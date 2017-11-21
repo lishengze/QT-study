@@ -57,28 +57,6 @@
        <property name="title">
         <string>ChooseTime</string>
        </property>
-       <widget class="QWidget" name="layoutWidget">
-        <property name="geometry">
-         <rect>
-          <x>12</x>
-          <y>24</y>
-          <width>150</width>
-          <height>22</height>
-         </rect>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QLabel" name="startTimeLabel">
-           <property name="text">
-            <string>StartTime</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QTimeEdit" name="selectStartTimeEdit"/>
-         </item>
-        </layout>
-       </widget>
        <widget class="QPushButton" name="historyData">
         <property name="geometry">
          <rect>
@@ -91,6 +69,38 @@
         <property name="text">
          <string>HistoryData</string>
         </property>
+       </widget>
+       <widget class="QWidget" name="">
+        <property name="geometry">
+         <rect>
+          <x>12</x>
+          <y>26</y>
+          <width>192</width>
+          <height>48</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="startTimeLabel">
+           <property name="text">
+            <string>起始时间:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QDateEdit" name="chooseStartDate"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="endTimeLabel">
+           <property name="text">
+            <string>终止时间:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDateEdit" name="chooseEndDate"/>
+         </item>
+        </layout>
        </widget>
       </widget>
      </item>

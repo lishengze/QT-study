@@ -13,6 +13,7 @@
 #include "setdata.h"
 #include <QScatterSeries>
 #include <QDialog>
+#include <QDateTime>
 #include "chartdialog.h"
 
 QT_CHARTS_USE_NAMESPACE
@@ -71,7 +72,7 @@ void Widget::setChartView(){
 //       series->append(i,i);
 //    }
 
-    series->append (getDatabaseData());
+    series->append (getOpenPrice());
 //    setSeriresData(series);
 
     QList<QPointF> datalist = series->points ();
@@ -117,8 +118,10 @@ Widget::Widget(QWidget *parent) :
     ui(new Ui::Widget)
 {
     ui->setupUi(this);
-    setChartView ();
-    ui->gridLayout->addWidget (m_chartView, 1, 0);
+    ui->chooseStartDate->setCalendarPopup (true);
+    ui->chooseEndDate->setCalendarPopup (true);
+//    setChartView ();
+//    ui->gridLayout->addWidget (m_chartView, 1, 0);
     ui->gridLayout->addWidget (getChartView(), 2, 0);
 //    g_timeId = startTimer(TIMEINTERVAL);
 }
@@ -155,29 +158,29 @@ void Widget::mouseMoveEvent(QMouseEvent *event)
 //    QGraphicsView::mouseMoveEvent(event);
 }
 
-void Widget::keepCallout()
-{
-    qDebug() << "clicked keepCallout" << endl;
-    m_callouts.append(m_tooltip);
-    m_tooltip = new Callout(m_chart);
-}
+//void Widget::keepCallout()
+//{
+//    qDebug() << "clicked keepCallout" << endl;
+//    m_callouts.append(m_tooltip);
+//    m_tooltip = new Callout(m_chart);
+//}
 
-void Widget::tooltip(QPointF point, bool state)
-{
-    qDebug() << "hover tooltip" << endl;
-    if (m_tooltip == 0)
-        m_tooltip = new Callout(m_chart);
+//void Widget::tooltip(QPointF point, bool state)
+//{
+//    qDebug() << "hover tooltip" << endl;
+//    if (m_tooltip == 0)
+//        m_tooltip = new Callout(m_chart);
 
-    if (state) {
-        m_tooltip->setText(QString("X: %1 \nY: %2 ").arg(point.x()).arg(point.y()));
-        m_tooltip->setAnchor(point);
-        m_tooltip->setZValue(11);
-        m_tooltip->updateGeometry();
-        m_tooltip->show();
-    } else {
-        m_tooltip->hide();
-    }
-}
+//    if (state) {
+//        m_tooltip->setText(QString("X: %1 \nY: %2 ").arg(point.x()).arg(point.y()));
+//        m_tooltip->setAnchor(point);
+//        m_tooltip->setZValue(11);
+//        m_tooltip->updateGeometry();
+//        m_tooltip->show();
+//    } else {
+//        m_tooltip->hide();
+//    }
+//}
 
 
 Widget::~Widget()
@@ -187,10 +190,13 @@ Widget::~Widget()
 
 void Widget::on_historyData_clicked()
 {
-//    m_chartWidegt = new QWidget(this);
-//    m_chartWidegt ->show ();
-//    m_chartDialog = new QDialog(this);
     m_chartDialog = new chartDialog(this);
 //    m_chartDialog = new chartDialog(this, m_chartView);
     m_chartDialog->show ();
+}
+
+void Widget::on_chooseStartDate_editingFinished()
+{
+    QDate startDate = ui->chooseStartDate->date ();
+    qDebug() << "startDate: " << startDate;
 }

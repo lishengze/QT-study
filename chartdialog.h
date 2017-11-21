@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QChartView>
 #include <QChart>
+#include <QVector>
 #include "callout.h"
 
 QT_CHARTS_USE_NAMESPACE
@@ -18,23 +19,21 @@ class chartDialog : public QDialog
 
 public:
     explicit chartDialog(QWidget *parent = 0);
-    chartDialog(QWidget *parent, QChartView* charView);
     ~chartDialog();
-    void setChartView();
+
+    void setTestChartView();
+    void setTimeChartView();
+    void setTimeChartViewCom();
 
 private slots:
     void on_changeTheme_clicked();
 
-public slots:
-    void keepCallout();
-    void tooltip(QPointF point, bool state);
-
 private:
     Ui::chartDialog *ui;
-    QChartView* m_chartView;
-    QChart* m_chart;
-    Callout* m_tooltip;
-    QList<Callout*> m_callouts;
+    QChartView* m_testChartView;
+    QChart* m_testChart;
+    QChartView* m_timeChartView;
+    QChart* m_timeChart;
 };
 
 #endif // CHARTDIALOG_H

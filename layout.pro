@@ -16,12 +16,14 @@ SOURCES += main.cpp\
         widget.cpp \
     setdata.cpp \
     callout.cpp \
-    chartdialog.cpp
+    chartdialog.cpp \
+    toolfunc.cpp
 
 HEADERS  += widget.h \
     setdata.h \
     callout.h \
-    chartdialog.h
+    chartdialog.h \
+    toolfunc.h
 
 FORMS    += widget.ui \
     chartdialog.ui

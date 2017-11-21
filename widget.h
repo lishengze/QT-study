@@ -31,11 +31,13 @@ public:
     void mouseMoveEvent(QMouseEvent *event);
 
 public slots:
-    void keepCallout();
-    void tooltip(QPointF point, bool state);
+//    void keepCallout();
+//    void tooltip(QPointF point, bool state);
 
 private slots:
     void on_historyData_clicked();
+
+    void on_chooseStartDate_editingFinished();
 
 private:
     Ui::Widget *ui;
