@@ -77,7 +77,7 @@ void Widget::setChartView(){
 
     QList<QPointF> datalist = series->points ();
     qDebug() << "series points.count: " << datalist.count();
-    qDebug() << datalist[0] << endl;
+//    qDebug() << datalist[0] << endl;
 
 //    m_coordX = new QGraphicsSimpleTextItem(m_chart);
 //    m_coordX->setPos(m_chart->size().width()/2 - 50, m_chart->size().height());
@@ -190,13 +190,22 @@ Widget::~Widget()
 
 void Widget::on_historyData_clicked()
 {
-    m_chartDialog = new chartDialog(this);
-//    m_chartDialog = new chartDialog(this, m_chartView);
-    m_chartDialog->show ();
+    QString startDate = ui->chooseStartDate->date ().toString ("yyyyMMdd");
+    QString endDate = ui->chooseEndDate->date ().toString ("yyyyMMdd");
+    qDebug() << "startDate: " << startDate << " endDate: " << endDate;
+    if (startDate.toInt () >= endDate.toInt ()) {
+        qDebug() << "endDate is early than startDate";
+    } else {
+        m_chartDialog = new chartDialog(this, startDate, endDate);
+        m_chartDialog->show ();
+    }
+
 }
 
 void Widget::on_chooseStartDate_editingFinished()
 {
     QDate startDate = ui->chooseStartDate->date ();
     qDebug() << "startDate: " << startDate;
+    QString strDate = startDate.toString ("yyyyMMdd");
+    qDebug() << "strDate: " << strDate;
 }

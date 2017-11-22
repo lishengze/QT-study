@@ -5,6 +5,9 @@
 #include <QChartView>
 #include <QChart>
 #include <QVector>
+#include <QString>
+#include <QList>
+#include "strategy.h"
 #include "callout.h"
 
 QT_CHARTS_USE_NAMESPACE
@@ -19,6 +22,8 @@ class chartDialog : public QDialog
 
 public:
     explicit chartDialog(QWidget *parent = 0);
+    chartDialog(QWidget *parent, QString startDate, QString endDate);
+    chartDialog(QWidget *parent, QString startDate, QString endDate, QList<strategy_ceil> strategy);
     ~chartDialog();
 
     void setTestChartView();
@@ -34,6 +39,11 @@ private:
     QChart* m_testChart;
     QChartView* m_timeChartView;
     QChart* m_timeChart;
+
+    QString m_startDate;
+    QString m_endDate;
+
+    QList<strategy_ceil> m_strategy;
 };
 
 #endif // CHARTDIALOG_H

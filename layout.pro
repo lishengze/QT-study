@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui sql widgets
+QT += axcontainer
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -17,13 +18,17 @@ SOURCES += main.cpp\
     setdata.cpp \
     callout.cpp \
     chartdialog.cpp \
-    toolfunc.cpp
+    toolfunc.cpp \
+    test.cpp \
+    strategy.cpp
 
 HEADERS  += widget.h \
     setdata.h \
     callout.h \
     chartdialog.h \
-    toolfunc.h
+    toolfunc.h \
+    test.h \
+    strategy.h
 
 FORMS    += widget.ui \
     chartdialog.ui

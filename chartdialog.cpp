@@ -24,6 +24,19 @@ chartDialog::chartDialog(QWidget *parent) :
     ui->gridLayout->addWidget (m_timeChartView, 2, 0);
 }
 
+chartDialog::chartDialog(QWidget *parent, QString startDate, QString endDate):
+    QDialog(parent),
+    m_startDate(startDate),
+    m_endDate(endDate),
+    ui(new Ui::chartDialog)
+{
+    ui->setupUi(this);
+    setTestChartView();
+    setTimeChartView();
+    ui->gridLayout->addWidget (m_testChartView, 1, 0);
+    ui->gridLayout->addWidget (m_timeChartView, 2, 0);
+}
+
 void chartDialog::setTestChartView () {
     m_testChart = new QChart();
     m_testChart->setTitle("Test Show Database Data");
@@ -34,7 +47,7 @@ void chartDialog::setTestChartView () {
 
     QLineSeries* series = new QLineSeries;
 //    series->append (getOpenPrice());
-    series->append (getTimeData());
+    series->append (getTimeData(m_startDate, m_endDate));
 
     m_testChart->addSeries (series);
 
@@ -67,7 +80,7 @@ void chartDialog::setTestChartView () {
 
 void chartDialog::setTimeChartView () {
     QLineSeries* series = new QLineSeries();
-    series->append (getTimeData ());
+    series->append (getTimeData(m_startDate, m_endDate));
 //    testSetTimeData(series);
 
     m_timeChart = new QChart();
@@ -82,7 +95,7 @@ void chartDialog::setTimeChartView () {
 
     QList<QPointF> datalist = series->points ();
     qDebug() << "timedata series points.count: " << datalist.count();
-    qDebug() << datalist[0] << endl;
+//    qDebug() << datalist[0] << endl;
 
 //    QDateTimeAxis* axisX = new QDateTimeAxis;
 //    axisX->setTitleText ("Time");
