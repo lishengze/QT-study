@@ -23,7 +23,7 @@ class chartDialog : public QDialog
 public:
     explicit chartDialog(QWidget *parent = 0);
     chartDialog(QWidget *parent, QString startDate, QString endDate);
-    chartDialog(QWidget *parent, QString startDate, QString endDate, QList<strategy_ceil> strategy);
+    chartDialog(QWidget *parent, int charID, QString startDate, QString endDate, QList<strategy_ceil> strategy);
     ~chartDialog();
 
     void setTestChartView();
@@ -35,6 +35,7 @@ private slots:
 
 private:
     Ui::chartDialog *ui;
+
     QChartView* m_testChartView;
     QChart* m_testChart;
     QChartView* m_timeChartView;
@@ -43,6 +44,7 @@ private:
     QString m_startDate;
     QString m_endDate;
 
+    int m_chartViewID;
     QList<strategy_ceil> m_strategy;
 };
 

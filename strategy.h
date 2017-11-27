@@ -5,7 +5,6 @@
 class strategy_ceil{
 public:
     strategy_ceil(QString secode, int buyCount);
-private:
     QString m_secode;
     int m_buyCount;
 };

@@ -1,7 +1,7 @@
 #include "widget.h"
 #include "chartdialog.h"
 #include <QApplication>
-#include <test.h>
+#include "test.h"
 
 int main(int argc, char *argv[])
 {
@@ -14,5 +14,10 @@ int main(int argc, char *argv[])
 
 //    testReadExcelData ();
 //    testGetExcelFileName();
+//    testRemovePathName();
+//    testExcel();
+//    testSortPointList ();
+//    testMergeSortedList();
+//    testTableData();
     return a.exec();
 }

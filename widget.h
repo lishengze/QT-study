@@ -11,6 +11,11 @@
 #include <QMouseEvent>
 #include <QPointF>
 #include <QDialog>
+#include <QTableView>
+#include "strategymodel.h"
+#include "database.h"
+#include "excel.h"
+
 QT_CHARTS_USE_NAMESPACE
 
 namespace Ui {
@@ -23,12 +28,15 @@ class Widget : public QWidget
 
 public:
     explicit Widget(QWidget *parent = 0);
-    void timerEvent(QTimerEvent* event);
-    void setChartView();
+
+    void setTableView();
+    void setDataFrequency();
+
     ~Widget();
 
 //    void resizeEvent(QResizeEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
+//    void mouseMoveEvent(QMouseEvent *event);
+//    void timerEvent(QTimerEvent* event);
 
 public slots:
 //    void keepCallout();
@@ -39,9 +47,11 @@ private slots:
 
     void on_chooseStartDate_editingFinished();
 
+    void on_tableView_clicked(const QModelIndex &index);
+
 private:
     Ui::Widget *ui;
-    QWidget* m_chartWidegt;
+    QList<QWidget*> m_chartViews;
     QDialog* m_chartDialog;
     QChart* m_chart;
     QChartView* m_chartView;
@@ -49,6 +59,13 @@ private:
     QGraphicsSimpleTextItem *m_coordY;
     Callout *m_tooltip;
     QList<Callout *> m_callouts;
+
+    StrategyModel* m_strategyModel;
+    QTableView* m_strategyTalbeView;
+    QString m_strategyFileDir;
+    QList<strategy_ceil> m_currStrategy;
+
+    Excel* m_excel;
 };
 
 #endif // WIDGET_H

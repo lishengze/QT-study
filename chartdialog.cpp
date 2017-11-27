@@ -4,10 +4,10 @@
 #include <QBarSeries>
 #include <QValueAxis>
 #include <QChartView>
-#include <QScatterSeries>
-#include <QDialog>
 #include <QPointF>
 #include <QDateTimeAxis>
+#include <QScatterSeries>
+#include <QDialog>
 #include "setdata.h"
 #include "chartdialog.h"
 #include "ui_chartdialog.h"
@@ -37,6 +37,22 @@ chartDialog::chartDialog(QWidget *parent, QString startDate, QString endDate):
     ui->gridLayout->addWidget (m_timeChartView, 2, 0);
 }
 
+chartDialog::chartDialog(QWidget *parent, int chartViewID, QString startDate, QString endDate, QList<strategy_ceil> strategyList):
+    QDialog(parent),
+    m_startDate(startDate),
+    m_endDate(endDate),
+    m_chartViewID(chartViewID),
+    ui(new Ui::chartDialog)
+{
+    m_strategy = strategyList;
+    ui->setupUi(this);
+    setTestChartView();
+    setTimeChartView();
+    ui->gridLayout->addWidget (m_testChartView, 1, 0);
+    ui->gridLayout->addWidget (m_timeChartView, 2, 0);
+}
+
+
 void chartDialog::setTestChartView () {
     m_testChart = new QChart();
     m_testChart->setTitle("Test Show Database Data");
@@ -47,7 +63,7 @@ void chartDialog::setTestChartView () {
 
     QLineSeries* series = new QLineSeries;
 //    series->append (getOpenPrice());
-    series->append (getTimeData(m_startDate, m_endDate));
+    series->append (getTimeData(m_startDate, m_endDate, "TOPEN", "SH600000"));
 
     m_testChart->addSeries (series);
 
@@ -80,7 +96,7 @@ void chartDialog::setTestChartView () {
 
 void chartDialog::setTimeChartView () {
     QLineSeries* series = new QLineSeries();
-    series->append (getTimeData(m_startDate, m_endDate));
+    series->append (getTimeData(m_startDate, m_endDate, "TOPEN", "SH600000"));
 //    testSetTimeData(series);
 
     m_timeChart = new QChart();

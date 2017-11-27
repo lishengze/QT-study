@@ -15,7 +15,8 @@ QList<QPointF> getOpenPrice();
 
 QList<QPointF> getTimeData();
 
-QList<QPointF> getTimeData(QString startDate, QString endDate);
+QList<QPointF> getTimeData(QString startDate, QString endDate, QString keyValue,
+                           QString tableName, QString databaseName ="MarketData");
 
 QT_CHARTS_USE_NAMESPACE
 

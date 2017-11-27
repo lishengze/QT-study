@@ -20,7 +20,12 @@ SOURCES += main.cpp\
     chartdialog.cpp \
     toolfunc.cpp \
     test.cpp \
-    strategy.cpp
+    strategy.cpp \
+    strategymodel.cpp \
+    database.cpp \
+    chartform.cpp \
+    excel.cpp \
+    tabledata.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -28,8 +33,14 @@ HEADERS  += widget.h \
     chartdialog.h \
     toolfunc.h \
     test.h \
-    strategy.h
+    strategy.h \
+    strategymodel.h \
+    database.h \
+    chartform.h \
+    excel.h \
+    tabledata.h
 
 FORMS    += widget.ui \
-    chartdialog.ui
+    chartdialog.ui \
+    chartform.ui
 QT += charts
