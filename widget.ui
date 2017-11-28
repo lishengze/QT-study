@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1037</width>
-    <height>545</height>
+    <width>1194</width>
+    <height>656</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -51,7 +51,7 @@
        <property name="minimumSize">
         <size>
          <width>350</width>
-         <height>150</height>
+         <height>180</height>
         </size>
        </property>
        <property name="maximumSize">
@@ -63,77 +63,95 @@
        <property name="title">
         <string>ChooseTime</string>
        </property>
-       <widget class="QPushButton" name="historyData">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>260</x>
-          <y>120</y>
-          <width>75</width>
-          <height>23</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>历史实时</string>
-        </property>
-       </widget>
-       <widget class="QWidget" name="layoutWidget">
-        <property name="geometry">
-         <rect>
-          <x>12</x>
-          <y>26</y>
-          <width>192</width>
-          <height>48</height>
-         </rect>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="0" column="0">
-          <widget class="QLabel" name="startTimeLabel">
-           <property name="text">
-            <string>起始时间:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QDateEdit" name="chooseStartDate"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="endTimeLabel">
-           <property name="text">
-            <string>终止时间:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QDateEdit" name="chooseEndDate"/>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QComboBox" name="dataFrequency">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>120</y>
-          <width>101</width>
-          <height>20</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label">
-        <property name="geometry">
-         <rect>
-          <x>130</x>
-          <y>120</y>
-          <width>24</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>分钟</string>
-        </property>
-       </widget>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0" colspan="3">
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QLabel" name="startTimeLabel">
+            <property name="text">
+             <string>起始时间:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDateEdit" name="chooseStartDate"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="endTimeLabel">
+            <property name="text">
+             <string>终止时间:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDateEdit" name="chooseEndDate"/>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="EMA1Time_label">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>T1</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLabel" name="EMA2Time_label">
+          <property name="text">
+           <string>T2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLabel" name="DIFFTime_label">
+          <property name="text">
+           <string>T3</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QSpinBox" name="EMA1TimeSpinBox"/>
+        </item>
+        <item row="2" column="1">
+         <widget class="QSpinBox" name="EMA2TimeSpinBox"/>
+        </item>
+        <item row="2" column="2">
+         <widget class="QSpinBox" name="DIFFTimeSpinBox"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>选择数据频率</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1" colspan="2">
+         <widget class="QComboBox" name="dataFrequency">
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QPushButton" name="historyData">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>历史实时</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
     </layout>

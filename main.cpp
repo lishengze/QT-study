@@ -19,5 +19,6 @@ int main(int argc, char *argv[])
 //    testSortPointList ();
 //    testMergeSortedList();
 //    testTableData();
+//    testComputeMACD ();
     return a.exec();
 }

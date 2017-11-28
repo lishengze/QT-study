@@ -40,6 +40,7 @@ Widget::Widget(QWidget *parent) :
     ui->chooseStartDate->setCalendarPopup (true);
     ui->chooseEndDate->setCalendarPopup (true);
 
+    setMacdTime();
     setTableView();
     setDataFrequency();
 }
@@ -74,9 +75,15 @@ void Widget::setTableView () {
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
+void Widget::setMacdTime () {
+ ui->EMA1TimeSpinBox->setValue (12);
+ ui->EMA2TimeSpinBox->setValue (26);
+ ui->DIFFTimeSpinBox->setValue (9);
+}
+
 void Widget::setDataFrequency () {
     QStringList timeFre;
-    timeFre << "1" << "5" << "10" << "15" << "30" << "60";
+    timeFre << "1m" << "5m" << "10m" << "20m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
     ui->dataFrequency->addItems (timeFre);
 }
 
@@ -84,11 +91,20 @@ void Widget::on_historyData_clicked()
 {
     QString startDate = ui->chooseStartDate->date ().toString ("yyyyMMdd");
     QString endDate = ui->chooseEndDate->date ().toString ("yyyyMMdd");
+    QString timeType = ui->dataFrequency->currentText();
+    int EVA1Time = ui->EMA1TimeSpinBox->value ();
+    int EVA2Time = ui->EMA2TimeSpinBox->value ();
+    int DIFFTime = ui->DIFFTimeSpinBox->value ();
+
+    qDebug() << "timeType: " << timeType;
+    qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
     if (startDate.toInt () >= endDate.toInt ()) {
         qDebug() << "endDate is early than startDate";
+    } else if (m_currStrategy.size () == 0) {
+        qDebug() << "Strategy is empty!";
     } else {
-//        QWidget* charView = new chartDialog(this, m_chartViews.count(), startDate, endDate, m_currStrategy);
-        QWidget* charView = new ChartForm(0, m_chartViews.count(), startDate, endDate, m_currStrategy);
+        QWidget* charView = new ChartForm(0, m_chartViews.count(), startDate, endDate, timeType, m_currStrategy,
+                                          EVA1Time, EVA2Time, DIFFTime);
         charView->show ();
         m_chartViews.append (charView);
     }

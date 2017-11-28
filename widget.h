@@ -31,6 +31,7 @@ public:
 
     void setTableView();
     void setDataFrequency();
+    void setMacdTime();
 
     ~Widget();
 

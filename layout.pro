@@ -25,7 +25,8 @@ SOURCES += main.cpp\
     database.cpp \
     chartform.cpp \
     excel.cpp \
-    tabledata.cpp
+    tabledata.cpp \
+    macd.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -38,7 +39,8 @@ HEADERS  += widget.h \
     database.h \
     chartform.h \
     excel.h \
-    tabledata.h
+    tabledata.h \
+    macd.h
 
 FORMS    += widget.ui \
     chartdialog.ui \

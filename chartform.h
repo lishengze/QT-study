@@ -24,12 +24,17 @@ public:
     explicit ChartForm(QWidget *parent = 0);
     ~ChartForm();
     ChartForm(QWidget *parent, int charViewID,
-                QString startDate, QString endDate,
-                QList<strategy_ceil> strategy);
+              QString startDate, QString endDate,
+              QString timeType, QList<strategy_ceil> strategy,
+              int EVA1Time, int EVA2Time, int DIFFTime,
+              QString databaseName="MarketData");
 
     void setOpenPriceChartView();
     void setVotRunoverChartView();
     void setStrategyChartView();
+    void setMACDChartView();
+
+    void setStrategyData();
 
     QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
 
@@ -42,6 +47,9 @@ private:
     QChartView* m_strategyChartView;
     QChart* m_strategyChart;
 
+    QChartView* m_macdChartView;
+    QChart* m_macdChart;
+
     QChartView* m_votrunoverChartView;
     QChart* m_votrunoverChart;
 
@@ -49,11 +57,18 @@ private:
     QString m_endDate;
 
     int m_chartViewID;
+    QList<QPointF> m_strategyData;
     QList<strategy_ceil> m_strategy;
     QList<QList<QPointF>> m_tableDataList;
     QList<int> m_buyCountList;
 
+    QString m_timeType;
+    QString m_databaseName;
     Database* m_database;
+
+    int m_EVA1Time;
+    int m_EVA2Time;
+    int m_DIFFTime;
 };
 
 #endif // CHARTFORM_H

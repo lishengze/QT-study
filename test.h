@@ -17,4 +17,6 @@ void testMergeSortedList();
 
 void testTableData();
 
+void testComputeMACD();
+
 #endif // TEST_H

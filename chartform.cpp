@@ -11,6 +11,7 @@
 #include "chartform.h"
 #include "ui_chartform.h"
 #include "toolfunc.h"
+#include "macd.h"
 
 ChartForm::ChartForm(QWidget *parent) :
     QWidget(parent),
@@ -21,25 +22,30 @@ ChartForm::ChartForm(QWidget *parent) :
     mainLayout->addWidget (ui->gridLayoutWidget);
 }
 
-ChartForm::ChartForm(QWidget *parent, int chartViewID, QString startDate,
-                     QString endDate, QList<strategy_ceil> strategyList):
+ChartForm::ChartForm(QWidget *parent, int chartViewID,
+                     QString startDate,QString endDate,
+                     QString timeType, QList<strategy_ceil> strategyList,
+                     int EVA1Time, int EVA2Time, int DIFFTime,
+                     QString databaseName):
     QWidget(parent),
-    m_startDate(startDate),
-    m_endDate(endDate),
-    m_chartViewID(chartViewID),
+    m_startDate(startDate), m_endDate(endDate),
+    m_timeType(timeType), m_chartViewID(chartViewID),
+    m_EVA1Time(EVA1Time), m_EVA2Time(EVA2Time), m_DIFFTime(DIFFTime),
     m_database(NULL),
     ui(new Ui::ChartForm)
 {
     ui->setupUi(this);
     m_strategy = strategyList;
     m_database = new Database(QString(m_chartViewID));
+    m_databaseName = databaseName + "_" + timeType;
+    setStrategyData();
     setOpenPriceChartView ();
     setVotRunoverChartView ();
     setStrategyChartView();
 
-    ui->gridLayout->addWidget (m_openPriceChartView, 1, 0);
+    ui->gridLayout->addWidget (m_strategyChartView, 1, 0);
     ui->gridLayout->addWidget (m_votrunoverChartView, 2, 0);
-    ui->gridLayout->addWidget (m_strategyChartView, 3, 0);
+    ui->gridLayout->addWidget (m_openPriceChartView, 3, 0);
 }
 
 ChartForm::~ChartForm()
@@ -51,9 +57,21 @@ ChartForm::~ChartForm()
     }
 }
 
+void ChartForm::setStrategyData() {
+    for (int i = 0; i < m_strategy.size (); ++i) {
+        QString tableName = m_strategy[i].m_secode;
+        int buyCount = m_strategy[i].m_buyCount;
+        QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "TCLOSE", tableName, m_databaseName);
+        m_tableDataList.append (sortPointFList(curTableData));
+        m_buyCountList.append (buyCount);
+        qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
+    }
+    m_strategyData = computeStrategyData(m_tableDataList, m_buyCountList);
+}
+
 void ChartForm::setOpenPriceChartView () {
     QLineSeries* series = new QLineSeries();
-    series->append (m_database->getOriChartData (m_startDate, m_endDate, "TOPEN", "SH600000"));
+    series->append (m_database->getOriChartData (m_startDate, m_endDate, "TOPEN", "SH600000", m_databaseName));
 
     QList<QPointF> datalist = series->points ();
     qDebug() << "OpenPrice points.count: " << datalist.count();
@@ -81,7 +99,7 @@ void ChartForm::setOpenPriceChartView () {
 
 void ChartForm::setVotRunoverChartView () {
     QLineSeries* series = new QLineSeries;
-    series->append (m_database->getOriChartData (m_startDate, m_endDate, "VOTRUNOVER", "SH600000"));
+    series->append (m_database->getOriChartData (m_startDate, m_endDate, "VOTRUNOVER", "SH600000", m_databaseName));
 
     QList<QPointF> datalist = series->points ();
     qDebug() << "Volume of Transaction points.count: " << datalist.count();
@@ -109,18 +127,10 @@ void ChartForm::setVotRunoverChartView () {
 
 void ChartForm::setStrategyChartView () {
     QLineSeries* series = new QLineSeries();
-
-    for (int i = 0; i < m_strategy.size (); ++i) {
-        QString tableName = m_strategy[i].m_secode;
-        int buyCount = m_strategy[i].m_buyCount;
-        QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "TCLOSE", tableName);
-        m_tableDataList.append (sortPointFList(curTableData));
-        m_buyCountList.append (buyCount);
-        qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
+    if (m_strategyData.size () == 0) {
+        ErrorMessage ("No strategy Data!");
     }
-    QList<QPointF> computedData = computeStrategyData(m_tableDataList, m_buyCountList);
-
-    series->append (computedData);
+    series->append (m_strategyData);
 
     QList<QPointF> datalist = series->points ();
     qDebug() << "StrategyChart points.count: " << datalist.count();
@@ -146,6 +156,52 @@ void ChartForm::setStrategyChartView () {
     series->attachAxis(axisY);
 }
 
+void ChartForm::setMACDChartView () {
+    QList<double> oriData;
+    for (int i = 0; i<m_strategyData.size (); ++i) {
+        oriData.append (m_strategyData.at(i).y ());
+    }
+    QList<MACD> macdData = computeMACD (oriData, m_EVA1Time, m_EVA2Time, m_DIFFTime);
+    QList<QPointF> diffPoint;
+    QList<QPointF> deaPoint;
+    QList<QPointF> macdPoint;
+
+    for (int i = 0; i<macdData.size (); ++i) {
+        diffPoint.append (QPointF(m_strategyData.at(i).x (), macdData.at(i).m_diff));
+        deaPoint.append (QPointF(m_strategyData.at(i).x (), macdData.at(i).m_dea));
+        macdPoint.append (QPointF(m_strategyData.at(i).x (), macdData.at(i).m_macd));
+    }
+
+    QLineSeries* diffSeries = new QLineSeries();
+    QLineSeries* deaSeries = new QLineSeries();
+    QLineSeries* macdSeries = new QLineSeries();
+
+    diffSeries->append (diffPoint);
+    deaSeries->append (deaPoint);
+    macdSeries->append (macdPoint);
+
+    m_macdChart = new QChart();
+    m_macdChart->addSeries (diffSeries);
+    m_macdChart->addSeries (deaSeries);
+    m_macdChart->addSeries (macdSeries);
+    m_macdChart->setTitle("MACD Chart");
+    m_macdChart->legend()->hide();
+
+    m_strategyChartView = new QChartView(m_macdChart);
+    m_strategyChartView->setRenderHint(QPainter::Antialiasing);
+
+    QDateTimeAxis *axisX = new QDateTimeAxis;
+    axisX->setTickCount(10);
+    axisX->setFormat("yyyy-MM-dd h:mm");
+    axisX->setTitleText("Date");
+    m_macdChart->addAxis(axisX, Qt::AlignBottom);
+    diffSeries->attachAxis(axisX);
+
+    QValueAxis *axisY = new QValueAxis;
+    axisY->setTitleText("Yield ");
+    m_macdChart->addAxis(axisY, Qt::AlignLeft);
+    diffSeries->attachAxis(axisY);
+}
 
 QList<QPointF> ChartForm::computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList) {
     QList<QPointF> result;
