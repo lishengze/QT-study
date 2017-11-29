@@ -1,5 +1,4 @@
 #include "widget.h"
-#include "chartdialog.h"
 #include <QApplication>
 #include "test.h"
 
@@ -20,5 +19,6 @@ int main(int argc, char *argv[])
 //    testMergeSortedList();
 //    testTableData();
 //    testComputeMACD ();
+//    testTranstime();
     return a.exec();
 }

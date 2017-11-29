@@ -13,7 +13,6 @@
 #include "ui_widget.h"
 #include "QChartView"
 #include "setdata.h"
-#include "chartdialog.h"
 #include "strategymodel.h"
 #include "chartform.h"
 
@@ -129,30 +128,6 @@ void Widget::on_tableView_clicked(const QModelIndex &index)
     }
     ui->historyData->setEnabled(true);
 }
-
-//void Widget::timerEvent (QTimerEvent *event) {
-//    if(event->timerId()==g_timeId){//定时器到时间,//模拟数据填充
-//        static QTime dataTime(QTime::currentTime());
-//        long int eltime = dataTime.elapsed();
-//        static int lastpointtime = 0;
-//        int size = (eltime - lastpointtime);//数据个数
-////        qDebug()<<"size-->"<<size;
-//        if(isVisible()){
-//            QVector<QPointF> oldPoints = g_series->pointsVector();//Returns the points in the series as a vector
-//            QVector<QPointF> points;
-
-//            for(int i=size;i<oldPoints.count();++i){
-//                points.append(QPointF(i-size ,oldPoints.at(i).y()));//替换数据用
-//            }
-//            qint64 sizePoints = points.count();
-//            for(int k=0;k<size;++k){
-//                points.append(QPointF(k+sizePoints,getData((((double)lastpointtime+k+1)/1000))));
-//            }
-//            g_series->replace(points);
-//            lastpointtime = eltime;
-//       }
-//    }
-//}
 
 //void Widget::mouseMoveEvent(QMouseEvent *event)
 //{

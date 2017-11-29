@@ -17,7 +17,6 @@ SOURCES += main.cpp\
         widget.cpp \
     setdata.cpp \
     callout.cpp \
-    chartdialog.cpp \
     toolfunc.cpp \
     test.cpp \
     strategy.cpp \
@@ -31,7 +30,6 @@ SOURCES += main.cpp\
 HEADERS  += widget.h \
     setdata.h \
     callout.h \
-    chartdialog.h \
     toolfunc.h \
     test.h \
     strategy.h \
@@ -43,6 +41,5 @@ HEADERS  += widget.h \
     macd.h
 
 FORMS    += widget.ui \
-    chartdialog.ui \
     chartform.ui
 QT += charts

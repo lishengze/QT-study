@@ -2,6 +2,7 @@
 #include <QPointF>
 #include <QDebug>
 #include <iostream>
+#include <QDateTime>
 #include "test.h"
 #include "setdata.h"
 #include "toolfunc.h"
@@ -116,4 +117,24 @@ void testComputeMACD() {
     for (int i =0; i < result.size (); ++i) {
         cout << result.at(i);
     }
+}
+
+void testTranstime() {
+    QDateTime xValue;
+    int year = 2017;
+    int month = 11;
+    int day = 28;
+    int hour = 16;
+    int min = 31;
+    int secs = 20;
+    xValue.setDate (QDate(year, month, day));
+    xValue.setTime (QTime(hour, min, secs));
+
+    qint64 offSecs = xValue.toMSecsSinceEpoch();
+
+    QDateTime dateTime = QDateTime::fromMSecsSinceEpoch(offSecs);
+
+    qDebug() << "oriDateTime: " << xValue;
+    qDebug() << "offSecs: " << offSecs;
+    qDebug() << "transedTime: " << dateTime;
 }

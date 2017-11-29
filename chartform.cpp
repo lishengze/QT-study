@@ -5,6 +5,7 @@
 #include <QValueAxis>
 #include <QChartView>
 #include <QPointF>
+#include <QDateTime>
 #include <QDateTimeAxis>
 #include <QScatterSeries>
 #include <QGridLayout>
@@ -12,6 +13,7 @@
 #include "ui_chartform.h"
 #include "toolfunc.h"
 #include "macd.h"
+#include "callout.h"
 
 ChartForm::ChartForm(QWidget *parent) :
     QWidget(parent),
@@ -31,21 +33,16 @@ ChartForm::ChartForm(QWidget *parent, int chartViewID,
     m_startDate(startDate), m_endDate(endDate),
     m_timeType(timeType), m_chartViewID(chartViewID),
     m_EVA1Time(EVA1Time), m_EVA2Time(EVA2Time), m_DIFFTime(DIFFTime),
-    m_database(NULL),
+    m_database(NULL), m_macdTooltip(NULL), m_strategyTooltip(NULL), m_votrunoverTooltip(NULL),
     ui(new Ui::ChartForm)
 {
-    ui->setupUi(this);
-    m_strategy = strategyList;
-    m_database = new Database(QString(m_chartViewID));
-    m_databaseName = databaseName + "_" + timeType;
-    setStrategyData();
+    initData(strategyList, databaseName, timeType);
     setOpenPriceChartView ();
     setVotRunoverChartView ();
     setStrategyChartView();
-
-    ui->gridLayout->addWidget (m_strategyChartView, 1, 0);
-    ui->gridLayout->addWidget (m_votrunoverChartView, 2, 0);
-    ui->gridLayout->addWidget (m_openPriceChartView, 3, 0);
+    setMACDChartView();
+    setLayout();
+    setThemeBox ();
 }
 
 ChartForm::~ChartForm()
@@ -55,6 +52,48 @@ ChartForm::~ChartForm()
         delete m_database;
         m_database = NULL;
     }
+    if (NULL != m_macdTooltip) {
+        delete m_macdTooltip;
+        m_macdTooltip = NULL;
+    }
+    if (NULL != m_strategyTooltip) {
+        delete m_strategyTooltip;
+        m_strategyTooltip = NULL;
+    }
+    if (NULL != m_votrunoverTooltip) {
+        delete m_votrunoverTooltip;
+        m_votrunoverTooltip = NULL;
+    }
+}
+
+void ChartForm::initData (QList<strategy_ceil> strategyList, QString databaseName, QString timeType) {
+    m_strategy = strategyList;
+    m_dbhost = "192.168.211.165";
+//    m_dbhost = "localhost";
+    m_database = new Database(QString(m_chartViewID), m_dbhost);
+    m_databaseName = databaseName + "_" + timeType;
+    setStrategyData();
+}
+
+void ChartForm::setLayout () {
+    ui->setupUi(this);
+    QGridLayout* mainLayout = new QGridLayout(this);
+    mainLayout->addWidget (ui->gridLayoutWidget);
+
+    ui->gridLayout->addWidget (m_strategyChartView, 1, 0);
+    ui->gridLayout->addWidget (m_votrunoverChartView, 2, 0);
+    ui->gridLayout->addWidget (m_macdChartView, 3, 0);
+}
+
+void ChartForm::setThemeBox () {
+    ui->themeComboBox->addItem("Light", QChart::ChartThemeLight);
+    ui->themeComboBox->addItem("Blue Cerulean", QChart::ChartThemeBlueCerulean);
+    ui->themeComboBox->addItem("Dark", QChart::ChartThemeDark);
+    ui->themeComboBox->addItem("Brown Sand", QChart::ChartThemeBrownSand);
+    ui->themeComboBox->addItem("Blue NCS", QChart::ChartThemeBlueNcs);
+    ui->themeComboBox->addItem("High Contrast", QChart::ChartThemeHighContrast);
+    ui->themeComboBox->addItem("Blue Icy", QChart::ChartThemeBlueIcy);
+    ui->themeComboBox->addItem("Qt", QChart::ChartThemeQt);
 }
 
 void ChartForm::setStrategyData() {
@@ -97,34 +136,6 @@ void ChartForm::setOpenPriceChartView () {
     series->attachAxis(axisY);
 }
 
-void ChartForm::setVotRunoverChartView () {
-    QLineSeries* series = new QLineSeries;
-    series->append (m_database->getOriChartData (m_startDate, m_endDate, "VOTRUNOVER", "SH600000", m_databaseName));
-
-    QList<QPointF> datalist = series->points ();
-    qDebug() << "Volume of Transaction points.count: " << datalist.count();
-
-    m_votrunoverChart = new QChart();
-    m_votrunoverChart->addSeries (series);
-    m_votrunoverChart->setTitle("volume of transaction");
-    m_votrunoverChart->legend()->hide();
-
-    m_votrunoverChartView = new QChartView(m_votrunoverChart);
-    m_votrunoverChartView->setRenderHint(QPainter::Antialiasing);
-
-    QDateTimeAxis *axisX = new QDateTimeAxis;
-    axisX->setTickCount(10);
-    axisX->setFormat("yyyy-MM-dd h:mm");
-    axisX->setTitleText("Date");
-    m_votrunoverChart->addAxis (axisX, Qt::AlignBottom);
-    series->attachAxis (axisX);
-
-    QValueAxis* axisY = new QValueAxis;
-    axisY->setTitleText ("VOTRUNOVER");
-    m_votrunoverChart->addAxis (axisY,Qt::AlignLeft);
-    series->attachAxis (axisY);
-}
-
 void ChartForm::setStrategyChartView () {
     QLineSeries* series = new QLineSeries();
     if (m_strategyData.size () == 0) {
@@ -154,6 +165,38 @@ void ChartForm::setStrategyChartView () {
     axisY->setTitleText("Yield ");
     m_strategyChart->addAxis(axisY, Qt::AlignLeft);
     series->attachAxis(axisY);
+
+    connect (series, SIGNAL(hovered(QPointF,bool)), this, SLOT(strategyToolTip(QPointF,bool)));
+}
+
+void ChartForm::setVotRunoverChartView () {
+    QLineSeries* series = new QLineSeries;
+    series->append (m_database->getOriChartData (m_startDate, m_endDate, "VOTRUNOVER", "SH600000", m_databaseName));
+
+    QList<QPointF> datalist = series->points ();
+    qDebug() << "Volume of Transaction points.count: " << datalist.count();
+
+    m_votrunoverChart = new QChart();
+    m_votrunoverChart->addSeries (series);
+    m_votrunoverChart->setTitle("volume of transaction");
+    m_votrunoverChart->legend()->hide();
+
+    m_votrunoverChartView = new QChartView(m_votrunoverChart);
+    m_votrunoverChartView->setRenderHint(QPainter::Antialiasing);
+
+    QDateTimeAxis *axisX = new QDateTimeAxis;
+    axisX->setTickCount(10);
+    axisX->setFormat("yyyy-MM-dd h:mm");
+    axisX->setTitleText("Date");
+    m_votrunoverChart->addAxis (axisX, Qt::AlignBottom);
+    series->attachAxis (axisX);
+
+    QValueAxis* axisY = new QValueAxis;
+    axisY->setTitleText ("VOTRUNOVER");
+    m_votrunoverChart->addAxis (axisY,Qt::AlignLeft);
+    series->attachAxis (axisY);
+
+    connect (series, SIGNAL(hovered(QPointF,bool)), this, SLOT(votRunoverToolTip(QPointF,bool)));
 }
 
 void ChartForm::setMACDChartView () {
@@ -173,8 +216,11 @@ void ChartForm::setMACDChartView () {
     }
 
     QLineSeries* diffSeries = new QLineSeries();
+    diffSeries->setName("DIFF");
     QLineSeries* deaSeries = new QLineSeries();
+    deaSeries->setName("DEA");
     QLineSeries* macdSeries = new QLineSeries();
+    macdSeries->setName("MACD");
 
     diffSeries->append (diffPoint);
     deaSeries->append (deaPoint);
@@ -184,23 +230,92 @@ void ChartForm::setMACDChartView () {
     m_macdChart->addSeries (diffSeries);
     m_macdChart->addSeries (deaSeries);
     m_macdChart->addSeries (macdSeries);
-    m_macdChart->setTitle("MACD Chart");
-    m_macdChart->legend()->hide();
+    m_macdChart->setTitle(QString::fromLocal8Bit("MACD Chart"));
+    m_macdChart->legend()->setAlignment(Qt::AlignRight);
 
-    m_strategyChartView = new QChartView(m_macdChart);
-    m_strategyChartView->setRenderHint(QPainter::Antialiasing);
+    m_macdChartView = new QChartView(m_macdChart);
+    m_macdChartView->setRenderHint(QPainter::Antialiasing);
 
     QDateTimeAxis *axisX = new QDateTimeAxis;
     axisX->setTickCount(10);
     axisX->setFormat("yyyy-MM-dd h:mm");
     axisX->setTitleText("Date");
     m_macdChart->addAxis(axisX, Qt::AlignBottom);
+
     diffSeries->attachAxis(axisX);
+    deaSeries->attachAxis (axisX);
+    macdSeries->attachAxis (axisX);
 
     QValueAxis *axisY = new QValueAxis;
     axisY->setTitleText("Yield ");
+    QList<double>  axisYRange = getMACDRange(macdData);
+    axisY -> setRange (axisYRange[0], axisYRange[1]);
     m_macdChart->addAxis(axisY, Qt::AlignLeft);
+
+    macdSeries->attachAxis (axisY);
     diffSeries->attachAxis(axisY);
+    deaSeries->attachAxis (axisY);
+
+    connect (diffSeries, SIGNAL(hovered(QPointF,bool)), this, SLOT(macdToolTip(QPointF,bool)));
+    connect (deaSeries, SIGNAL(hovered(QPointF,bool)), this, SLOT(macdToolTip(QPointF,bool)));
+    connect (macdSeries, SIGNAL(hovered(QPointF,bool)), this, SLOT(macdToolTip(QPointF,bool)));
+    this->setMouseTracking(true);
+
+//    m_macdChart->createDefaultAxes ();
+}
+
+void ChartForm::macdToolTip (QPointF point, bool state)
+{
+//    qDebug() << "hover MACDToolTip" << endl;
+    if (m_macdTooltip == 0)
+        m_macdTooltip = new Callout(m_macdChart);
+
+    if (state) {
+        QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(point.x());
+        m_macdTooltip->setText(QString("X: %1 \nY: %2 ").arg(curDatetime.toString ("yyyy-MM-dd h:mm")).arg(point.y()));
+        m_macdTooltip->setAnchor(point);
+        m_macdTooltip->setZValue(11);
+        m_macdTooltip->updateGeometry();
+        m_macdTooltip->show();
+    } else {
+        m_macdTooltip->hide();
+    }
+}
+
+void ChartForm::strategyToolTip (QPointF point, bool state)
+{
+//    qDebug() << "hover MACDToolTip" << endl;
+    if (m_strategyTooltip == 0)
+        m_strategyTooltip = new Callout(m_strategyChart);
+
+    if (state) {
+        QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(point.x());
+        m_strategyTooltip->setText(QString("X: %1 \nY: %2 ").arg(curDatetime.toString ("yyyy-MM-dd h:mm")).arg(point.y()));
+        m_strategyTooltip->setAnchor(point);
+        m_strategyTooltip->setZValue(11);
+        m_strategyTooltip->updateGeometry();
+        m_strategyTooltip->show();
+    } else {
+        m_strategyTooltip->hide();
+    }
+}
+
+void ChartForm::votRunoverToolTip (QPointF point, bool state)
+{
+//    qDebug() << "hover MACDToolTip" << endl;
+    if (m_votrunoverTooltip == 0)
+        m_votrunoverTooltip = new Callout(m_votrunoverChart);
+
+    if (state) {
+        QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(point.x());
+        m_votrunoverTooltip->setText(QString("X: %1 \nY: %2 ").arg(curDatetime.toString ("yyyy-MM-dd h:mm")).arg(point.y()));
+        m_votrunoverTooltip->setAnchor(point);
+        m_votrunoverTooltip->setZValue(11);
+        m_votrunoverTooltip->updateGeometry();
+        m_votrunoverTooltip->show();
+    } else {
+        m_votrunoverTooltip->hide();
+    }
 }
 
 QList<QPointF> ChartForm::computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList) {

@@ -20,4 +20,8 @@ QList<MACD> computeMACD(QList<double> oriData, int t1, int t2, int t3);
 
 void ErrorMessage(QString msg);
 
+QList<double> getMACDRange(QList<MACD> oriData);
+
+QString transOffsetSecondsToTime(qint64 offSecs);
+
 #endif // TOOLFUNC_H

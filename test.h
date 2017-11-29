@@ -19,4 +19,6 @@ void testTableData();
 
 void testComputeMACD();
 
+void testTranstime();
+
 #endif // TEST_H

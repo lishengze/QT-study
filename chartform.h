@@ -8,6 +8,7 @@
 #include <QString>
 #include <QList>
 #include <QPointF>
+#include <QComboBox>
 #include "strategy.h"
 #include "callout.h"
 #include "database.h"
@@ -29,14 +30,25 @@ public:
               int EVA1Time, int EVA2Time, int DIFFTime,
               QString databaseName="MarketData");
 
+    void initData(QList<strategy_ceil> strategyList, QString databaseName, QString timeType);
+
+    void setLayout ();
+
     void setOpenPriceChartView();
     void setVotRunoverChartView();
     void setStrategyChartView();
     void setMACDChartView();
+    void setThemeBox();
 
     void setStrategyData();
-
     QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
+
+
+
+public slots:
+    void macdToolTip(QPointF point, bool state);
+    void strategyToolTip(QPointF point, bool state);
+    void votRunoverToolTip(QPointF point, bool state);
 
 private:
     Ui::ChartForm *ui;
@@ -46,12 +58,15 @@ private:
 
     QChartView* m_strategyChartView;
     QChart* m_strategyChart;
-
-    QChartView* m_macdChartView;
-    QChart* m_macdChart;
+    Callout *m_strategyTooltip;
 
     QChartView* m_votrunoverChartView;
     QChart* m_votrunoverChart;
+    Callout *m_votrunoverTooltip;
+
+    QChartView* m_macdChartView;
+    QChart* m_macdChart;
+    Callout *m_macdTooltip;
 
     QString m_startDate;
     QString m_endDate;
@@ -65,10 +80,13 @@ private:
     QString m_timeType;
     QString m_databaseName;
     Database* m_database;
+    QString m_dbhost;
 
     int m_EVA1Time;
     int m_EVA2Time;
     int m_DIFFTime;
+
+
 };
 
 #endif // CHARTFORM_H

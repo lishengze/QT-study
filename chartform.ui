@@ -41,18 +41,7 @@
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QPushButton" name="changeTheme">
-      <property name="text">
-       <string>切换主题</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButton">
-      <property name="text">
-       <string>测试</string>
-      </property>
-     </widget>
+     <widget class="QComboBox" name="themeComboBox"/>
     </item>
    </layout>
   </widget>

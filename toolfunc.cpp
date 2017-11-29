@@ -1,9 +1,12 @@
 #include "toolfunc.h"
 #include <QStringList>
 #include <algorithm>
+#include <QDateTime>
 #include <QDebug>
 #include "macd.h"
 using std::sort;
+using std::max;
+using std::min;
 
 // 20170911 -> [2017, 9, 11]
 QList<int> getDateList(int intDate) {
@@ -102,4 +105,27 @@ QList<MACD> computeMACD(QList<double> oriData, int t1, int t2, int t3) {
 
 void ErrorMessage(QString msg) {
     qDebug() << msg;
+}
+
+QList<double> getMACDRange(QList<MACD> oriData) {
+    double maxValue = -1000000000000000000.0;
+    double minValue = 10000000000000000000.0;
+    for (int i = 0; i < oriData.size(); ++i) {
+        maxValue = max(max(maxValue, oriData[i].m_diff), max(oriData[i].m_dea, oriData[i].m_macd));
+        minValue = min(min(minValue, oriData[i].m_diff), min(oriData[i].m_dea, oriData[i].m_macd));
+    }
+
+    int rangeInterval = 6;
+    maxValue += (maxValue - minValue) / rangeInterval;
+    minValue -= (maxValue - minValue) / rangeInterval;
+    QList<double> result;
+    result.append (minValue);
+    result.append (maxValue);
+    return result;
+}
+
+QString transOffsetSecondsToTime(qint64 offSecs) {
+    QDateTime tmpDatetime;
+    tmpDatetime = tmpDatetime.toOffsetFromUtc(offSecs);
+    return tmpDatetime.toString ();
 }
