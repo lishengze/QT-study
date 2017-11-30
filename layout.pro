@@ -41,5 +41,6 @@ HEADERS  += widget.h \
     macd.h
 
 FORMS    += widget.ui \
-    chartform.ui
+    chartform.ui \
+    form.ui
 QT += charts

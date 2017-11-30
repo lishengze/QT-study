@@ -64,6 +64,7 @@ private:
     StrategyModel* m_strategyModel;
     QTableView* m_strategyTalbeView;
     QString m_strategyFileDir;
+    QString m_strategyName;
     QList<strategy_ceil> m_currStrategy;
 
     Excel* m_excel;

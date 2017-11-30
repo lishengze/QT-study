@@ -12,6 +12,7 @@ Database::Database(QString connName, QString host, QString userName, QString use
     m_userPwd(userPwd), m_dataSourceName(dataSourceName),
     m_databaseDriver(databaseDriver), m_bdatabaseOpen(false)
 {
+    qDebug() << "hostName: " << m_hostName;
     m_db = initDatabase();
 }
 

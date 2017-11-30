@@ -26,7 +26,7 @@ public:
     ~ChartForm();
     ChartForm(QWidget *parent, int charViewID,
               QString startDate, QString endDate,
-              QString timeType, QList<strategy_ceil> strategy,
+              QString timeType, QList<strategy_ceil> strategy, QString strategyName,
               int EVA1Time, int EVA2Time, int DIFFTime,
               QString databaseName="MarketData");
 
@@ -40,10 +40,11 @@ public:
     void setMACDChartView();
     void setThemeBox();
 
+    void setTestView();
+
     void setStrategyData();
     QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
-
-
+    QList<double> getChartYvalueRange(QList<QPointF> pointList );
 
 public slots:
     void macdToolTip(QPointF point, bool state);
@@ -68,12 +69,17 @@ private:
     QChart* m_macdChart;
     Callout *m_macdTooltip;
 
+    QChartView* m_testChartView;
+    QChart* m_testChart;
+    Callout *m_testTooltip;
+
     QString m_startDate;
     QString m_endDate;
 
     int m_chartViewID;
     QList<QPointF> m_strategyData;
     QList<strategy_ceil> m_strategy;
+    QString m_strategyName;
     QList<QList<QPointF>> m_tableDataList;
     QList<int> m_buyCountList;
 

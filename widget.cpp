@@ -39,6 +39,9 @@ Widget::Widget(QWidget *parent) :
     ui->chooseStartDate->setCalendarPopup (true);
     ui->chooseEndDate->setCalendarPopup (true);
 
+    ui->chooseStartDate->setDate (QDate(2016, 1, 1));
+    ui->chooseEndDate->setDate (QDate(2017, 1, 1));
+
     setMacdTime();
     setTableView();
     setDataFrequency();
@@ -102,7 +105,8 @@ void Widget::on_historyData_clicked()
     } else if (m_currStrategy.size () == 0) {
         qDebug() << "Strategy is empty!";
     } else {
-        QWidget* charView = new ChartForm(0, m_chartViews.count(), startDate, endDate, timeType, m_currStrategy,
+        QWidget* charView = new ChartForm(0, m_chartViews.count(), startDate, endDate, timeType,
+                                          m_currStrategy, m_strategyName,
                                           EVA1Time, EVA2Time, DIFFTime);
         charView->show ();
         m_chartViews.append (charView);
@@ -120,6 +124,7 @@ void Widget::on_tableView_clicked(const QModelIndex &index)
 {
 //    ui->historyData->setEnabled (false);
     int intIndex = index.row ();
+    m_strategyName = m_strategyModel->getTableModel () ->item (intIndex)->text ();
     QString strategyFullFileName = m_strategyModel->getStrategyFullFileName (intIndex);
     m_currStrategy = m_excel->readStrategyDataFromExcel (strategyFullFileName);
     for (int i = 0; i < m_currStrategy.size(); ++i) {

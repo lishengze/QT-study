@@ -127,7 +127,7 @@
         <item row="3" column="0">
          <widget class="QLabel" name="label">
           <property name="text">
-           <string>选择数据频率</string>
+           <string>时间频率：</string>
           </property>
          </widget>
         </item>

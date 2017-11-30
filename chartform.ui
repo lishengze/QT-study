@@ -28,22 +28,33 @@
      <height>761</height>
     </rect>
    </property>
-   <layout class="QGridLayout" name="gridLayout"/>
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="topMargin">
+     <number>20</number>
+    </property>
+   </layout>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QComboBox" name="themeComboBox">
    <property name="geometry">
     <rect>
-     <x>9</x>
-     <y>9</y>
-     <width>158</width>
-     <height>25</height>
+     <x>20</x>
+     <y>10</y>
+     <width>100</width>
+     <height>20</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
-     <widget class="QComboBox" name="themeComboBox"/>
-    </item>
-   </layout>
+   <property name="minimumSize">
+    <size>
+     <width>100</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>100</width>
+     <height>16777215</height>
+    </size>
+   </property>
   </widget>
  </widget>
  <resources/>
