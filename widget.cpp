@@ -69,7 +69,8 @@ Widget::~Widget()
 }
 
 void Widget::setTableView () {
-    m_strategyFileDir = "E:/github/study/QT/Creator/chapter4/layout";
+//    m_strategyFileDir = "E:/github/study/QT/Creator/chapter4/layout";
+    m_strategyFileDir = "D:/github/workprogram/client-qt";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 

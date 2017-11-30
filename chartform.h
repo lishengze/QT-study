@@ -43,6 +43,8 @@ public:
     void setTestView();
 
     void setStrategyData();
+    void setVotRunoverData();
+
     QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
     QList<double> getChartYvalueRange(QList<QPointF> pointList );
 
@@ -60,10 +62,12 @@ private:
     QChartView* m_strategyChartView;
     QChart* m_strategyChart;
     Callout *m_strategyTooltip;
+    QList<QPointF> m_strategyData;
 
     QChartView* m_votrunoverChartView;
     QChart* m_votrunoverChart;
     Callout *m_votrunoverTooltip;
+    QList<QPointF> m_votrunoverData;
 
     QChartView* m_macdChartView;
     QChart* m_macdChart;
@@ -77,7 +81,7 @@ private:
     QString m_endDate;
 
     int m_chartViewID;
-    QList<QPointF> m_strategyData;
+
     QList<strategy_ceil> m_strategy;
     QString m_strategyName;
     QList<QList<QPointF>> m_tableDataList;
