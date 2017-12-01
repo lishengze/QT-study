@@ -70,7 +70,8 @@ Widget::~Widget()
 
 void Widget::setTableView () {
 //    m_strategyFileDir = "E:/github/study/QT/Creator/chapter4/layout";
-    m_strategyFileDir = "D:/github/workprogram/client-qt";
+//    m_strategyFileDir = "D:/github/workprogram/client-qt";
+    m_strategyFileDir = "E:/github/work-program/client/client-qt";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
@@ -79,9 +80,9 @@ void Widget::setTableView () {
 }
 
 void Widget::setMacdTime () {
- ui->EMA1TimeSpinBox->setValue (12);
- ui->EMA2TimeSpinBox->setValue (26);
- ui->DIFFTimeSpinBox->setValue (9);
+    ui->EMA1TimeSpinBox->setValue (12);
+    ui->EMA2TimeSpinBox->setValue (26);
+    ui->DIFFTimeSpinBox->setValue (9);
 }
 
 void Widget::setDataFrequency () {

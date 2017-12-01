@@ -9,9 +9,13 @@
 #include <QList>
 #include <QPointF>
 #include <QComboBox>
+#include <QGraphicsSimpleTextItem>
+#include <QMouseEvent>
+#include <QResizeEvent>
 #include "strategy.h"
 #include "callout.h"
 #include "database.h"
+#include "macd.h"
 
 namespace Ui {
 class ChartForm;
@@ -31,22 +35,26 @@ public:
               QString databaseName="MarketData");
 
     void initData(QList<strategy_ceil> strategyList, QString databaseName, QString timeType);
+    void setStrategyData();
+    void setVotRunoverData();
+    void setMacdData();
 
     void setLayout ();
-
-    void setOpenPriceChartView();
     void setVotRunoverChartView();
     void setStrategyChartView();
     void setMACDChartView();
     void setThemeBox();
-
     void setTestView();
-
-    void setStrategyData();
-    void setVotRunoverData();
+    void setTextItem();
 
     QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
     QList<double> getChartYvalueRange(QList<QPointF> pointList );
+
+
+protected:
+    void resizeEvent(QResizeEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    bool eventFilter (QObject *watched, QEvent *event);
 
 public slots:
     void macdToolTip(QPointF point, bool state);
@@ -72,6 +80,7 @@ private:
     QChartView* m_macdChartView;
     QChart* m_macdChart;
     Callout *m_macdTooltip;
+    QList<MACD> m_macdData;
 
     QChartView* m_testChartView;
     QChart* m_testChart;
@@ -96,6 +105,12 @@ private:
     int m_EVA2Time;
     int m_DIFFTime;
 
+    QGraphicsSimpleTextItem* m_timeItem;
+    QGraphicsSimpleTextItem* m_targetItem;
+    QGraphicsSimpleTextItem* m_votrunoverItem;
+    QGraphicsSimpleTextItem* m_diffItem;
+    QGraphicsSimpleTextItem* m_deaItem;
+    QGraphicsSimpleTextItem* m_macdItem;
 
 };
 
