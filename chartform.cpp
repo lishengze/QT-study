@@ -109,6 +109,7 @@ void ChartForm::setLayout () {
     ui->gridLayout->addWidget (m_strategyChartView, 1, 0);
     ui->gridLayout->addWidget (m_votrunoverChartView, 2, 0);
     ui->gridLayout->addWidget (m_macdChartView, 3, 0);
+    ui->groupBox->installEventFilter(this);
     this->setMouseTracking(true);
 //    setTextItem();
 }
@@ -145,14 +146,18 @@ void ChartForm::setStrategyChartView () {
 //    m_strategyChart->legend()->hide();
     m_strategyChart->legend()->setAlignment(Qt::AlignRight);
 
-    m_strategyChartView = new QChartView(m_strategyChart);
+//    m_strategyChartView = new QChartView(m_strategyChart, this);
+    m_strategyChartView = new QMyChartView(m_strategyChart, this);
     m_strategyChartView->setRenderHint(QPainter::Antialiasing);
+    m_strategyChartView->installEventFilter(this);
+    m_strategyChartView->setMouseTracking(true);
 
     m_strategyChart->addAxis (axisX, Qt::AlignBottom);
     series->attachAxis (axisX);
     m_strategyChart->addAxis (axisY, Qt::AlignLeft);
     series->attachAxis (axisY);
 
+//    connect(m_strategyChart,  SIGNAL(hovered(QPointF,bool)), this, SLOT(strategyToolTip(QPointF,bool)));
 //    connect (series, SIGNAL(hovered(QPointF,bool)), this, SLOT(strategyToolTip(QPointF,bool)));
 }
 
@@ -178,11 +183,12 @@ void ChartForm::setVotRunoverChartView () {
     m_votrunoverChart = new QChart();
     m_votrunoverChart->addSeries (series);
     m_votrunoverChart->setTitle("volume of transaction");
-//    m_votrunoverChart->legend()->hide();
     m_votrunoverChart->legend()->setAlignment(Qt::AlignRight);
 
-    m_votrunoverChartView = new QChartView(m_votrunoverChart);
+    m_votrunoverChartView = new QMyChartView(m_votrunoverChart, this);
     m_votrunoverChartView->setRenderHint(QPainter::Antialiasing);
+    m_votrunoverChartView->installEventFilter(this);
+    m_votrunoverChartView->setMouseTracking(true);
 
     m_votrunoverChart->addAxis (axisX, Qt::AlignBottom);
     series->attachAxis (axisX);
@@ -227,8 +233,10 @@ void ChartForm::setMACDChartView () {
     m_macdChart->setTitle(QString::fromLocal8Bit("MACD Chart"));
     m_macdChart->legend()->setAlignment(Qt::AlignRight);
 
-    m_macdChartView = new QChartView(m_macdChart);
+    m_macdChartView = new QMyChartView(m_macdChart, this);
     m_macdChartView->setRenderHint(QPainter::Antialiasing);
+    m_macdChartView->installEventFilter(this);
+    m_macdChartView->setMouseTracking(true);
 
     m_macdChart->addAxis(axisX, Qt::AlignBottom);
     diffSeries->attachAxis(axisX);
@@ -322,35 +330,59 @@ void ChartForm::setTextItem () {
 }
 
 void ChartForm::mouseMoveEvent (QMouseEvent *event) {
-    QPoint curPoint = event->pos ();
-    QPointF curStrategyChartChartPoint = m_strategyChart->mapToValue (curPoint);
-    QPointF curVotrunoverChartChartPoint = m_votrunoverChart->mapToValue (curPoint);
-    QPointF curMacdChartChartPoint = m_macdChart->mapToValue (curPoint);
-    qDebug() << "oriPoint: " << curPoint;
-    qDebug() << "curStrategyChartChartPoint: " << curStrategyChartChartPoint;
-    qDebug() << "curVotrunoverChartChartPoint: " << curVotrunoverChartChartPoint;
-    qDebug() << "curMacdChartChartPoint: " << curMacdChartChartPoint;
+//    QPoint curPoint = event->pos ();
+//    qDebug() << "ChartForm mouseMoveEvent!" << curPoint;
+//    QPointF curStrategyChartChartPoint = m_strategyChart->mapToValue (curPoint);
+//    qDebug() << "curStrategyChartChartPoint: " << curStrategyChartChartPoint;
+//    QPointF curVotrunoverChartChartPoint = m_votrunoverChart->mapToValue (curPoint);
+//    QPointF curMacdChartChartPoint = m_macdChart->mapToValue (curPoint);
+//    qDebug() << "curVotrunoverChartChartPoint: " << curVotrunoverChartChartPoint;
+//    qDebug() << "curMacdChartChartPoint: " << curMacdChartChartPoint;
 }
 
 bool ChartForm::eventFilter (QObject *watched, QEvent *event) {
-    qDebug() << "event";
     if (event->type () == QEvent::MouseMove) {
-        qDebug() << "MouseMove";
-//        QMouseEvent *mouseEvent = event;
-//        QPoint curPoint = mouseEvent->pos ();
-//        QPointF curStrategyChartChartPoint = m_strategyChart->mapToValue (curPoint);
-//        QPointF curVotrunoverChartChartPoint = m_votrunoverChart->mapToValue (curPoint);
-//        QPointF curMacdChartChartPoint = m_macdChart->mapToValue (curPoint);
-//        qDebug() << "oriPoint: " << curPoint;
-//        qDebug() << "curStrategyChartChartPoint: " << curStrategyChartChartPoint;
-//        qDebug() << "curVotrunoverChartChartPoint: " << curVotrunoverChartChartPoint;
-//        qDebug() << "curMacdChartChartPoint: " << curMacdChartChartPoint;
+        QMouseEvent *mouseEvent = (QMouseEvent *)event;
+        QPoint curPoint = mouseEvent->pos ();
+        if (watched == m_strategyChartView) {
+            QPointF curStrategyChartChartPoint = m_strategyChart->mapToValue (curPoint);
+            qDebug() << "curStrategyChartChartPoint: " << curStrategyChartChartPoint;
+        }
+        if (watched == m_votrunoverChartView) {
+            QPointF curVotrunoverChartChartPoint = m_votrunoverChart->mapToValue (curPoint);
+            qDebug() << "curVotrunoverChartChartPoint: " << curVotrunoverChartChartPoint;
+        }
+        if (watched == m_macdChartView) {
+            QPointF curMacdChartChartPoint = m_macdChart->mapToValue (curPoint);
+            qDebug() << "curMacdChartChartPoint: " << curMacdChartChartPoint;
+        }
     }
     return QWidget::eventFilter (watched, event);
 }
 
-void ChartForm::resizeEvent(QResizeEvent *event) {
-    qDebug() << event;
+//void ChartForm::resizeEvent(QResizeEvent *event) {
+//    qDebug() << event;
+//}
+
+void ChartForm::strategyToolTip (QPointF point, bool state)
+{
+    qDebug() << "Strategy Hover";
+    if (m_strategyTooltip == 0)
+        m_strategyTooltip = new Callout(m_strategyChart);
+
+    if (state) {
+        int currIndex = qFloor (point.x());
+        QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(m_strategyData.at(currIndex).x ());
+        QString xValue = curDatetime.toString ("yyyy-MM-dd h:mm");
+        double yValue = m_strategyData.at(currIndex).y ();
+        m_strategyTooltip->setText(QString("X: %1 \nY: %2 ").arg(xValue).arg(yValue));
+        m_strategyTooltip->setAnchor(point);
+        m_strategyTooltip->setZValue(11);
+        m_strategyTooltip->updateGeometry();
+        m_strategyTooltip->show();
+    } else {
+        m_strategyTooltip->hide();
+    }
 }
 
 void ChartForm::macdToolTip (QPointF point, bool state)
@@ -374,26 +406,6 @@ void ChartForm::macdToolTip (QPointF point, bool state)
         m_macdTooltip->show();
     } else {
         m_macdTooltip->hide();
-    }
-}
-
-void ChartForm::strategyToolTip (QPointF point, bool state)
-{
-    if (m_strategyTooltip == 0)
-        m_strategyTooltip = new Callout(m_strategyChart);
-
-    if (state) {
-        int currIndex = qFloor (point.x());
-        QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(m_strategyData.at(currIndex).x ());
-        QString xValue = curDatetime.toString ("yyyy-MM-dd h:mm");
-        double yValue = m_strategyData.at(currIndex).y ();
-        m_strategyTooltip->setText(QString("X: %1 \nY: %2 ").arg(xValue).arg(yValue));
-        m_strategyTooltip->setAnchor(point);
-        m_strategyTooltip->setZValue(11);
-        m_strategyTooltip->updateGeometry();
-        m_strategyTooltip->show();
-    } else {
-        m_strategyTooltip->hide();
     }
 }
 

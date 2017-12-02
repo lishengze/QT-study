@@ -2,21 +2,24 @@
 #define QMYCHARTVIEW_H
 #include <QChartView>
 #include <QWidget>
+#include <QChart>
 #include <QMouseEvent>
+#include <qchartview.h>
+//#include "chartform.h"
 
-QT_BEGIN_NAMESPACE
-class QChartView;
-QT_END_NAMESPACE
+class ChartForm;
 
-class QMyChartView
+class QMyChartView: public QT_CHARTS_NAMESPACE::QChartView
 {
 public:
     QMyChartView(QWidget *parent = Q_NULLPTR);
+    QMyChartView(QT_CHARTS_NAMESPACE::QChart *chart, QWidget *parent = Q_NULLPTR);
 
 protected:
-
     void mouseMoveEvent(QMouseEvent *event);
 
+private:
+    QWidget* m_parent;
 };
 
 #endif // QMYCHARTVIEW_H

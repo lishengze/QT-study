@@ -16,6 +16,7 @@
 #include "callout.h"
 #include "database.h"
 #include "macd.h"
+#include "qmychartview.h"
 
 namespace Ui {
 class ChartForm;
@@ -52,7 +53,7 @@ public:
 
 
 protected:
-    void resizeEvent(QResizeEvent *event);
+//    void resizeEvent(QResizeEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     bool eventFilter (QObject *watched, QEvent *event);
 
@@ -67,17 +68,18 @@ private:
     QChartView* m_openPriceChartView;
     QChart* m_openPriceChart;
 
-    QChartView* m_strategyChartView;
+//    QChartView* m_strategyChartView;
+    QMyChartView* m_strategyChartView;
     QChart* m_strategyChart;
     Callout *m_strategyTooltip;
     QList<QPointF> m_strategyData;
 
-    QChartView* m_votrunoverChartView;
+    QMyChartView* m_votrunoverChartView;
     QChart* m_votrunoverChart;
     Callout *m_votrunoverTooltip;
     QList<QPointF> m_votrunoverData;
 
-    QChartView* m_macdChartView;
+    QMyChartView* m_macdChartView;
     QChart* m_macdChart;
     Callout *m_macdTooltip;
     QList<MACD> m_macdData;

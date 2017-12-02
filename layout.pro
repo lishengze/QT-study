@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     excel.cpp \
     tabledata.cpp \
     macd.cpp \
-    qmychartview.cpp
+    qmychartview.cpp \
+    testform.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -40,8 +41,10 @@ HEADERS  += widget.h \
     excel.h \
     tabledata.h \
     macd.h \
-    qmychartview.h
+    qmychartview.h \
+    testform.h
 
 FORMS    += widget.ui \
-    chartform.ui
+    chartform.ui \
+    testform.ui
 QT += charts
