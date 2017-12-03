@@ -44,17 +44,20 @@ public:
     void setVotRunoverChartView();
     void setStrategyChartView();
     void setMACDChartView();
+
+    void setTheme();
     void setThemeBox();
     void setTestView();
     void setTextItem();
+    void setMouseMoveValue(int currIndex);
 
     QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
     QList<double> getChartYvalueRange(QList<QPointF> pointList );
 
 
 protected:
-//    void resizeEvent(QResizeEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
+    void resizeEvent(QResizeEvent *event);
+//    void mouseMoveEvent(QMouseEvent *event);
     bool eventFilter (QObject *watched, QEvent *event);
 
 public slots:
@@ -64,7 +67,9 @@ public slots:
 
 private:
     Ui::ChartForm *ui;
+    QString m_title;
 
+    int m_chartXaxisTickCount;
     QChartView* m_openPriceChartView;
     QChart* m_openPriceChart;
 
@@ -99,6 +104,7 @@ private:
     QList<int> m_buyCountList;
 
     QString m_timeType;
+    QString m_timeTypeFormat;
     QString m_databaseName;
     Database* m_database;
     QString m_dbhost;

@@ -21,4 +21,6 @@ void testComputeMACD();
 
 void testTranstime();
 
+void testGetNumbList();
+
 #endif // TEST_H

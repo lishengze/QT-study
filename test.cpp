@@ -138,3 +138,11 @@ void testTranstime() {
     qDebug() << "offSecs: " << offSecs;
     qDebug() << "transedTime: " << dateTime;
 }
+
+void testGetNumbList() {
+    int dataNumb = 5;
+    int interval = 3;
+    qDebug() << "dataNumb: " << dataNumb;
+    qDebug() << "interval: " << interval;
+    qDebug() << "List: " << getNumbList(dataNumb, interval);
+}

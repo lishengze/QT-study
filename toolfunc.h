@@ -24,4 +24,6 @@ QList<double> getMACDRange(QList<MACD> oriData);
 
 QString transOffsetSecondsToTime(qint64 offSecs);
 
+QList<int> getNumbList(int dataNumb, int desNumb);
+
 #endif // TOOLFUNC_H

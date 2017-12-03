@@ -129,3 +129,39 @@ QString transOffsetSecondsToTime(qint64 offSecs) {
     tmpDatetime = tmpDatetime.toOffsetFromUtc(offSecs);
     return tmpDatetime.toString ();
 }
+
+QList<int> getNumbList(int dataNumb, int desNumb) {
+    QList<int> result;
+    int interval = (dataNumb-1) / (desNumb-1);
+    for (int i = interval; i < dataNumb; i += interval) {
+        result.append(i);
+    }
+    return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
