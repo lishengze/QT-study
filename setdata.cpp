@@ -94,7 +94,7 @@ QList<QPointF> getTimeData(QString startDate, QString endDate, QString keyValue,
 void testSetTimeData(QLineSeries* series) {
     int date[3] = {20170101, 20170202, 20170303};
     int time[3] = {93000, 103000, 113000};
-    float yValue[3] = {12.1, 12.2, 12.3};
+    double yValue[3] = {12.1, 12.2, 12.3};
 
     for (int i = 0; i < 3; ++i) {
         QList<int> tmpDate = getDateList(date[i]);

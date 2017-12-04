@@ -46,9 +46,10 @@ public:
     void setMACDChartView();
 
     void setTheme();
-    void setThemeBox();
+
     void setTestView();
-    void setTextItem();
+//    void setThemeBox();
+//    void setTextItem();
     void setMouseMoveValue(int currIndex);
 
     QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
@@ -56,14 +57,14 @@ public:
 
 
 protected:
-    void resizeEvent(QResizeEvent *event);
+//    void resizeEvent(QResizeEvent *event);
 //    void mouseMoveEvent(QMouseEvent *event);
     bool eventFilter (QObject *watched, QEvent *event);
 
 public slots:
-    void macdToolTip(QPointF point, bool state);
-    void strategyToolTip(QPointF point, bool state);
-    void votRunoverToolTip(QPointF point, bool state);
+//    void macdToolTip(QPointF point, bool state);
+//    void strategyToolTip(QPointF point, bool state);
+//    void votRunoverToolTip(QPointF point, bool state);
 
 private:
     Ui::ChartForm *ui;
@@ -90,6 +91,7 @@ private:
     QList<MACD> m_macdData;
 
     QChartView* m_testChartView;
+//    QMyChartView* m_testChartView;
     QChart* m_testChart;
     Callout *m_testTooltip;
 

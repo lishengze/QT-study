@@ -14,7 +14,8 @@ void setCode() {
 
 int main(int argc, char *argv[])
 {
-    setCode();
+//    setCode();
+    QApplication::addLibraryPath(".");
     QApplication a(argc, argv);
     Widget w;
     w.show();
@@ -29,6 +30,7 @@ int main(int argc, char *argv[])
 //    testGetExcelFileName();
 //    testRemovePathName();
 //    testExcel();
+//    testReadStrategyDataFromExcel();
 //    testSortPointList ();
 //    testMergeSortedList();
 //    testTableData();

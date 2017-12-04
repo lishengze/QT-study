@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <QDateTime>
 #include <QDebug>
+#include <QMessageBox>
+#include <QWidget>
 #include "macd.h"
 using std::sort;
 using std::max;
@@ -139,7 +141,9 @@ QList<int> getNumbList(int dataNumb, int desNumb) {
     return result;
 }
 
-
+void OutputMsg(QWidget* window,QString msg) {
+    QMessageBox::information(window, "TableDataNumb", msg);
+}
 
 
 

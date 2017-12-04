@@ -3,6 +3,9 @@
 
 strategy_ceil::strategy_ceil(QString secode, int buyCount):
     m_buyCount(buyCount){
+    while (secode.size ()< 6) {
+        secode.insert (0,'0');
+    }
     if (secode.startsWith ("6")) {
         m_secode = "SH" + secode;
     } else {

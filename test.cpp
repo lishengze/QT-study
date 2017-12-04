@@ -34,7 +34,7 @@ void testRemovePathName () {
 }
 
 void testReadStrategyDataFromExcel() {
-    QString fullFileName = "E:/github/study/QT/Creator/chapter4/layout/test.xlsx";
+    QString fullFileName = "E:/github/work-program/client/client-qt/test.xlsx";
     QList<strategy_ceil> m_currStrategy = readStrategyDataFromExcel (fullFileName);
     for (int i = 0; i < m_currStrategy.size(); ++i) {
         qDebug() << "secode: " << m_currStrategy.at(i).m_secode
