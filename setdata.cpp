@@ -11,6 +11,7 @@
 #include <QPointF>
 #include <QLineSeries>
 #include <QDateTime>
+#include <QProcess>
 #include "setdata.h"
 #include "toolfunc.h"
 using namespace std;
@@ -184,7 +185,7 @@ void readBasicDataFromExcel(QString excelFilePath) {
 QList<strategy_ceil> readStrategyDataFromExcel(QString excelFilePath) {
     qDebug() << "open file " << excelFilePath;
     QAxObject excel("Excel.Application");  // 花费时间最长;
-    excel.setProperty("Visible", false);  // 花费时间次之,其余操作不花时间;
+    excel.dynamicCall("SetVisible (bool Visible)","false"); //不显示窗体  // 花费时间次之,其余操作不花时间;
     QAxObject *work_books = excel.querySubObject("WorkBooks");
     work_books->dynamicCall("Open (const QString&)", QString(excelFilePath));
 
@@ -208,9 +209,12 @@ QList<strategy_ceil> readStrategyDataFromExcel(QString excelFilePath) {
             QString secode = varLstData[0].toString ();          //获取股票代码
             int buyCount = varLstData[1].toInt ();               //获取购买量
             strategy.append (strategy_ceil(secode, buyCount));
+            qDebug() << "secode: " <<secode << "  buyCount: " << buyCount;
         }
     }
+    activate_work_book->dynamicCall("Close(Boolean)", false);  //关闭文件
     work_books->dynamicCall ("Close()");
+    excel.dynamicCall("Quit()");  //退出
     return strategy;
 }
 
@@ -290,4 +294,99 @@ QList<QString> getExcelFileName(QString dirName) {
         filaPathList.append (fileInfo->at(i).filePath());
     }
     return filaPathList;
+}
+
+/**连接sql server数据库
+  *数据库名：abc
+  *表名：SQL_2000
+  *用户名：sa
+  *密码：123
+  *端口号：(默认)1433
+*/
+void connectSql(QString sIp, QString iPort,  QString sDbNm, QString sUserNm, QString sPwd)
+{
+    QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", "1");
+    QString dsn = QString("Driver={sql server};SERVER=%1;PORT=%2;DATABASE=%3;UID=%4;PWD=%5;")
+                  .arg(sIp)
+                  .arg(iPort)
+                  .arg(sDbNm)
+                  .arg(sUserNm)
+                  .arg(sPwd);
+    db.setDatabaseName(dsn);
+
+    /*连接sql 2000*/
+    bool r = db.open();
+    if (r)
+    {
+        qDebug() << "SQL Server Connect OK!";
+
+//        /* 计算当前表中id*/
+//        QSqlQuery query1 = QSqlQuery(db);
+//        query1.clear();
+//        query1.prepare("select top 1 ID from SQL_2000 order by ID desc");
+//        bool a = query1.exec();
+//        int id;
+//        if (a)
+//        {
+//            while(query1.next())
+//            {
+//                id = query1.value(0).toInt();
+//            }
+//        }
+
+//        /*插入数据*/
+//        QSqlQuery query2 = QSqlQuery(db);
+//        QString sq1 = QObject::tr("insert into SQL_2000(Id,Ip,Port,UserName,Password,DbType,DbName)"
+//                                  "values (?, ?, ?, ?, ?, ?, ?)");
+//        bool b = query2.prepare(sq1);
+//        if(b)
+//        {
+//            qDebug() << "insert data success!";
+//        }
+//        query2.bindValue(0, id+1);
+//        query2.bindValue(1, sIp);
+//        query2.bindValue(2, iPort);
+//        query2.bindValue(3, sUserNm);
+//        query2.bindValue(4, sPwd);
+//        query2.bindValue(5, sDbType);
+//        query2.bindValue(6, sDbNm);
+
+        /*查询数据*/
+        QSqlQuery query3 = QSqlQuery(db);
+        query3.prepare("select * from [TestRemote].[dbo].[BasicInfo]");
+        bool c = query3.exec();
+        if (c)
+        {
+            qDebug() << "select data success!";
+            while(query3.next())
+            {
+                qDebug() << query3.value(0).toString ();
+                qDebug() << query3.value(1).toString ();
+            }
+        }
+        else
+        {
+            qDebug() << query3.lastError().text().data();
+        }
+
+//        /*删除数据*/
+//        QSqlQuery query4 = QSqlQuery(db);
+//        query4.prepare("delete from SQL_2000 where Id=1");
+//        bool d = query4.exec();
+//        if (d)
+//        {
+//            qDebug() << "delete data success!";
+//        }
+//        else
+//        {
+//            qDebug() << query3.lastError().text().data();
+//        }
+    }
+    else
+    {
+//        QMessageBox::information(this, tr("提示"), tr("Sql Server数据库连接失败！"), tr("确定"));
+        qDebug() <<"error_SqlServer:\n" << db.lastError().text();
+    }
+
+    db.close();
 }

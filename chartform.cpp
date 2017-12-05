@@ -55,10 +55,10 @@ ChartForm::ChartForm(QWidget *parent, int chartViewID,
 
 void ChartForm::initData (QList<strategy_ceil> strategyList, QString databaseName, QString timeType) {
     m_strategy = strategyList;
-    QMessageBox::information(this, "Title", QString("m_strategyData.size: %1").arg(m_strategy.size ()));
+//    QMessageBox::information(this, "Title", QString("m_strategyData.size: %1").arg(m_strategy.size ()));
     m_dbhost = "192.168.211.165";
 //    m_dbhost = "localhost";
-    m_database = new Database(QString(m_chartViewID), m_dbhost);
+    m_database = new Database(this, QString(m_chartViewID), m_dbhost);
     m_databaseName = databaseName + "_" + timeType;
 
     if (m_timeType.contains("m") && m_timeType != "month") {
@@ -81,23 +81,19 @@ void ChartForm::setLayout () {
     ui->Title_Label->setText(m_title);
 
     setStrategyChartView();
-//    setVotRunoverChartView ();
-//    setMACDChartView();
-//    setTheme();
+    setVotRunoverChartView ();
+    setMACDChartView();
+    setTheme();
 
     if (NULL != m_strategyChartView) {
         ui->gridLayout->addWidget (m_strategyChartView, 1, 0);
     }
-
-//    QMessageBox::information(this, "Title", "ui->gridLayout->addWidget (m_strategyChartView, 1, 0) succeefully!");
-//    if (NULL != m_votrunoverChartView) {
-//        ui->gridLayout->addWidget (m_votrunoverChartView, 2, 0);
-//    }
-//    QMessageBox::information(this, "Title", "ui->gridLayout->addWidget (m_votrunoverChartView, 2, 0) succeefully!");
-//    if (NULL != m_macdChartView) {
-//        ui->gridLayout->addWidget (m_macdChartView, 3, 0);
-//    }
-//    QMessageBox::information(this, "Title", "ui->gridLayout->addWidget (m_macdChartView, 3, 0) succeefully!");
+    if (NULL != m_votrunoverChartView) {
+        ui->gridLayout->addWidget (m_votrunoverChartView, 2, 0);
+    }
+    if (NULL != m_macdChartView) {
+        ui->gridLayout->addWidget (m_macdChartView, 3, 0);
+    }
 
 //    setTestView();
 //    if (NULL != m_testChartView) {
@@ -116,7 +112,7 @@ void ChartForm::setStrategyData() {
         QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "TCLOSE", tableName, m_databaseName);
         tableDataList.append (sortPointFList(curTableData));
         buyCountList.append (buyCount);
-        QMessageBox::information(this, "TableDataNumb", QString("tableName: %1, datacount: %2").arg(tableName).arg(curTableData.size ()));
+//        QMessageBox::information(this, "TableDataNumb", QString("tableName: %1, datacount: %2").arg(tableName).arg(curTableData.size ()));
         qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
     }
     m_strategyData = computeStrategyData(tableDataList, buyCountList);
@@ -145,7 +141,7 @@ void ChartForm::setMacdData () {
 }
 
 void ChartForm::setStrategyChartView () {
-    QMessageBox::information(this, "Title", QString("m_strategyData.size: %1").arg(m_strategyData.size ()));
+//    QMessageBox::information(this, "Title", QString("m_strategyData.size: %1").arg(m_strategyData.size ()));
     if (m_strategyData.size () == 0) {
         ErrorMessage ("No strategy Data!");
         return ;

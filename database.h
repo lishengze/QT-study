@@ -4,16 +4,25 @@
 #include <QList>
 #include <QPointF>
 #include <QSqlDatabase>
+#include <QWidget>
 #include "tabledata.h"
 
 class Database
 {
 public:
-    Database(QString connName="0", QString host="localhost", QString userName="sa", QString userPwd="sasa",
+    Database(QWidget* window, QString connName="0", QString host="localhost",
+             QString userName="sa", QString userPwd="sasa",
+             QString connDbName = "master", QString port ="1433",
              QString dataSourceName="SqlServer", QString databaseDriver="QODBC");
+
+    Database(QString connName="0", QString host="localhost",
+             QString userName="sa", QString userPwd="sasa",
+             QString connDbName = "master", QString port ="1433",
+             QString dataSourceName="SqlServer", QString databaseDriver="QODBC");
+
     ~Database();
 
-    QSqlDatabase initDatabase();
+    void initDatabase();
     QSqlDatabase getDatabase();
     bool isDatabaseOpen();
 
@@ -30,8 +39,13 @@ private:
     QString m_hostName;
     QString m_userName;
     QString m_userPwd;
+    QString m_port;
+    QString m_connDbName;
     QString m_dataSourceName;
     QString m_databaseDriver;
+    QWidget* m_window;
+
+public:
     QSqlDatabase m_db;
     bool m_bdatabaseOpen;
 };

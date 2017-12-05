@@ -23,4 +23,9 @@ void testTranstime();
 
 void testGetNumbList();
 
+void testConnectDatabase();
+
+void testDBClass();
+
+
 #endif // TEST_H

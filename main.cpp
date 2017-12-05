@@ -3,6 +3,7 @@
 #include "test.h"
 #include "testform.h"
 #include <QTextCodec>
+#include <QProcess>
 
 void setCode() {
 //    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
@@ -12,13 +13,18 @@ void setCode() {
     QTextCodec::codecForName("GBK")->toUnicode("中文");
 }
 
+void setLibPath() {
+    QApplication::addLibraryPath(".");
+    QApplication::addLibraryPath("./lib");
+}
+
 int main(int argc, char *argv[])
 {
 //    setCode();
-    QApplication::addLibraryPath(".");
+    setLibPath();
     QApplication a(argc, argv);
-    Widget w;
-    w.show();
+//    Widget w;
+//    w.show();
 
 //    TestForm testForm;
 //    testForm.show();
@@ -26,7 +32,7 @@ int main(int argc, char *argv[])
 //    chartDialog dialog;
 //    dialog.show ();
 
-//    testReadExcelData ();
+    testReadExcelData ();
 //    testGetExcelFileName();
 //    testRemovePathName();
 //    testExcel();
@@ -37,6 +43,10 @@ int main(int argc, char *argv[])
 //    testComputeMACD ();
 //    testTranstime();
 //    testGetNumbList();
+//    testConnectDatabase();
+//    testDBClass();
+    QProcess process;
+    process.start("TASKKILL /F /T /im EXCEL.EXE");
     return a.exec();
 }
 

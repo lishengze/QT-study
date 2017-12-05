@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <iostream>
 #include <QDateTime>
+#include <QSqlError>
 #include "test.h"
 #include "setdata.h"
 #include "toolfunc.h"
@@ -10,11 +11,12 @@
 #include "tabledata.h"
 #include "excel.h"
 #include "macd.h"
+#include "database.h"
 
 using namespace  std;
 
 void testReadExcelData () {
-    QString excelFilePath = "E:/github/study/QT/Creator/chapter4/layout/test.xlsx";
+    QString excelFilePath = "D:/strategy/test.xlsx";
 //    readBasicDataFromExcel(excelFilePath);
     readStrategyDataFromExcel(excelFilePath);
 }
@@ -145,4 +147,41 @@ void testGetNumbList() {
     qDebug() << "dataNumb: " << dataNumb;
     qDebug() << "interval: " << interval;
     qDebug() << "List: " << getNumbList(dataNumb, interval);
+}
+
+void testConnectDatabase() {
+    QString server = "192.168.211.165";
+    QString port = "1433";
+    QString dbName = "master";
+    QString userName = "sa";
+    QString userPwd = "sasa";
+    connectSql (server, port, dbName, userName, userPwd);
+}
+
+void testDBClass() {
+    QString connName = "0";
+    QString server = "192.168.211.165";
+    Database dbObj = Database(connName, server);
+
+//    QSqlDatabase sqlDb = dbObj.getDatabase ();
+
+    if(dbObj.m_db.open ()) {
+        QSqlQuery query3 = QSqlQuery(dbObj.m_db);
+        QString sqlStr = "select * from [TestRemote].[dbo].[BasicInfo]";
+        bool c = query3.exec(sqlStr);
+        if (c)
+        {
+            qDebug() << "select data success!";
+            while(query3.next())
+            {
+                qDebug() << query3.value(0).toString ();
+                qDebug() << query3.value(1).toString ();
+            }
+        }
+        else
+        {
+            qDebug() << query3.lastError().text().data();
+        }
+    }
+
 }
