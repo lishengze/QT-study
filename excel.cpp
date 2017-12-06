@@ -1,15 +1,19 @@
 #include <QDebug>
 #include "excel.h"
-
-//QAxObject g_excel("Excel.Application");
+#include "toolfunc.h"
 
 Excel::Excel():
     m_excel(NULL),
     m_work_books(NULL)
 {
+    QList<QString> pidListBeforeCreate = getEXCELPidList ();
     m_excel = new QAxObject("Excel.Application");  // 花费时间最长;
+    QList<QString> pidListAfterCreate = getEXCELPidList ();
     m_excel->setProperty("Visible", false);        // 花费时间次之,其余操作不花时间;
+    m_createdPidList = getAddedList(pidListBeforeCreate, pidListAfterCreate);
     m_work_books = m_excel->querySubObject("WorkBooks");
+
+    qDebug() << "pidDeltaList: " << m_createdPidList;
 }
 
 Excel::~Excel () {
@@ -18,12 +22,10 @@ Excel::~Excel () {
         delete m_excel;
         m_excel = NULL;
     }
-//    g_excel.dynamicCall("Quit(void)");
-//    if (NULL != m_work_books) {
-//        m_work_books->dynamicCall ("Quit()");
-////        delete m_work_books;
-//        m_work_books = NULL;
-//    }
+
+    for (int i = 0; i < m_createdPidList.size (); ++i) {
+        killProcessByPid (m_createdPidList[i]);
+    }
 }
 
 QList<strategy_ceil> Excel::readStrategyDataFromExcel(QString excelFilePath) {

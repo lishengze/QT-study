@@ -4,6 +4,7 @@
 #include "testform.h"
 #include <QTextCodec>
 #include <QProcess>
+#include "processfunc.h"
 
 void setCode() {
 //    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
@@ -20,33 +21,12 @@ void setLibPath() {
 
 int main(int argc, char *argv[])
 {
-//    setCode();
     setLibPath();
     QApplication a(argc, argv);
-//    Widget w;
-//    w.show();
+    Widget w;
+    w.show();
 
-//    TestForm testForm;
-//    testForm.show();
-
-//    chartDialog dialog;
-//    dialog.show ();
-
-    testReadExcelData ();
-//    testGetExcelFileName();
-//    testRemovePathName();
-//    testExcel();
-//    testReadStrategyDataFromExcel();
-//    testSortPointList ();
-//    testMergeSortedList();
-//    testTableData();
-//    testComputeMACD ();
-//    testTranstime();
-//    testGetNumbList();
-//    testConnectDatabase();
-//    testDBClass();
-    QProcess process;
-    process.start("TASKKILL /F /T /im EXCEL.EXE");
+//    testMain();
     return a.exec();
 }
 

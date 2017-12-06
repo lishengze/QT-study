@@ -112,7 +112,6 @@ void ChartForm::setStrategyData() {
         QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "TCLOSE", tableName, m_databaseName);
         tableDataList.append (sortPointFList(curTableData));
         buyCountList.append (buyCount);
-//        QMessageBox::information(this, "TableDataNumb", QString("tableName: %1, datacount: %2").arg(tableName).arg(curTableData.size ()));
         qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
     }
     m_strategyData = computeStrategyData(tableDataList, buyCountList);
@@ -141,7 +140,6 @@ void ChartForm::setMacdData () {
 }
 
 void ChartForm::setStrategyChartView () {
-//    QMessageBox::information(this, "Title", QString("m_strategyData.size: %1").arg(m_strategyData.size ()));
     if (m_strategyData.size () == 0) {
         ErrorMessage ("No strategy Data!");
         return ;
@@ -158,6 +156,7 @@ void ChartForm::setStrategyChartView () {
         series->append (i, m_strategyData.at (i).y());
     }
     series->setName("目标");
+    series->setUseOpenGL (true);
 
     QValueAxis *axisY = new QValueAxis;
     QList<QPointF> pointList = series->points ();
@@ -202,12 +201,7 @@ void ChartForm::setVotRunoverChartView () {
         set->append(m_votrunoverData.at (i).y());
     }
     barseries->append(set);
-
-//    QLineSeries* series = new QLineSeries;
-//    for (int i = 0; i < m_votrunoverData.size (); ++i) {
-//        series->append (i, m_votrunoverData.at (i).y());
-//    }
-//    series->setName("VOT");
+    barseries->setUseOpenGL (true);
 
     QValueAxis *axisY = new QValueAxis;
     qDebug() << "VotRunoverChart points.count: " << m_votrunoverData.count();
@@ -216,7 +210,6 @@ void ChartForm::setVotRunoverChartView () {
     axisY -> setLabelFormat ("%1.1e");
 
     m_votrunoverChart = new QChart();
-//    m_votrunoverChart->addSeries (series);
     m_votrunoverChart->addSeries(barseries);
 
     m_votrunoverChart->legend()->setAlignment(Qt::AlignTop);
@@ -227,7 +220,6 @@ void ChartForm::setVotRunoverChartView () {
     m_votrunoverChartView->setMouseTracking(true);
 
     m_votrunoverChart->addAxis (axisX, Qt::AlignBottom);
-//    series->attachAxis (axisX);
     barseries->attachAxis(axisX);
 
     m_votrunoverChart->addAxis (axisY, Qt::AlignLeft);
@@ -264,6 +256,9 @@ void ChartForm::setMACDChartView () {
         macdSet->append (m_macdData.at(i).m_macd);
     }
     macdSeries->append(macdSet);
+    diffSeries->setUseOpenGL (true);
+    deaSeries->setUseOpenGL (true);
+    macdSeries->setUseOpenGL (true);
 
     QValueAxis *axisY = new QValueAxis;
     QList<double>  axisYRange = getMACDRange(m_macdData);
@@ -313,6 +308,8 @@ void ChartForm::setTestView () {
 
     m_testChartView = new QChartView(m_testChart);
     m_testChartView->setRenderHint(QPainter::Antialiasing);
+    m_testChartView->installEventFilter(this);
+    m_testChartView->setMouseTracking(true);
 
     m_testChart->addAxis (axisX, Qt::AlignBottom);
     series->attachAxis (axisX);

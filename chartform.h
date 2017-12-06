@@ -48,8 +48,6 @@ public:
     void setTheme();
 
     void setTestView();
-//    void setThemeBox();
-//    void setTextItem();
     void setMouseMoveValue(int currIndex);
 
     QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);

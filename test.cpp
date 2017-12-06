@@ -4,6 +4,7 @@
 #include <iostream>
 #include <QDateTime>
 #include <QSqlError>
+#include <QProcess>
 #include "test.h"
 #include "setdata.h"
 #include "toolfunc.h"
@@ -77,7 +78,7 @@ void testMergeSortedList() {
     QList<QPointF> firstList;
     QList<QPointF> secondList;
     int numb = 10;
-    int index = -15;
+    int index = -5;
     for (int i = 0; i<numb; ++i) {
         firstList.append (QPointF(i, i));
         secondList.append (QPointF(i + index, i));
@@ -183,5 +184,65 @@ void testDBClass() {
             qDebug() << query3.lastError().text().data();
         }
     }
-
 }
+
+void testProcess () {
+    QProcess p(0);
+    p.start("cmd", QStringList()<<"/c"<<"ping www.baidu.com");
+    p.waitForStarted();
+    p.waitForFinished();
+    QString strTemp=QString::fromLocal8Bit(p.readAllStandardOutput());
+//    QString strTemp=p.readAllStandardOutput();
+
+    qDebug () << strTemp;
+}
+
+void testKillProcess() {
+    QString pid = "20128";
+    killProcessByPid(pid);
+}
+
+void testMain() {
+    //    testReadExcelData ();
+    //    testGetExcelFileName();
+    //    testRemovePathName();
+    //    testExcel();
+    //    testReadStrategyDataFromExcel();
+        testSortPointList ();
+        testMergeSortedList();
+    //    testTableData();
+    //    testComputeMACD ();
+    //    testTranstime();
+    //    testGetNumbList();
+    //    testConnectDatabase();
+    //    testDBClass();
+    //    testProcess();
+    //    testKillProcess();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

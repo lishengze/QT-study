@@ -29,4 +29,12 @@ QList<int> getNumbList(int dataNumb, int desNumb);
 
 void OutputMsg(QWidget* window,QString msg);
 
+QList<QString> getAddedList(QList<QString> oriList, QList<QString> afterAddList);
+
+QList<QString> getEXCELPidList();
+
+QList<QString> getProcessPid(QString taskList, QString processName);
+
+void killProcessByPid(QString pid);
+
 #endif // TOOLFUNC_H

@@ -184,10 +184,21 @@ void readBasicDataFromExcel(QString excelFilePath) {
 
 QList<strategy_ceil> readStrategyDataFromExcel(QString excelFilePath) {
     qDebug() << "open file " << excelFilePath;
+
+    QList<QString> pidListBeforeCreate = getEXCELPidList ();
+    qDebug() << "pidListBeforeCreate: " << pidListBeforeCreate;
+
     QAxObject excel("Excel.Application");  // 花费时间最长;
+
+    QList<QString> pidListAfterCreate = getEXCELPidList ();
+    qDebug() << "pidListAfterCreate: "  << pidListAfterCreate;
+
     excel.dynamicCall("SetVisible (bool Visible)","false"); //不显示窗体  // 花费时间次之,其余操作不花时间;
     QAxObject *work_books = excel.querySubObject("WorkBooks");
     work_books->dynamicCall("Open (const QString&)", QString(excelFilePath));
+
+    QList<QString> pidDeltaList = getAddedList(pidListBeforeCreate, pidListAfterCreate);
+    qDebug() << "pidDeltaList: " << pidDeltaList;
 
     QAxObject *activate_work_book = excel.querySubObject("ActiveWorkBook");
     QAxObject *work_sheets = activate_work_book->querySubObject("Sheets");  //Sheets也可换用WorkSheets
@@ -215,6 +226,11 @@ QList<strategy_ceil> readStrategyDataFromExcel(QString excelFilePath) {
     activate_work_book->dynamicCall("Close(Boolean)", false);  //关闭文件
     work_books->dynamicCall ("Close()");
     excel.dynamicCall("Quit()");  //退出
+
+    for(int i = 0; i < pidDeltaList.size (); ++i) {
+        killProcessByPid (pidDeltaList[i]);
+    }
+
     return strategy;
 }
 

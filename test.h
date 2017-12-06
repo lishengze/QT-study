@@ -1,6 +1,8 @@
 #ifndef TEST_H
 #define TEST_H
 
+void testMain();
+
 void testReadExcelData();
 
 void testGetExcelFileName();
@@ -27,5 +29,8 @@ void testConnectDatabase();
 
 void testDBClass();
 
+void testProcess();
+
+void testKillProcess();
 
 #endif // TEST_H

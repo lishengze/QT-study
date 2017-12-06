@@ -8,6 +8,7 @@
 #include <QList>
 #include <QPointF>
 #include <QDebug>
+#include <QMessageBox>
 
 #include "widget.h"
 #include "ui_widget.h"
@@ -72,7 +73,8 @@ void Widget::setTableView () {
 //    m_strategyFileDir = "E:/github/study/QT/Creator/chapter4/layout";
 //    m_strategyFileDir = "D:/github/workprogram/qt-client";
 //    m_strategyFileDir = "E:/github/work-program/client/client-qt";
-    m_strategyFileDir = "D:/strategy";
+//    m_strategyFileDir = "D:/strategy";
+    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
@@ -90,6 +92,7 @@ void Widget::setDataFrequency () {
     QStringList timeFre;
     timeFre << "1m" << "5m" << "10m" << "20m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
     ui->dataFrequency->addItems (timeFre);
+    ui->dataFrequency->setCurrentText ("day");
 }
 
 void Widget::on_historyData_clicked()
@@ -105,8 +108,9 @@ void Widget::on_historyData_clicked()
     qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
     if (startDate.toInt () >= endDate.toInt ()) {
         qDebug() << "endDate is early than startDate";
+        QMessageBox::critical(NULL, "Error", "起始时间晚于截止时间");
     } else if (m_currStrategy.size () == 0) {
-        qDebug() << "Strategy is empty!";
+        QMessageBox::critical(NULL, "Error", "还未选择策略");
     } else {
         QWidget* charView = new ChartForm(0, m_chartViews.count(), startDate, endDate, timeType,
                                           m_currStrategy, m_strategyName,
@@ -125,7 +129,7 @@ void Widget::on_chooseStartDate_editingFinished()
 
 void Widget::on_tableView_clicked(const QModelIndex &index)
 {
-//    ui->historyData->setEnabled (false);
+    ui->historyData->setEnabled (false);
     int intIndex = index.row ();
     m_strategyName = m_strategyModel->getTableModel () ->item (intIndex)->text ();
     QString strategyFullFileName = m_strategyModel->getStrategyFullFileName (intIndex);
