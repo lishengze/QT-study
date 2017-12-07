@@ -37,4 +37,6 @@ QList<QString> getProcessPid(QString taskList, QString processName);
 
 void killProcessByPid(QString pid);
 
+QString getIndexCode();
+
 #endif // TOOLFUNC_H

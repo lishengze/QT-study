@@ -37,44 +37,37 @@ Widget::Widget(QWidget *parent) :
 {
     m_excel = new Excel();
     ui->setupUi(this);
-    ui->chooseStartDate->setCalendarPopup (true);
-    ui->chooseEndDate->setCalendarPopup (true);
 
-    ui->chooseStartDate->setDate (QDate(2016, 1, 1));
-    ui->chooseEndDate->setDate (QDate(2017, 1, 1));
-
+    setCalendarValue();
+    setHedgeValue();
     setMacdTime();
     setTableView();
     setDataFrequency();
 }
 
-Widget::~Widget()
-{
-    delete ui;
-    if (NULL != m_strategyModel) {
-        delete m_strategyModel;
-        m_strategyModel = NULL;
-    }
+void Widget::setCalendarValue () {
+    ui->chooseStartDate->setCalendarPopup (true);
+    ui->chooseEndDate->setCalendarPopup (true);
 
-    if (NULL != m_excel) {
-        delete m_excel;
-        m_excel = NULL;
-    }
+    ui->chooseStartDate->setDate (QDate(2016, 1, 1));
+    ui->chooseEndDate->setDate (QDate(2017, 1, 1));
+}
 
-    for (int i = 0; i < m_chartViews.size (); ++i) {
-        if (NULL != m_chartViews.at (i)) {
-            delete m_chartViews.at (i);
-            m_chartViews[i] = NULL;
-        }
-    }
+void Widget::setHedgeValue() {
+    ui->hedgeTarget_comboBox->setCurrentText ("沪深300");
+    ui->hedgeTarget_comboBox->addItem ("沪深300",  "SH000300");
+    ui->hedgeTarget_comboBox->addItem ("上证50",   "SH000016");
+    ui->hedgeTarget_comboBox->addItem ("中证100",  "SZ399903");
+    ui->hedgeTarget_comboBox->addItem ("中证200",  "SH000904");
+    ui->hedgeTarget_comboBox->addItem ("中证500",  "SH000905");
+    ui->hedgeTarget_comboBox->addItem ("中证800",  "SH000906");
+    ui->hedgeTarget_comboBox->addItem ("中证1000", "SH000852");
+    ui->hedgeCount_spinBox->setValue (2);
 }
 
 void Widget::setTableView () {
-//    m_strategyFileDir = "E:/github/study/QT/Creator/chapter4/layout";
-//    m_strategyFileDir = "D:/github/workprogram/qt-client";
-//    m_strategyFileDir = "E:/github/work-program/client/client-qt";
-//    m_strategyFileDir = "D:/strategy";
-    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
+    m_strategyFileDir = "D:/strategy";
+//    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
@@ -104,16 +97,21 @@ void Widget::on_historyData_clicked()
     int EVA2Time = ui->EMA2TimeSpinBox->value ();
     int DIFFTime = ui->DIFFTimeSpinBox->value ();
 
+    QString hedgeIndexCode = ui->hedgeTarget_comboBox->currentData ().toString ();
+    int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
+
+    qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
     qDebug() << "timeType: " << timeType;
     qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
     if (startDate.toInt () >= endDate.toInt ()) {
-        qDebug() << "endDate is early than startDate";
         QMessageBox::critical(NULL, "Error", "起始时间晚于截止时间");
     } else if (m_currStrategy.size () == 0) {
         QMessageBox::critical(NULL, "Error", "还未选择策略");
     } else {
-        QWidget* charView = new ChartForm(0, m_chartViews.count(), startDate, endDate, timeType,
+        QWidget* charView = new ChartForm(0, m_chartViews.count(),
+                                          startDate, endDate, timeType,
                                           m_currStrategy, m_strategyName,
+                                          hedgeIndexCode, hedgeIndexCount,
                                           EVA1Time, EVA2Time, DIFFTime);
         charView->show ();
         m_chartViews.append (charView);
@@ -139,6 +137,27 @@ void Widget::on_tableView_clicked(const QModelIndex &index)
                  << " buyCount: " << m_currStrategy.at(i).m_buyCount;
     }
     ui->historyData->setEnabled(true);
+}
+
+Widget::~Widget()
+{
+    delete ui;
+    if (NULL != m_strategyModel) {
+        delete m_strategyModel;
+        m_strategyModel = NULL;
+    }
+
+    if (NULL != m_excel) {
+        delete m_excel;
+        m_excel = NULL;
+    }
+
+    for (int i = 0; i < m_chartViews.size (); ++i) {
+        if (NULL != m_chartViews.at (i)) {
+            delete m_chartViews.at (i);
+            m_chartViews[i] = NULL;
+        }
+    }
 }
 
 //void Widget::mouseMoveEvent(QMouseEvent *event)

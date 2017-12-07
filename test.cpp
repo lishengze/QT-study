@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QSqlError>
 #include <QProcess>
+#include <QStringList>
 #include "test.h"
 #include "setdata.h"
 #include "toolfunc.h"
@@ -202,14 +203,26 @@ void testKillProcess() {
     killProcessByPid(pid);
 }
 
+void testDatabase() {
+    Database testDB;
+    QString tableName = "SH600000";
+    QString databaseName = "MarketData_day";
+    QString startDate = "20161221";
+    QString endDate = "20170101";
+    QStringList keyValueList;
+    keyValueList << "TCLOSE" << "VOTRUNOVER";
+    QList<QStringList> result = testDB.getOriChartData (startDate, endDate, keyValueList, tableName, databaseName);
+    qDebug() << result;
+}
+
 void testMain() {
     //    testReadExcelData ();
     //    testGetExcelFileName();
     //    testRemovePathName();
     //    testExcel();
     //    testReadStrategyDataFromExcel();
-        testSortPointList ();
-        testMergeSortedList();
+//        testSortPointList ();
+//        testMergeSortedList();
     //    testTableData();
     //    testComputeMACD ();
     //    testTranstime();
@@ -218,6 +231,7 @@ void testMain() {
     //    testDBClass();
     //    testProcess();
     //    testKillProcess();
+    testDatabase();
 }
 
 

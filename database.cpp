@@ -102,6 +102,43 @@ QList<QPointF> Database::getOriChartData(QString startDate, QString endDate, QSt
     return pointList;
 }
 
+QList<QStringList> Database::getOriChartData(QString startDate, QString endDate, QStringList keyValueList,
+                                         QString tableName, QString databaseName){
+
+    QList<QStringList> resultList;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString keyValueStr = "";
+        for (int i = 0; i < keyValueList.size (); ++i) {
+            keyValueStr += ", [" + keyValueList[i] + "] ";
+        }
+
+        QString sqlstr = QString("select [TDATE], [TIME] ") + keyValueStr  \
+                       + QString("from [") + databaseName + "].[dbo].[" + tableName + "] " \
+                       + "where TDATE <= " + endDate + " and TDATE >= " + startDate;
+        qDebug() <<sqlstr;
+        queryObj.exec(sqlstr);
+         while(queryObj.next ()) {
+            QStringList tmpResult;
+            QList<int> tmpDate = getDateList(queryObj.value (0).toInt ());
+            QList<int> tmpTime = getTimeList (queryObj.value (1).toInt ());
+            QDateTime timeValue;
+            timeValue.setDate (QDate(tmpDate[0], tmpDate[1], tmpDate[2]));
+            timeValue.setTime (QTime(tmpTime[0], tmpTime[1], tmpTime[2]));
+            tmpResult.append (QString("%1").arg(timeValue.toMSecsSinceEpoch ()));
+            for (int i = 0; i < keyValueList.size(); ++i) {
+                tmpResult.append(queryObj.value (i+2).toString ());
+            }
+            resultList.append (tmpResult);
+         }
+    } else {
+        QMessageBox::information (m_window, "Error", m_db.lastError().text());
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return resultList;
+}
+
+
 QList<TableData> Database::getOriData(QString startDate, QString endDate, QString keyValue,
                                          QString tableName, QString databaseName){
 

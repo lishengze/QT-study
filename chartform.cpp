@@ -37,25 +37,24 @@ ChartForm::ChartForm(QWidget *parent) :
 }
 
 ChartForm::ChartForm(QWidget *parent, int chartViewID,
-                     QString startDate,QString endDate,
-                     QString timeType, QList<strategy_ceil> strategyList, QString strategyName,
+                     QString startDate, QString endDate, QString timeType,
+                     QList<strategy_ceil> strategyList, QString strategyName,
+                     QString hedgeIndexCode, int hedgeIndexCount,
                      int EVA1Time, int EVA2Time, int DIFFTime,
                      QString databaseName):
-    QWidget(parent),
-    m_startDate(startDate), m_endDate(endDate),
-    m_timeType(timeType), m_chartViewID(chartViewID), m_strategyName(strategyName),
+    QWidget(parent), m_chartViewID(chartViewID),
+    m_startDate(startDate), m_endDate(endDate), m_timeType(timeType),
+    m_strategy(strategyList), m_strategyName(strategyName),
+    m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
     m_EVA1Time(EVA1Time), m_EVA2Time(EVA2Time), m_DIFFTime(DIFFTime),
     m_database(NULL), m_macdTooltip(NULL), m_strategyTooltip(NULL), m_votrunoverTooltip(NULL),
     ui(new Ui::ChartForm)
 {
-    initData(strategyList, databaseName, timeType);
-//    QMessageBox::information(this, "Title", "InitData succeed!");
+    initData(databaseName, timeType);
     setLayout();
 }
 
-void ChartForm::initData (QList<strategy_ceil> strategyList, QString databaseName, QString timeType) {
-    m_strategy = strategyList;
-//    QMessageBox::information(this, "Title", QString("m_strategyData.size: %1").arg(m_strategy.size ()));
+void ChartForm::initData (QString databaseName, QString timeType) {
     m_dbhost = "192.168.211.165";
 //    m_dbhost = "localhost";
     m_database = new Database(this, QString(m_chartViewID), m_dbhost);
@@ -74,7 +73,6 @@ void ChartForm::initData (QList<strategy_ceil> strategyList, QString databaseNam
 }
 
 void ChartForm::setLayout () {
-//    QMessageBox::information(this, "Title", "SetLayout begin!");
     ui->setupUi(this);
     m_title = QString("策略: %1 , MACD: %2, %3, %4 ").arg(m_strategyName).arg(m_EVA1Time).arg(m_EVA2Time).arg (m_DIFFTime);
 
@@ -125,7 +123,7 @@ void ChartForm::setVotRunoverData() {
         int buyCount = m_strategy[i].m_buyCount;
         QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "VOTRUNOVER", tableName, m_databaseName);
         tableDataList.append (sortPointFList(curTableData));
-        buyCountList.append (buyCount);
+        buyCountList.append (1);
         qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
     }
     m_votrunoverData = computeStrategyData(tableDataList, buyCountList);

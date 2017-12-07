@@ -52,6 +52,15 @@ QList<QPointF> sortPointFList(QList<QPointF> oridata) {
     return oridata;
 }
 
+bool compQString(QStringList strListA, QStringList strListB) {
+    return strListA[0].toLongLong() < strListB[0].toLongLong();
+}
+
+QList<QStringList> sortQStringList(QList<QStringList> oridata) {
+    sort(oridata.begin (), oridata.end (), compQString);
+    return oridata;
+}
+
 QList<QPointF> mergeSortedPointedList(QList<QPointF> firstList, int firstBuyCount,
                                       QList<QPointF> secondList, int secondBuyCount) {
 

@@ -27,7 +27,10 @@ public:
     bool isDatabaseOpen();
 
     QList<QPointF> getOriChartData(QString startDate, QString endDate, QString keyValue,
-                                   QString tableName, QString databasename ="MarketData");
+                                   QString tableName, QString databasename="MarketData");
+
+    QList<QStringList> getOriChartData(QString startDate, QString endDate, QStringList keyValue,
+                                       QString tableName, QString databaseName="MarketData");
 
     QList<TableData> getOriData(QString startDate, QString endDate, QString keyValue,
                                              QString tableName, QString databaseName="MarketData");

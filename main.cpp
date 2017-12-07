@@ -23,10 +23,10 @@ int main(int argc, char *argv[])
 {
     setLibPath();
     QApplication a(argc, argv);
-    Widget w;
-    w.show();
+//    Widget w;
+//    w.show();
 
-//    testMain();
+    testMain();
     return a.exec();
 }
 
