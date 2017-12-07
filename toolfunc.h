@@ -3,6 +3,7 @@
 #include <QString>
 #include <QList>
 #include <QPointF>
+#include <QWidget>
 #include "macd.h"
 
 QList<int> getDateList(int intDate);
@@ -25,5 +26,17 @@ QList<double> getMACDRange(QList<MACD> oriData);
 QString transOffsetSecondsToTime(qint64 offSecs);
 
 QList<int> getNumbList(int dataNumb, int desNumb);
+
+void OutputMsg(QWidget* window,QString msg);
+
+QList<QString> getAddedList(QList<QString> oriList, QList<QString> afterAddList);
+
+QList<QString> getEXCELPidList();
+
+QList<QString> getProcessPid(QString taskList, QString processName);
+
+void killProcessByPid(QString pid);
+
+QString getIndexCode();
 
 #endif // TOOLFUNC_H

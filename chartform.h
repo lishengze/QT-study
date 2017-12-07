@@ -30,13 +30,15 @@ public:
     explicit ChartForm(QWidget *parent = 0);
     ~ChartForm();
     ChartForm(QWidget *parent, int charViewID,
-              QString startDate, QString endDate,
-              QString timeType, QList<strategy_ceil> strategy, QString strategyName,
+              QString startDate, QString endDate, QString timeType,
+              QList<strategy_ceil> strategy, QString strategyName,
+              QString hedgeIndexCode, int hedgeIndexCount,
               int EVA1Time, int EVA2Time, int DIFFTime,
               QString databaseName="MarketData");
 
-    void initData(QList<strategy_ceil> strategyList, QString databaseName, QString timeType);
+    void initData(QString databaseName, QString timeType);
     void setStrategyData();
+    void setStrategyHedgeData();
     void setVotRunoverData();
     void setMacdData();
 
@@ -46,9 +48,8 @@ public:
     void setMACDChartView();
 
     void setTheme();
-    void setThemeBox();
+
     void setTestView();
-    void setTextItem();
     void setMouseMoveValue(int currIndex);
 
     QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
@@ -56,28 +57,30 @@ public:
 
 
 protected:
-    void resizeEvent(QResizeEvent *event);
+//    void resizeEvent(QResizeEvent *event);
 //    void mouseMoveEvent(QMouseEvent *event);
     bool eventFilter (QObject *watched, QEvent *event);
 
 public slots:
-    void macdToolTip(QPointF point, bool state);
-    void strategyToolTip(QPointF point, bool state);
-    void votRunoverToolTip(QPointF point, bool state);
+//    void macdToolTip(QPointF point, bool state);
+//    void strategyToolTip(QPointF point, bool state);
+//    void votRunoverToolTip(QPointF point, bool state);
 
 private:
     Ui::ChartForm *ui;
     QString m_title;
 
+    QList<qint64> timeList;
+
     int m_chartXaxisTickCount;
     QChartView* m_openPriceChartView;
     QChart* m_openPriceChart;
 
-//    QChartView* m_strategyChartView;
     QMyChartView* m_strategyChartView;
     QChart* m_strategyChart;
     Callout *m_strategyTooltip;
     QList<QPointF> m_strategyData;
+    QList<QPointF> m_strategyHedgeData;
 
     QMyChartView* m_votrunoverChartView;
     QChart* m_votrunoverChart;
@@ -90,6 +93,7 @@ private:
     QList<MACD> m_macdData;
 
     QChartView* m_testChartView;
+//    QMyChartView* m_testChartView;
     QChart* m_testChart;
     Callout *m_testTooltip;
 
@@ -112,6 +116,8 @@ private:
     int m_EVA1Time;
     int m_EVA2Time;
     int m_DIFFTime;
+    QString m_hedgeIndexCode;
+    int m_hedgeIndexCount;
 
     QGraphicsSimpleTextItem* m_timeItem;
     QGraphicsSimpleTextItem* m_targetItem;

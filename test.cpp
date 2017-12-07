@@ -3,6 +3,9 @@
 #include <QDebug>
 #include <iostream>
 #include <QDateTime>
+#include <QSqlError>
+#include <QProcess>
+#include <QStringList>
 #include "test.h"
 #include "setdata.h"
 #include "toolfunc.h"
@@ -10,11 +13,12 @@
 #include "tabledata.h"
 #include "excel.h"
 #include "macd.h"
+#include "database.h"
 
 using namespace  std;
 
 void testReadExcelData () {
-    QString excelFilePath = "E:/github/study/QT/Creator/chapter4/layout/test.xlsx";
+    QString excelFilePath = "D:/strategy/test.xlsx";
 //    readBasicDataFromExcel(excelFilePath);
     readStrategyDataFromExcel(excelFilePath);
 }
@@ -34,7 +38,7 @@ void testRemovePathName () {
 }
 
 void testReadStrategyDataFromExcel() {
-    QString fullFileName = "E:/github/study/QT/Creator/chapter4/layout/test.xlsx";
+    QString fullFileName = "E:/github/work-program/client/client-qt/test.xlsx";
     QList<strategy_ceil> m_currStrategy = readStrategyDataFromExcel (fullFileName);
     for (int i = 0; i < m_currStrategy.size(); ++i) {
         qDebug() << "secode: " << m_currStrategy.at(i).m_secode
@@ -75,7 +79,7 @@ void testMergeSortedList() {
     QList<QPointF> firstList;
     QList<QPointF> secondList;
     int numb = 10;
-    int index = -15;
+    int index = -5;
     for (int i = 0; i<numb; ++i) {
         firstList.append (QPointF(i, i));
         secondList.append (QPointF(i + index, i));
@@ -146,3 +150,113 @@ void testGetNumbList() {
     qDebug() << "interval: " << interval;
     qDebug() << "List: " << getNumbList(dataNumb, interval);
 }
+
+void testConnectDatabase() {
+    QString server = "192.168.211.165";
+    QString port = "1433";
+    QString dbName = "master";
+    QString userName = "sa";
+    QString userPwd = "sasa";
+    connectSql (server, port, dbName, userName, userPwd);
+}
+
+void testDBClass() {
+    QString connName = "0";
+    QString server = "192.168.211.165";
+    Database dbObj = Database(connName, server);
+
+//    QSqlDatabase sqlDb = dbObj.getDatabase ();
+
+    if(dbObj.m_db.open ()) {
+        QSqlQuery query3 = QSqlQuery(dbObj.m_db);
+        QString sqlStr = "select * from [TestRemote].[dbo].[BasicInfo]";
+        bool c = query3.exec(sqlStr);
+        if (c)
+        {
+            qDebug() << "select data success!";
+            while(query3.next())
+            {
+                qDebug() << query3.value(0).toString ();
+                qDebug() << query3.value(1).toString ();
+            }
+        }
+        else
+        {
+            qDebug() << query3.lastError().text().data();
+        }
+    }
+}
+
+void testProcess () {
+    QProcess p(0);
+    p.start("cmd", QStringList()<<"/c"<<"ping www.baidu.com");
+    p.waitForStarted();
+    p.waitForFinished();
+    QString strTemp=QString::fromLocal8Bit(p.readAllStandardOutput());
+//    QString strTemp=p.readAllStandardOutput();
+
+    qDebug () << strTemp;
+}
+
+void testKillProcess() {
+    QString pid = "20128";
+    killProcessByPid(pid);
+}
+
+void testDatabase() {
+    Database testDB;
+    QString tableName = "SH600000";
+    QString databaseName = "MarketData_day";
+    QString startDate = "20161221";
+    QString endDate = "20170101";
+    QStringList keyValueList;
+    keyValueList << "TCLOSE" << "VOTRUNOVER";
+    QList<QStringList> result = testDB.getOriChartData (startDate, endDate, keyValueList, tableName, databaseName);
+    qDebug() << result;
+}
+
+void testMain() {
+    //    testReadExcelData ();
+    //    testGetExcelFileName();
+    //    testRemovePathName();
+    //    testExcel();
+    //    testReadStrategyDataFromExcel();
+//        testSortPointList ();
+//        testMergeSortedList();
+    //    testTableData();
+    //    testComputeMACD ();
+    //    testTranstime();
+    //    testGetNumbList();
+    //    testConnectDatabase();
+    //    testDBClass();
+    //    testProcess();
+    //    testKillProcess();
+    testDatabase();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

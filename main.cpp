@@ -3,6 +3,8 @@
 #include "test.h"
 #include "testform.h"
 #include <QTextCodec>
+#include <QProcess>
+#include "processfunc.h"
 
 void setCode() {
 //    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
@@ -12,29 +14,19 @@ void setCode() {
     QTextCodec::codecForName("GBK")->toUnicode("中文");
 }
 
+void setLibPath() {
+    QApplication::addLibraryPath(".");
+    QApplication::addLibraryPath("./lib");
+}
+
 int main(int argc, char *argv[])
 {
-    setCode();
+    setLibPath();
     QApplication a(argc, argv);
-    Widget w;
-    w.show();
+//    Widget w;
+//    w.show();
 
-//    TestForm testForm;
-//    testForm.show();
-
-//    chartDialog dialog;
-//    dialog.show ();
-
-//    testReadExcelData ();
-//    testGetExcelFileName();
-//    testRemovePathName();
-//    testExcel();
-//    testSortPointList ();
-//    testMergeSortedList();
-//    testTableData();
-//    testComputeMACD ();
-//    testTranstime();
-//    testGetNumbList();
+    testMain();
     return a.exec();
 }
 

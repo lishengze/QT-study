@@ -2,6 +2,9 @@
 #define EXCEL_H
 #include <QAxObject>
 #include <QList>
+#include <QProcess>
+#include <QList>
+#include <QString>
 #include "strategy.h"
 
 class Excel
@@ -13,6 +16,7 @@ public:
 private:
     QAxObject* m_excel;
     QAxObject* m_work_books;
+    QList<QString> m_createdPidList;
 };
 
 #endif // EXCEL_H

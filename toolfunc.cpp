@@ -3,6 +3,10 @@
 #include <algorithm>
 #include <QDateTime>
 #include <QDebug>
+#include <QMessageBox>
+#include <QWidget>
+#include <QStringList>
+#include <QProcess>
 #include "macd.h"
 using std::sort;
 using std::max;
@@ -45,6 +49,15 @@ bool compQPointF(QPointF pointA, QPointF pointB) {
 
 QList<QPointF> sortPointFList(QList<QPointF> oridata) {
     sort(oridata.begin (), oridata.end (), compQPointF);
+    return oridata;
+}
+
+bool compQString(QStringList strListA, QStringList strListB) {
+    return strListA[0].toLongLong() < strListB[0].toLongLong();
+}
+
+QList<QStringList> sortQStringList(QList<QStringList> oridata) {
+    sort(oridata.begin (), oridata.end (), compQString);
     return oridata;
 }
 
@@ -107,6 +120,10 @@ void ErrorMessage(QString msg) {
     qDebug() << msg;
 }
 
+void ErrorMessage(QWidget* window,QString msg) {
+    QMessageBox::information(window, "TableDataNumb", msg);
+}
+
 QList<double> getMACDRange(QList<MACD> oriData) {
     double maxValue = -1000000000000000000.0;
     double minValue = 10000000000000000000.0;
@@ -139,9 +156,73 @@ QList<int> getNumbList(int dataNumb, int desNumb) {
     return result;
 }
 
+void OutputMsg(QWidget* window,QString msg) {
+    QMessageBox::information(window, "TableDataNumb", msg);
+}
 
+QList<QString> getAddedList(QList<QString> listA, QList<QString> listB) {
+    QList<QString> result;
 
+//    for(int i = 0; i < listA.size (); ++i) {
+//        bool curAStringStrInListB = false;
+//        for (int j = 0; j < listB.size(); ++j) {
+//            if (listA[i] == listB[j]) {
+//                curAStringStrInListB = true;
+//                break;
+//            }
+//        }
+//        if (!curAStringStrInListB) {
+//            result.append (listA[i]);
+//        }
+//    }
 
+    for(int i = 0; i < listB.size (); ++i) {
+        bool curBStringStrInListA = false;
+        for (int j = 0; j < listA.size(); ++j) {
+            if (listB[i] == listA[j]) {
+                curBStringStrInListA = true;
+                break;
+            }
+        }
+        if (!curBStringStrInListA) {
+            result.append (listB[i]);
+        }
+    }
+    return result;
+}
+
+QList<QString> getEXCELPidList() {
+    QProcess p(0);
+    p.start ("tasklist");
+    p.waitForStarted();
+    p.waitForFinished();
+
+    QString taskStr = QString::fromLocal8Bit(p.readAllStandardOutput());
+    QString processName = "EXCEL.EXE";
+    return getProcessPid(taskStr, processName);
+}
+
+QList<QString> getProcessPid(QString taskStr, QString processName) {
+    QStringList taskList = taskStr.split ("\r\n");
+    QList<QString> result;
+    for (int i = 0; i < taskList.size (); ++i) {
+       if (taskList[i].startsWith(processName)) {
+           QStringList tmpStrList = taskList[i].split(" ");
+           tmpStrList.removeAll ("");
+           result.append (tmpStrList[1]);
+       }
+    }
+    return result;
+}
+
+void killProcessByPid(QString pid) {
+    QProcess p(0);
+    p.start ("TASKKILL /F /T /pid " + pid);
+    p.waitForStarted();
+    p.waitForFinished();
+
+    QString taskStr = QString::fromLocal8Bit(p.readAllStandardOutput());
+}
 
 
 

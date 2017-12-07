@@ -8,6 +8,7 @@
 #include <QList>
 #include <QPointF>
 #include <QDebug>
+#include <QMessageBox>
 
 #include "widget.h"
 #include "ui_widget.h"
@@ -36,15 +37,106 @@ Widget::Widget(QWidget *parent) :
 {
     m_excel = new Excel();
     ui->setupUi(this);
+
+    setCalendarValue();
+    setHedgeValue();
+    setMacdTime();
+    setTableView();
+    setDataFrequency();
+}
+
+void Widget::setCalendarValue () {
     ui->chooseStartDate->setCalendarPopup (true);
     ui->chooseEndDate->setCalendarPopup (true);
 
     ui->chooseStartDate->setDate (QDate(2016, 1, 1));
     ui->chooseEndDate->setDate (QDate(2017, 1, 1));
+}
 
-    setMacdTime();
-    setTableView();
-    setDataFrequency();
+void Widget::setHedgeValue() {
+    ui->hedgeTarget_comboBox->setCurrentText ("沪深300");
+    ui->hedgeTarget_comboBox->addItem ("沪深300",  "SH000300");
+    ui->hedgeTarget_comboBox->addItem ("上证50",   "SH000016");
+    ui->hedgeTarget_comboBox->addItem ("中证100",  "SZ399903");
+    ui->hedgeTarget_comboBox->addItem ("中证200",  "SH000904");
+    ui->hedgeTarget_comboBox->addItem ("中证500",  "SH000905");
+    ui->hedgeTarget_comboBox->addItem ("中证800",  "SH000906");
+    ui->hedgeTarget_comboBox->addItem ("中证1000", "SH000852");
+    ui->hedgeCount_spinBox->setValue (2);
+}
+
+void Widget::setTableView () {
+    m_strategyFileDir = "D:/strategy";
+//    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
+    m_strategyModel = new StrategyModel(m_strategyFileDir);
+    QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
+
+    ui->tableView->setModel (tableModel);
+    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+}
+
+void Widget::setMacdTime () {
+    ui->EMA1TimeSpinBox->setValue (12);
+    ui->EMA2TimeSpinBox->setValue (26);
+    ui->DIFFTimeSpinBox->setValue (9);
+}
+
+void Widget::setDataFrequency () {
+    QStringList timeFre;
+    timeFre << "1m" << "5m" << "10m" << "20m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
+    ui->dataFrequency->addItems (timeFre);
+    ui->dataFrequency->setCurrentText ("day");
+}
+
+void Widget::on_historyData_clicked()
+{
+    QString startDate = ui->chooseStartDate->date ().toString ("yyyyMMdd");
+    QString endDate = ui->chooseEndDate->date ().toString ("yyyyMMdd");
+    QString timeType = ui->dataFrequency->currentText();
+    int EVA1Time = ui->EMA1TimeSpinBox->value ();
+    int EVA2Time = ui->EMA2TimeSpinBox->value ();
+    int DIFFTime = ui->DIFFTimeSpinBox->value ();
+
+    QString hedgeIndexCode = ui->hedgeTarget_comboBox->currentData ().toString ();
+    int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
+
+    qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
+    qDebug() << "timeType: " << timeType;
+    qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
+    if (startDate.toInt () >= endDate.toInt ()) {
+        QMessageBox::critical(NULL, "Error", "起始时间晚于截止时间");
+    } else if (m_currStrategy.size () == 0) {
+        QMessageBox::critical(NULL, "Error", "还未选择策略");
+    } else {
+        QWidget* charView = new ChartForm(0, m_chartViews.count(),
+                                          startDate, endDate, timeType,
+                                          m_currStrategy, m_strategyName,
+                                          hedgeIndexCode, hedgeIndexCount,
+                                          EVA1Time, EVA2Time, DIFFTime);
+        charView->show ();
+        m_chartViews.append (charView);
+    }
+}
+
+void Widget::on_chooseStartDate_editingFinished()
+{
+    QDate startDate = ui->chooseStartDate->date ();
+    QString strDate = startDate.toString ("yyyyMMdd");
+    qDebug() << "strDate: " << strDate;
+}
+
+void Widget::on_tableView_clicked(const QModelIndex &index)
+{
+    ui->historyData->setEnabled (false);
+    int intIndex = index.row ();
+    m_strategyName = m_strategyModel->getTableModel () ->item (intIndex)->text ();
+    QString strategyFullFileName = m_strategyModel->getStrategyFullFileName (intIndex);
+    m_currStrategy = m_excel->readStrategyDataFromExcel (strategyFullFileName);
+    for (int i = 0; i < m_currStrategy.size(); ++i) {
+        qDebug() << "secode: " << m_currStrategy.at(i).m_secode
+                 << " buyCount: " << m_currStrategy.at(i).m_buyCount;
+    }
+    ui->historyData->setEnabled(true);
 }
 
 Widget::~Widget()
@@ -66,74 +158,6 @@ Widget::~Widget()
             m_chartViews[i] = NULL;
         }
     }
-}
-
-void Widget::setTableView () {
-//    m_strategyFileDir = "E:/github/study/QT/Creator/chapter4/layout";
-    m_strategyFileDir = "D:/github/workprogram/qt-client";
-//    m_strategyFileDir = "E:/github/work-program/client/client-qt";
-    m_strategyModel = new StrategyModel(m_strategyFileDir);
-    QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
-
-    ui->tableView->setModel (tableModel);
-    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-}
-
-void Widget::setMacdTime () {
-    ui->EMA1TimeSpinBox->setValue (12);
-    ui->EMA2TimeSpinBox->setValue (26);
-    ui->DIFFTimeSpinBox->setValue (9);
-}
-
-void Widget::setDataFrequency () {
-    QStringList timeFre;
-    timeFre << "1m" << "5m" << "10m" << "20m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
-    ui->dataFrequency->addItems (timeFre);
-}
-
-void Widget::on_historyData_clicked()
-{
-    QString startDate = ui->chooseStartDate->date ().toString ("yyyyMMdd");
-    QString endDate = ui->chooseEndDate->date ().toString ("yyyyMMdd");
-    QString timeType = ui->dataFrequency->currentText();
-    int EVA1Time = ui->EMA1TimeSpinBox->value ();
-    int EVA2Time = ui->EMA2TimeSpinBox->value ();
-    int DIFFTime = ui->DIFFTimeSpinBox->value ();
-
-    qDebug() << "timeType: " << timeType;
-    qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
-    if (startDate.toInt () >= endDate.toInt ()) {
-        qDebug() << "endDate is early than startDate";
-    } else if (m_currStrategy.size () == 0) {
-        qDebug() << "Strategy is empty!";
-    } else {
-        QWidget* charView = new ChartForm(0, m_chartViews.count(), startDate, endDate, timeType,
-                                          m_currStrategy, m_strategyName,
-                                          EVA1Time, EVA2Time, DIFFTime);
-        charView->show ();
-        m_chartViews.append (charView);
-    }
-}
-
-void Widget::on_chooseStartDate_editingFinished()
-{
-    QDate startDate = ui->chooseStartDate->date ();
-    QString strDate = startDate.toString ("yyyyMMdd");
-    qDebug() << "strDate: " << strDate;
-}
-
-void Widget::on_tableView_clicked(const QModelIndex &index)
-{
-//    ui->historyData->setEnabled (false);
-    int intIndex = index.row ();
-    m_strategyName = m_strategyModel->getTableModel () ->item (intIndex)->text ();
-    QString strategyFullFileName = m_strategyModel->getStrategyFullFileName (intIndex);
-    m_currStrategy = m_excel->readStrategyDataFromExcel (strategyFullFileName);
-    for (int i = 0; i < m_currStrategy.size(); ++i) {
-        qDebug() << "secode: " << m_currStrategy.at(i).m_secode
-                 << " buyCount: " << m_currStrategy.at(i).m_buyCount;
-    }
-    ui->historyData->setEnabled(true);
 }
 
 //void Widget::mouseMoveEvent(QMouseEvent *event)

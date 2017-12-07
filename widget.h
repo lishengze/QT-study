@@ -29,6 +29,8 @@ class Widget : public QWidget
 public:
     explicit Widget(QWidget *parent = 0);
 
+    void setCalendarValue();
+    void setHedgeValue();
     void setTableView();
     void setDataFrequency();
     void setMacdTime();
