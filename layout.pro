@@ -6,6 +6,7 @@
 
 QT       += core gui sql widgets
 QT += axcontainer
+QT += charts
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -27,7 +28,9 @@ SOURCES += main.cpp\
     tabledata.cpp \
     macd.cpp \
     qmychartview.cpp \
-    testform.cpp
+    processfunc.cpp \
+    dataread.cpp \
+    dataprocess.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -42,9 +45,10 @@ HEADERS  += widget.h \
     tabledata.h \
     macd.h \
     qmychartview.h \
-    testform.h
+    processfunc.h \
+    dataread.h \
+    dataprocess.h
 
 FORMS    += widget.ui \
-    chartform.ui \
-    testform.ui
-QT += charts
+    chartform.ui
+

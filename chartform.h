@@ -12,6 +12,12 @@
 #include <QGraphicsSimpleTextItem>
 #include <QMouseEvent>
 #include <QResizeEvent>
+
+#include <QThread>
+#include <QObject>
+#include <QMutexLocker>
+#include <QMutex>
+
 #include "strategy.h"
 #include "callout.h"
 #include "database.h"
@@ -36,7 +42,9 @@ public:
               int EVA1Time, int EVA2Time, int DIFFTime,
               QString databaseName="MarketData");
 
+    void registSignalParamsType();
     void initData(QString databaseName, QString timeType);
+
     void setStrategyData();
     void setStrategyHedgeData();
     void setVotRunoverData();
@@ -55,16 +63,14 @@ public:
     QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
     QList<double> getChartYvalueRange(QList<QPointF> pointList );
 
-
 protected:
-//    void resizeEvent(QResizeEvent *event);
-//    void mouseMoveEvent(QMouseEvent *event);
     bool eventFilter (QObject *watched, QEvent *event);
 
 public slots:
-//    void macdToolTip(QPointF point, bool state);
-//    void strategyToolTip(QPointF point, bool state);
-//    void votRunoverToolTip(QPointF point, bool state);
+    void receiveProcessedData(QList<int> subThreadData);
+
+signals:
+    void sendStartSignal(QList<int> testData);
 
 private:
     Ui::ChartForm *ui;

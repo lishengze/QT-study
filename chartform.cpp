@@ -54,6 +54,14 @@ ChartForm::ChartForm(QWidget *parent, int chartViewID,
     setLayout();
 }
 
+void ChartForm::registSignalParamsType () {
+    qRegisterMetaType<QList<int>>("QList<int>");
+}
+
+void ChartForm::receiveProcessedData (QList<int> subThreadData) {
+
+}
+
 void ChartForm::initData (QString databaseName, QString timeType) {
     m_dbhost = "192.168.211.165";
 //    m_dbhost = "localhost";
@@ -442,6 +450,13 @@ ChartForm::~ChartForm()
         m_votrunoverTooltip = NULL;
     }
 }
+
+//    void resizeEvent(QResizeEvent *event);
+//    void mouseMoveEvent(QMouseEvent *event);
+
+//    void macdToolTip(QPointF point, bool state);
+//    void strategyToolTip(QPointF point, bool state);
+//    void votRunoverToolTip(QPointF point, bool state);
 
 //void ChartForm::strategyToolTip (QPointF point, bool state)
 //{
