@@ -12,13 +12,14 @@ class DataProcess: public QObject
 {
     Q_OBJECT
 public:
-    DataProcess(QMap<QString, QList<QStringList>> oridata, QMap<QString, int> buyCount, QObject *parent = Q_NULLPTR);
+    DataProcess(QMap<QString, QList<QStringList>> oridata, QMap<QString, int> buyCount, QList<int> macdTime, QObject *parent = Q_NULLPTR);
     ~DataProcess();
+    void filterIndexHedegeData();
     QList<QList<double>> computeAllData();
-    QList<double> computeStrategyData();
-    QList<double> computeVotData();
-    QList<double> computeMACDData();
-    QList<double> computeTimeData();
+    QList<QList<double>> computeStrategyData();
+    QList<QList<double>> computeVotData();
+    QList<QList<double>> computeMACDData();
+
 
 public slots:
     void receiveStartProcessData(QString dataType);
@@ -28,11 +29,18 @@ signals:
     void sendStrategyData(QList<double> strategyData);
     void sendVotData(QList<double> votData);
     void sendMACDData(QList<double> macdData);
-    void sendTimeData(QList<double> timeData);
 
-public:
+private:
     QMap<QString, QList<QStringList>> m_oriData;
+    QMap<QString, int> m_indexHedgeMetaInfo;
+    QList<QStringList> m_indexHedgeData;
+    int m_indexHedgeCount;
     QMap<QString, int> m_buyCount;
+    QList<int> m_macdTime;
+    QList<double> m_strategyData;
+    QList<double> m_votData;
+    QList<double> m_macdData;
+    QList<double> m_timeData;
 };
 
 
