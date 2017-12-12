@@ -30,7 +30,8 @@ SOURCES += main.cpp\
     qmychartview.cpp \
     processfunc.cpp \
     dataread.cpp \
-    dataprocess.cpp
+    dataprocess.cpp \
+    dialog.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -47,8 +48,10 @@ HEADERS  += widget.h \
     qmychartview.h \
     processfunc.h \
     dataread.h \
-    dataprocess.h
+    dataprocess.h \
+    dialog.h
 
 FORMS    += widget.ui \
-    chartform.ui
+    chartform.ui \
+    dialog.ui
 

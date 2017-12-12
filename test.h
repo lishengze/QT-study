@@ -35,4 +35,6 @@ void testKillProcess();
 
 void testDatabase();
 
+void testDataRead();
+
 #endif // TEST_H

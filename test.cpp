@@ -6,6 +6,7 @@
 #include <QSqlError>
 #include <QProcess>
 #include <QStringList>
+
 #include "test.h"
 #include "setdata.h"
 #include "toolfunc.h"
@@ -14,6 +15,7 @@
 #include "excel.h"
 #include "macd.h"
 #include "database.h"
+#include "dialog.h"
 
 using namespace  std;
 
@@ -215,6 +217,11 @@ void testDatabase() {
     qDebug() << result;
 }
 
+void testDataRead () {
+    Dialog testDialog(8);
+    testDialog.show ();
+}
+
 void testMain() {
     //    testReadExcelData ();
     //    testGetExcelFileName();
@@ -231,7 +238,8 @@ void testMain() {
     //    testDBClass();
     //    testProcess();
     //    testKillProcess();
-    testDatabase();
+//    testDatabase();
+    testDataRead();
 }
 
 

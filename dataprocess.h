@@ -5,30 +5,34 @@
 #include <QList>
 #include <QObject>
 #include <QDebug>
+#include <QMap>
+#include <QStringList>
 
 class DataProcess: public QObject
 {
     Q_OBJECT
 public:
-    DataProcess(QList<int> oridata, QObject *parent = Q_NULLPTR);
+    DataProcess(QMap<QString, QList<QStringList>> oridata, QMap<QString, int> buyCount, QObject *parent = Q_NULLPTR);
     ~DataProcess();
-
-    QList<int> computeAllData();
-    QList<int> computeStrategyData();
-    QList<int> computeVotData();
-    QList<int> computeMACDData();
+    QList<QList<double>> computeAllData();
+    QList<double> computeStrategyData();
+    QList<double> computeVotData();
+    QList<double> computeMACDData();
+    QList<double> computeTimeData();
 
 public slots:
     void receiveStartProcessData(QString dataType);
 
 signals:
-    void sendAllData(QList<int> allData);
-    void sendStrategyData(QList<int> strategyData);
-    void sendVotData(QList<int> votData);
-    void sendMACDData(QList<int> macdData);
+    void sendAllData(QList<QList<double>> allData);
+    void sendStrategyData(QList<double> strategyData);
+    void sendVotData(QList<double> votData);
+    void sendMACDData(QList<double> macdData);
+    void sendTimeData(QList<double> timeData);
 
 public:
-    QList<int> m_oriData;
+    QMap<QString, QList<QStringList>> m_oriData;
+    QMap<QString, int> m_buyCount;
 };
 
 

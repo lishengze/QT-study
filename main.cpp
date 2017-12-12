@@ -5,6 +5,7 @@
 #include <QTextCodec>
 #include <QProcess>
 #include "processfunc.h"
+#include "dialog.h"
 
 void setCode() {
 //    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
@@ -26,7 +27,10 @@ int main(int argc, char *argv[])
 //    Widget w;
 //    w.show();
 
-    testMain();
+    Dialog testDialog(8);
+    testDialog.show ();
+
+//    testMain();
     return a.exec();
 }
 
