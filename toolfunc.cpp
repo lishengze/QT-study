@@ -116,12 +116,37 @@ QList<MACD> computeMACD(QList<double> oriData, int t1, int t2, int t3) {
     return result;
 }
 
+QList<double> computeMACDDoubleData(QList<double> oriData, int t1, int t2, int t3) {
+    double EMA1[2] = {oriData[0], 0.0};
+    double EMA2[2] = {oriData[0], 0.0};
+    double DIFF;
+    double DEA[2];
+    double Macd;
+    QList<double> result;
+    for (int i = 0; i < oriData.size (); ++i) {
+        EMA1[1] = EMA1[0] * (t1-1) / (t1 + 1) + oriData[i] * 2 / (t1 + 1);
+        EMA2[1] = EMA2[0] * (t2-1) / (t2 + 1) + oriData[i] * 2 / (t2 + 1);
+        DIFF = EMA1[1] - EMA2[1];
+        if (i == 0) {
+            DEA[0] = DIFF;
+        }
+        DEA[1] = DEA[0] * (t3 -1) / (t3 + 1) + DIFF * 2 / (t3 + 1);
+        Macd = 2 * (DIFF - DEA[1]);
+        result << EMA1[1] << EMA2[1] << DIFF << DEA[1] << Macd;
+
+        EMA1[0] = EMA1[1];
+        EMA2[0] = EMA2[1];
+        DEA[0] = DEA[1];
+    }
+    return result;
+}
+
 void ErrorMessage(QString msg) {
     qDebug() << msg;
 }
 
-void ErrorMessage(QWidget* window,QString msg) {
-    QMessageBox::information(window, "TableDataNumb", msg);
+void WarnMessage(QWidget* window, QString title, QString msg) {
+    QMessageBox::warning(window, title, msg);
 }
 
 QList<double> getMACDRange(QList<MACD> oriData) {

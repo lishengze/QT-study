@@ -24,9 +24,12 @@ public:
     Dialog(int threadNumb, QWidget *parent = 0);
     ~Dialog();
 
-    void setOriData();
+    void setOriData();   
     void startReadData();
     void startProcessData();
+
+    void setTestProcessData();
+    void testProcessData();
 
     void releaseDataReaderSrc();
     void releaseDataProcessSrc();
@@ -54,11 +57,16 @@ private:
     QStringList m_oriData;
     QMap<QString, int> m_secodeBuyCount;
     QMap<QString, QList<QStringList>> m_completeTableData;
+    QList<int> m_macdTime;
 
     int m_dataNumb;
     int m_threadNumb;
     int m_processedThreadCount;
     mutable QMutex m_mutex;
+
+    QMap<QString, QList<QStringList>> m_tesTabletData;
+    QMap<QString, int> m_testBuyCount;
+    QList<int> m_testMacdTime;
 };
 
 #endif // DIALOG_H

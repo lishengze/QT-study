@@ -24,11 +24,11 @@ int main(int argc, char *argv[])
 {
     setLibPath();
     QApplication a(argc, argv);
-//    Widget w;
-//    w.show();
+    Widget w;
+    w.show();
 
-    Dialog testDialog(8);
-    testDialog.show ();
+//    Dialog testDialog(8);
+//    testDialog.show ();
 
 //    testMain();
     return a.exec();

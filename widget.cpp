@@ -96,6 +96,8 @@ void Widget::on_historyData_clicked()
     int EVA1Time = ui->EMA1TimeSpinBox->value ();
     int EVA2Time = ui->EMA2TimeSpinBox->value ();
     int DIFFTime = ui->DIFFTimeSpinBox->value ();
+    QList<int> macdTime;
+    macdTime << EVA1Time << EVA2Time << DIFFTime;
 
     QString hedgeIndexCode = ui->hedgeTarget_comboBox->currentData ().toString ();
     int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
@@ -112,7 +114,7 @@ void Widget::on_historyData_clicked()
                                           startDate, endDate, timeType,
                                           m_currStrategy, m_strategyName,
                                           hedgeIndexCode, hedgeIndexCount,
-                                          EVA1Time, EVA2Time, DIFFTime);
+                                          macdTime);
         charView->show ();
         m_chartViews.append (charView);
     }
@@ -132,10 +134,11 @@ void Widget::on_tableView_clicked(const QModelIndex &index)
     m_strategyName = m_strategyModel->getTableModel () ->item (intIndex)->text ();
     QString strategyFullFileName = m_strategyModel->getStrategyFullFileName (intIndex);
     m_currStrategy = m_excel->readStrategyDataFromExcel (strategyFullFileName);
-    for (int i = 0; i < m_currStrategy.size(); ++i) {
-        qDebug() << "secode: " << m_currStrategy.at(i).m_secode
-                 << " buyCount: " << m_currStrategy.at(i).m_buyCount;
-    }
+//    for (int i = 0; i < m_currStrategy.size(); ++i) {
+//        qDebug() << "secode: " << m_currStrategy.at(i).m_secode
+//                 << " buyCount: " << m_currStrategy.at(i).m_buyCount;
+//    }
+    qDebug() << "m_currStrategy.size: " << m_currStrategy.size ();
     ui->historyData->setEnabled(true);
 }
 

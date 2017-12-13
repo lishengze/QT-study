@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QChartView>
+#include <QCategoryAxis>
 #include <QChart>
 #include <QVector>
 #include <QString>
@@ -17,6 +18,9 @@
 #include <QObject>
 #include <QMutexLocker>
 #include <QMutex>
+
+#include "dataread.h"
+#include "dataprocess.h"
 
 #include "strategy.h"
 #include "callout.h"
@@ -39,99 +43,114 @@ public:
               QString startDate, QString endDate, QString timeType,
               QList<strategy_ceil> strategy, QString strategyName,
               QString hedgeIndexCode, int hedgeIndexCount,
-              int EVA1Time, int EVA2Time, int DIFFTime,
-              QString databaseName="MarketData");
+              QList<int> macdTime, int threadNumb = 8, QString databaseName="MarketData");
 
     void registSignalParamsType();
-    void initData(QString databaseName, QString timeType);
+    void initData(QString databaseName, QString timeType, QList<strategy_ceil> strategyList);
+    QList<QStringList> allocateThreadData();
 
-    void setStrategyData();
-    void setStrategyHedgeData();
-    void setVotRunoverData();
-    void setMacdData();
+    void startReadData();
+    void startProcessData();
+
+    void releaseDataReaderSrc();
+    void releaseDataProcessSrc();
 
     void setLayout ();
     void setVotRunoverChartView();
     void setStrategyChartView();
     void setMACDChartView();
 
+    QCategoryAxis* getAxisX ();
     void setTheme();
 
     void setTestView();
     void setMouseMoveValue(int currIndex);
 
-    QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
     QList<double> getChartYvalueRange(QList<QPointF> pointList );
+    QList<double> getChartYvalueRange(QList<double> yValueList );
+
+public slots:
+    void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
+    void receiveAllProcessedData(QList<QList<double>> allData);
+
+signals:
+    void sendStartReadDataSignal(QString dataType);
+    void sendStartProcessDataSignal(QString dataType);
 
 protected:
     bool eventFilter (QObject *watched, QEvent *event);
 
-public slots:
-    void receiveProcessedData(QList<int> subThreadData);
-
-signals:
-    void sendStartSignal(QList<int> testData);
-
 private:
     Ui::ChartForm *ui;
+
+
+private:
+    int m_chartViewID;
+    QList<strategy_ceil> m_strategy;
+    QString m_strategyName;
+    QString m_hedgeIndexCode;
+    int m_hedgeIndexCount;
+
+    QList<int> m_macdTime;
+    QString m_startDate;
+    QString m_endDate;
+    QStringList m_keyValueList;
+    QString m_timeType;
+    QString m_timeTypeFormat;
+    QString m_databaseName;
+    QString m_dbhost;
+
+    int m_threadNumb;
+
+private:
+    mutable QMutex m_mutex;
+
+    QMap<QString, int> m_seocdebuyCountMap;
+    QStringList m_secodeNameList;
+
+    QList<DataProcess*> m_dataProcessList;
+    QList<QThread*> m_dataProcessThreadList;
+
+    QList<DataRead*> m_dataReaderList;
+    QList<QThread*> m_dataReaderThreadList;
+    int m_readDataThreadCount;
+
+    QMap<QString, QList<QStringList>> m_completeTableData;
+
+    QList<double> m_timeData;
+    QList<double> m_strategyData;
+    QList<double> m_votData;
+    QList<MACD> m_macdData;
+
+    int m_dataNumb;
     QString m_title;
-
-    QList<qint64> timeList;
-
     int m_chartXaxisTickCount;
-    QChartView* m_openPriceChartView;
-    QChart* m_openPriceChart;
 
     QMyChartView* m_strategyChartView;
     QChart* m_strategyChart;
     Callout *m_strategyTooltip;
-    QList<QPointF> m_strategyData;
-    QList<QPointF> m_strategyHedgeData;
 
     QMyChartView* m_votrunoverChartView;
     QChart* m_votrunoverChart;
     Callout *m_votrunoverTooltip;
-    QList<QPointF> m_votrunoverData;
 
     QMyChartView* m_macdChartView;
     QChart* m_macdChart;
     Callout *m_macdTooltip;
-    QList<MACD> m_macdData;
 
     QChartView* m_testChartView;
-//    QMyChartView* m_testChartView;
     QChart* m_testChart;
     Callout *m_testTooltip;
 
-    QString m_startDate;
-    QString m_endDate;
-
-    int m_chartViewID;
-
-    QList<strategy_ceil> m_strategy;
-    QString m_strategyName;
-    QList<QList<QPointF>> m_tableDataList;
-    QList<int> m_buyCountList;
-
-    QString m_timeType;
-    QString m_timeTypeFormat;
-    QString m_databaseName;
-    Database* m_database;
-    QString m_dbhost;
-
-    int m_EVA1Time;
-    int m_EVA2Time;
-    int m_DIFFTime;
-    QString m_hedgeIndexCode;
-    int m_hedgeIndexCount;
-
-    QGraphicsSimpleTextItem* m_timeItem;
-    QGraphicsSimpleTextItem* m_targetItem;
-    QGraphicsSimpleTextItem* m_votrunoverItem;
-    QGraphicsSimpleTextItem* m_diffItem;
-    QGraphicsSimpleTextItem* m_deaItem;
-    QGraphicsSimpleTextItem* m_macdItem;
-
 };
+
+//    QList<QPointF> m_strategyData;
+//    QList<QPointF> m_strategyHedgeData;
+//    QList<QPointF> m_votrunoverData;
+
+//    QList<QPointF> computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList);
+//    void setStrategyData();
+//    void setVotRunoverData();
+//    void setMacdData();
 
 #endif // CHARTFORM_H

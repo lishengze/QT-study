@@ -2,25 +2,30 @@
 #include "toolfunc.h"
 #include <QPointF>
 
-DataProcess::DataProcess(QMap<QString, QList<QStringList>>oridata, QMap<QString, int> buyCount, QList<int> macdTime, QObject *parent):
-    m_oriData(oridata), m_buyCount(buyCount), m_macdTime(macdTime), QObject(parent)
+DataProcess::DataProcess(QMap<QString, QList<QStringList>>oridata,
+                         QMap<QString, int> buyCount, QList<int> macdTime,
+                         QObject *parent):
+    m_oriData(oridata), m_buyCount(buyCount), m_macdTime(macdTime),
+    QObject(parent)
 {
-    m_indexHedgeMetaInfo.insert("SH000300", 2*300);
-    m_indexHedgeMetaInfo.insert("SH000016", 2*50);
-    m_indexHedgeMetaInfo.insert("SH000852", 2*1000);
-    m_indexHedgeMetaInfo.insert("SH000904", 2*200);
-    m_indexHedgeMetaInfo.insert("SH000905", 2*500);
-    m_indexHedgeMetaInfo.insert("SH000906", 2*800);
-    m_indexHedgeMetaInfo.insert("SZ399903", 2*100);
+    m_indexHedgeMetaInfo.insert("SH000300", 300);
+    m_indexHedgeMetaInfo.insert("SH000016", 50);
+    m_indexHedgeMetaInfo.insert("SH000852", 1000);
+    m_indexHedgeMetaInfo.insert("SH000904", 200);
+    m_indexHedgeMetaInfo.insert("SH000905", 500);
+    m_indexHedgeMetaInfo.insert("SH000906", 800);
+    m_indexHedgeMetaInfo.insert("SZ399903", 100);
+
+    filterIndexHedegeData();
 }
 
 void DataProcess::filterIndexHedegeData() {
     QList<QString> indexHedgeCode = m_indexHedgeMetaInfo.keys();
     QList<QString> secodeList = m_oriData.keys();
-
     for (int i = 0; i < indexHedgeCode.size(); ++i) {
-        if (secodeList.indexOf(indexHedgeCode[i]) > 0) {
-            qDebug() << "indexcode: " << indexHedgeCode[i];
+        if (secodeList.indexOf(indexHedgeCode[i]) >= 0) {
+            qDebug() << "hedgeIndexcode: " << indexHedgeCode[i];
+            m_indexHedgeCode = indexHedgeCode[i];
             m_indexHedgeData = m_oriData[indexHedgeCode[i]];
             m_indexHedgeCount = m_indexHedgeMetaInfo[indexHedgeCode[i]];
             m_oriData.remove(indexHedgeCode[i]);
@@ -30,7 +35,7 @@ void DataProcess::filterIndexHedegeData() {
 }
 
 void DataProcess::receiveStartProcessData (QString dataType) {
-    qDebug() << "DataProcess::receiveStartProcessData: " << QThread::currentThreadId();
+//    qDebug() << "DataProcess::receiveStartProcessData: " << QThread::currentThreadId();
     if (dataType == "all") {
         emit sendAllData(computeAllData());
     } else {
@@ -58,9 +63,9 @@ QList<QList<double>> DataProcess::computeAllData() {
     return allData;
 }
 
-QList<double> DataProcess::computeStrategyData () {
+QList<QList<double>> DataProcess::computeStrategyData () {
     QList<QList<double>> result;
-    QList<QString> keyList;
+    QList<QString> keyList = m_oriData.keys ();
     QList<QPointF> pointDataList;
     for (int i = 0; i < keyList.size (); ++i) {
         QString key = keyList[i];
@@ -72,7 +77,6 @@ QList<double> DataProcess::computeStrategyData () {
         tmpPointData = sortPointFList(tmpPointData);
         pointDataList = mergeSortedPointedList (pointDataList, 1, tmpPointData, 1);
     }
-
     if (m_timeData.size() == 0) {
         for (int i = 0; i < pointDataList.size(); ++i) {
             m_timeData.append(pointDataList[i].x());
@@ -80,7 +84,7 @@ QList<double> DataProcess::computeStrategyData () {
     }
 
     for (int i = 0; i < pointDataList.size(); ++i) {
-        m_strategyData.append(pointDataList[i].y() / m_indexHedgeCount - m_indexHedgeData[i][1].toDouble());
+        m_strategyData.append(pointDataList[i].y() / (m_buyCount[m_indexHedgeCode] * m_indexHedgeCount) - m_indexHedgeData[i][1].toDouble());
     }
 
     result.append(m_timeData);
@@ -90,7 +94,7 @@ QList<double> DataProcess::computeStrategyData () {
 
 QList<QList<double>> DataProcess::computeVotData () {
     QList<QList<double>> result;
-    QList<QString> keyList;
+    QList<QString> keyList = m_oriData.keys ();
     QList<QPointF> pointDataList;
     for (int i = 0; i < keyList.size (); ++i) {
         QString key = keyList[i];
@@ -120,7 +124,7 @@ QList<QList<double>> DataProcess::computeVotData () {
 
 QList<QList<double>> DataProcess::computeMACDData () {
     QList<QList<double>> result;
-    m_macdData = computeMACD(m_strategyData, m_macdTime[0], m_macdTime[1], m_macdTime[2]);
+    m_macdData = computeMACDDoubleData(m_strategyData, m_macdTime[0], m_macdTime[1], m_macdTime[2]);
     result.append(m_timeData);
     result.append(m_macdData);
     return result;
@@ -128,5 +132,5 @@ QList<QList<double>> DataProcess::computeMACDData () {
 
 
 DataProcess::~DataProcess () {
-    qDebug() << "~DataProcess";
+//    qDebug() << "~DataProcess";
 }

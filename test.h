@@ -21,6 +21,8 @@ void testTableData();
 
 void testComputeMACD();
 
+void testComputeMACDDoubleData();
+
 void testTranstime();
 
 void testGetNumbList();

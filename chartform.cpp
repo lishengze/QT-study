@@ -18,6 +18,9 @@
 #include <QBarSet>
 #include <QMessageBox>
 
+#include <QMetaType>
+#include <QMutexLocker>
+
 #include "chartform.h"
 #include "ui_chartform.h"
 #include "toolfunc.h"
@@ -40,49 +43,159 @@ ChartForm::ChartForm(QWidget *parent, int chartViewID,
                      QString startDate, QString endDate, QString timeType,
                      QList<strategy_ceil> strategyList, QString strategyName,
                      QString hedgeIndexCode, int hedgeIndexCount,
-                     int EVA1Time, int EVA2Time, int DIFFTime,
+                     QList<int> macdTime, int threadNumb,
                      QString databaseName):
     QWidget(parent), m_chartViewID(chartViewID),
     m_startDate(startDate), m_endDate(endDate), m_timeType(timeType),
     m_strategy(strategyList), m_strategyName(strategyName),
-    m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
-    m_EVA1Time(EVA1Time), m_EVA2Time(EVA2Time), m_DIFFTime(DIFFTime),
-    m_database(NULL), m_macdTooltip(NULL), m_strategyTooltip(NULL), m_votrunoverTooltip(NULL),
+    m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),    
+    m_macdTime(macdTime), m_readDataThreadCount(0), m_threadNumb(threadNumb),
+    m_macdTooltip(NULL), m_strategyTooltip(NULL), m_votrunoverTooltip(NULL),
     ui(new Ui::ChartForm)
 {
-    initData(databaseName, timeType);
-    setLayout();
+    registSignalParamsType();
+    initData(databaseName, timeType, strategyList);
+    startReadData ();
 }
 
 void ChartForm::registSignalParamsType () {
-    qRegisterMetaType<QList<int>>("QList<int>");
+    qRegisterMetaType<QMap<QString, QList<QStringList>>>("QMap<QString, QList<QStringList>>");
+    qRegisterMetaType<QList<QList<double>>>("QList<QList<double>>");
 }
 
-void ChartForm::receiveProcessedData (QList<int> subThreadData) {
-
-}
-
-void ChartForm::initData (QString databaseName, QString timeType) {
+void ChartForm::initData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
     m_dbhost = "192.168.211.165";
 //    m_dbhost = "localhost";
-    m_database = new Database(this, QString(m_chartViewID), m_dbhost);
     m_databaseName = databaseName + "_" + timeType;
+    m_keyValueList << "TCLOSE" << "VOTRUNOVER";
+
+    for (int i = 0; i < strategyList.size (); ++i) {
+        m_seocdebuyCountMap.insert (strategyList[i].m_secode, strategyList[i].m_buyCount);
+    }
+    m_seocdebuyCountMap.insert (m_hedgeIndexCode, m_hedgeIndexCount);
+    m_secodeNameList = m_seocdebuyCountMap.keys();
 
     if (m_timeType.contains("m") && m_timeType != "month") {
         m_timeTypeFormat = "yyyy-MM-dd h:mm";
     } else {
         m_timeTypeFormat = "yyyy-MM-dd";
     }
-
     m_chartXaxisTickCount = 10;
-    setStrategyData();
-    setVotRunoverData();
-    setMacdData();
+}
+
+QList<QStringList> ChartForm::allocateThreadData() {
+    QList<QStringList> result;
+    for (int i = 0; i < m_threadNumb; ++i) {
+        QStringList emptyList;
+        result.append (emptyList);
+    }
+
+    for (int i = 0; i < m_secodeNameList.size(); i+=m_threadNumb) {
+        for (int j = 0; j < m_threadNumb && i + j < m_secodeNameList.size(); ++j) {
+            result[j].append (m_secodeNameList[i+j]);
+        }
+    }
+    return result;
+}
+
+void ChartForm::startReadData (){
+    QList<QStringList> oriThreadData = allocateThreadData ();
+    qDebug() << "oriThreadData: " << oriThreadData;
+    for (int i = 0; i < oriThreadData.size (); ++i) {
+        DataRead* curDataReader = new DataRead(QString("%1").arg(i + m_chartViewID * m_threadNumb), m_dbhost, m_databaseName,
+                                               oriThreadData[i], m_startDate, m_endDate, m_keyValueList);
+        QThread* curThread = new QThread();
+        curDataReader->moveToThread(curThread);
+
+        connect (curThread, SIGNAL(finished()),
+                 curDataReader, SLOT(deleteLater()));
+
+        connect (this, SIGNAL(sendStartReadDataSignal(QString)),
+                 curDataReader, SLOT(receiveStartReadData(QString)));
+
+        connect (curDataReader, SIGNAL(sendHistoryData(QMap<QString, QList<QStringList>>)),
+                 this, SLOT(receiveOriginalData(QMap<QString, QList<QStringList>>)), Qt::QueuedConnection);
+
+        curThread->start();
+        m_dataReaderList.append(curDataReader);
+        m_dataReaderThreadList.append(curThread);
+    }
+
+    qDebug() << "ChartForm::sendStartReadDataSignal: " << QThread::currentThreadId();
+    emit sendStartReadDataSignal("HistoryData");
+}
+
+void ChartForm::receiveOriginalData (QMap<QString, QList<QStringList>> subThreadData) {
+    QMutexLocker locker(&m_mutex);
+    m_completeTableData.unite (subThreadData);
+    ++m_readDataThreadCount;
+    qDebug() << "ChartForm::receiveProcessedData: " << QThread::currentThreadId() << " dataNumb: " << subThreadData.size ();
+    qDebug() << "m_readDataThreadCount: " << m_readDataThreadCount << "\n";
+
+    if (m_readDataThreadCount == m_threadNumb) {
+        releaseDataReaderSrc ();
+        m_readDataThreadCount = 0;
+        qDebug() << "m_completeTableData.size: " <<  m_completeTableData.size ();
+        startProcessData();
+        m_completeTableData.clear ();
+    }
+}
+
+void ChartForm::startProcessData () {
+    DataProcess* curDataProcess = new DataProcess(m_completeTableData, m_seocdebuyCountMap, m_macdTime);
+    QThread* curDataProcessThread = new QThread();
+    curDataProcess->moveToThread (curDataProcessThread);
+
+    connect (curDataProcessThread, SIGNAL(finished()),
+             curDataProcess, SLOT(deleteLater()));
+
+    connect (this, SIGNAL(sendStartProcessDataSignal(QString)),
+             curDataProcess, SLOT(receiveStartProcessData(QString)));
+
+    connect(curDataProcess, SIGNAL(sendAllData(QList<QList<double>>)),
+            this, SLOT(receiveAllProcessedData (QList<QList<double>>)));
+
+    curDataProcessThread->start ();
+    m_dataProcessList.append (curDataProcess);
+    m_dataProcessThreadList.append (curDataProcessThread);
+    emit sendStartProcessDataSignal("all");
+}
+
+void ChartForm::receiveAllProcessedData (QList<QList<double>> allData) {
+    qDebug() << "ChartForm::receiveAllProcessedData: " << QThread::currentThreadId();
+    m_timeData = allData[0];
+    m_strategyData = allData[1];
+    m_votData = allData[2];
+    QList<double> macdData = allData[3];
+    for (int i = 0; i < macdData.size (); i += 5){
+        m_macdData.append (MACD(macdData[i], macdData[i+1],
+                                macdData[i+2], macdData[i+3], macdData[i+4]));
+    }
+    qDebug() << "timeData.size:     " << m_timeData.size ();
+    qDebug() << "strategyData.size: " << m_strategyData.size ();
+    qDebug() << "votData.size:      " << m_votData.size ();
+    qDebug() << "macdData.size:     " << m_macdData.size ();
+    releaseDataProcessSrc ();
+    setLayout ();
+}
+
+void ChartForm::releaseDataReaderSrc () {
+    qDebug() << " m_dataReaderThreadList.size(): " <<  m_dataReaderThreadList.size();
+    for (int i = 0; i < m_dataReaderThreadList.size(); ++i) {
+         m_dataReaderThreadList[i]->quit ();
+    }
+}
+
+void ChartForm::releaseDataProcessSrc () {
+    qDebug() << " m_dataProcessThreadList.size(): " <<  m_dataProcessThreadList.size();
+    for (int i = 0; i < m_dataProcessThreadList.size (); ++i) {
+        m_dataProcessThreadList[i]->quit ();
+    }
 }
 
 void ChartForm::setLayout () {
     ui->setupUi(this);
-    m_title = QString("策略: %1 , MACD: %2, %3, %4 ").arg(m_strategyName).arg(m_EVA1Time).arg(m_EVA2Time).arg (m_DIFFTime);
+    m_title = QString("策略: %1 , MACD: %2, %3, %4 ").arg(m_strategyName).arg(m_macdTime[0]).arg(m_macdTime[1]).arg (m_macdTime[2]);
 
     ui->Title_Label->setText(m_title);
 
@@ -109,66 +222,33 @@ void ChartForm::setLayout () {
     this->setMouseTracking(true);
 }
 
-void ChartForm::setStrategyData() {
-    QList<QList<QPointF>> tableDataList;
-    QList<int> buyCountList;
-    for (int i = 0; i < m_strategy.size (); ++i) {
-        QString tableName = m_strategy[i].m_secode;
-        int buyCount = m_strategy[i].m_buyCount;
-        QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "TCLOSE", tableName, m_databaseName);
-        tableDataList.append (sortPointFList(curTableData));
-        buyCountList.append (buyCount);
-        qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
+QCategoryAxis* ChartForm::getAxisX () {
+    QCategoryAxis* axisX = new QCategoryAxis;
+    QList<int> axisXPosList = getNumbList(m_timeData.size (), m_chartXaxisTickCount);
+    for (int i = 0; i < axisXPosList.size(); ++i) {
+        int xpos = axisXPosList.at(i);
+        QDateTime tmpDatetime = QDateTime::fromMSecsSinceEpoch (m_timeData[xpos]);
+        axisX->append (tmpDatetime.toString (m_timeTypeFormat), xpos);
     }
-    m_strategyData = computeStrategyData(tableDataList, buyCountList);
-}
-
-void ChartForm::setVotRunoverData() {
-    QList<QList<QPointF>> tableDataList;
-    QList<int> buyCountList;
-    for (int i = 0; i < m_strategy.size (); ++i) {
-        QString tableName = m_strategy[i].m_secode;
-        int buyCount = m_strategy[i].m_buyCount;
-        QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "VOTRUNOVER", tableName, m_databaseName);
-        tableDataList.append (sortPointFList(curTableData));
-        buyCountList.append (1);
-        qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
-    }
-    m_votrunoverData = computeStrategyData(tableDataList, buyCountList);
-}
-
-void ChartForm::setMacdData () {
-    QList<double> oriData;
-    for (int i = 0; i<m_strategyData.size (); ++i) {
-        oriData.append (m_strategyData.at(i).y ());
-    }
-    m_macdData = computeMACD (oriData, m_EVA1Time, m_EVA2Time, m_DIFFTime);
+    return axisX;
 }
 
 void ChartForm::setStrategyChartView () {
     if (m_strategyData.size () == 0) {
-        ErrorMessage ("No strategy Data!");
+        QMessageBox::warning (this, "Waring", "净值点差曲线在所选时间范围内没有数据");
         return ;
     }    
-    QCategoryAxis* axisX = new QCategoryAxis;
-    QList<int> axisXPosList = getNumbList(m_strategyData.size (), m_chartXaxisTickCount);
-    for (int i = 0; i < axisXPosList.size(); ++i) {
-        int xpos = axisXPosList.at(i);
-        QDateTime tmpDatetime = QDateTime::fromMSecsSinceEpoch (m_strategyData.at(xpos).x());
-        axisX->append (tmpDatetime.toString (m_timeTypeFormat), xpos);
-    }
+
+    QCategoryAxis* axisX = getAxisX();
+    QValueAxis *axisY = new QValueAxis;
     QLineSeries* series = new QLineSeries;
     for (int i = 0; i < m_strategyData.size (); ++i) {
-        series->append (i, m_strategyData.at (i).y());
+        series->append (i, m_strategyData.at (i));
     }
-    series->setName("目标");
+    series->setName("点差");
     series->setUseOpenGL (true);
 
-    QValueAxis *axisY = new QValueAxis;
-    QList<QPointF> pointList = series->points ();
-    qDebug() << "StrategyChart points.count: " << pointList.count();
-
-    QList<double>  axisYRange = getChartYvalueRange(pointList);
+    QList<double>  axisYRange = getChartYvalueRange(m_strategyData);
     axisY -> setRange (axisYRange[0], axisYRange[1]);
     axisY -> setLabelFormat ("%1.1e");
 
@@ -188,30 +268,22 @@ void ChartForm::setStrategyChartView () {
 }
 
 void ChartForm::setVotRunoverChartView () {
-    if (m_votrunoverData.size () == 0) {
-        ErrorMessage ("No strategy Data!");
+    if (m_votData.size () == 0) {
+        QMessageBox::warning (this, "Waring", "销售额曲线在所选时间范围内没有数据");
         return;
     }
 
-    QCategoryAxis* axisX = new QCategoryAxis;
-    QList<int> axisXPosList = getNumbList(m_votrunoverData.size (), m_chartXaxisTickCount);
-    for (int i = 0; i < axisXPosList.size(); ++i) {
-        int xpos = axisXPosList.at(i);
-        QDateTime tmpDatetime = QDateTime::fromMSecsSinceEpoch (m_strategyData.at(xpos).x());
-        axisX->append (tmpDatetime.toString (m_timeTypeFormat), xpos);
-    }
-
+    QCategoryAxis* axisX = getAxisX();
     QStackedBarSeries *barseries = new QStackedBarSeries();
     QBarSet *set = new QBarSet("金额");
-    for (int i = 0; i < m_votrunoverData.size (); ++i) {
-        set->append(m_votrunoverData.at (i).y());
+    for (int i = 0; i < m_votData.size (); ++i) {
+        set->append(m_votData.at (i));
     }
     barseries->append(set);
     barseries->setUseOpenGL (true);
 
     QValueAxis *axisY = new QValueAxis;
-    qDebug() << "VotRunoverChart points.count: " << m_votrunoverData.count();
-    QList<double>  axisYRange = getChartYvalueRange(m_votrunoverData);
+    QList<double>  axisYRange = getChartYvalueRange(m_votData);
     axisY -> setRange (0, axisYRange[1]);
     axisY -> setLabelFormat ("%1.1e");
 
@@ -237,10 +309,9 @@ void ChartForm::setVotRunoverChartView () {
 
 void ChartForm::setMACDChartView () {
     if (m_macdData.size () == 0) {
-        ErrorMessage ("No strategy Data!");
+         QMessageBox::warning (this, "Waring", "MACD曲线在所选时间范围内没有数据");
         return;
     }
-    qDebug() << "MacdChart points.count: " << m_macdData.size ();
 
     QLineSeries* diffSeries = new QLineSeries();
     diffSeries->setName("DIFF");
@@ -249,13 +320,7 @@ void ChartForm::setMACDChartView () {
     QStackedBarSeries *macdSeries = new QStackedBarSeries();
     QBarSet *macdSet = new QBarSet("MACD");
 
-    QCategoryAxis* axisX = new QCategoryAxis;
-    QList<int> axisXPosList = getNumbList(m_macdData.size (), m_chartXaxisTickCount);
-    for (int i = 0; i < axisXPosList.size(); ++i) {
-        int xpos = axisXPosList.at(i);
-        QDateTime tmpDatetime = QDateTime::fromMSecsSinceEpoch (m_strategyData.at(xpos).x());
-        axisX->append (tmpDatetime.toString (m_timeTypeFormat), xpos);
-    }
+    QCategoryAxis* axisX = getAxisX();
     for (int i = 0; i < m_macdData.size (); ++i) {
         diffSeries->append (i, m_macdData.at(i).m_diff);
         deaSeries->append (i, m_macdData.at(i).m_dea);
@@ -339,10 +404,10 @@ void ChartForm::setTheme() {
 void ChartForm::setMouseMoveValue(int currIndex) {
     if (currIndex >= 0 && currIndex < m_strategyData.size()) {
 //        qDebug() << "currIndex: " << currIndex;
-        QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(m_strategyData.at(currIndex).x ());
+        QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(qint64(m_timeData.at(currIndex)));
         QString dateTimeString = curDatetime.toString (m_timeTypeFormat);
-        qreal strategyValue = m_strategyData.at(currIndex).y ();
-        qreal votrunoverValue = m_votrunoverData.at(currIndex).y ();
+        qreal strategyValue = m_strategyData.at(currIndex);
+        qreal votrunoverValue = m_votData.at(currIndex);
         qreal DIFF = m_macdData.at(currIndex).m_diff;
         qreal DEA = m_macdData.at(currIndex).m_dea;
         qreal Macd = m_macdData.at(currIndex).m_macd;
@@ -397,22 +462,6 @@ bool ChartForm::eventFilter (QObject *watched, QEvent *event) {
     return QWidget::eventFilter (watched, event);
 }
 
-QList<QPointF> ChartForm::computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList) {
-    QList<QPointF> result;
-    QList<QPointF> firstStockData = allTableData.at(0);
-    int firstBuyCount = buyCountList.at(0);
-    for (int i = 0; i < firstStockData.size (); ++i) {
-        result.append (QPointF(firstStockData.at (i).x(), firstStockData.at(i).y () * firstBuyCount));
-    }
-
-    for (int i = 1; i < allTableData.size (); ++i) {
-        QList<QPointF> tmpStockData = allTableData.at(i);
-        int tmpBuyCount = buyCountList.at(i);
-        result = mergeSortedPointedList (result, 1, tmpStockData, tmpBuyCount);
-    }
-    return result;
-}
-
 QList<double> ChartForm::getChartYvalueRange(QList<QPointF> pointList ) {
     double maxValue = -1000000000000000000.0;
     double minValue = 10000000000000000000.0;
@@ -430,13 +479,26 @@ QList<double> ChartForm::getChartYvalueRange(QList<QPointF> pointList ) {
     return result;
 }
 
+QList<double> ChartForm::getChartYvalueRange(QList<double> yValueList ) {
+    double maxValue = -1000000000000000000.0;
+    double minValue = 10000000000000000000.0;
+    for (int i = 0; i < yValueList.size(); ++i) {
+        maxValue = max(maxValue, yValueList[i]);
+        minValue = min(minValue, yValueList[i]);
+    }
+
+    int rangeInterval = 6;
+    maxValue += (maxValue - minValue) / rangeInterval;
+    minValue -= (maxValue - minValue) / rangeInterval;
+    QList<double> result;
+    result.append (minValue);
+    result.append (maxValue);
+    return result;
+}
+
 ChartForm::~ChartForm()
 {
     delete ui;
-    if (NULL != m_database) {
-        delete m_database;
-        m_database = NULL;
-    }
     if (NULL != m_macdTooltip) {
         delete m_macdTooltip;
         m_macdTooltip = NULL;
@@ -449,7 +511,67 @@ ChartForm::~ChartForm()
         delete m_votrunoverTooltip;
         m_votrunoverTooltip = NULL;
     }
+    for (int i = 0; i < m_dataProcessThreadList.size(); ++i) {
+         delete m_dataProcessThreadList[i];
+         m_dataProcessThreadList[i] = NULL;
+    }
+    for (int i = 0; i < m_dataReaderThreadList.size(); ++i) {
+         delete m_dataReaderThreadList[i];
+         m_dataReaderThreadList[i] = NULL;
+    }
 }
+
+//QList<QPointF> ChartForm::computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList) {
+//    QList<QPointF> result;
+//    QList<QPointF> firstStockData = allTableData.at(0);
+//    int firstBuyCount = buyCountList.at(0);
+//    for (int i = 0; i < firstStockData.size (); ++i) {
+//        result.append (QPointF(firstStockData.at (i).x(), firstStockData.at(i).y () * firstBuyCount));
+//    }
+
+//    for (int i = 1; i < allTableData.size (); ++i) {
+//        QList<QPointF> tmpStockData = allTableData.at(i);
+//        int tmpBuyCount = buyCountList.at(i);
+//        result = mergeSortedPointedList (result, 1, tmpStockData, tmpBuyCount);
+//    }
+//    return result;
+//}
+
+//void ChartForm::setStrategyData() {
+//    QList<QList<QPointF>> tableDataList;
+//    QList<int> buyCountList;
+//    for (int i = 0; i < m_strategy.size (); ++i) {
+//        QString tableName = m_strategy[i].m_secode;
+//        int buyCount = m_strategy[i].m_buyCount;
+//        QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "TCLOSE", tableName, m_databaseName);
+//        tableDataList.append (sortPointFList(curTableData));
+//        buyCountList.append (buyCount);
+//        qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
+//    }
+//    m_strategyData = computeStrategyData(tableDataList, buyCountList);
+//}
+
+//void ChartForm::setVotRunoverData() {
+//    QList<QList<QPointF>> tableDataList;
+//    QList<int> buyCountList;
+//    for (int i = 0; i < m_strategy.size (); ++i) {
+//        QString tableName = m_strategy[i].m_secode;
+//        int buyCount = m_strategy[i].m_buyCount;
+//        QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "VOTRUNOVER", tableName, m_databaseName);
+//        tableDataList.append (sortPointFList(curTableData));
+//        buyCountList.append (1);
+//        qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
+//    }
+//    m_votrunoverData = computeStrategyData(tableDataList, buyCountList);
+//}
+
+//void ChartForm::setMacdData () {
+//    QList<double> oriData;
+//    for (int i = 0; i<m_strategyData.size (); ++i) {
+//        oriData.append (m_strategyData.at(i).y ());
+//    }
+//    m_macdData = computeMACD (oriData, m_EVA1Time, m_EVA2Time, m_DIFFTime);
+//}
 
 //    void resizeEvent(QResizeEvent *event);
 //    void mouseMoveEvent(QMouseEvent *event);

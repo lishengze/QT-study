@@ -19,7 +19,11 @@ QList<QPointF> mergeSortedPointedList(QList<QPointF> firstList, int firstBuyCoun
 
 QList<MACD> computeMACD(QList<double> oriData, int t1, int t2, int t3);
 
+QList<double> computeMACDDoubleData(QList<double> oriData, int t1, int t2, int t3);
+
 void ErrorMessage(QString msg);
+
+void WarnMessage(QWidget* window, QString title, QString msg);
 
 QList<double> getMACDRange(QList<MACD> oriData);
 

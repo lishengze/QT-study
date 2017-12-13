@@ -114,7 +114,6 @@ void testComputeMACD() {
     for (int i = 0; i < numb; ++i) {
         oriData.append (data[i]);
     }
-    qDebug() << oriData;
     int t1 = 12;
     int t2 = 26;
     int t3 = 9;
@@ -123,6 +122,53 @@ void testComputeMACD() {
     for (int i =0; i < result.size (); ++i) {
         cout << result.at(i);
     }
+    cout<< "result.size: " << result.size ();
+}
+
+void testComputeMACDDoubleData() {
+    double data[] = {99.9800, 104.3900, 109.1300,114.5500,
+                    120.2500,125.2700,125.2800,126.4500,
+                    127.6100,128.8400,130.1400,131.4400,
+                    132.0600,132.6800,133.3400,133.9700,
+                    134.6000,134.6700,134.7400,134.2400,
+                    134.2500,134.2400,134.2400,133.7200,
+                    133.1700,132.6100,132.0500,131.4600,
+                    130.9500,130.4400,129.9700,129.5100,
+                    129.0500,128.5800,129.1400,129.7900,
+                    130.3800};
+    QList<double> oriData;
+    int numb = sizeof(data) / sizeof(double);
+    for (int i = 0; i < numb; ++i) {
+        oriData.append (data[i]);
+    }
+    int t1 = 12;
+    int t2 = 26;
+    int t3 = 9;
+    QList<double> doubleResult = computeMACDDoubleData (oriData, t1, t2, t3);
+    QList<MACD> classResult = computeMACD (oriData, t1, t2, t3);
+
+    for (int i = 0; i < classResult.size (); ++i) {
+        cout << classResult[i];
+        cout << doubleResult[i*5] << ", " << doubleResult[i*5+1] << ", " << doubleResult[i*5+2] << ", "
+             << doubleResult[i*5+3] << ", " << doubleResult[i*5+4] << "\n" << endl;
+
+        if (classResult[i].m_ema1 != doubleResult[i*5] ||
+            classResult[i].m_ema2 != doubleResult[i*5+1] ||
+            classResult[i].m_diff != doubleResult[i*5+2] ||
+            classResult[i].m_dea != doubleResult[i*5+3] ||
+            classResult[i].m_macd != doubleResult[i*5+4]) {
+            qDebug() << "Differernt ";
+        }
+    }
+
+//    for (int i = 0; i < doubleResult.size (); i+= 5) {
+//        cout << doubleResult[i] << ", "
+//             << doubleResult[i+1] << ", "
+//             << doubleResult[i+2] << ", "
+//             << doubleResult[i+3] << ", "
+//             << doubleResult[i+4] << endl;
+//    }
+//    cout << "doubleResult.size: " << doubleResult.size ();
 }
 
 void testTranstime() {
@@ -239,7 +285,9 @@ void testMain() {
     //    testProcess();
     //    testKillProcess();
 //    testDatabase();
-    testDataRead();
+//    testDataRead();
+//    testComputeMACD();
+    testComputeMACDDoubleData();
 }
 
 

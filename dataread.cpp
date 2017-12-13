@@ -43,5 +43,5 @@ DataRead::~DataRead () {
         delete m_database;
         m_database = NULL;
     }
-    qDebug() << "~DataRead";
+//    qDebug() << "~DataRead";
 }
