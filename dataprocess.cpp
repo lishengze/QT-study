@@ -1,6 +1,8 @@
 #include "dataprocess.h"
 #include "toolfunc.h"
 #include <QPointF>
+#include <QDateTime>
+#include <QString>
 
 DataProcess::DataProcess(QMap<QString, QList<QStringList>>oridata,
                          QMap<QString, int> buyCount, QList<int> macdTime,
@@ -22,15 +24,22 @@ DataProcess::DataProcess(QMap<QString, QList<QStringList>>oridata,
 void DataProcess::filterIndexHedegeData() {
     QList<QString> indexHedgeCode = m_indexHedgeMetaInfo.keys();
     QList<QString> secodeList = m_oriData.keys();
+    QList<QStringList> tmpIndexHedgeData;
     for (int i = 0; i < indexHedgeCode.size(); ++i) {
         if (secodeList.indexOf(indexHedgeCode[i]) >= 0) {
             qDebug() << "hedgeIndexcode: " << indexHedgeCode[i];
             m_indexHedgeCode = indexHedgeCode[i];
-            m_indexHedgeData = m_oriData[indexHedgeCode[i]];
+            tmpIndexHedgeData = m_oriData[indexHedgeCode[i]];
             m_indexHedgeCount = m_indexHedgeMetaInfo[indexHedgeCode[i]];
             m_oriData.remove(indexHedgeCode[i]);
             break;
         }
+    }
+    for (int i = 0; i < tmpIndexHedgeData.size (); ++i) {
+        QStringList tmpKeyValue;
+        tmpKeyValue << tmpIndexHedgeData[i][1] << tmpIndexHedgeData[i][2];
+        QString dateTimeString = QDateTime::fromMSecsSinceEpoch(qint64(tmpIndexHedgeData[i][0].toLongLong())).toString ("yyyyMMddhhmmss");
+        m_indexHedgeData.insert (dateTimeString, tmpKeyValue);
     }
 }
 
@@ -83,8 +92,18 @@ QList<QList<double>> DataProcess::computeStrategyData () {
         }
     }
 
+    qDebug() << "pointDataList.size:    " << pointDataList.size ();
+    qDebug() << "m_indexHedgeData.size: " << m_indexHedgeData.size();
+
+    QList<QString> indexHedgedataTimeKey = m_indexHedgeData.keys ();
     for (int i = 0; i < pointDataList.size(); ++i) {
-        m_strategyData.append(pointDataList[i].y() / (m_buyCount[m_indexHedgeCode] * m_indexHedgeCount) - m_indexHedgeData[i][1].toDouble());
+        QString timeKeyStr = QDateTime::fromMSecsSinceEpoch(qint64(pointDataList[i].x())).toString ("yyyyMMddhhmmss");
+        if (indexHedgedataTimeKey.indexOf (timeKeyStr) >= 0) {
+            m_strategyData.append(pointDataList[i].y() / (m_buyCount[m_indexHedgeCode] * m_indexHedgeCount) - m_indexHedgeData[timeKeyStr][0].toDouble());
+        } else {
+            m_strategyData.append(pointDataList[i].y() / (m_buyCount[m_indexHedgeCode] * m_indexHedgeCount));
+            qDebug() << "time not in indexHedgeData: " << timeKeyStr;
+        }
     }
 
     result.append(m_timeData);

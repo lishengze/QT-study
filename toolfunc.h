@@ -4,6 +4,7 @@
 #include <QList>
 #include <QPointF>
 #include <QWidget>
+#include <QTableView>
 #include "macd.h"
 
 QList<int> getDateList(int intDate);
@@ -42,5 +43,7 @@ QList<QString> getProcessPid(QString taskList, QString processName);
 void killProcessByPid(QString pid);
 
 QString getIndexCode();
+
+void updateProgramInfo(QTableView* programInfoTableView, QString message, QString remark="");
 
 #endif // TOOLFUNC_H

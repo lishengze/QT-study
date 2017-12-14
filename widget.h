@@ -31,19 +31,15 @@ public:
 
     void setCalendarValue();
     void setHedgeValue();
-    void setTableView();
+    void setStrategyTableView();
+    void setProgramInfoTableView();
     void setDataFrequency();
     void setMacdTime();
 
     ~Widget();
 
-//    void resizeEvent(QResizeEvent *event);
-//    void mouseMoveEvent(QMouseEvent *event);
-//    void timerEvent(QTimerEvent* event);
-
 public slots:
-//    void keepCallout();
-//    void tooltip(QPointF point, bool state);
+
 
 private slots:
     void on_historyData_clicked();
@@ -55,13 +51,6 @@ private slots:
 private:
     Ui::Widget *ui;
     QList<QWidget*> m_chartViews;
-    QDialog* m_chartDialog;
-    QChart* m_chart;
-    QChartView* m_chartView;
-    QGraphicsSimpleTextItem *m_coordX;
-    QGraphicsSimpleTextItem *m_coordY;
-    Callout *m_tooltip;
-    QList<Callout *> m_callouts;
 
     StrategyModel* m_strategyModel;
     QTableView* m_strategyTalbeView;

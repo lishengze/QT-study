@@ -9,7 +9,9 @@
 #include <QPointF>
 #include <QDebug>
 #include <QMessageBox>
+#include <QAbstractItemModel>
 
+#include "toolfunc.h"
 #include "widget.h"
 #include "ui_widget.h"
 #include "QChartView"
@@ -18,18 +20,9 @@
 #include "chartform.h"
 
 QT_CHARTS_USE_NAMESPACE
-const int MAXSIZE = 500;
-const int TIMEINTERVAL = 100;
-QChart *g_chart;
-QLineSeries *g_series;
-int g_timeId;
 
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
-    m_coordX(0),
-    m_coordY(0),
-    m_chart(0),
-    m_tooltip(0),
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_strategyFileDir(""),
@@ -41,7 +34,8 @@ Widget::Widget(QWidget *parent) :
     setCalendarValue();
     setHedgeValue();
     setMacdTime();
-    setTableView();
+    setStrategyTableView();
+    setProgramInfoTableView();
     setDataFrequency();
 }
 
@@ -65,14 +59,30 @@ void Widget::setHedgeValue() {
     ui->hedgeCount_spinBox->setValue (2);
 }
 
-void Widget::setTableView () {
-    m_strategyFileDir = "D:/strategy";
-//    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
+void Widget::setStrategyTableView () {
+//    m_strategyFileDir = "D:/strategy";
+    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
     ui->tableView->setModel (tableModel);
+    ui->tableView->setColumnWidth (0, 150);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableView->setShowGrid (false);
+//    QAbstractItemModel* testMode = ui->tableView->model ();
+//    qDebug() << "testMode: " << testMode;
+}
+
+void Widget::setProgramInfoTableView () {
+    QStandardItemModel* initModel = new QStandardItemModel();
+    initModel -> setHorizontalHeaderItem (0, new QStandardItem(QObject::tr("时间")));
+    initModel -> setHorizontalHeaderItem (1, new QStandardItem(QObject::tr("消息")));
+    initModel -> setHorizontalHeaderItem (2, new QStandardItem(QObject::tr("备注")));
+    ui->programInfo_tableView->setModel (initModel);
+    ui->programInfo_tableView->setColumnWidth (0, 150);
+    ui->programInfo_tableView->setColumnWidth (1, 600);
+    ui->programInfo_tableView->setColumnWidth (2, 150);
+    ui->programInfo_tableView->setShowGrid (false);
 }
 
 void Widget::setMacdTime () {
@@ -102,15 +112,14 @@ void Widget::on_historyData_clicked()
     QString hedgeIndexCode = ui->hedgeTarget_comboBox->currentData ().toString ();
     int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
 
-    qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
-    qDebug() << "timeType: " << timeType;
-    qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
     if (startDate.toInt () >= endDate.toInt ()) {
         QMessageBox::critical(NULL, "Error", "起始时间晚于截止时间");
+        return;
     } else if (m_currStrategy.size () == 0) {
         QMessageBox::critical(NULL, "Error", "还未选择策略");
+        return;
     } else {
-        QWidget* charView = new ChartForm(0, m_chartViews.count(),
+        QWidget* charView = new ChartForm(0, ui->programInfo_tableView, m_chartViews.count(),
                                           startDate, endDate, timeType,
                                           m_currStrategy, m_strategyName,
                                           hedgeIndexCode, hedgeIndexCount,
@@ -118,6 +127,14 @@ void Widget::on_historyData_clicked()
         charView->show ();
         m_chartViews.append (charView);
     }
+    qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
+    qDebug() << "timeType: " << timeType;
+    qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
+    updateProgramInfo (ui->programInfo_tableView, QString("策略名称: %1, 策略中股票数目为: %2").arg(m_strategyName).arg(m_currStrategy.size ()));
+    updateProgramInfo (ui->programInfo_tableView, QString("起始时间: %1, 终止时间: %2, 时间频率: %3, T1: %4, T2: %5, T3: %6")
+                       .arg(startDate).arg(endDate).arg(timeType).arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
+    updateProgramInfo (ui->programInfo_tableView, QString("对冲目标: %1, 对冲笔数: %2").arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
+    updateProgramInfo (ui->programInfo_tableView, QString("读取数据"));
 }
 
 void Widget::on_chooseStartDate_editingFinished()
@@ -132,13 +149,14 @@ void Widget::on_tableView_clicked(const QModelIndex &index)
     ui->historyData->setEnabled (false);
     int intIndex = index.row ();
     m_strategyName = m_strategyModel->getTableModel () ->item (intIndex)->text ();
+    updateProgramInfo (ui->programInfo_tableView, QString("读取策略: %1").arg(m_strategyName));
+
     QString strategyFullFileName = m_strategyModel->getStrategyFullFileName (intIndex);
     m_currStrategy = m_excel->readStrategyDataFromExcel (strategyFullFileName);
-//    for (int i = 0; i < m_currStrategy.size(); ++i) {
-//        qDebug() << "secode: " << m_currStrategy.at(i).m_secode
-//                 << " buyCount: " << m_currStrategy.at(i).m_buyCount;
-//    }
+
+    updateProgramInfo (ui->programInfo_tableView, QString("策略中股票数目为: %1").arg(m_currStrategy.size ()));
     qDebug() << "m_currStrategy.size: " << m_currStrategy.size ();
+
     ui->historyData->setEnabled(true);
 }
 
@@ -163,118 +181,5 @@ Widget::~Widget()
     }
 }
 
-//void Widget::mouseMoveEvent(QMouseEvent *event)
-//{
-////    qDebug() << "mouseMoveEvent" << endl;
-//    m_coordX->setText(QString("X: %1").arg(m_chart->mapToValue(event->pos()).x()));
-//    m_coordY->setText(QString("Y: %1").arg(m_chart->mapToValue(event->pos()).y()));
-////    QGraphicsView::mouseMoveEvent(event);
-//}
 
-//void Widget::keepCallout()
-//{
-//    qDebug() << "clicked keepCallout" << endl;
-//    m_callouts.append(m_tooltip);
-//    m_tooltip = new Callout(m_chart);
-//}
 
-//void Widget::tooltip(QPointF point, bool state)
-//{
-//    qDebug() << "hover tooltip" << endl;
-//    if (m_tooltip == 0)
-//        m_tooltip = new Callout(m_chart);
-
-//    if (state) {
-//        m_tooltip->setText(QString("X: %1 \nY: %2 ").arg(point.x()).arg(point.y()));
-//        m_tooltip->setAnchor(point);
-//        m_tooltip->setZValue(11);
-//        m_tooltip->updateGeometry();
-//        m_tooltip->show();
-//    } else {
-//        m_tooltip->hide();
-//    }
-//}
-
-//double getData(double time){
-//    double s = qCos( time * M_PI * 2 ) ;
-//    return s;
-//}
-
-//QChartView * getChartView(){
-//    g_chart = new QChart;
-//    QChartView *chartView = new QChartView(g_chart);
-////    v.setRubberBand(QChartView::HorizontalRubberBand);
-//    chartView->setRubberBand(QChartView::RectangleRubberBand);
-
-//    g_series = new QLineSeries;
-//    g_chart->addSeries(g_series);
-
-//    for(int i=0;i<MAXSIZE;++i){
-//       g_series->append(i,0);
-//    }
-//    g_series->setUseOpenGL(true);//openGl 加速
-////    qDebug()<<g_series->useOpenGL();
-
-//    QValueAxis *axisX = new QValueAxis;
-//    axisX->setRange(0,MAXSIZE);
-////    axisX->setLabelFormat("%g");
-//    axisX->setTitleText("axisX");
-
-//    QValueAxis *axisY = new QValueAxis;
-//    axisY->setRange(-1.5,1.5);
-//    axisY->setTitleText("axisY");
-
-//    g_chart->setAxisX(axisX,g_series);
-//    g_chart->setAxisY(axisY,g_series);
-//    g_chart->legend()->hide();
-//    g_chart->setTitle("demo");
-//    return chartView;
-//}
-
-//void Widget::setChartView(){
-//    m_chart = new QChart();
-//    m_chart->setTitle("Test Show Database Data");
-//    m_chart->legend()->hide();
-
-//    m_chartView = new QChartView(m_chart);
-
-//    QLineSeries* series = new QLineSeries;
-////    QScatterSeries *series = new QScatterSeries(m_chart);
-//    m_chart->addSeries (series);
-//    m_chartView->setRubberBand(QChartView::RectangleRubberBand);
-
-////    int pointNumb = 100;
-////    for(int i=0;i<pointNumb;++i){
-////       series->append(i,i);
-////    }
-
-//    series->append (getOpenPrice());
-////    setSeriresData(series);
-
-//    QList<QPointF> datalist = series->points ();
-//    qDebug() << "series points.count: " << datalist.count();
-////    qDebug() << datalist[0] << endl;
-
-////    m_coordX = new QGraphicsSimpleTextItem(m_chart);
-////    m_coordX->setPos(m_chart->size().width()/2 - 50, m_chart->size().height());
-////    m_coordX->setText("X: ");
-////    m_coordY = new QGraphicsSimpleTextItem(m_chart);
-////    m_coordY->setPos(m_chart->size().width()/2 + 50, m_chart->size().height());
-////    m_coordY->setText("Y: ");
-
-//    connect(series, SIGNAL(clicked(QPointF)), this, SLOT(keepCallout()));
-//    connect(series, SIGNAL(hovered(QPointF, bool)), this, SLOT(tooltip(QPointF,bool)));
-
-//    QValueAxis* axisX = new QValueAxis();
-//    axisX->setTitleText ("Time");
-//    axisX->setRange(0,1000);
-
-//    QValueAxis* axisY = new QValueAxis();
-//    axisY->setTitleText ("TOPEN");
-//    axisY->setRange(12,13);
-
-//    m_chart->setAxisX (axisX, series);
-//    m_chart->setAxisY (axisY, series);
-
-////    m_chart->createDefaultAxes();
-//}

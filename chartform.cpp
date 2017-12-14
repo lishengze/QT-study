@@ -39,13 +39,13 @@ ChartForm::ChartForm(QWidget *parent) :
 //    mainLayout->addWidget (ui->gridLayoutWidget);
 }
 
-ChartForm::ChartForm(QWidget *parent, int chartViewID,
+ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
                      QString startDate, QString endDate, QString timeType,
                      QList<strategy_ceil> strategyList, QString strategyName,
                      QString hedgeIndexCode, int hedgeIndexCount,
                      QList<int> macdTime, int threadNumb,
                      QString databaseName):
-    QWidget(parent), m_chartViewID(chartViewID),
+    QWidget(parent), m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
     m_startDate(startDate), m_endDate(endDate), m_timeType(timeType),
     m_strategy(strategyList), m_strategyName(strategyName),
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),    
@@ -100,7 +100,7 @@ QList<QStringList> ChartForm::allocateThreadData() {
 
 void ChartForm::startReadData (){
     QList<QStringList> oriThreadData = allocateThreadData ();
-    qDebug() << "oriThreadData: " << oriThreadData;
+//    qDebug() << "oriThreadData: " << oriThreadData;
     for (int i = 0; i < oriThreadData.size (); ++i) {
         DataRead* curDataReader = new DataRead(QString("%1").arg(i + m_chartViewID * m_threadNumb), m_dbhost, m_databaseName,
                                                oriThreadData[i], m_startDate, m_endDate, m_keyValueList);
@@ -129,19 +129,26 @@ void ChartForm::receiveOriginalData (QMap<QString, QList<QStringList>> subThread
     QMutexLocker locker(&m_mutex);
     m_completeTableData.unite (subThreadData);
     ++m_readDataThreadCount;
-    qDebug() << "ChartForm::receiveProcessedData: " << QThread::currentThreadId() << " dataNumb: " << subThreadData.size ();
+    qDebug() << "ChartForm::receiveOriginalData: " << QThread::currentThreadId()
+             << " dataNumb: " << subThreadData.size ();
     qDebug() << "m_readDataThreadCount: " << m_readDataThreadCount << "\n";
 
+    updateProgramInfo (m_programInfoTableView, QString("完成股票指数读取数目: %1").arg(m_completeTableData.size ()));
     if (m_readDataThreadCount == m_threadNumb) {
         releaseDataReaderSrc ();
         m_readDataThreadCount = 0;
-        qDebug() << "m_completeTableData.size: " <<  m_completeTableData.size ();
         startProcessData();
         m_completeTableData.clear ();
     }
 }
 
 void ChartForm::startProcessData () {
+    int oridataCount = 0;
+    for (int i = 0; i < m_secodeNameList.size (); ++i) {
+        oridataCount += m_completeTableData[m_secodeNameList[i]].size ();
+    }
+    updateProgramInfo (m_programInfoTableView, QString("原始数据获取完成, 原始数据总数: %1").arg(oridataCount));
+    updateProgramInfo (m_programInfoTableView, QString("计算数据"));
     DataProcess* curDataProcess = new DataProcess(m_completeTableData, m_seocdebuyCountMap, m_macdTime);
     QThread* curDataProcessThread = new QThread();
     curDataProcess->moveToThread (curDataProcessThread);
@@ -157,7 +164,7 @@ void ChartForm::startProcessData () {
 
     curDataProcessThread->start ();
     m_dataProcessList.append (curDataProcess);
-    m_dataProcessThreadList.append (curDataProcessThread);
+    m_dataProcessThreadList.append (curDataProcessThread);   
     emit sendStartProcessDataSignal("all");
 }
 
@@ -171,6 +178,8 @@ void ChartForm::receiveAllProcessedData (QList<QList<double>> allData) {
         m_macdData.append (MACD(macdData[i], macdData[i+1],
                                 macdData[i+2], macdData[i+3], macdData[i+4]));
     }
+    updateProgramInfo (m_programInfoTableView, QString("完成数据计算, 计算后数据总数: %1").arg(m_timeData.size () * 6));
+    updateProgramInfo (m_programInfoTableView, QString("显示图像"));
     qDebug() << "timeData.size:     " << m_timeData.size ();
     qDebug() << "strategyData.size: " << m_strategyData.size ();
     qDebug() << "votData.size:      " << m_votData.size ();
@@ -275,7 +284,7 @@ void ChartForm::setVotRunoverChartView () {
 
     QCategoryAxis* axisX = getAxisX();
     QStackedBarSeries *barseries = new QStackedBarSeries();
-    QBarSet *set = new QBarSet("金额");
+    QBarSet *set = new QBarSet("销售额");
     for (int i = 0; i < m_votData.size (); ++i) {
         set->append(m_votData.at (i));
     }
@@ -421,15 +430,11 @@ void ChartForm::setMouseMoveValue(int currIndex) {
 
         QString timeChineseString = QStringLiteral("时间: ");
         QString strategyChineseString = "\347\233\256\346\240\207\345\200\274:";
-//        QString strategyChineseString = QString::fromLocal8Bit("目标值: ");
-//        QString strategyChineseString = tr("目标值: ");
-//        QString strategyChineseString = QString::fromUtf8("目标值: ");
-//        QString strategyChineseString = QStringLiteral("目标值: ");
         QString votRunoverChineseString = QString::fromLocal8Bit("金额: ");
 
         ui->TimeLabel->setText(QString("%1 %2").arg("时间: ").arg(dateTimeString));
         ui->StrategyValue_Label->setText(QString("%1 %2").arg(strategyChineseString).arg(strategyValue));
-        ui->VotRunover_Label->setText(QString("%1 %2").arg("金额: ").arg(votrunoverValue));
+        ui->VotRunover_Label->setText(QString("%1 %2").arg("销售额: ").arg(votrunoverValue));
 
         ui->DIFF_Label->setText(QString("DIFF: %1").arg(DIFF));
         ui->DEA_Label->setText(QString("DEA: %1").arg(DEA));
@@ -520,227 +525,3 @@ ChartForm::~ChartForm()
          m_dataReaderThreadList[i] = NULL;
     }
 }
-
-//QList<QPointF> ChartForm::computeStrategyData(QList<QList<QPointF>> allTableData, QList<int> buyCountList) {
-//    QList<QPointF> result;
-//    QList<QPointF> firstStockData = allTableData.at(0);
-//    int firstBuyCount = buyCountList.at(0);
-//    for (int i = 0; i < firstStockData.size (); ++i) {
-//        result.append (QPointF(firstStockData.at (i).x(), firstStockData.at(i).y () * firstBuyCount));
-//    }
-
-//    for (int i = 1; i < allTableData.size (); ++i) {
-//        QList<QPointF> tmpStockData = allTableData.at(i);
-//        int tmpBuyCount = buyCountList.at(i);
-//        result = mergeSortedPointedList (result, 1, tmpStockData, tmpBuyCount);
-//    }
-//    return result;
-//}
-
-//void ChartForm::setStrategyData() {
-//    QList<QList<QPointF>> tableDataList;
-//    QList<int> buyCountList;
-//    for (int i = 0; i < m_strategy.size (); ++i) {
-//        QString tableName = m_strategy[i].m_secode;
-//        int buyCount = m_strategy[i].m_buyCount;
-//        QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "TCLOSE", tableName, m_databaseName);
-//        tableDataList.append (sortPointFList(curTableData));
-//        buyCountList.append (buyCount);
-//        qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
-//    }
-//    m_strategyData = computeStrategyData(tableDataList, buyCountList);
-//}
-
-//void ChartForm::setVotRunoverData() {
-//    QList<QList<QPointF>> tableDataList;
-//    QList<int> buyCountList;
-//    for (int i = 0; i < m_strategy.size (); ++i) {
-//        QString tableName = m_strategy[i].m_secode;
-//        int buyCount = m_strategy[i].m_buyCount;
-//        QList<QPointF> curTableData = m_database->getOriChartData (m_startDate, m_endDate, "VOTRUNOVER", tableName, m_databaseName);
-//        tableDataList.append (sortPointFList(curTableData));
-//        buyCountList.append (1);
-//        qDebug() << "tableName: " << tableName << " datacount: " << curTableData.size ();
-//    }
-//    m_votrunoverData = computeStrategyData(tableDataList, buyCountList);
-//}
-
-//void ChartForm::setMacdData () {
-//    QList<double> oriData;
-//    for (int i = 0; i<m_strategyData.size (); ++i) {
-//        oriData.append (m_strategyData.at(i).y ());
-//    }
-//    m_macdData = computeMACD (oriData, m_EVA1Time, m_EVA2Time, m_DIFFTime);
-//}
-
-//    void resizeEvent(QResizeEvent *event);
-//    void mouseMoveEvent(QMouseEvent *event);
-
-//    void macdToolTip(QPointF point, bool state);
-//    void strategyToolTip(QPointF point, bool state);
-//    void votRunoverToolTip(QPointF point, bool state);
-
-//void ChartForm::strategyToolTip (QPointF point, bool state)
-//{
-//    qDebug() << "Strategy Hover";
-//    if (m_strategyTooltip == 0)
-//        m_strategyTooltip = new Callout(m_strategyChart);
-
-//    if (state) {
-//        int currIndex = qFloor (point.x());
-//        QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(m_strategyData.at(currIndex).x ());
-//        QString xValue = curDatetime.toString ("yyyy-MM-dd h:mm");
-//        double yValue = m_strategyData.at(currIndex).y ();
-//        m_strategyTooltip->setText(QString("X: %1 \nY: %2 ").arg(xValue).arg(yValue));
-//        m_strategyTooltip->setAnchor(point);
-//        m_strategyTooltip->setZValue(11);
-//        m_strategyTooltip->updateGeometry();
-//        m_strategyTooltip->show();
-//    } else {
-//        m_strategyTooltip->hide();
-//    }
-//}
-
-//void ChartForm::macdToolTip (QPointF point, bool state)
-//{
-//    if (m_macdTooltip == 0)
-//        m_macdTooltip = new Callout(m_macdChart);
-
-//    if (state) {
-//        int currIndex = qFloor (point.x());
-//        QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(m_strategyData.at(currIndex).x ());
-//        QString time = curDatetime.toString ("yyyy-MM-dd h:mm");
-//        qreal DIFF = m_macdData.at(currIndex).m_diff;
-//        qreal DEA = m_macdData.at(currIndex).m_dea;
-//        qreal Macd = m_macdData.at(currIndex).m_macd;
-//        QString text = QString("Time: %1 \nDIFF: %2\nDEA: %3\nMACD: %4").arg(time).arg(DIFF).arg (DEA).arg (Macd);
-//        qDebug() << text;
-//        m_strategyTooltip->setText(text);
-//        m_macdTooltip->setAnchor(point);
-//        m_macdTooltip->setZValue(11);
-//        m_macdTooltip->updateGeometry();
-//        m_macdTooltip->show();
-//    } else {
-//        m_macdTooltip->hide();
-//    }
-//}
-
-//void ChartForm::votRunoverToolTip (QPointF point, bool state)
-//{
-//    if (m_votrunoverTooltip == 0)
-//        m_votrunoverTooltip = new Callout(m_votrunoverChart);
-
-//    if (state) {
-//        int currIndex = qFloor (point.x());
-//        qDebug() << "currIndex: " << currIndex;
-//        QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(m_votrunoverData.at(currIndex).x ());
-//        QString xValue = curDatetime.toString ("yyyy-MM-dd h:mm");
-//        qreal yValue = m_votrunoverData.at(currIndex).y ();
-//        qDebug() << xValue << ", " << yValue;
-//        m_strategyTooltip->setText(QString("X: %1 \nY: %2 ").arg(xValue).arg(yValue));
-//        m_votrunoverTooltip->setAnchor(point);
-//        m_votrunoverTooltip->setZValue(11);
-//        m_votrunoverTooltip->updateGeometry();
-//        m_votrunoverTooltip->show();
-//    } else {
-//        m_votrunoverTooltip->hide();
-//    }
-//}
-
-//void ChartForm::setThemeBox () {
-//    ui->themeComboBox->addItem("Light", QChart::ChartThemeLight);
-//    ui->themeComboBox->addItem("Blue Cerulean", QChart::ChartThemeBlueCerulean);
-//    ui->themeComboBox->addItem("Dark", QChart::ChartThemeDark);
-//    ui->themeComboBox->addItem("Brown Sand", QChart::ChartThemeBrownSand);
-//    ui->themeComboBox->addItem("Blue NCS", QChart::ChartThemeBlueNcs);
-//    ui->themeComboBox->addItem("High Contrast", QChart::ChartThemeHighContrast);
-//    ui->themeComboBox->addItem("Blue Icy", QChart::ChartThemeBlueIcy);
-//    ui->themeComboBox->addItem("Qt", QChart::ChartThemeQt);
-//}
-
-//void ChartForm::resizeEvent(QResizeEvent *event) {
-//    qDebug() <<"m_strategyChartView size: " << m_strategyChartView->size();
-//    qDebug() <<"m_votrunoverChartView size: " << m_votrunoverChartView->size();
-//    qDebug() <<"m_macdChartView size: " << m_macdChartView->size();
-//    m_votrunoverChartView->setFixedSize(m_strategyChartView->size().width(), m_strategyChartView->size().height() / 2);
-//    m_macdChartView->setFixedSize(m_strategyChartView->size().width(), m_strategyChartView->size().height() / 2);
-//    qDebug() << event;
-//    qDebug() <<"m_strategyChartView size: " << m_strategyChartView->size();
-//    qDebug() <<"m_votrunoverChartView size: " << m_votrunoverChartView->size();
-//    qDebug() <<"m_macdChartView size: " << m_macdChartView->size();
-//}
-
-//void ChartForm::mouseMoveEvent (QMouseEvent *event) {
-//    QPoint curPoint = event->pos ();
-//    qDebug() << "ChartForm mouseMoveEvent!" << curPoint;
-//    QPointF curStrategyChartChartPoint = m_strategyChart->mapToValue (curPoint);
-//    qDebug() << "curStrategyChartChartPoint: " << curStrategyChartChartPoint;
-//    QPointF curVotrunoverChartChartPoint = m_votrunoverChart->mapToValue (curPoint);
-//    QPointF curMacdChartChartPoint = m_macdChart->mapToValue (curPoint);
-//    qDebug() << "curVotrunoverChartChartPoint: " << curVotrunoverChartChartPoint;
-//    qDebug() << "curMacdChartChartPoint: " << curMacdChartChartPoint;
-//}
-
-//void ChartForm::setOpenPriceChartView () {
-//    QLineSeries* series = new QLineSeries();
-//    series->append (m_database->getOriChartData (m_startDate, m_endDate, "TOPEN", "SH600000", m_databaseName));
-
-//    QList<QPointF> datalist = series->points ();
-//    qDebug() << "OpenPrice points.count: " << datalist.count();
-
-//    m_openPriceChart = new QChart();
-//    m_openPriceChart->addSeries (series);
-//    m_openPriceChart->setTitle("Open Price Chart");
-//    m_openPriceChart->legend()->hide();
-
-//    m_openPriceChartView = new QChartView(m_openPriceChart);
-//    m_openPriceChartView->setRenderHint(QPainter::Antialiasing);
-
-//    QDateTimeAxis *axisX = new QDateTimeAxis;
-//    axisX->setTickCount(10);
-//    axisX->setFormat("yyyy-MM-dd h:mm");
-//    axisX->setTitleText("Date");
-//    m_openPriceChart->addAxis(axisX, Qt::AlignBottom);
-//    series->attachAxis(axisX);
-
-//    QValueAxis *axisY = new QValueAxis;
-//    axisY->setTitleText("OPEN PRICE");
-//    m_openPriceChart->addAxis(axisY, Qt::AlignLeft);
-//    series->attachAxis(axisY);
-//}
-
-//void ChartForm::setTextItem () {
-//    QGraphicsScene* testGraphicsScene = new QGraphicsScene(ui->gridLayout);
-
-//    m_timeItem = new QGraphicsSimpleTextItem();
-//    m_targetItem = new QGraphicsSimpleTextItem();
-//    m_votrunoverItem = new QGraphicsSimpleTextItem();
-//    m_diffItem = new QGraphicsSimpleTextItem();
-//    m_deaItem = new QGraphicsSimpleTextItem();
-//    m_macdItem = new QGraphicsSimpleTextItem();
-
-//    qreal leftStartPos = this->size ().width () - 190;
-//    qreal topStartPos = 20;
-//    qreal vertialIntervel = 20;
-
-////    qDebug() << m_strategyChart->size ();
-//    qDebug() << m_strategyChartView->size ();
-//    qDebug() << ui->gridLayout->sizeHint ();
-//    qDebug() << this->size ();
-
-//    m_timeItem->setPos (leftStartPos, topStartPos);
-//    m_targetItem->setPos (leftStartPos, topStartPos+vertialIntervel*1);
-//    m_votrunoverItem->setPos (leftStartPos, topStartPos+vertialIntervel*2);
-//    m_diffItem->setPos (leftStartPos, topStartPos+vertialIntervel*3);
-//    m_deaItem->setPos (leftStartPos, topStartPos+vertialIntervel*4);
-//    m_macdItem->setPos (leftStartPos, topStartPos+vertialIntervel*5);
-
-//    m_timeItem->setText ("Time: ");
-//    m_targetItem->setText("Target: ");
-//    m_votrunoverItem->setText ("Money: ");
-//    m_diffItem->setText ("DIFF: ");
-//    m_deaItem->setText ("DEA: ");
-//    m_macdItem->setText ("MACD: ");
-
-//    testGraphicsScene->addItem (m_timeItem);
-//}

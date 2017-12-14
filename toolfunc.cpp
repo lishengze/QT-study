@@ -7,6 +7,7 @@
 #include <QWidget>
 #include <QStringList>
 #include <QProcess>
+#include <QStandardItemModel>
 #include "macd.h"
 using std::sort;
 using std::max;
@@ -249,7 +250,17 @@ void killProcessByPid(QString pid) {
     QString taskStr = QString::fromLocal8Bit(p.readAllStandardOutput());
 }
 
-
+void updateProgramInfo(QTableView* programInfoTableView, QString message, QString remark) {
+    QStandardItemModel* testMode = dynamic_cast<QStandardItemModel*>(programInfoTableView->model ());
+    if (NULL != testMode) {
+        QString datetime = QDateTime::currentDateTime ().toString ("yyyy/MM/dd hh:mm:ss");
+        int row = testMode->rowCount ();
+        testMode->setItem (row, 0,  new QStandardItem(datetime));
+        testMode->setItem (row, 1,  new QStandardItem(message));
+        testMode->setItem (row, 2,  new QStandardItem(remark));
+        programInfoTableView->setRowHeight (row, 20);
+    }
+}
 
 
 

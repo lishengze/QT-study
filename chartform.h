@@ -19,6 +19,7 @@
 #include <QMutexLocker>
 #include <QMutex>
 
+#include <QTableView>
 #include "dataread.h"
 #include "dataprocess.h"
 
@@ -39,14 +40,17 @@ class ChartForm : public QWidget
 public:
     explicit ChartForm(QWidget *parent = 0);
     ~ChartForm();
-    ChartForm(QWidget *parent, int charViewID,
+    ChartForm(QWidget *parent, QTableView* programInfoTableView, int charViewID,
               QString startDate, QString endDate, QString timeType,
               QList<strategy_ceil> strategy, QString strategyName,
               QString hedgeIndexCode, int hedgeIndexCount,
-              QList<int> macdTime, int threadNumb = 8, QString databaseName="MarketData");
+              QList<int> macdTime, int threadNumb = 8,
+              QString databaseName="MarketData");
 
     void registSignalParamsType();
-    void initData(QString databaseName, QString timeType, QList<strategy_ceil> strategyList);
+    void initData(QString databaseName, QString timeType,
+                  QList<strategy_ceil> strategyList);
+
     QList<QStringList> allocateThreadData();
 
     void startReadData();
@@ -86,6 +90,7 @@ private:
 
 private:
     int m_chartViewID;
+    QTableView* m_programInfoTableView;
     QList<strategy_ceil> m_strategy;
     QString m_strategyName;
     QString m_hedgeIndexCode;

@@ -37,7 +37,7 @@ private:
 
     QMap<QString, int> m_indexHedgeMetaInfo;
     QString m_indexHedgeCode;
-    QList<QStringList> m_indexHedgeData;
+    QMap<QString, QStringList> m_indexHedgeData;
     int m_indexHedgeCount;
 
     QList<int> m_macdTime;
