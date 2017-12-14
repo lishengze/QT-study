@@ -64,8 +64,8 @@ void ChartForm::registSignalParamsType () {
 }
 
 void ChartForm::initData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
-    m_dbhost = "192.168.211.165";
-//    m_dbhost = "localhost";
+//    m_dbhost = "192.168.211.165";
+    m_dbhost = "localhost";
     m_databaseName = databaseName + "_" + timeType;
     m_keyValueList << "TCLOSE" << "VOTRUNOVER";
 
@@ -446,6 +446,7 @@ bool ChartForm::eventFilter (QObject *watched, QEvent *event) {
     if (event->type () == QEvent::MouseMove) {
         QMouseEvent *mouseEvent = (QMouseEvent *)event;
         QPoint curPoint = mouseEvent->pos ();
+        qDebug() << "movePoint: " << curPoint;
         int currIndex = -1;
         if (watched == m_strategyChartView) {
             QPointF curStrategyChartChartPoint = m_strategyChart->mapToValue (curPoint);
@@ -463,6 +464,20 @@ bool ChartForm::eventFilter (QObject *watched, QEvent *event) {
             currIndex = qFloor(curMacdChartChartPoint.x());
         }
         setMouseMoveValue(currIndex);
+    }
+    if (event->type() == QEvent::KeyRelease) {
+        QKeyEvent* keyEvent = (QKeyEvent*)event;
+        if (keyEvent->key() == Qt::Key_Left) {
+            qDebug() << "key_left";
+            qDebug() << "QCursor::pos(): " << QCursor::pos();
+
+        }
+        if (keyEvent->key() == Qt::Key_Right) {
+            qDebug() << "Key_Right";
+            qDebug() << "QCursor::pos(): " << QCursor::pos();
+        }
+        qDebug() << "keyValue: " << keyEvent->key() << ", keyText: " << keyEvent->text();
+        qDebug() << "nativeScanCode: " << keyEvent->nativeScanCode() << ", nativeVirtualKey: " << keyEvent->nativeVirtualKey();
     }
     return QWidget::eventFilter (watched, event);
 }

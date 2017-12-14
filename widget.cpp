@@ -60,8 +60,8 @@ void Widget::setHedgeValue() {
 }
 
 void Widget::setStrategyTableView () {
-//    m_strategyFileDir = "D:/strategy";
-    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
+    m_strategyFileDir = "D:/strategy";
+//    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
