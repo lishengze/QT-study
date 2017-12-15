@@ -31,7 +31,8 @@ SOURCES += main.cpp\
     processfunc.cpp \
     dataread.cpp \
     dataprocess.cpp \
-    dialog.cpp
+    dialog.cpp \
+    windapi.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -49,9 +50,12 @@ HEADERS  += widget.h \
     processfunc.h \
     dataread.h \
     dataprocess.h \
-    dialog.h
+    dialog.h \
+    windapi.h \
+    WAPIWrapperCpp.h
 
 FORMS    += widget.ui \
     chartform.ui \
     dialog.ui
 
+LIBS += -LE:/github/work-program/client/client-work -lWAPIWrapperCpp

@@ -39,4 +39,6 @@ void testDatabase();
 
 void testDataRead();
 
+void testWindApi();
+
 #endif // TEST_H

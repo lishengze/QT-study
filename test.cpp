@@ -16,6 +16,7 @@
 #include "macd.h"
 #include "database.h"
 #include "dialog.h"
+#include "windapi.h"
 
 using namespace  std;
 
@@ -266,6 +267,10 @@ void testDatabase() {
 void testDataRead () {
     Dialog testDialog(8);
     testDialog.show ();
+}
+
+void testWindApi () {
+    WindApi windObj;
 }
 
 void testMain() {
