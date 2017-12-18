@@ -34,4 +34,5 @@ HEADERS  += dialog.h \
     toolfunc.h
 
 FORMS    += dialog.ui
-LIBS += -LD:/github/workprogram/wind/study/TestWindDialog -lWAPIWrapperCpp
+LIBS += -LE:/github/work-program/wind/code/TestWindDialog -lWAPIWrapperCpp
+#LIBS += -L./ -lWAPIWrapperCpp

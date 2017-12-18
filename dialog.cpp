@@ -2,6 +2,10 @@
 #include <QDebug>
 #include <iostream>
 #include "test.h"
+#include <QMap>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QTimer>
 
 using namespace std;
 
@@ -9,16 +13,31 @@ using namespace std;
 #include "ui_dialog.h"
 #include "WAPIWrapperCpp.h"
 
+QMap<QString, QList<QStringList>> g_wsqData;
+QMutex g_wsqMutex;
+
+
 Dialog::Dialog(QWidget *parent) :
     QDialog(parent),
+    m_updateTime(3000),
     ui(new Ui::Dialog)
 {
     ui->setupUi(this);
     m_testObj = new Test();
     m_testObj->moveToThread(&m_thread);
+
     connect(this, SIGNAL(startLogin()), m_testObj, SLOT(login()));
+    connect(this, SIGNAL(startWsq()), m_testObj, SLOT(testWsq()));
+    connect(this, SIGNAL(startWset()), m_testObj, SLOT(testWset()));
+    connect(this, SIGNAL(startWsd()), m_testObj, SLOT(testWsd()));
 
     m_thread.start();
+
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(checkData()));
+    timer->start(m_updateTime);
+
+    initData();
 }
 
 Dialog::~Dialog()
@@ -28,84 +47,50 @@ Dialog::~Dialog()
     delete ui;
 }
 
-int Dialog::login() {
-    qDebug() << "Logining...... ";
-    int errcode = CWAPIWrapperCpp::start();
-    qDebug() << "Login errcode: " << errcode;
-    if (0 == errcode) {
-        QMessageBox::information(this, "Login", "login successfully");
-        cout << "login successfully" << endl;
-    }else {
-        WCHAR buffer[128];
-        int bufferSize = 128;
-        CWAPIWrapperCpp::getErrorMsg(errcode, eCHN, buffer, bufferSize);
-        cout << buffer << endl;
-        std::wcout.imbue(std::locale("chs"));
-        std::wcout << buffer << std::endl;
-        return 0;
+void Dialog::initData() {
+    m_secodeNameList<< "600000.SH" << "000001.SZ" << "000002.SZ";
+    QList<QStringList> empty;
+    for (int i = 0; i < m_secodeNameList.size(); ++i) {
+        m_wsqData.insert(m_secodeNameList[i], empty);
     }
-    return errcode;
 }
 
-
-int Dialog::testWset() {
-    WindData wd;
-    LPCWSTR reportname = TEXT("sectorconstituent");
-    LPCWSTR options = TEXT("date=2017-11-07;sectorid=a001010100000000");
-    int errcode = CWAPIWrapperCpp::wset(wd,reportname,options);
-    qDebug() << "errcode: " << errcode;
-    if (0 == errcode)
-    {
-        int codelen = wd.GetCodesLength();
-        int fieldslen = wd.GetFieldsLength();
-        int colnum = fieldslen + 1;
-        std::cout << "No.       ";
-        for (int i =1;i < colnum; ++i)
-        {
-            LPCWSTR outfields = wd.GetFieldsByIndex(i-1);
-            qDebug() << outfields;
-//            std::wcout << outfields.GetString();
-//            std::wcout << "     ";
-        }
-        std::wcout <<std::endl;
-        for (int i = 0; i < codelen; ++i)
-        {
-            LPCWSTR codes = wd.GetCodeByIndex(i);
-            qDebug() << codes;
-//            std::wcout << codes.GetString();
-//            std::wcout << "  ";
-            for (int j = 0; j < fieldslen; ++j)
-            {
-                VARIANT var;
-                wd.GetDataItem(0,i,j,var);
-//                LPCWSTR temp = toString(&var);
-//                std::wcout.imbue(std::locale("chs"));
-//                std::wcout << temp.GetString();
-//                std::wcout << "  ";
-
+void Dialog::checkData() {
+    qDebug() << "checkData";
+    QMutexLocker locker(&g_wsqMutex);
+    bool dataChange = false;
+    for (int i = 0; i < m_secodeNameList.size(); ++i) {
+        QString secode = m_secodeNameList[i];
+        if (g_wsqData[secode].size() > m_wsqData[secode].size()) {
+            dataChange = true;
+            for (int j = m_wsqData[secode].size(); j < g_wsqData[secode].size(); ++j) {
+                m_wsqData[secode].append( g_wsqData[secode][j]);
             }
-//            std::wcout << std::endl;
         }
-        return 0;
-
     }
-    else
-    {
-        WCHAR buffer[128];
-        int bufferSize = 128;
-        CWAPIWrapperCpp::getErrorMsg(errcode, eCHN, buffer, bufferSize);
-        qDebug() << buffer;
-        std::wcout.imbue(std::locale("chs"));
-        std::wcout << buffer << std::endl;
-        return 0;
+    if(dataChange) {
+        dataChange = false;
+        qDebug() << "Append New Data";
+        qDebug() << "m_wsqData: " << m_wsqData;
     }
 }
 
 void Dialog::on_testWset_clicked()
 {
+    emit startWset();
 }
 
 void Dialog::on_loginButton_clicked()
 {
     emit startLogin();
+}
+
+void Dialog::on_testWsdButton_clicked()
+{
+    emit startWsd();
+}
+
+void Dialog::on_testWsqButton_clicked()
+{
+    emit startWsq();
 }
