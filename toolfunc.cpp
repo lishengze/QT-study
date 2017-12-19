@@ -13,6 +13,9 @@ using std::sort;
 using std::max;
 using std::min;
 
+extern QMap<QString, QList<QStringList>> g_wsqData;
+extern QMutex g_wsqMutex;
+
 // 20170911 -> [2017, 9, 11]
 QList<int> getDateList(int intDate) {
     QList<int> dateList;
@@ -142,6 +145,21 @@ QList<double> computeMACDDoubleData(QList<double> oriData, int t1, int t2, int t
     return result;
 }
 
+MACD computeMACDData(double newData,  MACD oldData, int t1, int t2, int t3)  {
+    double EMA1;
+    double EMA2;
+    double DIFF;
+    double DEA;
+    double Macd;
+    MACD result;
+    EMA1 = oldData.m_ema1 * (t1-1) / (t1 + 1) + newData * 2 / (t1 + 1);
+    EMA2 = oldData.m_ema2 * (t2-1) / (t2 + 1) + newData * 2 / (t2 + 1);
+    DIFF = EMA1 - EMA2;
+    DEA = oldData.m_dea * (t3 -1) / (t3 + 1) + DIFF * 2 / (t3 + 1);
+    Macd = 2 * (DIFF - DEA);
+    return MACD(EMA1, EMA2, DIFF, DEA, Macd);
+}
+
 void ErrorMessage(QString msg) {
     qDebug() << msg;
 }
@@ -262,8 +280,123 @@ void updateProgramInfo(QTableView* programInfoTableView, QString message, QStrin
     }
 }
 
+LPCWSTR transSecode(QStringList secodeList) {
+    QString result="";
+    for (int i = 0; i < secodeList.size(); ++i) {
+        QString curSecode = secodeList[i];
+        QString transSecode;
+        for (int j = 2; j < curSecode.size(); ++j) {
+            transSecode.append(curSecode[j]);
+        }
+        transSecode.append('.');
+        transSecode.append(curSecode[0]);
+        transSecode.append(curSecode[1]);
+        result += transSecode + ',';
+    }
+    result.remove(result.size()-1, result.size()-1);
+    string data = result.toStdString();
+    size_t size = data.length();
+    wchar_t *buffer = new wchar_t[size + 1];
+    MultiByteToWideChar(CP_ACP, 0, data.c_str(), size, buffer, size * sizeof(wchar_t));
+    buffer[size] = 0;  //确保以 '\0' 结尾
+    return buffer;
+}
 
+QString getWindSecode(QString secode) {
+    QString windSecode;
+    for (int j = 2; j < secode.size(); ++j) {
+        windSecode.append(secode[j]);
+    }
+    windSecode.append('.');
+    windSecode.append(secode[0]);
+    windSecode.append(secode[1]);
+    return windSecode;
+}
 
+QString variantToQString(const LPVARIANT data)
+{
+    QString str;
+    switch (data->vt)
+    {
+    case VT_INT:
+        str = QString::number(data->intVal);
+        break;
+    case VT_I4:
+        str = QString::number(data->lVal);
+        break;
+    case VT_I8:
+        str = QString::number(data->llVal);
+        break;
+    case VT_R4:
+        str = QString("%1").arg(data->fltVal, 0, 'f', 4);
+        break;
+    case VT_R8:
+        str = QString("%1").arg(data->dblVal, 0, 'f', 4);
+        break;
+    case VT_EMPTY:
+        break;
+    case VT_BSTR:
+        str = QString((QChar*)data->bstrVal, wcslen(data->bstrVal));
+    break;
+    case VT_DATE:
+//        str = QString::fromUtf16((ushort*)LPCTSTR(COleDateTime(data->date).Format(L"%Y%m%d%h%m%s")));
+        str = QString("%1").arg(data->date);
+        break;
+    }
+    return str;
+}
+
+//功能：WSQ回调函数输出行情数值至控制台
+//int g_count = 0;
+LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd)
+{
+//    cout <<"reqid: " << reqid << " ++g_count: " << ++g_count << endl;
+//    cout <<"reqid: " << reqid << " --g_count: " << --g_count << endl;
+    cout << "reqid: " << reqid << endl;
+    int codelen = wd.GetCodesLength();
+    int fieldslen = wd.GetFieldsLength();
+    int colnum = fieldslen + 1;
+    cout  << "WindCodes    ";
+    for (int i =1;i < colnum; ++i)
+    {
+        QString outfields = QString::fromStdWString(wd.GetFieldsByIndex(i-1));
+        cout << outfields.toStdString() << "    ";
+    }
+    cout << endl;
+    for (int i = 0; i < codelen; ++i)
+    {
+        QStringList singleCodeData;
+        QString codes = QString::fromStdWString(wd.GetCodeByIndex(i));
+        cout << codes.toStdString() << "    ";
+        for (int j = 0; j < fieldslen; ++j)
+        {
+            VARIANT var;
+            wd.GetDataItem(0,i,j,var);
+            QString temp = variantToQString(&var);
+            singleCodeData.append(temp);
+            cout << temp.toStdString() << "    ";
+        }
+        cout << endl;
+        writeWsqData(codes, singleCodeData);
+    }
+    return 0;
+}
+
+void writeWsqData(QString secode, QStringList data) {
+    QList<QString> keys = g_wsqData.keys();
+    if (keys.indexOf(secode) < 0) {
+        QList<QStringList> initData;
+        initData.append(data);
+        g_wsqData.insert(secode, initData);
+    } else {
+        QList<QStringList> currData = g_wsqData[secode];
+        QStringList latestData = currData[currData.size()-1];
+        if (latestData[1].toDouble() < data[1].toDouble()) {
+            g_wsqData[secode].append(data);
+        }
+    }
+//    qDebug() << g_wsqData;
+}
 
 
 

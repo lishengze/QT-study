@@ -12,9 +12,14 @@
 #include <QPointF>
 #include <QDialog>
 #include <QTableView>
+#include <QThread>
+
 #include "strategymodel.h"
 #include "database.h"
 #include "excel.h"
+
+#include "realtimedataread.h"
+#include "realtimedataprocess.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -29,6 +34,7 @@ class Widget : public QWidget
 public:
     explicit Widget(QWidget *parent = 0);
 
+    void initReadRealTimeData();
     void setCalendarValue();
     void setHedgeValue();
     void setStrategyTableView();
@@ -38,8 +44,15 @@ public:
 
     ~Widget();
 
-public slots:
+signals:
+    void loginWind();
+    void startWsq(QStringList secodeList);
 
+public slots:
+    void loginWindFailed(int errcode);
+    void loginWindSucc();
+    void startWsqFailed(int errcode);
+    void startWsqSucc();
 
 private slots:
     void on_historyData_clicked();
@@ -47,6 +60,8 @@ private slots:
     void on_chooseStartDate_editingFinished();
 
     void on_tableView_clicked(const QModelIndex &index);
+
+    void on_realDateTime_pushButton_clicked();
 
 private:
     Ui::Widget *ui;
@@ -57,6 +72,11 @@ private:
     QString m_strategyFileDir;
     QString m_strategyName;
     QList<strategy_ceil> m_currStrategy;
+
+    bool m_loginWind;
+    QThread m_windWorkThread;
+    RealTimeDataRead* m_readRealTimeData;
+    QMap<QString, QStringList> m_realTimeData;
 
     Excel* m_excel;
 };

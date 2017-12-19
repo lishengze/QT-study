@@ -6,6 +6,7 @@
 #include <QSqlError>
 #include <QProcess>
 #include <QStringList>
+#include <string>
 
 #include "test.h"
 #include "setdata.h"
@@ -16,7 +17,8 @@
 #include "macd.h"
 #include "database.h"
 #include "dialog.h"
-#include "windapi.h"
+
+#include <WinNls.h>
 
 using namespace  std;
 
@@ -269,8 +271,24 @@ void testDataRead () {
     testDialog.show ();
 }
 
-void testWindApi () {
-    WindApi windObj;
+void testTransSecode() {
+    QStringList oriData;
+    oriData << "SH600000" << "SZ000001" << "SZ000002";
+//    qDebug() << "oriData: " << oriData;
+    LPCWSTR transData = transSecode(oriData);
+    wcout << "transData: " << transData << endl;
+//    LPCWSTR lpdata = transData.toStdWString().c_str();
+//    qDebug() << "transData: " << transData;
+//    wcout << "lpdata: " << lpdata << endl;
+//    string data = transData.toStdString();
+//    size_t size = data.length();
+//    wchar_t *buffer = new wchar_t[size + 1];
+//    MultiByteToWideChar(CP_ACP, 0, data.c_str(), size, buffer, size * sizeof(wchar_t));
+//    buffer[size] = 0;  //确保以 '\0' 结尾
+//    wcout << "buffer: " << buffer << endl;
+//    LPCWSTR lpdata = buffer;
+//    wcout << "lpdata: " << lpdata << endl;
+    delete[] transData;
 }
 
 void testMain() {
@@ -292,7 +310,8 @@ void testMain() {
 //    testDatabase();
 //    testDataRead();
 //    testComputeMACD();
-    testComputeMACDDoubleData();
+    testTransSecode();
+//    testComputeMACDDoubleData();
 }
 
 

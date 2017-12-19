@@ -18,11 +18,17 @@
 #include "setdata.h"
 #include "strategymodel.h"
 #include "chartform.h"
+#include "realtimedataread.h"
 
 QT_CHARTS_USE_NAMESPACE
 
+QMap<QString, QList<QStringList>> g_wsqData;
+QMutex g_wsqMutex;
+
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
+    m_loginWind(false),
+    m_readRealTimeData(NULL),
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_strategyFileDir(""),
@@ -30,13 +36,31 @@ Widget::Widget(QWidget *parent) :
 {
     m_excel = new Excel();
     ui->setupUi(this);
-
     setCalendarValue();
     setHedgeValue();
     setMacdTime();
     setStrategyTableView();
     setProgramInfoTableView();
     setDataFrequency();
+    initReadRealTimeData();
+}
+
+void Widget::initReadRealTimeData() {
+    m_readRealTimeData = new RealTimeDataRead();
+    m_readRealTimeData->moveToThread(&m_windWorkThread);
+    connect(&m_windWorkThread, SIGNAL(finished()), m_readRealTimeData, SLOT(deleteLater()));
+    connect(this, SIGNAL(loginWind()), m_readRealTimeData, SLOT(loginWind()));
+    connect(this, SIGNAL(startWsq(QStringList)), m_readRealTimeData, SLOT(startWsq(QStringList)));
+
+    connect(m_readRealTimeData, SIGNAL(loginWindFailed(int)), this, SLOT(loginWindFailed(int)));
+    connect(m_readRealTimeData, SIGNAL(loginWindSucc()), this, SLOT(loginWindSucc()));
+
+    connect(m_readRealTimeData, SIGNAL(startWsqFailed(int)), this, SLOT(startWsqFailed(int)));
+    connect(m_readRealTimeData, SIGNAL(startWsqSucc()), this, SLOT(startWsqSucc()));
+
+    m_windWorkThread.start();
+    emit loginWind();
+    updateProgramInfo(ui->programInfo_tableView, "正在登陆万得");
 }
 
 void Widget::setCalendarValue () {
@@ -96,6 +120,37 @@ void Widget::setDataFrequency () {
     timeFre << "1m" << "5m" << "10m" << "20m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
     ui->dataFrequency->addItems (timeFre);
     ui->dataFrequency->setCurrentText ("day");
+}
+
+void Widget::loginWindFailed(int errcode) {
+    updateProgramInfo(ui->programInfo_tableView, "登陆万得失败");
+    QMessageBox::StandardButton rb = QMessageBox::critical(this, "Error", "登陆万得失败, 再次尝试登陆?",
+                                                           QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+    if (rb == QMessageBox::Yes) {
+        emit loginWind();
+    }
+}
+
+void Widget::loginWindSucc() {
+    m_loginWind = true;
+    updateProgramInfo(ui->programInfo_tableView, "登陆万得成功");
+}
+
+void Widget::startWsqFailed(int errcode) {
+    updateProgramInfo(ui->programInfo_tableView, "订阅实时消息失败");
+    QMessageBox::StandardButton rb = QMessageBox::critical(this, "Error", "订阅实时消息失败, 再次尝试订阅?",
+                                                           QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+    if (rb == QMessageBox::Yes) {
+        QStringList secodeList;
+        for (int i = 0; i < m_currStrategy.size (); ++i) {
+            secodeList.append(m_currStrategy[i].m_secode);
+        }
+        emit startWsq(secodeList);
+    }
+}
+
+void Widget::startWsqSucc() {
+    updateProgramInfo(ui->programInfo_tableView, "订阅实时消息成功");
 }
 
 void Widget::on_historyData_clicked()
@@ -162,6 +217,9 @@ void Widget::on_tableView_clicked(const QModelIndex &index)
 
 Widget::~Widget()
 {
+    m_windWorkThread.quit();
+    m_windWorkThread.wait();
+
     delete ui;
     if (NULL != m_strategyModel) {
         delete m_strategyModel;
@@ -181,5 +239,40 @@ Widget::~Widget()
     }
 }
 
+void Widget::on_realDateTime_pushButton_clicked()
+{
+    if (true == m_loginWind) {
+        int EVA1Time = ui->EMA1TimeSpinBox->value ();
+        int EVA2Time = ui->EMA2TimeSpinBox->value ();
+        int DIFFTime = ui->DIFFTimeSpinBox->value ();
+        QList<int> macdTime;
+        macdTime << EVA1Time << EVA2Time << DIFFTime;
 
+        QString hedgeIndexCode = ui->hedgeTarget_comboBox->currentData ().toString ();
+        int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
 
+        if (m_currStrategy.size () == 0) {
+            QMessageBox::critical(NULL, "Error", "还未选择策略");
+            return;
+        } else {
+            QStringList secodeList;
+            for (int i = 0; i < m_currStrategy.size (); ++i) {
+                secodeList.append(m_currStrategy[i].m_secode);
+            }
+            emit startWsq(secodeList);
+        }
+        qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
+        qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
+        updateProgramInfo (ui->programInfo_tableView, QString("策略名称: %1, 策略中股票数目为: %2").arg(m_strategyName).arg(m_currStrategy.size ()));
+        updateProgramInfo (ui->programInfo_tableView, QString("T1: %1, T2: %2, T3: %3").arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
+        updateProgramInfo (ui->programInfo_tableView, QString("对冲目标: %1, 对冲笔数: %2").arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
+        updateProgramInfo (ui->programInfo_tableView, QString("读取数据"));
+    } else {
+        QMessageBox::StandardButton rb = QMessageBox::critical(this, "Error", "还未登陆万得, 再次尝试登陆?",
+                                                               QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        if (rb == QMessageBox::Yes) {
+            emit loginWind();
+        }
+    }
+
+}

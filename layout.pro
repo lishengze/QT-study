@@ -32,7 +32,8 @@ SOURCES += main.cpp\
     dataread.cpp \
     dataprocess.cpp \
     dialog.cpp \
-    windapi.cpp
+    realtimedataprocess.cpp \
+    realtimedataread.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -51,8 +52,9 @@ HEADERS  += widget.h \
     dataread.h \
     dataprocess.h \
     dialog.h \
-    windapi.h \
-    WAPIWrapperCpp.h
+    realtimedataprocess.h \
+    WAPIWrapperCpp.h \
+    realtimedataread.h
 
 FORMS    += widget.ui \
     chartform.ui \

@@ -7,14 +7,6 @@
 #include "processfunc.h"
 #include "dialog.h"
 
-void setCode() {
-//    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-//    QTextCodec::setCodecForLocale(codec);
-//    QTextCodec::codecForName("UTF-8")->toUnicode("中文");
-
-    QTextCodec::codecForName("GBK")->toUnicode("中文");
-}
-
 void setLibPath() {
     QApplication::addLibraryPath(".");
     QApplication::addLibraryPath("./lib");

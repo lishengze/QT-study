@@ -47,6 +47,11 @@ public:
               QList<int> macdTime, int threadNumb = 8,
               QString databaseName="MarketData");
 
+    ChartForm(QWidget *parent, QTableView* programInfoTableView,
+              QList<strategy_ceil> strategy, QString strategyName,
+              QString hedgeIndexCode, int hedgeIndexCount,
+              int updateTime, QList<int> macdTime);
+
     void registSignalParamsType();
     void initData(QString databaseName, QString timeType,
                   QList<strategy_ceil> strategyList);
@@ -58,6 +63,10 @@ public:
 
     void releaseDataReaderSrc();
     void releaseDataProcessSrc();
+
+    void initRealTimeData();
+    void updateData();
+    void updateChart();
 
     void setLayout ();
     void setVotRunoverChartView();
@@ -76,6 +85,8 @@ public:
 public slots:
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
     void receiveAllProcessedData(QList<QList<double>> allData);
+
+    void checkRealTimeData();
 
 signals:
     void sendStartReadDataSignal(QString dataType);
@@ -112,6 +123,9 @@ private:
 
     QMap<QString, int> m_seocdebuyCountMap;
     QStringList m_secodeNameList;
+
+    int m_updateTime;
+    QMap<QString, QStringList> m_realTimeData;
 
     QList<DataProcess*> m_dataProcessList;
     QList<QThread*> m_dataProcessThreadList;

@@ -17,7 +17,7 @@
 #include <QStackedBarSeries>
 #include <QBarSet>
 #include <QMessageBox>
-
+#include <QTimer>
 #include <QMetaType>
 #include <QMutexLocker>
 
@@ -27,8 +27,9 @@
 #include "macd.h"
 #include "callout.h"
 
-
 //#pragma execution_character_set("utf-8")
+extern QMap<QString, QList<QStringList>> g_wsqData;
+extern QMutex g_wsqMutex;
 
 ChartForm::ChartForm(QWidget *parent) :
     QWidget(parent),
@@ -58,14 +59,27 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int char
     startReadData ();
 }
 
+ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
+                      QList<strategy_ceil> strategy, QString strategyName,
+                      QString hedgeIndexCode, int hedgeIndexCount,
+                      int updateTime, QList<int> macdTime):
+    QWidget(parent), m_programInfoTableView(programInfoTableView),
+    m_strategy(strategyList), m_strategyName(strategyName),
+    m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
+    m_updateTime(updateTime), m_macdTime(macdTime),
+    ui(new Ui::ChartForm)
+{
+    initRealTimeData();
+}
+
 void ChartForm::registSignalParamsType () {
     qRegisterMetaType<QMap<QString, QList<QStringList>>>("QMap<QString, QList<QStringList>>");
     qRegisterMetaType<QList<QList<double>>>("QList<QList<double>>");
 }
 
 void ChartForm::initData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
-//    m_dbhost = "192.168.211.165";
-    m_dbhost = "localhost";
+    m_dbhost = "192.168.211.165";
+//    m_dbhost = "localhost";
     m_databaseName = databaseName + "_" + timeType;
     m_keyValueList << "TCLOSE" << "VOTRUNOVER";
 
@@ -81,6 +95,70 @@ void ChartForm::initData (QString databaseName, QString timeType, QList<strategy
         m_timeTypeFormat = "yyyy-MM-dd";
     }
     m_chartXaxisTickCount = 10;
+}
+
+void ChartForm::initRealTimeData() {
+    for (int i = 0; i < strategyList.size (); ++i) {
+        m_seocdebuyCountMap.insert (getWindSecode(strategyList[i].m_secode), strategyList[i].m_buyCount);
+    }
+    m_seocdebuyCountMap.insert (m_hedgeIndexCode, m_hedgeIndexCount);
+    m_secodeNameList = m_seocdebuyCountMap.keys();
+
+    m_timeTypeFormat = "yyyy-MM-dd hh:mm:ss";
+    m_chartXaxisTickCount = 10;
+
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(checkRealTimeData()));
+    timer->start(m_updateTime);
+}
+
+void ChartForm::checkRealTimeData() {
+    qDebug() << "checkData";
+    bool dataChange = false;
+    for (int i = 0; i < m_secodeNameList.size(); ++i) {
+        QString secode = m_secodeNameList[i];
+        QList<QStringList> currData = g_wsqData[secode];
+        QStringList latestData = currData[currData.size()-1];
+       if (m_realTimeData[secode].size() == 0 || latestData[1].toDouble() > m_realTimeData[secode][1].toDouble()) {
+            dataChange = true;
+            m_realTimeData[secode] = latestData;
+        }
+    }
+    if(dataChange) {
+        updateData();
+        updateChart();
+        dataChange = false;
+        qDebug() << "Append New Data";
+        qDebug() << "m_realTimeData: " << m_realTimeData;
+    }
+}
+
+void ChartForm::updateData() {
+    double strategyData = 0;
+    double votData = 0;
+    double timeData = QDateTime::currentDateTime().toMSecsSinceEpoch();
+    MACD macdData;
+    for (int i = 0; i < m_secodeNameList.size(); ++i) {
+        QString secode = m_secodeNameList[i];
+        if (m_realTimeData[secode][2] == "") {
+            strategyData += m_realTimeData[secode][3].toDouble() * m_seocdebuyCountMap[secode];
+        } else {
+            strategyData += m_realTimeData[secode][2].toDouble() * m_seocdebuyCountMap[secode];
+        }
+        votData += m_realTimeData[secode][4];
+    }
+    if (m_macdData.size() > 0) {
+        MACD latestData = m_macdData[m_macdData.size()-1];
+        macdData = computeMACDData(strategyData, latestData, m_macdTime[0], m_macdTime[1], m_macdTime[2]);
+    }
+    m_strategyData.append(strategyData);
+    m_votData.append(votData);
+    m_timeData.append(timeData);
+    m_macdData.append(macdData);
+}
+
+void ChartForm::updateChart() {
+
 }
 
 QList<QStringList> ChartForm::allocateThreadData() {

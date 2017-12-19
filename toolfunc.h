@@ -6,6 +6,7 @@
 #include <QWidget>
 #include <QTableView>
 #include "macd.h"
+#include "WAPIWrapperCpp.h"
 
 QList<int> getDateList(int intDate);
 
@@ -21,6 +22,8 @@ QList<QPointF> mergeSortedPointedList(QList<QPointF> firstList, int firstBuyCoun
 QList<MACD> computeMACD(QList<double> oriData, int t1, int t2, int t3);
 
 QList<double> computeMACDDoubleData(QList<double> oriData, int t1, int t2, int t3);
+
+MACD computeMACDData(double newData, MACD oldData, int t1, int t2, int t3);
 
 void ErrorMessage(QString msg);
 
@@ -45,5 +48,15 @@ void killProcessByPid(QString pid);
 QString getIndexCode();
 
 void updateProgramInfo(QTableView* programInfoTableView, QString message, QString remark="");
+
+QString getWindSecode(QString secode);
+
+LPCWSTR transSecode(QStringList secodeList);
+
+QString variantToQString(const LPVARIANT data);
+
+LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd);
+
+void writeWsqData(QString secode, QStringList data);
 
 #endif // TOOLFUNC_H
