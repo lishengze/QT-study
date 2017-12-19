@@ -14,6 +14,6 @@ QString variantToQString(const LPVARIANT data);
 
 LONG WINAPI CallBack( ULONGLONG reqid,const WindData &wd);
 
-void writeWsqData(int reqId, QList<QStringList> result);
+void writeWsqData(QString secode, QStringList data);
 
 #endif // TOOLFUNC_H

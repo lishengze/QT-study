@@ -1,6 +1,7 @@
 #include "test.h"
 #include <QDebug>
 #include <iostream>
+#include <QThread>
 #include "toolfunc.h"
 using namespace std;
 
@@ -12,19 +13,23 @@ Test::Test(QObject* parent):
 }
 
 void Test::login() {
-    qDebug() << "Test: Logining...... ";
-    int errcode = CWAPIWrapperCpp::start();
-    qDebug() << "Login errcode: " << errcode;
-    if (0 == errcode) {
-        cout << "login successfully" << endl;
-        m_login = true;
-    }else {
-        WCHAR buffer[128];
-        int bufferSize = 128;
-        CWAPIWrapperCpp::getErrorMsg(errcode, eCHN, buffer, bufferSize);
-        cout << buffer << endl;
-        std::wcout.imbue(std::locale("chs"));
-        std::wcout << buffer << std::endl;
+    if (!m_login) {
+        qDebug() << "Thread: " << QThread::currentThreadId() <<  " is Logining...... ";
+        int errcode = CWAPIWrapperCpp::start();
+        qDebug() << "Login errcode: " << errcode;
+        if (0 == errcode) {
+            cout << "login successfully" << endl;
+            m_login = true;
+        }else {
+            WCHAR buffer[128];
+            int bufferSize = 128;
+            CWAPIWrapperCpp::getErrorMsg(errcode, eCHN, buffer, bufferSize);
+            cout << buffer << endl;
+            std::wcout.imbue(std::locale("chs"));
+            std::wcout << buffer << std::endl;
+        }
+    } else {
+        qDebug() << "Thread: " << QThread::currentThreadId() << " has already logined";
     }
 }
 
@@ -146,11 +151,14 @@ int Test::testWsd()
 
 int Test::testWsq()
 {
+    qDebug() << "Thread: " << QThread::currentThreadId() <<  " wsq...... ";
     int errcode;
     if (m_login) {
         WindData wd;
-        LPCWSTR windcodes = TEXT("600000.SH,000001.SZ,000002.SZ");
-        LPCWSTR indicators = TEXT("rt_date,rt_time,rt_last,rt_pre_close,rt_amt");
+        LPCWSTR windcodes = TEXT("600000.SH, 000001.SZ");
+        LPCWSTR indicators = TEXT("rt_date,rt_time");
+//        LPCWSTR windcodes = TEXT("600000.SH,000001.SZ,000002.SZ");
+//        LPCWSTR indicators = TEXT("rt_date,rt_time,rt_last,rt_pre_close,rt_amt");
         LPCWSTR options = TEXT("");
         ULONGLONG reqid = 0;
         errcode = CWAPIWrapperCpp::wsq(reqid, windcodes, indicators, CallBack, options, TRUE);

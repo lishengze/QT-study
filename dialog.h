@@ -44,9 +44,13 @@ private:
     Ui::Dialog *ui;
     QThread m_thread;
     Test* m_testObj;
+    QList<QThread*> m_threadList;
+    QList<Test*> m_testObjList;
+
     int m_updateTime;
     QStringList m_secodeNameList;
-    QMap<QString, QList<QStringList>> m_wsqData;
+    QList<QStringList> m_StrategyList;
+    QMap<QString, QStringList> m_realTimeData;
 };
 
 #endif // DIALOG_H

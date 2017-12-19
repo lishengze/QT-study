@@ -2,6 +2,7 @@
 #include <QString>
 #include <QMutexLocker>
 #include <iostream>
+#include <QThread>
 using namespace std;
 
 extern QMap<QString, QList<QStringList>> g_wsqData;
@@ -44,14 +45,13 @@ QString variantToQString(const LPVARIANT data)
     }
     return str;
 }
+int g_count = 0;
 
 //功能：WSQ回调函数输出行情数值至控制台
 LONG WINAPI CallBack( ULONGLONG reqid, const WindData &wd)
 {
-    QMutexLocker locker(&g_wsqMutex);
-    QList<QString> curSecodeList = g_wsqData.keys();
-    system("cls");
-    cout << "reqid: " << reqid << endl;
+    cout <<"reqid: " << reqid << " ++g_count: " << ++g_count << endl;
+    cout <<"reqid: " << reqid << " --g_count: " << --g_count << endl;
     int codelen = wd.GetCodesLength();
     int fieldslen = wd.GetFieldsLength();
     int colnum = fieldslen + 1;
@@ -66,12 +66,7 @@ LONG WINAPI CallBack( ULONGLONG reqid, const WindData &wd)
     {
         QStringList singleCodeData;
         QString codes = QString::fromStdWString(wd.GetCodeByIndex(i));
-        if (curSecodeList.indexOf(codes) < 0) {
-            QList<QStringList> emtpy;
-            g_wsqData.insert(codes, emtpy);
-        }
         cout << codes.toStdString() << "    ";
-        singleCodeData.append(codes);
         for (int j = 0; j < fieldslen; ++j)
         {
             VARIANT var;
@@ -80,22 +75,24 @@ LONG WINAPI CallBack( ULONGLONG reqid, const WindData &wd)
             singleCodeData.append(temp);
             cout << temp.toStdString() << "    ";
         }
-        g_wsqData[codes].append(singleCodeData);
         cout << endl;
+        writeWsqData(codes, singleCodeData);
     }
-    qDebug() << "g_wsqData: " << g_wsqData;
     return 0;
 }
 
-void writeWsqData(int reqId, QList<QStringList> result) {
-//     QMutexLocker locker(&g_wsqMutex);
-//     QList<int> keys = g_wsqData.keys();
-//     if (keys.indexOf(reqId) < 0) {
-//         QList<QList<QStringList>> initData;
-//         initData.append(result);
-//         g_wsqData.insert(reqId, initData);
-//     } else {
-//         g_wsqData[reqId].append(result);
-//     }
-//     qDebug() << g_wsqData;
+void writeWsqData(QString secode, QStringList data) {
+    QList<QString> keys = g_wsqData.keys();
+    if (keys.indexOf(secode) < 0) {
+        QList<QStringList> initData;
+        initData.append(data);
+        g_wsqData.insert(secode, initData);
+    } else {
+        QList<QStringList> currData = g_wsqData[secode];
+        QStringList latestData = currData[currData.size()-1];
+        if (latestData[1].toDouble() < data[1].toDouble()) {
+            g_wsqData[secode].append(data);
+        }
+    }
+//    qDebug() << g_wsqData;
 }
