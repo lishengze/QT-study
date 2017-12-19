@@ -13,6 +13,8 @@
 #include <QGraphicsSimpleTextItem>
 #include <QMouseEvent>
 #include <QResizeEvent>
+#include <QLineSeries>
+#include <QStackedBarSeries>
 
 #include <QThread>
 #include <QObject>
@@ -79,9 +81,6 @@ public:
     void setTestView();
     void setMouseMoveValue(int currIndex);
 
-    QList<double> getChartYvalueRange(QList<QPointF> pointList );
-    QList<double> getChartYvalueRange(QList<double> yValueList );
-
 public slots:
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
     void receiveAllProcessedData(QList<QList<double>> allData);
@@ -145,14 +144,19 @@ private:
     QString m_title;
     int m_chartXaxisTickCount;
 
+    QLineSeries* m_strategySeries;
     QMyChartView* m_strategyChartView;
     QChart* m_strategyChart;
     Callout *m_strategyTooltip;
 
+    QStackedBarSeries* m_votBarSeries;
     QMyChartView* m_votrunoverChartView;
     QChart* m_votrunoverChart;
     Callout *m_votrunoverTooltip;
 
+    QLineSeries* m_diffSeries;
+    QLineSeries* m_deaSeries;
+    QStackedBarSeries* m_macdSeries;
     QMyChartView* m_macdChartView;
     QChart* m_macdChart;
     Callout *m_macdTooltip;

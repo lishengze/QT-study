@@ -60,7 +60,7 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int char
 }
 
 ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
-                      QList<strategy_ceil> strategy, QString strategyName,
+                      QList<strategy_ceil> strategyList, QString strategyName,
                       QString hedgeIndexCode, int hedgeIndexCount,
                       int updateTime, QList<int> macdTime):
     QWidget(parent), m_programInfoTableView(programInfoTableView),
@@ -70,6 +70,7 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
     ui(new Ui::ChartForm)
 {
     initRealTimeData();
+    setLayout();
 }
 
 void ChartForm::registSignalParamsType () {
@@ -78,8 +79,8 @@ void ChartForm::registSignalParamsType () {
 }
 
 void ChartForm::initData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
-    m_dbhost = "192.168.211.165";
-//    m_dbhost = "localhost";
+//    m_dbhost = "192.168.211.165";
+    m_dbhost = "localhost";
     m_databaseName = databaseName + "_" + timeType;
     m_keyValueList << "TCLOSE" << "VOTRUNOVER";
 
@@ -98,8 +99,8 @@ void ChartForm::initData (QString databaseName, QString timeType, QList<strategy
 }
 
 void ChartForm::initRealTimeData() {
-    for (int i = 0; i < strategyList.size (); ++i) {
-        m_seocdebuyCountMap.insert (getWindSecode(strategyList[i].m_secode), strategyList[i].m_buyCount);
+    for (int i = 0; i < m_strategy.size (); ++i) {
+        m_seocdebuyCountMap.insert (getWindSecode(m_strategy[i].m_secode), m_strategy[i].m_buyCount);
     }
     m_seocdebuyCountMap.insert (m_hedgeIndexCode, m_hedgeIndexCount);
     m_secodeNameList = m_seocdebuyCountMap.keys();
@@ -115,14 +116,20 @@ void ChartForm::initRealTimeData() {
 void ChartForm::checkRealTimeData() {
     qDebug() << "checkData";
     bool dataChange = false;
+    QList<QString> global_secodeList = g_wsqData.keys();
     for (int i = 0; i < m_secodeNameList.size(); ++i) {
-        QString secode = m_secodeNameList[i];
-        QList<QStringList> currData = g_wsqData[secode];
-        QStringList latestData = currData[currData.size()-1];
-       if (m_realTimeData[secode].size() == 0 || latestData[1].toDouble() > m_realTimeData[secode][1].toDouble()) {
-            dataChange = true;
-            m_realTimeData[secode] = latestData;
-        }
+       QString secode = m_secodeNameList[i];
+       if (global_secodeList.indexOf(secode) >= 0) {
+           QList<QStringList> currData = g_wsqData[secode];
+           QStringList latestData = currData[currData.size()-1];
+           if (m_realTimeData[secode].size() == 0 || latestData[1].toDouble() > m_realTimeData[secode][1].toDouble()) {
+                dataChange = true;
+                m_realTimeData[secode] = latestData;
+            }
+       } else {
+           dataChange = false;
+           break;
+       }
     }
     if(dataChange) {
         updateData();
@@ -145,7 +152,7 @@ void ChartForm::updateData() {
         } else {
             strategyData += m_realTimeData[secode][2].toDouble() * m_seocdebuyCountMap[secode];
         }
-        votData += m_realTimeData[secode][4];
+        votData += m_realTimeData[secode][4].toDouble();
     }
     if (m_macdData.size() > 0) {
         MACD latestData = m_macdData[m_macdData.size()-1];
@@ -301,11 +308,6 @@ void ChartForm::setLayout () {
         ui->gridLayout->addWidget (m_macdChartView, 3, 0);
     }
 
-//    setTestView();
-//    if (NULL != m_testChartView) {
-//        ui->gridLayout->addWidget (m_testChartView, 1, 0);
-//    }
-
     this->setMouseTracking(true);
 }
 
@@ -321,26 +323,26 @@ QCategoryAxis* ChartForm::getAxisX () {
 }
 
 void ChartForm::setStrategyChartView () {
-    if (m_strategyData.size () == 0) {
-        QMessageBox::warning (this, "Waring", "净值点差曲线在所选时间范围内没有数据");
-        return ;
-    }    
+//    if (m_strategyData.size () == 0) {
+//        QMessageBox::warning (this, "Waring", "净值点差曲线在所选时间范围内没有数据");
+//        return ;
+//    }
 
     QCategoryAxis* axisX = getAxisX();
     QValueAxis *axisY = new QValueAxis;
-    QLineSeries* series = new QLineSeries;
+    m_strategySeries = new QLineSeries;
     for (int i = 0; i < m_strategyData.size (); ++i) {
-        series->append (i, m_strategyData.at (i));
+        m_strategySeries->append (i, m_strategyData.at (i));
     }
-    series->setName("点差");
-    series->setUseOpenGL (true);
+    m_strategySeries->setName("点差");
+    m_strategySeries->setUseOpenGL (true);
 
     QList<double>  axisYRange = getChartYvalueRange(m_strategyData);
     axisY -> setRange (axisYRange[0], axisYRange[1]);
     axisY -> setLabelFormat ("%1.1e");
 
     m_strategyChart = new QChart();
-    m_strategyChart->addSeries (series);
+    m_strategyChart->addSeries (m_strategySeries);
     m_strategyChart->legend()->setAlignment(Qt::AlignTop);
 
     m_strategyChartView = new QMyChartView(m_strategyChart);
@@ -349,25 +351,25 @@ void ChartForm::setStrategyChartView () {
     m_strategyChartView->setMouseTracking(true);
 
     m_strategyChart->addAxis (axisX, Qt::AlignBottom);
-    series->attachAxis (axisX);
+    m_strategySeries->attachAxis (axisX);
     m_strategyChart->addAxis (axisY, Qt::AlignLeft);
-    series->attachAxis (axisY);
+    m_strategySeries->attachAxis (axisY);
 }
 
 void ChartForm::setVotRunoverChartView () {
-    if (m_votData.size () == 0) {
-        QMessageBox::warning (this, "Waring", "销售额曲线在所选时间范围内没有数据");
-        return;
-    }
+//    if (m_votData.size () == 0) {
+//        QMessageBox::warning (this, "Waring", "销售额曲线在所选时间范围内没有数据");
+//        return;
+//    }
 
     QCategoryAxis* axisX = getAxisX();
-    QStackedBarSeries *barseries = new QStackedBarSeries();
+    m_votBarSeries = new QStackedBarSeries();
     QBarSet *set = new QBarSet("销售额");
     for (int i = 0; i < m_votData.size (); ++i) {
         set->append(m_votData.at (i));
     }
-    barseries->append(set);
-    barseries->setUseOpenGL (true);
+    m_votBarSeries->append(set);
+    m_votBarSeries->setUseOpenGL (true);
 
     QValueAxis *axisY = new QValueAxis;
     QList<double>  axisYRange = getChartYvalueRange(m_votData);
@@ -375,7 +377,7 @@ void ChartForm::setVotRunoverChartView () {
     axisY -> setLabelFormat ("%1.1e");
 
     m_votrunoverChart = new QChart();
-    m_votrunoverChart->addSeries(barseries);
+    m_votrunoverChart->addSeries(m_votBarSeries);
 
     m_votrunoverChart->legend()->setAlignment(Qt::AlignTop);
 
@@ -385,38 +387,36 @@ void ChartForm::setVotRunoverChartView () {
     m_votrunoverChartView->setMouseTracking(true);
 
     m_votrunoverChart->addAxis (axisX, Qt::AlignBottom);
-    barseries->attachAxis(axisX);
+    m_votBarSeries->attachAxis(axisX);
 
     m_votrunoverChart->addAxis (axisY, Qt::AlignLeft);
-    barseries->attachAxis (axisY);
+    m_votBarSeries->attachAxis (axisY);
 
-//    m_votrunoverChart->createDefaultAxes();
-//    connect (series, SIGNAL(hovered(QPointF,bool)), this, SLOT(votRunoverToolTip(QPointF,bool)));
 }
 
 void ChartForm::setMACDChartView () {
-    if (m_macdData.size () == 0) {
-         QMessageBox::warning (this, "Waring", "MACD曲线在所选时间范围内没有数据");
-        return;
-    }
+//    if (m_macdData.size () == 0) {
+//         QMessageBox::warning (this, "Waring", "MACD曲线在所选时间范围内没有数据");
+//        return;
+//    }
 
-    QLineSeries* diffSeries = new QLineSeries();
-    diffSeries->setName("DIFF");
-    QLineSeries* deaSeries = new QLineSeries();
-    deaSeries->setName("DEA");
-    QStackedBarSeries *macdSeries = new QStackedBarSeries();
+    m_diffSeries = new QLineSeries();
+    m_diffSeries->setName("DIFF");
+    m_deaSeries = new QLineSeries();
+    m_deaSeries->setName("DEA");
+    m_macdSeries = new QStackedBarSeries();
     QBarSet *macdSet = new QBarSet("MACD");
 
     QCategoryAxis* axisX = getAxisX();
     for (int i = 0; i < m_macdData.size (); ++i) {
-        diffSeries->append (i, m_macdData.at(i).m_diff);
-        deaSeries->append (i, m_macdData.at(i).m_dea);
+        m_diffSeries->append (i, m_macdData.at(i).m_diff);
+        m_deaSeries->append (i, m_macdData.at(i).m_dea);
         macdSet->append (m_macdData.at(i).m_macd);
     }
-    macdSeries->append(macdSet);
-    diffSeries->setUseOpenGL (true);
-    deaSeries->setUseOpenGL (true);
-    macdSeries->setUseOpenGL (true);
+    m_macdSeries->append(macdSet);
+    m_diffSeries->setUseOpenGL (true);
+    m_deaSeries->setUseOpenGL (true);
+    m_macdSeries->setUseOpenGL (true);
 
     QValueAxis *axisY = new QValueAxis;
     QList<double>  axisYRange = getMACDRange(m_macdData);
@@ -424,9 +424,9 @@ void ChartForm::setMACDChartView () {
     axisY -> setLabelFormat ("%1.1e");
 
     m_macdChart = new QChart();
-    m_macdChart->addSeries (diffSeries);
-    m_macdChart->addSeries (deaSeries);
-    m_macdChart->addSeries (macdSeries);
+    m_macdChart->addSeries (m_diffSeries);
+    m_macdChart->addSeries (m_deaSeries);
+    m_macdChart->addSeries (m_macdSeries);
     m_macdChart->legend()->setAlignment(Qt::AlignTop);
 
     m_macdChartView = new QMyChartView(m_macdChart, this);
@@ -435,14 +435,14 @@ void ChartForm::setMACDChartView () {
     m_macdChartView->setMouseTracking(true);
 
     m_macdChart->addAxis(axisX, Qt::AlignBottom);
-    diffSeries->attachAxis(axisX);
-    deaSeries->attachAxis (axisX);
-    macdSeries->attachAxis (axisX);
+    m_diffSeries->attachAxis(axisX);
+    m_deaSeries->attachAxis (axisX);
+    m_macdSeries->attachAxis (axisX);
 
     m_macdChart->addAxis(axisY, Qt::AlignLeft);
-    diffSeries->attachAxis(axisY);
-    deaSeries->attachAxis (axisY);
-    macdSeries->attachAxis (axisY);
+    m_diffSeries->attachAxis(axisY);
+    m_deaSeries->attachAxis (axisY);
+    m_macdSeries->attachAxis (axisY);
 }
 
 void ChartForm::setTestView () {
@@ -524,23 +524,24 @@ bool ChartForm::eventFilter (QObject *watched, QEvent *event) {
     if (event->type () == QEvent::MouseMove) {
         QMouseEvent *mouseEvent = (QMouseEvent *)event;
         QPoint curPoint = mouseEvent->pos ();
-        qDebug() << "movePoint: " << curPoint;
+//        qDebug() << "movePoint: " << curPoint;
         int currIndex = -1;
         if (watched == m_strategyChartView) {
             QPointF curStrategyChartChartPoint = m_strategyChart->mapToValue (curPoint);
-//            qDebug() << "curStrategyChartChartPoint: " << curStrategyChartChartPoint;
+            qDebug() << "curStrategyChartChartPoint: " << curStrategyChartChartPoint;
             currIndex = qFloor(curStrategyChartChartPoint.x());
         }
         if (watched == m_votrunoverChartView) {
             QPointF curVotrunoverChartChartPoint = m_votrunoverChart->mapToValue (curPoint);
-//            qDebug() << "curVotrunoverChartChartPoint: " << curVotrunoverChartChartPoint;
+            qDebug() << "curVotrunoverChartChartPoint: " << curVotrunoverChartChartPoint;
             currIndex = qFloor(curVotrunoverChartChartPoint.x());
         }
         if (watched == m_macdChartView) {
             QPointF curMacdChartChartPoint = m_macdChart->mapToValue (curPoint);
-//            qDebug() << "curMacdChartChartPoint: " << curMacdChartChartPoint;
+            qDebug() << "curMacdChartChartPoint: " << curMacdChartChartPoint;
             currIndex = qFloor(curMacdChartChartPoint.x());
         }
+        qDebug() << "currIndex: " << currIndex;
         setMouseMoveValue(currIndex);
     }
     if (event->type() == QEvent::KeyRelease) {
@@ -558,40 +559,6 @@ bool ChartForm::eventFilter (QObject *watched, QEvent *event) {
         qDebug() << "nativeScanCode: " << keyEvent->nativeScanCode() << ", nativeVirtualKey: " << keyEvent->nativeVirtualKey();
     }
     return QWidget::eventFilter (watched, event);
-}
-
-QList<double> ChartForm::getChartYvalueRange(QList<QPointF> pointList ) {
-    double maxValue = -1000000000000000000.0;
-    double minValue = 10000000000000000000.0;
-    for (int i = 0; i < pointList.size(); ++i) {
-        maxValue = max(maxValue, pointList.at(i).y());
-        minValue = min(minValue, pointList.at (i).y ());
-    }
-
-    int rangeInterval = 6;
-    maxValue += (maxValue - minValue) / rangeInterval;
-    minValue -= (maxValue - minValue) / rangeInterval;
-    QList<double> result;
-    result.append (minValue);
-    result.append (maxValue);
-    return result;
-}
-
-QList<double> ChartForm::getChartYvalueRange(QList<double> yValueList ) {
-    double maxValue = -1000000000000000000.0;
-    double minValue = 10000000000000000000.0;
-    for (int i = 0; i < yValueList.size(); ++i) {
-        maxValue = max(maxValue, yValueList[i]);
-        minValue = min(minValue, yValueList[i]);
-    }
-
-    int rangeInterval = 6;
-    maxValue += (maxValue - minValue) / rangeInterval;
-    minValue -= (maxValue - minValue) / rangeInterval;
-    QList<double> result;
-    result.append (minValue);
-    result.append (maxValue);
-    return result;
 }
 
 ChartForm::~ChartForm()

@@ -59,8 +59,8 @@ void Widget::initReadRealTimeData() {
     connect(m_readRealTimeData, SIGNAL(startWsqSucc()), this, SLOT(startWsqSucc()));
 
     m_windWorkThread.start();
-    emit loginWind();
-    updateProgramInfo(ui->programInfo_tableView, "正在登陆万得");
+//    emit loginWind();
+//    updateProgramInfo(ui->programInfo_tableView, "正在登陆万得");
 }
 
 void Widget::setCalendarValue () {
@@ -153,6 +153,29 @@ void Widget::startWsqSucc() {
     updateProgramInfo(ui->programInfo_tableView, "订阅实时消息成功");
 }
 
+void Widget::on_chooseStartDate_editingFinished()
+{
+    QDate startDate = ui->chooseStartDate->date ();
+    QString strDate = startDate.toString ("yyyyMMdd");
+    qDebug() << "strDate: " << strDate;
+}
+
+void Widget::on_tableView_clicked(const QModelIndex &index)
+{
+    ui->historyData->setEnabled (false);
+    int intIndex = index.row ();
+    m_strategyName = m_strategyModel->getTableModel () ->item (intIndex)->text ();
+    updateProgramInfo (ui->programInfo_tableView, QString("读取策略: %1").arg(m_strategyName));
+
+    QString strategyFullFileName = m_strategyModel->getStrategyFullFileName (intIndex);
+    m_currStrategy = m_excel->readStrategyDataFromExcel (strategyFullFileName);
+
+    updateProgramInfo (ui->programInfo_tableView, QString("策略中股票数目为: %1").arg(m_currStrategy.size ()));
+    qDebug() << "m_currStrategy.size: " << m_currStrategy.size ();
+
+    ui->historyData->setEnabled(true);
+}
+
 void Widget::on_historyData_clicked()
 {
     QString startDate = ui->chooseStartDate->date ().toString ("yyyyMMdd");
@@ -192,27 +215,51 @@ void Widget::on_historyData_clicked()
     updateProgramInfo (ui->programInfo_tableView, QString("读取数据"));
 }
 
-void Widget::on_chooseStartDate_editingFinished()
+void Widget::on_realDateTime_pushButton_clicked()
 {
-    QDate startDate = ui->chooseStartDate->date ();
-    QString strDate = startDate.toString ("yyyyMMdd");
-    qDebug() << "strDate: " << strDate;
-}
+    m_loginWind = true;
+    if (true == m_loginWind) {
+        int EVA1Time = ui->EMA1TimeSpinBox->value ();
+        int EVA2Time = ui->EMA2TimeSpinBox->value ();
+        int DIFFTime = ui->DIFFTimeSpinBox->value ();
+        QList<int> macdTime;
+        macdTime << EVA1Time << EVA2Time << DIFFTime;
 
-void Widget::on_tableView_clicked(const QModelIndex &index)
-{
-    ui->historyData->setEnabled (false);
-    int intIndex = index.row ();
-    m_strategyName = m_strategyModel->getTableModel () ->item (intIndex)->text ();
-    updateProgramInfo (ui->programInfo_tableView, QString("读取策略: %1").arg(m_strategyName));
+        QString hedgeIndexCode = ui->hedgeTarget_comboBox->currentData ().toString ();
+        int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
 
-    QString strategyFullFileName = m_strategyModel->getStrategyFullFileName (intIndex);
-    m_currStrategy = m_excel->readStrategyDataFromExcel (strategyFullFileName);
+        if (m_currStrategy.size () == 0) {
+            QMessageBox::critical(NULL, "Error", "还未选择策略");
+            return;
+        } else {
+            int updateTime = 3000;
+            QStringList secodeList;
+            for (int i = 0; i < m_currStrategy.size (); ++i) {
+                secodeList.append(m_currStrategy[i].m_secode);
+            }
+            QWidget* charView = new ChartForm(0, ui->programInfo_tableView,
+                                              m_currStrategy, m_strategyName,
+                                              hedgeIndexCode, hedgeIndexCount,
+                                              updateTime, macdTime);
+            charView->show ();
+            m_chartViews.append (charView);
+//            emit startWsq(secodeList);
 
-    updateProgramInfo (ui->programInfo_tableView, QString("策略中股票数目为: %1").arg(m_currStrategy.size ()));
-    qDebug() << "m_currStrategy.size: " << m_currStrategy.size ();
+        }
+        qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
+        qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
+        updateProgramInfo (ui->programInfo_tableView, QString("策略名称: %1, 策略中股票数目为: %2").arg(m_strategyName).arg(m_currStrategy.size ()));
+        updateProgramInfo (ui->programInfo_tableView, QString("T1: %1, T2: %2, T3: %3").arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
+        updateProgramInfo (ui->programInfo_tableView, QString("对冲目标: %1, 对冲笔数: %2").arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
+        updateProgramInfo (ui->programInfo_tableView, QString("读取数据"));
+    } else {
+        QMessageBox::StandardButton rb = QMessageBox::critical(this, "Error", "还未登陆万得, 再次尝试登陆?",
+                                                               QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        if (rb == QMessageBox::Yes) {
+            emit loginWind();
+        }
+    }
 
-    ui->historyData->setEnabled(true);
 }
 
 Widget::~Widget()
@@ -237,42 +284,4 @@ Widget::~Widget()
             m_chartViews[i] = NULL;
         }
     }
-}
-
-void Widget::on_realDateTime_pushButton_clicked()
-{
-    if (true == m_loginWind) {
-        int EVA1Time = ui->EMA1TimeSpinBox->value ();
-        int EVA2Time = ui->EMA2TimeSpinBox->value ();
-        int DIFFTime = ui->DIFFTimeSpinBox->value ();
-        QList<int> macdTime;
-        macdTime << EVA1Time << EVA2Time << DIFFTime;
-
-        QString hedgeIndexCode = ui->hedgeTarget_comboBox->currentData ().toString ();
-        int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
-
-        if (m_currStrategy.size () == 0) {
-            QMessageBox::critical(NULL, "Error", "还未选择策略");
-            return;
-        } else {
-            QStringList secodeList;
-            for (int i = 0; i < m_currStrategy.size (); ++i) {
-                secodeList.append(m_currStrategy[i].m_secode);
-            }
-            emit startWsq(secodeList);
-        }
-        qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
-        qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
-        updateProgramInfo (ui->programInfo_tableView, QString("策略名称: %1, 策略中股票数目为: %2").arg(m_strategyName).arg(m_currStrategy.size ()));
-        updateProgramInfo (ui->programInfo_tableView, QString("T1: %1, T2: %2, T3: %3").arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
-        updateProgramInfo (ui->programInfo_tableView, QString("对冲目标: %1, 对冲笔数: %2").arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
-        updateProgramInfo (ui->programInfo_tableView, QString("读取数据"));
-    } else {
-        QMessageBox::StandardButton rb = QMessageBox::critical(this, "Error", "还未登陆万得, 再次尝试登陆?",
-                                                               QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
-        if (rb == QMessageBox::Yes) {
-            emit loginWind();
-        }
-    }
-
 }

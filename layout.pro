@@ -60,4 +60,4 @@ FORMS    += widget.ui \
     chartform.ui \
     dialog.ui
 
-LIBS += -LE:/github/work-program/client/client-work -lWAPIWrapperCpp
+LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp

@@ -29,6 +29,10 @@ void ErrorMessage(QString msg);
 
 void WarnMessage(QWidget* window, QString title, QString msg);
 
+QList<double> getChartYvalueRange(QList<QPointF> pointList );
+
+QList<double> getChartYvalueRange(QList<double> yValueList );
+
 QList<double> getMACDRange(QList<MACD> oriData);
 
 QString transOffsetSecondsToTime(qint64 offSecs);

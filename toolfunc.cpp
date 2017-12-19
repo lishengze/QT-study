@@ -168,12 +168,12 @@ void WarnMessage(QWidget* window, QString title, QString msg) {
     QMessageBox::warning(window, title, msg);
 }
 
-QList<double> getMACDRange(QList<MACD> oriData) {
+QList<double> getChartYvalueRange(QList<QPointF> pointList ) {
     double maxValue = -1000000000000000000.0;
     double minValue = 10000000000000000000.0;
-    for (int i = 0; i < oriData.size(); ++i) {
-        maxValue = max(max(maxValue, oriData[i].m_diff), max(oriData[i].m_dea, oriData[i].m_macd));
-        minValue = min(min(minValue, oriData[i].m_diff), min(oriData[i].m_dea, oriData[i].m_macd));
+    for (int i = 0; i < pointList.size(); ++i) {
+        maxValue = max(maxValue, pointList.at(i).y());
+        minValue = min(minValue, pointList.at (i).y ());
     }
 
     int rangeInterval = 6;
@@ -185,6 +185,53 @@ QList<double> getMACDRange(QList<MACD> oriData) {
     return result;
 }
 
+QList<double> getChartYvalueRange(QList<double> yValueList ) {
+    QList<double> result;
+    if (yValueList.size() == 0) {
+        result.append(0);
+        result.append(1);
+    } else {
+        double maxValue = -1000000000000000000.0;
+        double minValue = 10000000000000000000.0;
+        for (int i = 0; i < yValueList.size(); ++i) {
+            maxValue = max(maxValue, yValueList[i]);
+            minValue = min(minValue, yValueList[i]);
+        }
+
+        int rangeInterval = 6;
+        maxValue += (maxValue - minValue) / rangeInterval;
+        minValue -= (maxValue - minValue) / rangeInterval;
+
+        result.append (minValue);
+        result.append (maxValue);
+    }
+
+    return result;
+}
+
+QList<double> getMACDRange(QList<MACD> oriData) {
+    QList<double> result;
+    if (oriData.size() == 0) {
+        result.append(0);
+        result.append(1);
+    } else {
+        double maxValue = -1000000000000000000.0;
+        double minValue = 10000000000000000000.0;
+        for (int i = 0; i < oriData.size(); ++i) {
+            maxValue = max(max(maxValue, oriData[i].m_diff), max(oriData[i].m_dea, oriData[i].m_macd));
+            minValue = min(min(minValue, oriData[i].m_diff), min(oriData[i].m_dea, oriData[i].m_macd));
+        }
+
+        int rangeInterval = 6;
+        maxValue += (maxValue - minValue) / rangeInterval;
+        minValue -= (maxValue - minValue) / rangeInterval;
+        result.append (minValue);
+        result.append (maxValue);
+    }
+
+    return result;
+}
+
 QString transOffsetSecondsToTime(qint64 offSecs) {
     QDateTime tmpDatetime;
     tmpDatetime = tmpDatetime.toOffsetFromUtc(offSecs);
@@ -193,9 +240,18 @@ QString transOffsetSecondsToTime(qint64 offSecs) {
 
 QList<int> getNumbList(int dataNumb, int desNumb) {
     QList<int> result;
-    int interval = (dataNumb-1) / (desNumb-1);
-    for (int i = interval; i < dataNumb; i += interval) {
-        result.append(i);
+    if (dataNumb < desNumb) {
+        for (int i = 0; i < dataNumb; ++i) {
+            result.append(i);
+        }
+    } else {
+        int interval = (dataNumb-1) / (desNumb-1);
+        for (int i = interval-1; i < dataNumb; i += interval) {
+            result.append(i);
+        }
+        if (result[result.size()-1] != dataNumb-1) {
+            result[result.size()-1] = dataNumb - 1;
+        }
     }
     return result;
 }
@@ -388,12 +444,11 @@ void writeWsqData(QString secode, QStringList data) {
         QList<QStringList> initData;
         initData.append(data);
         g_wsqData.insert(secode, initData);
-    } else {
-        QList<QStringList> currData = g_wsqData[secode];
-        QStringList latestData = currData[currData.size()-1];
-        if (latestData[1].toDouble() < data[1].toDouble()) {
-            g_wsqData[secode].append(data);
-        }
+    }
+    QList<QStringList> currData = g_wsqData[secode];
+    QStringList latestData = currData[currData.size()-1];
+    if (latestData[1].toDouble() < data[1].toDouble()) {
+        g_wsqData[secode].append(data);
     }
 //    qDebug() << g_wsqData;
 }
