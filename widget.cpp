@@ -34,7 +34,7 @@ Widget::Widget(QWidget *parent) :
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_strategyFileDir(""),
-    m_bTestRealTime(false),
+    m_bTestRealTime(true),
     ui(new Ui::Widget)
 {
     m_excel = new Excel();
