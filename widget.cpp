@@ -4,12 +4,14 @@
 #include <QtCharts/QChart>
 #include <QLineSeries>
 #include <QValueAxis>
+#include <QDate>
 #include <QTime>
 #include <QList>
 #include <QPointF>
 #include <QDebug>
 #include <QMessageBox>
 #include <QAbstractItemModel>
+#include <QTimer>
 
 #include "toolfunc.h"
 #include "widget.h"
@@ -32,6 +34,7 @@ Widget::Widget(QWidget *parent) :
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_strategyFileDir(""),
+    m_bTestRealTime(false),
     ui(new Ui::Widget)
 {
     m_excel = new Excel();
@@ -46,21 +49,28 @@ Widget::Widget(QWidget *parent) :
 }
 
 void Widget::initReadRealTimeData() {
-    m_readRealTimeData = new RealTimeDataRead();
-    m_readRealTimeData->moveToThread(&m_windWorkThread);
-    connect(&m_windWorkThread, SIGNAL(finished()), m_readRealTimeData, SLOT(deleteLater()));
-    connect(this, SIGNAL(loginWind()), m_readRealTimeData, SLOT(loginWind()));
-    connect(this, SIGNAL(startWsq(QStringList)), m_readRealTimeData, SLOT(startWsq(QStringList)));
+    if (!m_bTestRealTime) {
+        m_readRealTimeData = new RealTimeDataRead();
+        m_readRealTimeData->moveToThread(&m_windWorkThread);
+        connect(&m_windWorkThread, SIGNAL(finished()), m_readRealTimeData, SLOT(deleteLater()));
+        connect(this, SIGNAL(loginWind()), m_readRealTimeData, SLOT(loginWind()));
+        connect(this, SIGNAL(startWsq(QStringList, int)), m_readRealTimeData, SLOT(startWsq(QStringList, int)));
 
-    connect(m_readRealTimeData, SIGNAL(loginWindFailed(int)), this, SLOT(loginWindFailed(int)));
-    connect(m_readRealTimeData, SIGNAL(loginWindSucc()), this, SLOT(loginWindSucc()));
+        connect(this, SIGNAL(cancelWsqRequest(int)), m_readRealTimeData, SLOT(cancelWsqRequest(int)));
+        connect(this, SIGNAL(cancelAllWsqRequest()), m_readRealTimeData, SLOT(cancelAllWsqRequest()));
 
-    connect(m_readRealTimeData, SIGNAL(startWsqFailed(int)), this, SLOT(startWsqFailed(int)));
-    connect(m_readRealTimeData, SIGNAL(startWsqSucc()), this, SLOT(startWsqSucc()));
+        connect(m_readRealTimeData, SIGNAL(loginWindFailed(int)), this, SLOT(loginWindFailed(int)));
+        connect(m_readRealTimeData, SIGNAL(loginWindSucc()), this, SLOT(loginWindSucc()));
 
-    m_windWorkThread.start();
-//    emit loginWind();
-//    updateProgramInfo(ui->programInfo_tableView, "正在登陆万得");
+        connect(m_readRealTimeData, SIGNAL(startWsqFailed(int, int)), this, SLOT(startWsqFailed(int, int)));
+        connect(m_readRealTimeData, SIGNAL(startWsqSucc()), this, SLOT(startWsqSucc()));
+
+        m_windWorkThread.start();
+        emit loginWind();
+        updateProgramInfo(ui->programInfo_tableView, "正在登陆万得");
+    } else {
+        setTestRealTimeData();
+    }
 }
 
 void Widget::setCalendarValue () {
@@ -69,6 +79,27 @@ void Widget::setCalendarValue () {
 
     ui->chooseStartDate->setDate (QDate(2016, 1, 1));
     ui->chooseEndDate->setDate (QDate(2017, 1, 1));
+}
+
+void Widget::setTestRealTimeData() {
+    connect(&m_testRealTimer, SIGNAL(timeout()), this, SLOT(addTestRealTimeData()));
+    m_testRealTimer.start(3000);
+}
+
+void Widget::addTestRealTimeData() {
+    QList<QString> curGlobalSecodeList = g_wsqData.keys();
+    for (int i = 0; i < curGlobalSecodeList.size(); ++i) {
+        QString secode = curGlobalSecodeList[i];
+        QList<QStringList> curData = g_wsqData[secode];
+        QStringList newData;
+        QString date = QDate::currentDate().toString("yyyyMMdd");
+        QString time = QTime::currentTime().toString("hhmmss");
+        QString last = QString("%1").arg(qrand()%10);
+        QString preClost = QString("%1").arg(qrand()%10);
+        QString amt = QString("%1").arg(qrand()%10000);
+        newData << date << time << last << preClost << amt;
+        g_wsqData[secode].append(newData);
+    }
 }
 
 void Widget::setHedgeValue() {
@@ -136,7 +167,7 @@ void Widget::loginWindSucc() {
     updateProgramInfo(ui->programInfo_tableView, "登陆万得成功");
 }
 
-void Widget::startWsqFailed(int errcode) {
+void Widget::startWsqFailed(int errcode, int reqID) {
     updateProgramInfo(ui->programInfo_tableView, "订阅实时消息失败");
     QMessageBox::StandardButton rb = QMessageBox::critical(this, "Error", "订阅实时消息失败, 再次尝试订阅?",
                                                            QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
@@ -145,7 +176,7 @@ void Widget::startWsqFailed(int errcode) {
         for (int i = 0; i < m_currStrategy.size (); ++i) {
             secodeList.append(m_currStrategy[i].m_secode);
         }
-        emit startWsq(secodeList);
+        emit startWsq(secodeList, reqID);
     }
 }
 
@@ -174,6 +205,21 @@ void Widget::on_tableView_clicked(const QModelIndex &index)
     qDebug() << "m_currStrategy.size: " << m_currStrategy.size ();
 
     ui->historyData->setEnabled(true);
+
+    if (m_bTestRealTime) {
+        QString hedgeIndexCode = ui->hedgeTarget_comboBox->currentData ().toString ();
+        QList<QStringList> emptyList;
+        QList<QString> curGlobalSecodeList = g_wsqData.keys();
+        if(curGlobalSecodeList.indexOf(getWindSecode(hedgeIndexCode)) < 0) {
+            g_wsqData.insert(getWindSecode(hedgeIndexCode), emptyList);
+        }
+        for (int i = 0; i < m_currStrategy.size (); ++i) {
+            if (curGlobalSecodeList.indexOf(getWindSecode(m_currStrategy[i].m_secode)) < 0) {
+                g_wsqData.insert(getWindSecode(m_currStrategy[i].m_secode), emptyList);
+            }
+        }
+    }
+
 }
 
 void Widget::on_historyData_clicked()
@@ -217,7 +263,9 @@ void Widget::on_historyData_clicked()
 
 void Widget::on_realDateTime_pushButton_clicked()
 {
-    m_loginWind = true;
+    if (m_bTestRealTime) {
+        m_loginWind = true;
+    }
     if (true == m_loginWind) {
         int EVA1Time = ui->EMA1TimeSpinBox->value ();
         int EVA2Time = ui->EMA2TimeSpinBox->value ();
@@ -237,14 +285,19 @@ void Widget::on_realDateTime_pushButton_clicked()
             for (int i = 0; i < m_currStrategy.size (); ++i) {
                 secodeList.append(m_currStrategy[i].m_secode);
             }
-            QWidget* charView = new ChartForm(0, ui->programInfo_tableView,
+            secodeList.append(hedgeIndexCode);
+            int chartViewID = m_chartViews.count();
+            QWidget* charView = new ChartForm(0, ui->programInfo_tableView, chartViewID,
                                               m_currStrategy, m_strategyName,
                                               hedgeIndexCode, hedgeIndexCount,
                                               updateTime, macdTime);
+
+            connect(charView,SIGNAL(sendCloseSignal(int)), this, SLOT(receiveChartCLoseSignal(int)));
+            if (!m_bTestRealTime) {
+                emit startWsq(secodeList, chartViewID);
+            }
             charView->show ();
             m_chartViews.append (charView);
-//            emit startWsq(secodeList);
-
         }
         qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
         qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
@@ -259,7 +312,24 @@ void Widget::on_realDateTime_pushButton_clicked()
             emit loginWind();
         }
     }
+}
 
+void Widget::receiveChartCLoseSignal(int chartViewID) {
+    qDebug() << "chartViewID: " << chartViewID;
+    if (!m_bTestRealTime) {
+        emit cancelWsqRequest(chartViewID);
+    }
+}
+
+void Widget::closeEvent(QCloseEvent *event) {
+    if (!m_bTestRealTime) {
+        emit cancelAllWsqRequest();
+    } else {
+        m_testRealTimer.stop();
+    }
+    for(int i = 0; i < m_chartViews.size(); ++i) {
+        m_chartViews[i] -> close();
+    }
 }
 
 Widget::~Widget()

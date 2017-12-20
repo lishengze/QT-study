@@ -32,30 +32,39 @@ void RealTimeDataRead::loginWind() {
     }
 }
 
-void RealTimeDataRead::startWsq(QStringList secodeList) {
+void RealTimeDataRead::startWsq(QStringList secodeList, int reqID) {
     qDebug() << "Thread: " << QThread::currentThreadId() <<  " wsq...... ";
     int errcode;
     if (m_login) {
 //        qDebug() <<"secodeList: " << secodeList;
 //        LPCWSTR windcodes = TEXT("600000.SH,000001.SZ,000002.SZ");
-//        LPCWSTR testdata = transSecode(secodeList).toStdWString().c_str();
-//        wcout << "wcout windcodes: " << windcodes << endl;
-//        wcout << "wcout testdata: " << testdata << endl;
         LPCWSTR windcodes = transSecode(secodeList);
 //        wcout << "wcout windcodes: " << windcodes << endl;
         LPCWSTR indicators = TEXT("rt_date,rt_time,rt_last,rt_pre_close,rt_amt");
         LPCWSTR options = TEXT("");
-        ULONGLONG reqid = 0;
+//        ULONGLONG reqid = 0;
+        ULONGLONG reqid = unsigned long long (reqID);
         errcode = CWAPIWrapperCpp::wsq(reqid, windcodes, indicators, wsqCallBack, options, TRUE);
         qDebug() << "wsq errcode: " << errcode;
         if (errcode == 0) {
             emit startWsqSucc();
         } else {
-            emit startWsqFailed(errcode);
+            emit startWsqFailed(errcode, reqID);
         }
         delete[] windcodes;
     } else {
         errcode = -1;
         qDebug() << "Login first!";
     }
+}
+
+void RealTimeDataRead::cancelWsqRequest(int reqID) {
+    ULONGLONG reqid = unsigned long long (reqID);
+    CWAPIWrapperCpp::cancelRequest(reqid);
+    qDebug() << "cancelWsqRequest ";
+}
+
+void RealTimeDataRead::cancelAllWsqRequest() {
+    CWAPIWrapperCpp::cancelAllRequest();
+    qDebug() << "cancelAllWsqRequest ";
 }

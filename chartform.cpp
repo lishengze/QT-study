@@ -59,11 +59,11 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int char
     startReadData ();
 }
 
-ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
+ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
                       QList<strategy_ceil> strategyList, QString strategyName,
                       QString hedgeIndexCode, int hedgeIndexCount,
                       int updateTime, QList<int> macdTime):
-    QWidget(parent), m_programInfoTableView(programInfoTableView),
+    QWidget(parent), m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
     m_strategy(strategyList), m_strategyName(strategyName),
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
     m_updateTime(updateTime), m_macdTime(macdTime),
@@ -79,8 +79,8 @@ void ChartForm::registSignalParamsType () {
 }
 
 void ChartForm::initData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
-//    m_dbhost = "192.168.211.165";
-    m_dbhost = "localhost";
+    m_dbhost = "192.168.211.165";
+//    m_dbhost = "localhost";
     m_databaseName = databaseName + "_" + timeType;
     m_keyValueList << "TCLOSE" << "VOTRUNOVER";
 
@@ -102,21 +102,32 @@ void ChartForm::initRealTimeData() {
     for (int i = 0; i < m_strategy.size (); ++i) {
         m_seocdebuyCountMap.insert (getWindSecode(m_strategy[i].m_secode), m_strategy[i].m_buyCount);
     }
+    m_hedgeIndexCode = getWindSecode(m_hedgeIndexCode);
     m_seocdebuyCountMap.insert (m_hedgeIndexCode, m_hedgeIndexCount);
     m_secodeNameList = m_seocdebuyCountMap.keys();
 
     m_timeTypeFormat = "yyyy-MM-dd hh:mm:ss";
-    m_chartXaxisTickCount = 10;
+    m_chartXaxisTickCount = 5;
 
-    QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(checkRealTimeData()));
-    timer->start(m_updateTime);
+
+    connect(&m_timer, SIGNAL(timeout()), this, SLOT(checkRealTimeData()));
+    m_timer.start(m_updateTime);
+
+    m_indexHedgeMetaInfo.insert("000300.SH", 300);
+    m_indexHedgeMetaInfo.insert("000016.SH", 50);
+    m_indexHedgeMetaInfo.insert("000852.SH", 1000);
+    m_indexHedgeMetaInfo.insert("000904.SH", 200);
+    m_indexHedgeMetaInfo.insert("000905.SH", 500);
+    m_indexHedgeMetaInfo.insert("000906.SH", 800);
+    m_indexHedgeMetaInfo.insert("399903.SZ", 100);
 }
 
 void ChartForm::checkRealTimeData() {
-    qDebug() << "checkData";
+//    qDebug() <<"ChartID: " << m_chartViewID <<  " checking data";
     bool dataChange = false;
     QList<QString> global_secodeList = g_wsqData.keys();
+//    qDebug() << "global_secodeList: " << global_secodeList;
+//    qDebug() << "m_secodeNameList: " << m_secodeNameList;
     for (int i = 0; i < m_secodeNameList.size(); ++i) {
        QString secode = m_secodeNameList[i];
        if (global_secodeList.indexOf(secode) >= 0) {
@@ -135,8 +146,8 @@ void ChartForm::checkRealTimeData() {
         updateData();
         updateChart();
         dataChange = false;
-        qDebug() << "Append New Data";
-        qDebug() << "m_realTimeData: " << m_realTimeData;
+//        qDebug() << "Append New Data";
+//        qDebug() << "m_realTimeData: " << m_realTimeData;
     }
 }
 
@@ -147,6 +158,10 @@ void ChartForm::updateData() {
     MACD macdData;
     for (int i = 0; i < m_secodeNameList.size(); ++i) {
         QString secode = m_secodeNameList[i];
+        if (secode == m_hedgeIndexCode) {
+//            qDebug() << "m_hedgeIndexCode: " << m_hedgeIndexCode;
+            continue;
+        }
         if (m_realTimeData[secode][2] == "") {
             strategyData += m_realTimeData[secode][3].toDouble() * m_seocdebuyCountMap[secode];
         } else {
@@ -154,6 +169,10 @@ void ChartForm::updateData() {
         }
         votData += m_realTimeData[secode][4].toDouble();
     }
+
+//    qDebug () << "m_hedgeIndexCount: " << m_hedgeIndexCount << "  m_indexHedgeMetaInfo[m_hedgeIndexCode]: " << m_indexHedgeMetaInfo[m_hedgeIndexCode];
+    strategyData = strategyData / (m_hedgeIndexCount * m_indexHedgeMetaInfo[m_hedgeIndexCode]) - m_realTimeData[m_hedgeIndexCode][2].toDouble();
+
     if (m_macdData.size() > 0) {
         MACD latestData = m_macdData[m_macdData.size()-1];
         macdData = computeMACDData(strategyData, latestData, m_macdTime[0], m_macdTime[1], m_macdTime[2]);
@@ -165,7 +184,71 @@ void ChartForm::updateData() {
 }
 
 void ChartForm::updateChart() {
+    updateAxis();
+    updateSeries();
+}
 
+void ChartForm::updateAxis() {
+    int curPointNumb = m_timeData.size();
+    qDebug() << "curPointNumb: " << curPointNumb;
+
+    QValueAxis *strategyAxisY = dynamic_cast<QValueAxis *>(m_strategyChart->axisY());
+    QList<double>  strategyAxisYRange = getChartYvalueRange(m_strategyData);
+    strategyAxisY -> setRange (strategyAxisYRange[0], strategyAxisYRange[1]);
+
+    QValueAxis *votAxisY = dynamic_cast<QValueAxis *>(m_votrunoverChart->axisY());
+    QList<double>  votAxisYRange = getChartYvalueRange(m_votData);
+    votAxisY -> setRange (votAxisYRange[0], votAxisYRange[1]);
+
+    QValueAxis *macdAxisY = dynamic_cast<QValueAxis *>(m_macdChart->axisY());
+    QList<double>  macdAxisYRange = getMACDRange(m_macdData);
+    macdAxisY -> setRange (macdAxisYRange[0], macdAxisYRange[1]);
+
+    QCategoryAxis* strategyAxisX = dynamic_cast<QCategoryAxis*> (m_strategyChart->axisX());
+    QCategoryAxis* votAxisX = dynamic_cast<QCategoryAxis*> (m_votrunoverChart->axisX());
+    QCategoryAxis* macdAxisX = dynamic_cast<QCategoryAxis*> (m_macdChart->axisX());
+
+    if (curPointNumb < m_chartXaxisTickCount) {
+        strategyAxisX->append (QDateTime::fromMSecsSinceEpoch(m_timeData[curPointNumb-1]).toString (m_timeTypeFormat), curPointNumb-1);
+        strategyAxisX->setMax(curPointNumb-1);
+        votAxisX->append (QDateTime::fromMSecsSinceEpoch(m_timeData[curPointNumb-1]).toString (m_timeTypeFormat), curPointNumb-1);
+        votAxisX->setMax(curPointNumb-1);
+        macdAxisX->append (QDateTime::fromMSecsSinceEpoch(m_timeData[curPointNumb-1]).toString (m_timeTypeFormat), curPointNumb-1);
+        macdAxisX->setMax(curPointNumb-1);
+    } else {
+        m_strategyChart->removeAxis(strategyAxisX);
+        QCategoryAxis* newStrategyAxisX = getAxisX();
+        newStrategyAxisX->setMax(curPointNumb-1);
+        m_strategyChart->addAxis (newStrategyAxisX, Qt::AlignBottom);
+        m_strategySeries->attachAxis (newStrategyAxisX);
+
+        m_votrunoverChart->removeAxis(votAxisX);
+        QCategoryAxis* newVotAxisX = getAxisX();
+        newVotAxisX->setMax(curPointNumb-1);
+        m_votrunoverChart->addAxis (newVotAxisX, Qt::AlignBottom);
+        m_votBarSeries->attachAxis (newVotAxisX);
+
+        m_macdChart->removeAxis(macdAxisX);
+        QCategoryAxis* newMacdAxisX = getAxisX();
+        newMacdAxisX->setMax(curPointNumb-1);
+        m_macdChart->addAxis (newMacdAxisX, Qt::AlignBottom);
+        m_diffSeries->attachAxis (newMacdAxisX);
+        m_deaSeries->attachAxis (newMacdAxisX);
+        m_macdSeries->attachAxis (newMacdAxisX);
+    }
+}
+
+void ChartForm::updateSeries() {
+    int curPointNumb = m_timeData.size();
+    m_strategySeries->append(curPointNumb-1, m_strategyData[curPointNumb-1]);
+
+    QList<QBarSet *> votSetList = m_votBarSeries->barSets();
+    votSetList[0]->append(m_votData[curPointNumb-1]);
+
+    m_diffSeries->append(curPointNumb-1, m_macdData[curPointNumb-1].m_diff);
+    m_deaSeries->append(curPointNumb-1, m_macdData[curPointNumb-1].m_dea);
+    QList<QBarSet *> macdSetList = m_macdSeries->barSets();
+    macdSetList[0]->append(m_macdData[curPointNumb-1].m_macd);
 }
 
 QList<QStringList> ChartForm::allocateThreadData() {
@@ -313,6 +396,7 @@ void ChartForm::setLayout () {
 
 QCategoryAxis* ChartForm::getAxisX () {
     QCategoryAxis* axisX = new QCategoryAxis;
+    axisX->setStartValue(0);
     QList<int> axisXPosList = getNumbList(m_timeData.size (), m_chartXaxisTickCount);
     for (int i = 0; i < axisXPosList.size(); ++i) {
         int xpos = axisXPosList.at(i);
@@ -334,6 +418,9 @@ void ChartForm::setStrategyChartView () {
     for (int i = 0; i < m_strategyData.size (); ++i) {
         m_strategySeries->append (i, m_strategyData.at (i));
     }
+    QPen red(Qt::red);
+    red.setWidth(3);
+    m_strategySeries->setPen(red);
     m_strategySeries->setName("点差");
     m_strategySeries->setUseOpenGL (true);
 
@@ -358,13 +445,13 @@ void ChartForm::setStrategyChartView () {
 
 void ChartForm::setVotRunoverChartView () {
 //    if (m_votData.size () == 0) {
-//        QMessageBox::warning (this, "Waring", "销售额曲线在所选时间范围内没有数据");
+//        QMessageBox::warning (this, "Waring", "成交额曲线在所选时间范围内没有数据");
 //        return;
 //    }
 
     QCategoryAxis* axisX = getAxisX();
     m_votBarSeries = new QStackedBarSeries();
-    QBarSet *set = new QBarSet("销售额");
+    QBarSet *set = new QBarSet("\346\210\220\344\272\244\351\242\235:");
     for (int i = 0; i < m_votData.size (); ++i) {
         set->append(m_votData.at (i));
     }
@@ -490,7 +577,6 @@ void ChartForm::setTheme() {
 
 void ChartForm::setMouseMoveValue(int currIndex) {
     if (currIndex >= 0 && currIndex < m_strategyData.size()) {
-//        qDebug() << "currIndex: " << currIndex;
         QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(qint64(m_timeData.at(currIndex)));
         QString dateTimeString = curDatetime.toString (m_timeTypeFormat);
         qreal strategyValue = m_strategyData.at(currIndex);
@@ -499,20 +585,11 @@ void ChartForm::setMouseMoveValue(int currIndex) {
         qreal DEA = m_macdData.at(currIndex).m_dea;
         qreal Macd = m_macdData.at(currIndex).m_macd;
 
-//        qDebug() << "dateTimeString: " << dateTimeString;
-//        qDebug() << "strategyValue: " << strategyValue;
-//        qDebug() << "votrunoverValue: " << votrunoverValue;
-//        qDebug() << "DIFF: " << DIFF;
-//        qDebug() << "DEA: " << DEA;
-//        qDebug() << "Macd: " << Macd;
-
-        QString timeChineseString = QStringLiteral("时间: ");
-        QString strategyChineseString = "\347\233\256\346\240\207\345\200\274:";
-        QString votRunoverChineseString = QString::fromLocal8Bit("金额: ");
+        QString strategyChineseString = "点差:";
 
         ui->TimeLabel->setText(QString("%1 %2").arg("时间: ").arg(dateTimeString));
         ui->StrategyValue_Label->setText(QString("%1 %2").arg(strategyChineseString).arg(strategyValue));
-        ui->VotRunover_Label->setText(QString("%1 %2").arg("销售额: ").arg(votrunoverValue));
+        ui->VotRunover_Label->setText(QString("%1 %2").arg("\346\210\220\344\272\244\351\242\235: ").arg(votrunoverValue));
 
         ui->DIFF_Label->setText(QString("DIFF: %1").arg(DIFF));
         ui->DEA_Label->setText(QString("DEA: %1").arg(DEA));
@@ -528,20 +605,20 @@ bool ChartForm::eventFilter (QObject *watched, QEvent *event) {
         int currIndex = -1;
         if (watched == m_strategyChartView) {
             QPointF curStrategyChartChartPoint = m_strategyChart->mapToValue (curPoint);
-            qDebug() << "curStrategyChartChartPoint: " << curStrategyChartChartPoint;
+//            qDebug() << "curStrategyChartChartPoint: " << curStrategyChartChartPoint;
             currIndex = qFloor(curStrategyChartChartPoint.x());
         }
         if (watched == m_votrunoverChartView) {
             QPointF curVotrunoverChartChartPoint = m_votrunoverChart->mapToValue (curPoint);
-            qDebug() << "curVotrunoverChartChartPoint: " << curVotrunoverChartChartPoint;
+//            qDebug() << "curVotrunoverChartChartPoint: " << curVotrunoverChartChartPoint;
             currIndex = qFloor(curVotrunoverChartChartPoint.x());
         }
         if (watched == m_macdChartView) {
             QPointF curMacdChartChartPoint = m_macdChart->mapToValue (curPoint);
-            qDebug() << "curMacdChartChartPoint: " << curMacdChartChartPoint;
+//            qDebug() << "curMacdChartChartPoint: " << curMacdChartChartPoint;
             currIndex = qFloor(curMacdChartChartPoint.x());
         }
-        qDebug() << "currIndex: " << currIndex;
+//        qDebug() << "currIndex: " << currIndex;
         setMouseMoveValue(currIndex);
     }
     if (event->type() == QEvent::KeyRelease) {
@@ -559,6 +636,12 @@ bool ChartForm::eventFilter (QObject *watched, QEvent *event) {
         qDebug() << "nativeScanCode: " << keyEvent->nativeScanCode() << ", nativeVirtualKey: " << keyEvent->nativeVirtualKey();
     }
     return QWidget::eventFilter (watched, event);
+}
+
+void ChartForm::closeEvent(QCloseEvent *event) {
+    qDebug() << "--- Close -- " << endl;
+    m_timer.stop();
+    emit sendCloseSignal(m_chartViewID);
 }
 
 ChartForm::~ChartForm()

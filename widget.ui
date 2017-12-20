@@ -173,7 +173,7 @@
               </size>
              </property>
              <property name="text">
-              <string>时间频率：</string>
+              <string>时间频率:</string>
              </property>
             </widget>
            </item>

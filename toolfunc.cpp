@@ -202,6 +202,10 @@ QList<double> getChartYvalueRange(QList<double> yValueList ) {
         maxValue += (maxValue - minValue) / rangeInterval;
         minValue -= (maxValue - minValue) / rangeInterval;
 
+        if (abs(maxValue - minValue) / abs(minValue) < 0.2) {
+            maxValue += max(abs(maxValue),  abs(minValue)) / 4;
+            minValue -= max(abs(maxValue),  abs(minValue)) / 4;
+        }
         result.append (minValue);
         result.append (maxValue);
     }
@@ -238,20 +242,25 @@ QString transOffsetSecondsToTime(qint64 offSecs) {
     return tmpDatetime.toString ();
 }
 
-QList<int> getNumbList(int dataNumb, int desNumb) {
+QList<int> getNumbList(int dataNumb, int intervalNumb) {
     QList<int> result;
-    if (dataNumb < desNumb) {
+    if (dataNumb <= intervalNumb) {
         for (int i = 0; i < dataNumb; ++i) {
             result.append(i);
         }
     } else {
-        int interval = (dataNumb-1) / (desNumb-1);
-        for (int i = interval-1; i < dataNumb; i += interval) {
+        int intervalLength = dataNumb / intervalNumb;
+        int leftInterval = dataNumb % intervalNumb - 1;
+        for (int i = 0, tmpIntervalNumb = 0; tmpIntervalNumb < intervalNumb; ++tmpIntervalNumb) {
             result.append(i);
+            if (tmpIntervalNumb < leftInterval) {
+                i += intervalLength + 1;
+            } else {
+                i += intervalLength;
+            }
+//            qDebug() << "i: " <<i;
         }
-        if (result[result.size()-1] != dataNumb-1) {
-            result[result.size()-1] = dataNumb - 1;
-        }
+        result.append(dataNumb - 1);
     }
     return result;
 }
@@ -408,7 +417,7 @@ LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd)
 {
 //    cout <<"reqid: " << reqid << " ++g_count: " << ++g_count << endl;
 //    cout <<"reqid: " << reqid << " --g_count: " << --g_count << endl;
-    cout << "reqid: " << reqid << endl;
+//    cout << "reqid: " << reqid << endl;
     int codelen = wd.GetCodesLength();
     int fieldslen = wd.GetFieldsLength();
     int colnum = fieldslen + 1;

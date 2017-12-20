@@ -1,6 +1,7 @@
 #include "macd.h"
 
-MACD::MACD()
+MACD::MACD():
+    m_ema1(0), m_ema2(0), m_diff(0), m_dea(0), m_macd(0)
 {
 
 }

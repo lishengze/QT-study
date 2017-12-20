@@ -195,8 +195,8 @@ void testTranstime() {
 }
 
 void testGetNumbList() {
-    int dataNumb = 5;
-    int interval = 3;
+    int dataNumb = 14;
+    int interval = 5;
     qDebug() << "dataNumb: " << dataNumb;
     qDebug() << "interval: " << interval;
     qDebug() << "List: " << getNumbList(dataNumb, interval);
@@ -302,7 +302,7 @@ void testMain() {
     //    testTableData();
     //    testComputeMACD ();
     //    testTranstime();
-    //    testGetNumbList();
+        testGetNumbList();
     //    testConnectDatabase();
     //    testDBClass();
     //    testProcess();
@@ -310,7 +310,7 @@ void testMain() {
 //    testDatabase();
 //    testDataRead();
 //    testComputeMACD();
-    testTransSecode();
+//    testTransSecode();
 //    testComputeMACDDoubleData();
 }
 

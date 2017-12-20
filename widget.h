@@ -13,6 +13,7 @@
 #include <QDialog>
 #include <QTableView>
 #include <QThread>
+#include <QTimer>
 
 #include "strategymodel.h"
 #include "database.h"
@@ -42,17 +43,27 @@ public:
     void setDataFrequency();
     void setMacdTime();
 
+    void setTestRealTimeData();
+
+
     ~Widget();
+
+protected:
+    void closeEvent(QCloseEvent *event);
 
 signals:
     void loginWind();
-    void startWsq(QStringList secodeList);
+    void startWsq(QStringList secodeList, int reqID);
+    void cancelWsqRequest(int reqID);
+    void cancelAllWsqRequest();
 
 public slots:
     void loginWindFailed(int errcode);
     void loginWindSucc();
-    void startWsqFailed(int errcode);
+    void startWsqFailed(int errcode, int reqID);
     void startWsqSucc();
+    void addTestRealTimeData();
+    void receiveChartCLoseSignal(int chartViewID);
 
 private slots:
     void on_historyData_clicked();
@@ -67,11 +78,17 @@ private:
     Ui::Widget *ui;
     QList<QWidget*> m_chartViews;
 
+    QTimer m_testRealTimer;
     StrategyModel* m_strategyModel;
     QTableView* m_strategyTalbeView;
     QString m_strategyFileDir;
     QString m_strategyName;
     QList<strategy_ceil> m_currStrategy;
+
+    QMap<QString, int> m_seocdebuyCountMap;
+    QStringList m_secodeNameList;
+    QString m_hedgeIndexCode;
+    int m_hedgeIndexCount;
 
     bool m_loginWind;
     QThread m_windWorkThread;
@@ -79,6 +96,8 @@ private:
     QMap<QString, QStringList> m_realTimeData;
 
     Excel* m_excel;
+
+    bool m_bTestRealTime;
 };
 
 #endif // WIDGET_H

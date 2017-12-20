@@ -15,6 +15,7 @@
 #include <QResizeEvent>
 #include <QLineSeries>
 #include <QStackedBarSeries>
+#include <QTimer>
 
 #include <QThread>
 #include <QObject>
@@ -49,7 +50,7 @@ public:
               QList<int> macdTime, int threadNumb = 8,
               QString databaseName="MarketData");
 
-    ChartForm(QWidget *parent, QTableView* programInfoTableView,
+    ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
               QList<strategy_ceil> strategy, QString strategyName,
               QString hedgeIndexCode, int hedgeIndexCount,
               int updateTime, QList<int> macdTime);
@@ -69,6 +70,8 @@ public:
     void initRealTimeData();
     void updateData();
     void updateChart();
+    void updateAxis();
+    void updateSeries();
 
     void setLayout ();
     void setVotRunoverChartView();
@@ -90,9 +93,11 @@ public slots:
 signals:
     void sendStartReadDataSignal(QString dataType);
     void sendStartProcessDataSignal(QString dataType);
+    void sendCloseSignal(int ChartViewID);
 
 protected:
     bool eventFilter (QObject *watched, QEvent *event);
+    void closeEvent(QCloseEvent *event);
 
 private:
     Ui::ChartForm *ui;
@@ -120,10 +125,12 @@ private:
 private:
     mutable QMutex m_mutex;
 
+    QMap<QString, int> m_indexHedgeMetaInfo;
     QMap<QString, int> m_seocdebuyCountMap;
     QStringList m_secodeNameList;
 
     int m_updateTime;
+    QTimer m_timer;
     QMap<QString, QStringList> m_realTimeData;
 
     QList<DataProcess*> m_dataProcessList;

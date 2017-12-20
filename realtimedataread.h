@@ -10,12 +10,14 @@ public:
     RealTimeDataRead(QObject* parent = 0);
 public slots:
     void loginWind();
-    void startWsq(QStringList secodeList);
+    void startWsq(QStringList secodeList, int reqID);
+    void cancelWsqRequest(int reqID);
+    void cancelAllWsqRequest();
 
 signals:
     void loginWindFailed(int errcode);
     void loginWindSucc();
-    void startWsqFailed(int errcode);
+    void startWsqFailed(int errcode, int reqID);
     void startWsqSucc();
 
 private:
