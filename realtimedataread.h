@@ -1,13 +1,13 @@
 #ifndef REALTIMEDATAREAD_H
 #define REALTIMEDATAREAD_H
-
+#include <QTableView>
 #include <QObject>
 
 class RealTimeDataRead:public QObject
 {
     Q_OBJECT
 public:
-    RealTimeDataRead(QObject* parent = 0);
+    RealTimeDataRead(QTableView* programInfoTableView,QObject* parent = 0);
 public slots:
     void loginWind();
     void startWsq(QStringList secodeList, int reqID);
@@ -22,6 +22,7 @@ signals:
 
 private:
     bool m_login;
+    QTableView* m_programInfoTableView;
 };
 
 #endif // REALTIMEDATAREAD_H

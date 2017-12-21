@@ -34,7 +34,7 @@ Widget::Widget(QWidget *parent) :
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_strategyFileDir(""),
-    m_bTestRealTime(true),
+    m_bTestRealTime(false),
     ui(new Ui::Widget)
 {
     m_excel = new Excel();
@@ -50,7 +50,7 @@ Widget::Widget(QWidget *parent) :
 
 void Widget::initReadRealTimeData() {
     if (!m_bTestRealTime) {
-        m_readRealTimeData = new RealTimeDataRead();
+        m_readRealTimeData = new RealTimeDataRead(ui->programInfo_tableView);
         m_readRealTimeData->moveToThread(&m_windWorkThread);
         connect(&m_windWorkThread, SIGNAL(finished()), m_readRealTimeData, SLOT(deleteLater()));
         connect(this, SIGNAL(loginWind()), m_readRealTimeData, SLOT(loginWind()));
@@ -77,8 +77,8 @@ void Widget::setCalendarValue () {
     ui->chooseStartDate->setCalendarPopup (true);
     ui->chooseEndDate->setCalendarPopup (true);
 
-    ui->chooseStartDate->setDate (QDate(2016, 1, 1));
-    ui->chooseEndDate->setDate (QDate(2017, 1, 1));
+    ui->chooseStartDate->setDate (QDate(2017, 12, 8));
+    ui->chooseEndDate->setDate (QDate(2017, 12, 20));
 }
 
 void Widget::setTestRealTimeData() {
@@ -94,9 +94,12 @@ void Widget::addTestRealTimeData() {
         QStringList newData;
         QString date = QDate::currentDate().toString("yyyyMMdd");
         QString time = QTime::currentTime().toString("hhmmss");
-        QString last = QString("%1").arg(qrand()%10);
-        QString preClost = QString("%1").arg(qrand()%10);
-        QString amt = QString("%1").arg(qrand()%10000);
+//        QString last = QString("%1").arg(qrand()%10);
+//        QString preClost = QString("%1").arg(qrand()%10);
+//        QString amt = QString("%1").arg(qrand()%10000);
+        QString last = QString("%1").arg(1);
+        QString preClost = QString("%1").arg(1);
+        QString amt = QString("%1").arg(100);
         newData << date << time << last << preClost << amt;
         g_wsqData[secode].append(newData);
     }
@@ -115,8 +118,8 @@ void Widget::setHedgeValue() {
 }
 
 void Widget::setStrategyTableView () {
-    m_strategyFileDir = "D:/strategy";
-//    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
+//    m_strategyFileDir = "D:/strategy";
+    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
@@ -315,7 +318,7 @@ void Widget::on_realDateTime_pushButton_clicked()
 }
 
 void Widget::receiveChartCLoseSignal(int chartViewID) {
-    qDebug() << "chartViewID: " << chartViewID;
+    qDebug() << "Widget::receiveChartCLoseSignal chartViewID: " << chartViewID;
     if (!m_bTestRealTime) {
         emit cancelWsqRequest(chartViewID);
     }
@@ -334,8 +337,10 @@ void Widget::closeEvent(QCloseEvent *event) {
 
 Widget::~Widget()
 {
-    m_windWorkThread.quit();
-    m_windWorkThread.wait();
+    if (!m_bTestRealTime) {
+        m_windWorkThread.quit();
+        m_windWorkThread.wait();
+    }
 
     delete ui;
     if (NULL != m_strategyModel) {
@@ -349,8 +354,8 @@ Widget::~Widget()
     }
 
     for (int i = 0; i < m_chartViews.size (); ++i) {
-        if (NULL != m_chartViews.at (i)) {
-            delete m_chartViews.at (i);
+        if (NULL != m_chartViews[i]) {
+            delete m_chartViews[i];
             m_chartViews[i] = NULL;
         }
     }

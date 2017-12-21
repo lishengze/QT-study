@@ -202,10 +202,16 @@ QList<double> getChartYvalueRange(QList<double> yValueList ) {
         maxValue += (maxValue - minValue) / rangeInterval;
         minValue -= (maxValue - minValue) / rangeInterval;
 
-        if (abs(maxValue - minValue) / abs(minValue) < 0.2) {
-            maxValue += max(abs(maxValue),  abs(minValue)) / 4;
-            minValue -= max(abs(maxValue),  abs(minValue)) / 4;
+        if (maxValue == minValue) {
+            double addedRange = abs(maxValue) / rangeInterval;
+            maxValue = maxValue + addedRange;
+            minValue = minValue - addedRange;
         }
+
+//        if (abs(maxValue - minValue) / abs(minValue) < 0.2) {
+//            maxValue += max(abs(maxValue),  abs(minValue)) / 4;
+//            minValue -= max(abs(maxValue),  abs(minValue)) / 4;
+//        }
         result.append (minValue);
         result.append (maxValue);
     }
@@ -229,6 +235,18 @@ QList<double> getMACDRange(QList<MACD> oriData) {
         int rangeInterval = 6;
         maxValue += (maxValue - minValue) / rangeInterval;
         minValue -= (maxValue - minValue) / rangeInterval;
+
+        if (maxValue == minValue) {
+            if (maxValue != 0) {
+                double addedRange = abs(maxValue) / rangeInterval;
+                maxValue = maxValue + addedRange;
+                minValue = minValue - addedRange;
+            } else {
+                maxValue = 0.5;
+                minValue = -0.5;
+            }
+        }
+
         result.append (minValue);
         result.append (maxValue);
     }

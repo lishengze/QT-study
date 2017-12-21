@@ -17,6 +17,7 @@ public:
 
 protected:
     void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
 
 private:
     QWidget* m_parent;

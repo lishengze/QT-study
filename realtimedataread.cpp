@@ -6,8 +6,8 @@
 #include "WAPIWrapperCpp.h"
 using namespace std;
 
-RealTimeDataRead::RealTimeDataRead(QObject* parent):
-    m_login(false),
+RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView, QObject* parent):
+    m_programInfoTableView(programInfoTableView), m_login(false),
     QObject(parent)
 {
 
@@ -36,6 +36,7 @@ void RealTimeDataRead::startWsq(QStringList secodeList, int reqID) {
     qDebug() << "Thread: " << QThread::currentThreadId() <<  " wsq...... ";
     int errcode;
     if (m_login) {
+        updateProgramInfo(m_programInfoTableView, "订阅实时数据");
 //        qDebug() <<"secodeList: " << secodeList;
 //        LPCWSTR windcodes = TEXT("600000.SH,000001.SZ,000002.SZ");
         LPCWSTR windcodes = transSecode(secodeList);

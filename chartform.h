@@ -83,6 +83,9 @@ public:
 
     void setTestView();
     void setMouseMoveValue(int currIndex);
+    void mouseMoveEvenFunc(QObject *watched, QEvent *event);
+    void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
+    void KeyReleaseFunc(QObject *watched, QEvent *event);
 
 public slots:
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
@@ -104,6 +107,8 @@ private:
 
 
 private:
+    bool m_isRealTime;
+    bool m_isclosed;
     int m_chartViewID;
     QTableView* m_programInfoTableView;
     QList<strategy_ceil> m_strategy;
@@ -124,6 +129,10 @@ private:
 
 private:
     mutable QMutex m_mutex;
+    QPointF m_mousePos;
+    QPointF m_mousePosChartValue;
+    QString m_mouseChartName;
+    int m_mouseXPos;
 
     QMap<QString, int> m_indexHedgeMetaInfo;
     QMap<QString, int> m_seocdebuyCountMap;

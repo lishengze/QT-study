@@ -19,3 +19,7 @@ void QMyChartView::mouseMoveEvent (QMouseEvent *event) {
 //    qDebug() <<  "MyChartView MouseMove Event: " << curPoint;
     event->ignore ();
 }
+
+void QMyChartView::mouseReleaseEvent(QMouseEvent *event) {
+    event->ignore();
+}
