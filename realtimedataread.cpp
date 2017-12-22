@@ -1,6 +1,7 @@
 #include "realtimedataread.h"
 #include <QDebug>
 #include <iostream>
+#include <QDate>
 #include <QThread>
 #include "toolfunc.h"
 #include "WAPIWrapperCpp.h"
@@ -32,8 +33,53 @@ void RealTimeDataRead::loginWind() {
     }
 }
 
+void RealTimeDataRead::getOldStrategySpread(QList<QString> secodeList) {
+    int errcode;
+    qDebug() << "RealTimeDataRead::getOldStrategySpread ";
+    if (m_login) {
+        WindData wd;
+        LPCWSTR windcodes = transSecode(secodeList);
+        LPCWSTR indicators = TEXT("pre_close");
+        LPCWSTR options = TEXT("Days=Alldays");
+        LPCWSTR beginDate = transSecode(QDate::currentDate().toString("yyyy-MM-dd"));
+
+        errcode = CWAPIWrapperCpp::wsd(wd, windcodes, indicators, beginDate, beginDate, options);
+        qDebug() << "wsd errcode: " << errcode;
+        if (errcode == 0) {
+            QMap<QString, double> result;
+            int codelen = wd.GetCodesLength();
+            int fieldslen = wd.GetFieldsLength();
+            int colnum = fieldslen + 1;
+            cout  << "WindCodes    ";
+            for (int i =1;i < colnum; ++i)
+            {
+                QString outfields = QString::fromStdWString(wd.GetFieldsByIndex(i-1));
+                cout << outfields.toStdString() << "    ";
+            }
+            cout << endl;
+            for (int i = 0; i < codelen; ++i)
+            {
+                QString codes = QString::fromStdWString(wd.GetCodeByIndex(i));
+                cout << codes.toStdString() << "    ";
+                VARIANT var;
+                wd.GetDataItem(0,i,0, var);
+                QString temp = variantToQString(&var);
+                cout << temp.toStdString() << endl;
+                result.insert(codes, temp.toDouble());
+            }
+            sendOldStrategySpread(result);
+        } else {
+
+        }
+        delete[] beginDate;
+    } else {
+        errcode = -1;
+    }
+
+}
+
 void RealTimeDataRead::startWsq(QStringList secodeList, int reqID) {
-    qDebug() << "Thread: " << QThread::currentThreadId() <<  " wsq...... ";
+//    qDebug() << "Thread: " << QThread::currentThreadId() <<  " wsq...... ";
     int errcode;
     if (m_login) {
         updateProgramInfo(m_programInfoTableView, "订阅实时数据");

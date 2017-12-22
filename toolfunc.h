@@ -57,10 +57,14 @@ QString getWindSecode(QString secode);
 
 LPCWSTR transSecode(QStringList secodeList);
 
+LPCWSTR transSecode(QString qString);
+
 QString variantToQString(const LPVARIANT data);
 
 LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd);
 
 void writeWsqData(QString secode, QStringList data);
+
+double getAveValue(QList<double>);
 
 #endif // TOOLFUNC_H

@@ -11,6 +11,9 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QAbstractItemModel>
+#include <QPersistentModelIndex>
+#include <QAbstractItemModel>
+#include <QVector>
 #include <QTimer>
 
 #include "toolfunc.h"
@@ -34,7 +37,7 @@ Widget::Widget(QWidget *parent) :
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_strategyFileDir(""),
-    m_bTestRealTime(false),
+    m_bTestRealTime(true),
     ui(new Ui::Widget)
 {
     m_excel = new Excel();
@@ -71,6 +74,12 @@ void Widget::initReadRealTimeData() {
     } else {
         setTestRealTimeData();
     }
+
+    qRegisterMetaType<QList<QString>>("QList<QString>");
+    qRegisterMetaType<QList<QString>>("QMap<QString, double>");
+    qRegisterMetaType<QList<QPersistentModelIndex>>("QList<QPersistentModelIndex>");
+    qRegisterMetaType<QVector<int>>("QVector<int>");
+    qRegisterMetaType<QAbstractItemModel::LayoutChangeHint>("QAbstractItemModel::LayoutChangeHint");
 }
 
 void Widget::setCalendarValue () {
@@ -94,12 +103,12 @@ void Widget::addTestRealTimeData() {
         QStringList newData;
         QString date = QDate::currentDate().toString("yyyyMMdd");
         QString time = QTime::currentTime().toString("hhmmss");
-//        QString last = QString("%1").arg(qrand()%10);
-//        QString preClost = QString("%1").arg(qrand()%10);
-//        QString amt = QString("%1").arg(qrand()%10000);
-        QString last = QString("%1").arg(1);
-        QString preClost = QString("%1").arg(1);
-        QString amt = QString("%1").arg(100);
+        QString last = QString("%1").arg(qrand()%10);
+        QString preClost = QString("%1").arg(qrand()%10);
+        QString amt = QString("%1").arg(qrand()%10000);
+//        QString last = QString("%1").arg(1);
+//        QString preClost = QString("%1").arg(1);
+//        QString amt = QString("%1").arg(100);
         newData << date << time << last << preClost << amt;
         g_wsqData[secode].append(newData);
     }
@@ -127,8 +136,6 @@ void Widget::setStrategyTableView () {
     ui->tableView->setColumnWidth (0, 150);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tableView->setShowGrid (false);
-//    QAbstractItemModel* testMode = ui->tableView->model ();
-//    qDebug() << "testMode: " << testMode;
 }
 
 void Widget::setProgramInfoTableView () {
@@ -222,7 +229,6 @@ void Widget::on_tableView_clicked(const QModelIndex &index)
             }
         }
     }
-
 }
 
 void Widget::on_historyData_clicked()
@@ -270,44 +276,47 @@ void Widget::on_realDateTime_pushButton_clicked()
         m_loginWind = true;
     }
     if (true == m_loginWind) {
-        int EVA1Time = ui->EMA1TimeSpinBox->value ();
-        int EVA2Time = ui->EMA2TimeSpinBox->value ();
-        int DIFFTime = ui->DIFFTimeSpinBox->value ();
-        QList<int> macdTime;
-        macdTime << EVA1Time << EVA2Time << DIFFTime;
-
-        QString hedgeIndexCode = ui->hedgeTarget_comboBox->currentData ().toString ();
-        int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
-
         if (m_currStrategy.size () == 0) {
             QMessageBox::critical(NULL, "Error", "还未选择策略");
             return;
         } else {
             int updateTime = 3000;
+            int EVA1Time = ui->EMA1TimeSpinBox->value ();
+            int EVA2Time = ui->EMA2TimeSpinBox->value ();
+            int DIFFTime = ui->DIFFTimeSpinBox->value ();
+            QList<int> macdTime;
+            macdTime << EVA1Time << EVA2Time << DIFFTime;
+
+            QString hedgeIndexCode = ui->hedgeTarget_comboBox->currentData ().toString ();
+            int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
+
             QStringList secodeList;
             for (int i = 0; i < m_currStrategy.size (); ++i) {
                 secodeList.append(m_currStrategy[i].m_secode);
             }
             secodeList.append(hedgeIndexCode);
+
             int chartViewID = m_chartViews.count();
-            QWidget* charView = new ChartForm(0, ui->programInfo_tableView, chartViewID,
+            QWidget* charView = new ChartForm(0, m_readRealTimeData,
+                                              ui->programInfo_tableView, chartViewID,
                                               m_currStrategy, m_strategyName,
                                               hedgeIndexCode, hedgeIndexCount,
-                                              updateTime, macdTime);
+                                              updateTime, macdTime, m_bTestRealTime);
 
             connect(charView,SIGNAL(sendCloseSignal(int)), this, SLOT(receiveChartCLoseSignal(int)));
+
             if (!m_bTestRealTime) {
                 emit startWsq(secodeList, chartViewID);
             }
             charView->show ();
             m_chartViews.append (charView);
+            qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
+            qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
+            updateProgramInfo (ui->programInfo_tableView, QString("策略名称: %1, 策略中股票数目为: %2").arg(m_strategyName).arg(m_currStrategy.size ()));
+            updateProgramInfo (ui->programInfo_tableView, QString("T1: %1, T2: %2, T3: %3").arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
+            updateProgramInfo (ui->programInfo_tableView, QString("对冲目标: %1, 对冲笔数: %2").arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
+            updateProgramInfo (ui->programInfo_tableView, QString("读取数据"));
         }
-        qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
-        qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
-        updateProgramInfo (ui->programInfo_tableView, QString("策略名称: %1, 策略中股票数目为: %2").arg(m_strategyName).arg(m_currStrategy.size ()));
-        updateProgramInfo (ui->programInfo_tableView, QString("T1: %1, T2: %2, T3: %3").arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
-        updateProgramInfo (ui->programInfo_tableView, QString("对冲目标: %1, 对冲笔数: %2").arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
-        updateProgramInfo (ui->programInfo_tableView, QString("读取数据"));
     } else {
         QMessageBox::StandardButton rb = QMessageBox::critical(this, "Error", "还未登陆万得, 再次尝试登陆?",
                                                                QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);

@@ -377,7 +377,17 @@ LPCWSTR transSecode(QStringList secodeList) {
         result += transSecode + ',';
     }
     result.remove(result.size()-1, result.size()-1);
+
     string data = result.toStdString();
+    size_t size = data.length();
+    wchar_t *buffer = new wchar_t[size + 1];
+    MultiByteToWideChar(CP_ACP, 0, data.c_str(), size, buffer, size * sizeof(wchar_t));
+    buffer[size] = 0;  //确保以 '\0' 结尾
+    return buffer;
+}
+
+LPCWSTR transSecode(QString qString) {
+    string data = qString.toStdString();
     size_t size = data.length();
     wchar_t *buffer = new wchar_t[size + 1];
     MultiByteToWideChar(CP_ACP, 0, data.c_str(), size, buffer, size * sizeof(wchar_t));
@@ -439,27 +449,27 @@ LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd)
     int codelen = wd.GetCodesLength();
     int fieldslen = wd.GetFieldsLength();
     int colnum = fieldslen + 1;
-    cout  << "WindCodes    ";
-    for (int i =1;i < colnum; ++i)
-    {
-        QString outfields = QString::fromStdWString(wd.GetFieldsByIndex(i-1));
-        cout << outfields.toStdString() << "    ";
-    }
-    cout << endl;
+//    cout  << "WindCodes    ";
+//    for (int i =1;i < colnum; ++i)
+//    {
+//        QString outfields = QString::fromStdWString(wd.GetFieldsByIndex(i-1));
+//        cout << outfields.toStdString() << "    ";
+//    }
+//    cout << endl;
     for (int i = 0; i < codelen; ++i)
     {
         QStringList singleCodeData;
         QString codes = QString::fromStdWString(wd.GetCodeByIndex(i));
-        cout << codes.toStdString() << "    ";
+//        cout << codes.toStdString() << "    ";
         for (int j = 0; j < fieldslen; ++j)
         {
             VARIANT var;
             wd.GetDataItem(0,i,j,var);
             QString temp = variantToQString(&var);
             singleCodeData.append(temp);
-            cout << temp.toStdString() << "    ";
+//            cout << temp.toStdString() << "    ";
         }
-        cout << endl;
+//        cout << endl;
         writeWsqData(codes, singleCodeData);
     }
     return 0;
@@ -480,7 +490,13 @@ void writeWsqData(QString secode, QStringList data) {
 //    qDebug() << g_wsqData;
 }
 
-
+double getAveValue(QList<double> oriData) {
+    double result = 0;
+    for (int i = 0; i < oriData.size(); ++i) {
+        result += oriData[i];
+    }
+    return result/oriData.size();
+}
 
 
 

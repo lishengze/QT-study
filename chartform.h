@@ -31,6 +31,7 @@
 #include "database.h"
 #include "macd.h"
 #include "qmychartview.h"
+#include "realtimedataread.h"
 
 namespace Ui {
 class ChartForm;
@@ -50,10 +51,11 @@ public:
               QList<int> macdTime, int threadNumb = 8,
               QString databaseName="MarketData");
 
-    ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
+    ChartForm(QWidget *parent, RealTimeDataRead* readRealTimeData,
+              QTableView* programInfoTableView, int chartViewID,
               QList<strategy_ceil> strategy, QString strategyName,
               QString hedgeIndexCode, int hedgeIndexCount,
-              int updateTime, QList<int> macdTime);
+              int updateTime, QList<int> macdTime, bool isTestRealTime);
 
     void registSignalParamsType();
     void initData(QString databaseName, QString timeType,
@@ -82,21 +84,24 @@ public:
     void setTheme();
 
     void setTestView();
+
     void setMouseMoveValue(int currIndex);
     void mouseMoveEvenFunc(QObject *watched, QEvent *event);
     void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
     void KeyReleaseFunc(QObject *watched, QEvent *event);
+    double getPointXDistance();
 
 public slots:
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
     void receiveAllProcessedData(QList<QList<double>> allData);
-
     void checkRealTimeData();
+    void receiveOldStrategySpread(QMap<QString, double> result);
 
 signals:
     void sendStartReadDataSignal(QString dataType);
     void sendStartProcessDataSignal(QString dataType);
     void sendCloseSignal(int ChartViewID);
+    void getOldStrategySpread(QList<QString> secodeList);
 
 protected:
     bool eventFilter (QObject *watched, QEvent *event);
@@ -105,11 +110,12 @@ protected:
 private:
     Ui::ChartForm *ui;
 
-
 private:
     bool m_isRealTime;
+    bool m_bTestRealTime;
     bool m_isclosed;
     int m_chartViewID;
+    RealTimeDataRead* m_readRealTimeData;
     QTableView* m_programInfoTableView;
     QList<strategy_ceil> m_strategy;
     QString m_strategyName;
@@ -129,10 +135,10 @@ private:
 
 private:
     mutable QMutex m_mutex;
-    QPointF m_mousePos;
-    QPointF m_mousePosChartValue;
+    QPoint m_mouseInitPos;
     QString m_mouseChartName;
-    int m_mouseXPos;
+    int m_currTimeIndex;
+    int m_keyMoveCount;
 
     QMap<QString, int> m_indexHedgeMetaInfo;
     QMap<QString, int> m_seocdebuyCountMap;
@@ -141,6 +147,7 @@ private:
     int m_updateTime;
     QTimer m_timer;
     QMap<QString, QStringList> m_realTimeData;
+    double m_OldStrategySpread;
 
     QList<DataProcess*> m_dataProcessList;
     QList<QThread*> m_dataProcessThreadList;
@@ -153,6 +160,7 @@ private:
 
     QList<double> m_timeData;
     QList<double> m_strategyData;
+    double strategySpread;
     QList<double> m_votData;
     QList<MACD> m_macdData;
 
@@ -160,6 +168,7 @@ private:
     QString m_title;
     int m_chartXaxisTickCount;
 
+    QLineSeries* m_oldStrategySpreadSeries;
     QLineSeries* m_strategySeries;
     QMyChartView* m_strategyChartView;
     QChart* m_strategyChart;
