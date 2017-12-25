@@ -33,6 +33,20 @@
      </property>
     </layout>
    </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="Title_Label">
+     <property name="styleSheet">
+      <string notr="true">color: rgb(85, 255, 255);
+font: 75 14pt &quot;微软雅黑&quot;;</string>
+     </property>
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
    <item row="2" column="2">
     <widget class="QGroupBox" name="groupBox">
      <property name="minimumSize">
@@ -66,7 +80,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>30</y>
+        <y>20</y>
         <width>180</width>
         <height>16</height>
        </rect>
@@ -85,7 +99,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>60</y>
+        <y>80</y>
         <width>180</width>
         <height>16</height>
        </rect>
@@ -104,7 +118,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>90</y>
+        <y>110</y>
         <width>180</width>
         <height>16</height>
        </rect>
@@ -116,14 +130,14 @@
        </size>
       </property>
       <property name="text">
-       <string>销售额:</string>
+       <string>成交额:</string>
       </property>
      </widget>
      <widget class="QLabel" name="DIFF_Label">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>120</y>
+        <y>140</y>
         <width>180</width>
         <height>16</height>
        </rect>
@@ -142,7 +156,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>150</y>
+        <y>170</y>
         <width>180</width>
         <height>16</height>
        </rect>
@@ -161,7 +175,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>180</y>
+        <y>200</y>
         <width>180</width>
         <height>16</height>
        </rect>
@@ -176,20 +190,25 @@
        <string>MACD:</string>
       </property>
      </widget>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="Title_Label">
-     <property name="styleSheet">
-      <string notr="true">color: rgb(85, 255, 255);
-font: 75 14pt &quot;微软雅黑&quot;;</string>
-     </property>
-     <property name="text">
-      <string>TextLabel</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
+     <widget class="QLabel" name="preCLoseSpreadValue_Label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>50</y>
+        <width>180</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>180</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>昨日点差:</string>
+      </property>
+     </widget>
     </widget>
    </item>
   </layout>

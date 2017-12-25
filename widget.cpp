@@ -37,7 +37,7 @@ Widget::Widget(QWidget *parent) :
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_strategyFileDir(""),
-    m_bTestRealTime(true),
+    m_bTestRealTime(false),
     ui(new Ui::Widget)
 {
     m_excel = new Excel();
@@ -99,7 +99,7 @@ void Widget::addTestRealTimeData() {
     QList<QString> curGlobalSecodeList = g_wsqData.keys();
     for (int i = 0; i < curGlobalSecodeList.size(); ++i) {
         QString secode = curGlobalSecodeList[i];
-        QList<QStringList> curData = g_wsqData[secode];
+
         QStringList newData;
         QString date = QDate::currentDate().toString("yyyyMMdd");
         QString time = QTime::currentTime().toString("hhmmss");
@@ -110,6 +110,12 @@ void Widget::addTestRealTimeData() {
 //        QString preClost = QString("%1").arg(1);
 //        QString amt = QString("%1").arg(100);
         newData << date << time << last << preClost << amt;
+//        QList<QStringList> curData = g_wsqData[secode];
+//        QStringList latestData;
+//        if (curData.size() > 0) {
+//            QStringList latestData = curData[curData.size()-1];
+//        }
+        g_wsqData[secode].clear();
         g_wsqData[secode].append(newData);
     }
 }
@@ -258,16 +264,17 @@ void Widget::on_historyData_clicked()
                                           hedgeIndexCode, hedgeIndexCount,
                                           macdTime);
         charView->show ();
+
         m_chartViews.append (charView);
+        qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
+        qDebug() << "timeType: " << timeType;
+        qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
+        updateProgramInfo (ui->programInfo_tableView, QString("策略名称: %1, 策略中股票数目为: %2").arg(m_strategyName).arg(m_currStrategy.size ()));
+        updateProgramInfo (ui->programInfo_tableView, QString("起始时间: %1, 终止时间: %2, 时间频率: %3, T1: %4, T2: %5, T3: %6")
+                           .arg(startDate).arg(endDate).arg(timeType).arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
+        updateProgramInfo (ui->programInfo_tableView, QString("对冲目标: %1, 对冲笔数: %2").arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
+        updateProgramInfo (ui->programInfo_tableView, QString("读取数据"));
     }
-    qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
-    qDebug() << "timeType: " << timeType;
-    qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
-    updateProgramInfo (ui->programInfo_tableView, QString("策略名称: %1, 策略中股票数目为: %2").arg(m_strategyName).arg(m_currStrategy.size ()));
-    updateProgramInfo (ui->programInfo_tableView, QString("起始时间: %1, 终止时间: %2, 时间频率: %3, T1: %4, T2: %5, T3: %6")
-                       .arg(startDate).arg(endDate).arg(timeType).arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
-    updateProgramInfo (ui->programInfo_tableView, QString("对冲目标: %1, 对冲笔数: %2").arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
-    updateProgramInfo (ui->programInfo_tableView, QString("读取数据"));
 }
 
 void Widget::on_realDateTime_pushButton_clicked()
@@ -302,7 +309,6 @@ void Widget::on_realDateTime_pushButton_clicked()
                                               m_currStrategy, m_strategyName,
                                               hedgeIndexCode, hedgeIndexCount,
                                               updateTime, macdTime, m_bTestRealTime);
-
             connect(charView,SIGNAL(sendCloseSignal(int)), this, SLOT(receiveChartCLoseSignal(int)));
 
             if (!m_bTestRealTime) {

@@ -14,14 +14,14 @@ public slots:
     void startWsq(QStringList secodeList, int reqID);
     void cancelWsqRequest(int reqID);
     void cancelAllWsqRequest();
-    void getOldStrategySpread(QList<QString> secodeList);
+    void getPreData(QList<QString> secodeList);
 
 signals:
     void loginWindFailed(int errcode);
     void loginWindSucc();
     void startWsqFailed(int errcode, int reqID);
     void startWsqSucc();
-    void sendOldStrategySpread(QMap<QString, double> result);
+    void sendPreData(QMap<QString,QStringList>);
 
 private:
     bool m_login;

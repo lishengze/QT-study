@@ -74,6 +74,7 @@ public:
     void updateChart();
     void updateAxis();
     void updateSeries();
+    void updateMousePos();
 
     void setLayout ();
     void setVotRunoverChartView();
@@ -95,13 +96,13 @@ public slots:
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
     void receiveAllProcessedData(QList<QList<double>> allData);
     void checkRealTimeData();
-    void receiveOldStrategySpread(QMap<QString, double> result);
+    void receivePreData(QMap<QString, QStringList> result);
 
 signals:
     void sendStartReadDataSignal(QString dataType);
     void sendStartProcessDataSignal(QString dataType);
     void sendCloseSignal(int ChartViewID);
-    void getOldStrategySpread(QList<QString> secodeList);
+    void getPreData(QList<QString> secodeList);
 
 protected:
     bool eventFilter (QObject *watched, QEvent *event);
@@ -137,6 +138,7 @@ private:
     mutable QMutex m_mutex;
     QPoint m_mouseInitPos;
     QString m_mouseChartName;
+    double m_oldPointDistance;
     int m_currTimeIndex;
     int m_keyMoveCount;
 

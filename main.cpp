@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
     setLibPath();
     QApplication a(argc, argv);
     Widget w;
+    w.setWindowTitle("Client");
     w.show();
 
 //    Dialog testDialog(8);

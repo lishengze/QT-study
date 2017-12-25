@@ -479,15 +479,19 @@ void writeWsqData(QString secode, QStringList data) {
     QList<QString> keys = g_wsqData.keys();
     if (keys.indexOf(secode) < 0) {
         QList<QStringList> initData;
-        initData.append(data);
         g_wsqData.insert(secode, initData);
     }
-    QList<QStringList> currData = g_wsqData[secode];
-    QStringList latestData = currData[currData.size()-1];
-    if (latestData[1].toDouble() < data[1].toDouble()) {
+    if (g_wsqData[secode].size() == 0) {
         g_wsqData[secode].append(data);
+    } else {
+        QList<QStringList> currData = g_wsqData[secode];
+        QStringList latestData = currData[currData.size()-1];
+        if (latestData[1].toDouble() < data[1].toDouble()) {
+            g_wsqData[secode].clear();
+            g_wsqData[secode].append(latestData);
+            g_wsqData[secode].append(data);
+        }
     }
-//    qDebug() << g_wsqData;
 }
 
 double getAveValue(QList<double> oriData) {

@@ -33,7 +33,7 @@ void RealTimeDataRead::loginWind() {
     }
 }
 
-void RealTimeDataRead::getOldStrategySpread(QList<QString> secodeList) {
+void RealTimeDataRead::getPreData(QList<QString> secodeList) {
     int errcode;
     qDebug() << "RealTimeDataRead::getOldStrategySpread ";
     if (m_login) {
@@ -46,28 +46,33 @@ void RealTimeDataRead::getOldStrategySpread(QList<QString> secodeList) {
         errcode = CWAPIWrapperCpp::wsd(wd, windcodes, indicators, beginDate, beginDate, options);
         qDebug() << "wsd errcode: " << errcode;
         if (errcode == 0) {
-            QMap<QString, double> result;
+            QMap<QString, QStringList> result;
             int codelen = wd.GetCodesLength();
             int fieldslen = wd.GetFieldsLength();
             int colnum = fieldslen + 1;
-            cout  << "WindCodes    ";
+//            cout  << "WindCodes    ";
             for (int i =1;i < colnum; ++i)
             {
                 QString outfields = QString::fromStdWString(wd.GetFieldsByIndex(i-1));
-                cout << outfields.toStdString() << "    ";
+//                cout << outfields.toStdString() << "    ";
             }
-            cout << endl;
+//            cout << endl;
             for (int i = 0; i < codelen; ++i)
             {
+                QStringList singleCodeData;
                 QString codes = QString::fromStdWString(wd.GetCodeByIndex(i));
-                cout << codes.toStdString() << "    ";
-                VARIANT var;
-                wd.GetDataItem(0,i,0, var);
-                QString temp = variantToQString(&var);
-                cout << temp.toStdString() << endl;
-                result.insert(codes, temp.toDouble());
+        //        cout << codes.toStdString() << "    ";
+                for (int j = 0; j < fieldslen; ++j)
+                {
+                    VARIANT var;
+                    wd.GetDataItem(0,i,j,var);
+                    QString temp = variantToQString(&var);
+                    singleCodeData.append(temp);
+        //            cout << temp.toStdString() << "    ";
+                }
+                result.insert(codes, singleCodeData);
             }
-            sendOldStrategySpread(result);
+            emit sendPreData(result);
         } else {
 
         }
