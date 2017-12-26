@@ -37,7 +37,7 @@ Widget::Widget(QWidget *parent) :
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_strategyFileDir(""),
-    m_bTestRealTime(false),
+    m_bTestRealTime(true),
     ui(new Ui::Widget)
 {
     m_excel = new Excel();
@@ -52,6 +52,7 @@ Widget::Widget(QWidget *parent) :
 }
 
 void Widget::initReadRealTimeData() {
+//    qDebug() << "Widget::initReadRealTimeData(): " << QThread::currentThread();
     if (!m_bTestRealTime) {
         m_readRealTimeData = new RealTimeDataRead(ui->programInfo_tableView);
         m_readRealTimeData->moveToThread(&m_windWorkThread);
@@ -115,7 +116,14 @@ void Widget::addTestRealTimeData() {
 //        if (curData.size() > 0) {
 //            QStringList latestData = curData[curData.size()-1];
 //        }
+        QStringList latestData;
+        if (g_wsqData[secode].size() > 0) {
+            latestData = g_wsqData[secode][g_wsqData[secode].size() -1];
+        }
         g_wsqData[secode].clear();
+        if (latestData.size() > 0) {
+            g_wsqData[secode].append(latestData);
+        }
         g_wsqData[secode].append(newData);
     }
 }
@@ -139,7 +147,7 @@ void Widget::setStrategyTableView () {
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
     ui->tableView->setModel (tableModel);
-    ui->tableView->setColumnWidth (0, 150);
+    ui->tableView->setColumnWidth (0, 300);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tableView->setShowGrid (false);
 }

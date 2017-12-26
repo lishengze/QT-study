@@ -9,6 +9,7 @@ class MACD
 public:
     MACD();
     MACD(double ema1, double ema2, double diff, double dea, double macd);
+//    MACD(MACD& data);
     double m_diff;
     double m_dea;
     double m_macd;

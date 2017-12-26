@@ -32,6 +32,8 @@
 #include "macd.h"
 #include "qmychartview.h"
 #include "realtimedataread.h"
+#include "monitorrealtimedata.h"
+#include "chartdata.h"
 
 namespace Ui {
 class ChartForm;
@@ -70,7 +72,8 @@ public:
     void releaseDataProcessSrc();
 
     void initRealTimeData();
-    void updateData();
+    void initMonitorThread();
+//    void updateData();
     void updateChart();
     void updateAxis();
     void updateSeries();
@@ -82,6 +85,7 @@ public:
     void setMACDChartView();
 
     QCategoryAxis* getAxisX ();
+    QCategoryAxis* getAxisX (int addedTimeNumb);
     void setTheme();
 
     void setTestView();
@@ -95,14 +99,16 @@ public:
 public slots:
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
     void receiveAllProcessedData(QList<QList<double>> allData);
-    void checkRealTimeData();
+//    void checkRealTimeData();
     void receivePreData(QMap<QString, QStringList> result);
+    void receiveRealTimeData(ChartData curChartData);
 
 signals:
     void sendStartReadDataSignal(QString dataType);
     void sendStartProcessDataSignal(QString dataType);
     void sendCloseSignal(int ChartViewID);
     void getPreData(QList<QString> secodeList);
+    void startMonitorRealTimeData();
 
 protected:
     bool eventFilter (QObject *watched, QEvent *event);
@@ -141,6 +147,8 @@ private:
     double m_oldPointDistance;
     int m_currTimeIndex;
     int m_keyMoveCount;
+    int m_addedTimeNumb;
+    int m_changeRefreshCondition;
 
     QMap<QString, int> m_indexHedgeMetaInfo;
     QMap<QString, int> m_seocdebuyCountMap;
@@ -148,6 +156,8 @@ private:
 
     int m_updateTime;
     QTimer m_timer;
+    MonitorRealTimeData* m_monitorWorker;
+    QThread m_MonitorThread;
     QMap<QString, QStringList> m_realTimeData;
     double m_OldStrategySpread;
 
