@@ -73,7 +73,12 @@ public:
 
     void initRealTimeData();
     void initMonitorThread();
-//    void updateData();
+    void initMonitorTimer();
+
+    void initIndexHedgeMetaInfo();
+
+
+    void updateData();
     void updateChart();
     void updateAxis();
     void updateSeries();
@@ -99,7 +104,7 @@ public:
 public slots:
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
     void receiveAllProcessedData(QList<QList<double>> allData);
-//    void checkRealTimeData();
+    void checkRealTimeData();
     void receivePreData(QMap<QString, QStringList> result);
     void receiveRealTimeData(ChartData curChartData);
 

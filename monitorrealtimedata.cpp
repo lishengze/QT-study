@@ -84,7 +84,7 @@ void MonitorRealTimeData::updateData() {
         if (secode == m_hedgeIndexCode) {
             continue;
         }
-        if (m_realTimeData[secode][2] == "") {
+        if (m_realTimeData[secode][2] == "0.0000") {
             strategyData += m_realTimeData[secode][3].toDouble() * m_seocdebuyCountMap[secode];
         } else {
             strategyData += m_realTimeData[secode][2].toDouble() * m_seocdebuyCountMap[secode];
