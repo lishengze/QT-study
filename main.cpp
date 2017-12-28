@@ -5,14 +5,7 @@
 #include <QTextCodec>
 #include <QProcess>
 #include "processfunc.h"
-
-void setCode() {
-//    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-//    QTextCodec::setCodecForLocale(codec);
-//    QTextCodec::codecForName("UTF-8")->toUnicode("中文");
-
-    QTextCodec::codecForName("GBK")->toUnicode("中文");
-}
+#include "dialog.h"
 
 void setLibPath() {
     QApplication::addLibraryPath(".");
@@ -23,10 +16,14 @@ int main(int argc, char *argv[])
 {
     setLibPath();
     QApplication a(argc, argv);
-//    Widget w;
-//    w.show();
+    Widget w;
+    w.setWindowTitle("Client");
+    w.show();
 
-    testMain();
+//    Dialog testDialog(8);
+//    testDialog.show ();
+
+//    testMain();
     return a.exec();
 }
 

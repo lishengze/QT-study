@@ -21,6 +21,8 @@ void testTableData();
 
 void testComputeMACD();
 
+void testComputeMACDDoubleData();
+
 void testTranstime();
 
 void testGetNumbList();
@@ -34,5 +36,11 @@ void testProcess();
 void testKillProcess();
 
 void testDatabase();
+
+void testDataRead();
+
+void testTransSecode();
+
+void testWindWsq();
 
 #endif // TEST_H

@@ -36,6 +36,7 @@ Database::Database(QString connName, QString host,
 }
 
 Database::~Database () {
+//    qDebug() << "m_db.close()";
     m_db.close ();
 }
 
@@ -116,7 +117,7 @@ QList<QStringList> Database::getOriChartData(QString startDate, QString endDate,
         QString sqlstr = QString("select [TDATE], [TIME] ") + keyValueStr  \
                        + QString("from [") + databaseName + "].[dbo].[" + tableName + "] " \
                        + "where TDATE <= " + endDate + " and TDATE >= " + startDate;
-        qDebug() <<sqlstr;
+//        qDebug() <<sqlstr;
         queryObj.exec(sqlstr);
          while(queryObj.next ()) {
             QStringList tmpResult;

@@ -4,7 +4,9 @@
 #include <QList>
 #include <QPointF>
 #include <QWidget>
+#include <QTableView>
 #include "macd.h"
+#include "WAPIWrapperCpp.h"
 
 QList<int> getDateList(int intDate);
 
@@ -19,7 +21,17 @@ QList<QPointF> mergeSortedPointedList(QList<QPointF> firstList, int firstBuyCoun
 
 QList<MACD> computeMACD(QList<double> oriData, int t1, int t2, int t3);
 
+QList<double> computeMACDDoubleData(QList<double> oriData, int t1, int t2, int t3);
+
+MACD computeMACDData(double newData, MACD oldData, int t1, int t2, int t3);
+
 void ErrorMessage(QString msg);
+
+void WarnMessage(QWidget* window, QString title, QString msg);
+
+QList<double> getChartYvalueRange(QList<QPointF> pointList );
+
+QList<double> getChartYvalueRange(QList<double> yValueList );
 
 QList<double> getMACDRange(QList<MACD> oriData);
 
@@ -38,5 +50,27 @@ QList<QString> getProcessPid(QString taskList, QString processName);
 void killProcessByPid(QString pid);
 
 QString getIndexCode();
+
+void updateProgramInfo(QTableView* programInfoTableView, QString message, QString remark="");
+
+QString getWindSecode(QString secode);
+
+LPCWSTR transSecode(QStringList secodeList);
+
+LPCWSTR transSecodeB(QStringList secodeList);
+
+LPCWSTR transSecode(QString qString);
+
+QString variantToQString(const LPVARIANT data);
+
+LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd);
+
+void testSpread(QMap<QString, QStringList> data);
+
+void writeWsqData(QString secode, QStringList data);
+
+double getAveValue(QList<double>);
+
+bool isTradingTime(QTime);
 
 #endif // TOOLFUNC_H

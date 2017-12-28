@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1046</width>
-    <height>692</height>
+    <width>1058</width>
+    <height>709</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -148,7 +148,7 @@
          <rect>
           <x>10</x>
           <y>150</y>
-          <width>331</width>
+          <width>618</width>
           <height>31</height>
          </rect>
         </property>
@@ -173,7 +173,7 @@
               </size>
              </property>
              <property name="text">
-              <string>时间频率:</string>
+              <string>时间频率：</string>
              </property>
             </widget>
            </item>
@@ -222,12 +222,9 @@
         </size>
        </property>
        <property name="text">
-        <string>开始组合信息：</string>
+        <string>组合信息：</string>
        </property>
       </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QTableView" name="tableView"/>
      </item>
      <item row="2" column="0">
       <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -317,35 +314,14 @@
        </item>
       </layout>
      </item>
-    </layout>
-   </item>
-   <item row="1" column="0" colspan="2">
-    <layout class="QVBoxLayout" name="programInfo_verticalLayout">
-     <property name="topMargin">
-      <number>20</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="programInfo_Label">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>25</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>------------ 程序运行信息 ------------</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QTableView" name="programInfo_tableView"/>
+     <item row="1" column="0">
+      <widget class="QTableView" name="tableView"/>
      </item>
     </layout>
    </item>
   </layout>
+  <zorder></zorder>
+  <zorder></zorder>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

@@ -28,7 +28,14 @@ SOURCES += main.cpp\
     tabledata.cpp \
     macd.cpp \
     qmychartview.cpp \
-    processfunc.cpp
+    processfunc.cpp \
+    dataread.cpp \
+    dataprocess.cpp \
+    dialog.cpp \
+    realtimedataprocess.cpp \
+    realtimedataread.cpp \
+    monitorrealtimedata.cpp \
+    chartdata.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -43,8 +50,19 @@ HEADERS  += widget.h \
     tabledata.h \
     macd.h \
     qmychartview.h \
-    processfunc.h
+    processfunc.h \
+    dataread.h \
+    dataprocess.h \
+    dialog.h \
+    realtimedataprocess.h \
+    WAPIWrapperCpp.h \
+    realtimedataread.h \
+    monitorrealtimedata.h \
+    chartdata.h
 
 FORMS    += widget.ui \
-    chartform.ui
+    chartform.ui \
+    dialog.ui
 
+#LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
+LIBS += -LE:/github/work-program/client/client-work-changeRefresh -lWAPIWrapperCpp
