@@ -62,6 +62,7 @@ public:
     void registSignalParamsType();
     void initData(QString databaseName, QString timeType,
                   QList<strategy_ceil> strategyList);
+    void initRealTimeData();
 
     QList<QStringList> allocateThreadData();
 
@@ -71,12 +72,9 @@ public:
     void releaseDataReaderSrc();
     void releaseDataProcessSrc();
 
-    void initRealTimeData();
     void initMonitorThread();
     void initMonitorTimer();
-
     void initIndexHedgeMetaInfo();
-
 
     void updateData();
     void updateChart();
@@ -84,13 +82,15 @@ public:
     void updateSeries();
     void updateMousePos();
 
+    void setTimeAxisUpdateData();
+    QCategoryAxis* getTimeAxis();
+
     void setLayout ();
     void setVotRunoverChartView();
     void setStrategyChartView();
     void setMACDChartView();
 
     QCategoryAxis* getAxisX ();
-    QCategoryAxis* getAxisX (int addedTimeNumb);
     void setTheme();
 
     void setTestView();
@@ -98,7 +98,7 @@ public:
     void setMouseMoveValue(int currIndex);
     void mouseMoveEvenFunc(QObject *watched, QEvent *event);
     void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
-    void KeyReleaseFunc(QObject *watched, QEvent *event);
+    void KeyReleaseFunc(QEvent *event);
     double getPointXDistance();
 
 public slots:
@@ -165,6 +165,9 @@ private:
     QThread m_MonitorThread;
     QMap<QString, QStringList> m_realTimeData;
     double m_OldStrategySpread;
+
+    double m_timeAxisUpdatePercent;
+    QList<double> m_timeAxisUpdateData;
 
     QList<DataProcess*> m_dataProcessList;
     QList<QThread*> m_dataProcessThreadList;

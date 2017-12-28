@@ -15,9 +15,9 @@ RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView, QObject* pa
 }
 
 void RealTimeDataRead::loginWind() {
-    qDebug() << "Test: Logining...... ";
+//    qDebug() << "Test: Logining...... ";
     int errcode = CWAPIWrapperCpp::start();
-    qDebug() << "Login errcode: " << errcode;
+//    qDebug() << "Login errcode: " << errcode;
     if (0 == errcode) {
         cout << "login successfully" << endl;
         emit loginWindSucc();
@@ -35,7 +35,7 @@ void RealTimeDataRead::loginWind() {
 
 void RealTimeDataRead::getPreData(QList<QString> secodeList) {
     int errcode;
-    qDebug() << "RealTimeDataRead::getOldStrategySpread ";
+//    qDebug() << "RealTimeDataRead::getOldStrategySpread ";
     if (m_login) {
         WindData wd;
         LPCWSTR windcodes = transSecode(secodeList);

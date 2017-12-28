@@ -78,6 +78,7 @@ private:
     Ui::Widget *ui;
     QList<QWidget*> m_chartViews;
 
+    int m_updateRealDataTimeMS;
     QTimer m_testRealTimer;
     StrategyModel* m_strategyModel;
     QTableView* m_strategyTalbeView;

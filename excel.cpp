@@ -13,7 +13,7 @@ Excel::Excel():
     m_createdPidList = getAddedList(pidListBeforeCreate, pidListAfterCreate);
     m_work_books = m_excel->querySubObject("WorkBooks");
 
-    qDebug() << "pidDeltaList: " << m_createdPidList;
+//    qDebug() << "pidDeltaList: " << m_createdPidList;
 }
 
 Excel::~Excel () {
