@@ -93,7 +93,6 @@ public:
     void setMACDChartView();
 
     QCategoryAxis* getAxisX ();
-    QCategoryAxis* getAxisX (int addedTimeNumb);
     void setTheme();
 
     void setTestView();
@@ -101,7 +100,7 @@ public:
     void setMouseMoveValue(int currIndex);
     void mouseMoveEvenFunc(QObject *watched, QEvent *event);
     void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
-    void KeyReleaseFunc(QObject *watched, QEvent *event);
+    void KeyReleaseFunc(QEvent *event);
     double getPointXDistance();
 
 public slots:

@@ -12,8 +12,6 @@ Excel::Excel():
     m_excel->setProperty("Visible", false);        // 花费时间次之,其余操作不花时间;
     m_createdPidList = getAddedList(pidListBeforeCreate, pidListAfterCreate);
     m_work_books = m_excel->querySubObject("WorkBooks");
-
-    qDebug() << "pidDeltaList: " << m_createdPidList;
 }
 
 Excel::~Excel () {

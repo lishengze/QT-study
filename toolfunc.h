@@ -71,6 +71,10 @@ void writeWsqData(QString secode, QStringList data);
 
 double getAveValue(QList<double>);
 
-bool isTradingTime(QTime);
+bool isTradingTime(QTime time);
+
+bool isTradingOver(QTime time);
+
+QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList);
 
 #endif // TOOLFUNC_H

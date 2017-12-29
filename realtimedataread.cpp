@@ -15,9 +15,7 @@ RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView, QObject* pa
 }
 
 void RealTimeDataRead::loginWind() {
-    qDebug() << "Test: Logining...... ";
     int errcode = CWAPIWrapperCpp::start();
-    qDebug() << "Login errcode: " << errcode;
     if (0 == errcode) {
         cout << "login successfully" << endl;
         emit loginWindSucc();
@@ -35,40 +33,40 @@ void RealTimeDataRead::loginWind() {
 
 void RealTimeDataRead::getPreData(QList<QString> secodeList) {
     int errcode;
-    qDebug() << "RealTimeDataRead::getOldStrategySpread ";
+//    qDebug() << "RealTimeDataRead::getOldStrategySpread ";
     if (m_login) {
         WindData wd;
         LPCWSTR windcodes = transSecode(secodeList);
         LPCWSTR indicators = TEXT("pre_close");
         LPCWSTR options = TEXT("Days=Alldays");
         LPCWSTR beginDate = transSecode(QDate::currentDate().toString("yyyy-MM-dd"));
-
+        bool bOutputMsg = false;
         errcode = CWAPIWrapperCpp::wsd(wd, windcodes, indicators, beginDate, beginDate, options);
-        qDebug() << "wsd errcode: " << errcode;
+        if (bOutputMsg) qDebug() << "wsd errcode: " << errcode;
         if (errcode == 0) {
             QMap<QString, QStringList> result;
             int codelen = wd.GetCodesLength();
             int fieldslen = wd.GetFieldsLength();
             int colnum = fieldslen + 1;
-//            cout  << "WindCodes    ";
+            if (bOutputMsg) cout  << "WindCodes    ";
             for (int i =1;i < colnum; ++i)
             {
                 QString outfields = QString::fromStdWString(wd.GetFieldsByIndex(i-1));
-//                cout << outfields.toStdString() << "    ";
+                if (bOutputMsg) cout << outfields.toStdString() << "    ";
             }
-//            cout << endl;
+            if (bOutputMsg) cout << endl;
             for (int i = 0; i < codelen; ++i)
             {
                 QStringList singleCodeData;
                 QString codes = QString::fromStdWString(wd.GetCodeByIndex(i));
-        //        cout << codes.toStdString() << "    ";
+                if (bOutputMsg) cout << codes.toStdString() << "    ";
                 for (int j = 0; j < fieldslen; ++j)
                 {
                     VARIANT var;
                     wd.GetDataItem(0,i,j,var);
                     QString temp = variantToQString(&var);
                     singleCodeData.append(temp);
-        //            cout << temp.toStdString() << "    ";
+                    if (bOutputMsg) cout << temp.toStdString() << "    ";
                 }
                 result.insert(codes, singleCodeData);
             }
@@ -92,9 +90,8 @@ void RealTimeDataRead::startWsq(QStringList secodeList, int reqID) {
 //        LPCWSTR windcodes = TEXT("600000.SH,000001.SZ,000002.SZ");
         LPCWSTR windcodes = transSecode(secodeList);
         wcout << "wcout windcodes: " << windcodes << endl;
-        LPCWSTR indicators = TEXT("rt_date,rt_time,rt_last,rt_pre_close,rt_amt");
+        LPCWSTR indicators = TEXT("rt_date,rt_time,rt_latest,rt_pre_close,rt_amt");
         LPCWSTR options = TEXT("");
-//        ULONGLONG reqid = 0;
         ULONGLONG reqid = unsigned long long (reqID);
         errcode = CWAPIWrapperCpp::wsq(reqid, windcodes, indicators, wsqCallBack, options, TRUE);
         qDebug() << "wsq errcode: " << errcode;
@@ -102,64 +99,6 @@ void RealTimeDataRead::startWsq(QStringList secodeList, int reqID) {
             emit startWsqSucc();
         } else {
             emit startWsqFailed(errcode, reqID);
-        }
-        delete[] windcodes;
-    } else {
-        errcode = -1;
-        qDebug() << "Login first!";
-    }
-}
-
-void RealTimeDataRead::startWsqOneTime(QStringList secodeList) {
-//    qDebug() << "RealTimeDataRead::startWsqOneTime";
-//    qDebug() << "Thread: " << QThread::currentThreadId() <<  " wsq...... ";
-    QTime curTime = QTime::currentTime();
-    QTime amStopTime = QTime(11, 30, 10);
-    QTime pmStartTime = QTime(13, 0, 0);
-    if (curTime >= amStopTime && pmStartTime >= curTime) return;
-    int errcode;
-    if (m_login) {
-        bool bOutputMsg = true;
-        updateProgramInfo(m_programInfoTableView, "请求实时数据");
-        WindData wd;
-        LPCWSTR windcodes = transSecodeB(secodeList);
-        if (bOutputMsg) wcout << "windcodes: " << windcodes << endl;
-        LPCWSTR indicators = TEXT("rt_date,rt_time,rt_last,rt_pre_close,rt_amt");
-        LPCWSTR options = TEXT("");
-        errcode = CWAPIWrapperCpp::wsq(wd, windcodes, indicators, options);
-        if (bOutputMsg) qDebug() << "wsq errcode: " << errcode;
-        if (errcode == 0) {
-            QMap<QString, QStringList> result;
-            int codelen = wd.GetCodesLength();
-            int fieldslen = wd.GetFieldsLength();
-            int colnum = fieldslen + 1;
-            if (bOutputMsg)  cout  << "WindCodes    ";
-            for (int i =1;i < colnum; ++i)
-            {
-                QString outfields = QString::fromStdWString(wd.GetFieldsByIndex(i-1));
-                if (bOutputMsg) cout << outfields.toStdString() << "    ";
-            }
-            if (bOutputMsg) cout << endl;
-            for (int i = 0; i < codelen; ++i)
-            {
-                QStringList singleCodeData;
-                QString codes = QString::fromStdWString(wd.GetCodeByIndex(i));
-                if (bOutputMsg)  cout << codes.toStdString() << "    ";
-                for (int j = 0; j < fieldslen; ++j)
-                {
-                    VARIANT var;
-                    wd.GetDataItem(0,i,j,var);
-                    QString temp = variantToQString(&var);
-                    singleCodeData.append(temp);
-                    if (bOutputMsg) cout << temp.toStdString() << "    ";
-                }
-                if (bOutputMsg) cout << endl;
-                result.insert(codes, singleCodeData);
-            }
-//            testSpread(result);
-            emit sendRealTimeData(result);
-        } else {
-//            emit startWsqFailed(errcode, reqID);
         }
         delete[] windcodes;
     } else {

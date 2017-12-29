@@ -12,7 +12,6 @@ public:
 public slots:
     void loginWind();
     void startWsq(QStringList secodeList, int reqID);
-    void startWsqOneTime(QStringList secodeList);
     void cancelWsqRequest(int reqID);
     void cancelAllWsqRequest();
     void getPreData(QList<QString> secodeList);

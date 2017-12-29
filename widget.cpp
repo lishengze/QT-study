@@ -37,7 +37,7 @@ Widget::Widget(QWidget *parent) :
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_strategyFileDir(""),
-    m_bTestRealTime(true),
+    m_bTestRealTime(false),
     ui(new Ui::Widget)
 {
     m_excel = new Excel();
@@ -142,8 +142,8 @@ void Widget::setHedgeValue() {
 }
 
 void Widget::setStrategyTableView () {
-    m_strategyFileDir = "D:/strategy";
-//    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
+//    m_strategyFileDir = "D:/strategy";
+    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
@@ -179,7 +179,8 @@ void Widget::setDataFrequency () {
 }
 
 void Widget::loginWindFailed(int errcode) {
-    updateProgramInfo(ui->programInfo_tableView, "登陆万得失败");
+
+    updateProgramInfo(ui->programInfo_tableView, QString("登录万得失败, 错误代码: %1").arg(errcode));
     QMessageBox::StandardButton rb = QMessageBox::critical(this, "Error", "登陆万得失败, 再次尝试登陆?",
                                                            QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
     if (rb == QMessageBox::Yes) {
@@ -193,7 +194,7 @@ void Widget::loginWindSucc() {
 }
 
 void Widget::startWsqFailed(int errcode, int reqID) {
-    updateProgramInfo(ui->programInfo_tableView, "订阅实时消息失败");
+    updateProgramInfo(ui->programInfo_tableView, QString("订阅实时消息失败, 错误代码: %1").arg(errcode));
     QMessageBox::StandardButton rb = QMessageBox::critical(this, "Error", "订阅实时消息失败, 再次尝试订阅?",
                                                            QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
     if (rb == QMessageBox::Yes) {
@@ -321,12 +322,12 @@ void Widget::on_realDateTime_pushButton_clicked()
             connect(charView,SIGNAL(sendCloseSignal(int)), this, SLOT(receiveChartCLoseSignal(int)));
 
             if (!m_bTestRealTime) {
-                emit startWsq(secodeList, chartViewID);
+//                emit startWsq(secodeList, chartViewID);
             }
             charView->show ();
             m_chartViews.append (charView);
-            qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
-            qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
+//            qDebug() << "hedgeIndexCode: " << hedgeIndexCode << " hedgeIndexCount: " << hedgeIndexCount;
+//            qDebug() << "EVA1Time: " << EVA1Time << ", EVA2Time: " << EVA2Time << ", DIFFTime: " << DIFFTime;
             updateProgramInfo (ui->programInfo_tableView, QString("策略名称: %1, 策略中股票数目为: %2").arg(m_strategyName).arg(m_currStrategy.size ()));
             updateProgramInfo (ui->programInfo_tableView, QString("T1: %1, T2: %2, T3: %3").arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
             updateProgramInfo (ui->programInfo_tableView, QString("对冲目标: %1, 对冲笔数: %2").arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
@@ -349,6 +350,7 @@ void Widget::receiveChartCLoseSignal(int chartViewID) {
 }
 
 void Widget::closeEvent(QCloseEvent *event) {
+    event;
     if (!m_bTestRealTime) {
         emit cancelAllWsqRequest();
     } else {

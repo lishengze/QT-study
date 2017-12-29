@@ -19,16 +19,15 @@ public:
     void startTimer();
     void stopTimer();
     void initIndexHedgeMetaInfo();
+    void preprecessRealTimeData(QMap<QString,QStringList> realTimeData);
+    void computeChartData();
+
 signals:
-    void sendReadTimeData(ChartData data);
-    void startWsqOneTime(QStringList secodeList);
+    void sendRealTimeData(ChartData data);
 
 public slots:
-    void startMonitorRealTimeData();
     void monitorRealTimeData();
     void wsqRealTimeData();
-    void receiveRealTimeData(QMap<QString,QStringList> realTimeData);
-    void updateData();
 
 private:
     QMap<QString, QStringList> m_realTimeData;
