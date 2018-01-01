@@ -37,7 +37,7 @@ Widget::Widget(QWidget *parent) :
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_strategyFileDir(""),
-    m_bTestRealTime(false),
+    m_bTestRealTime(true),
     ui(new Ui::Widget)
 {
     m_excel = new Excel();
@@ -142,8 +142,8 @@ void Widget::setHedgeValue() {
 }
 
 void Widget::setStrategyTableView () {
-//    m_strategyFileDir = "D:/strategy";
-    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
+    m_strategyFileDir = "D:/strategy";
+//    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 

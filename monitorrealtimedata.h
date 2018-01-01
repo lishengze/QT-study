@@ -6,6 +6,7 @@
 #include <QTimer>
 #include "macd.h"
 #include "chartdata.h"
+#include "database.h"
 
 class MonitorRealTimeData: public QObject
 {
@@ -15,13 +16,15 @@ public:
     MonitorRealTimeData(int monitorTime,  QList<int> macdTime,
                         QMap<QString, int> seocdebuyCountMap, QStringList secodeNameList,
                         QString hedgeIndexCode, int hedgeIndexCount, bool bTestRealTime,
+                        QString dbConnId, QString dbhost,
                         QObject* parent = 0);
+    ~MonitorRealTimeData();
+
     void startTimer();
     void stopTimer();
     void initIndexHedgeMetaInfo();
     void preprecessRealTimeData(QMap<QString,QStringList> realTimeData);
     void computeChartData();
-
 signals:
     void sendRealTimeData(ChartData data);
 
@@ -43,6 +46,10 @@ private:
     QMap<QString, int> m_seocdebuyCountMap;
     QList<MACD> m_macdData;
     bool m_bTestRealTime;
+
+    QString m_dbConnId;
+    QString m_dbhost;
+    Database* m_database;
 };
 
 #endif // MONITORREALTIMEDATA_H

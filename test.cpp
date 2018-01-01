@@ -306,6 +306,11 @@ void testWindWsq() {
     qDebug() << "wsq errcode: " << errcode;
 }
 
+void testGetSnapShootData() {
+    Database databaseObj;
+    qDebug() << databaseObj.getSnapShootData();
+}
+
 void testMain() {
     //    testReadExcelData ();
     //    testGetExcelFileName();

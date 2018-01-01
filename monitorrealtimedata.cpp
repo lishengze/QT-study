@@ -16,12 +16,13 @@ MonitorRealTimeData::MonitorRealTimeData(QObject* parent):
 MonitorRealTimeData::MonitorRealTimeData(int monitorTime,  QList<int> macdTime,
                                          QMap<QString, int> seocdebuyCountMap, QStringList secodeNameList,
                                          QString hedgeIndexCode, int hedgeIndexCount, bool bTestRealTime,
+                                         QString dbConnId, QString dbhost,
                                          QObject* parent):
     m_monitorTime(monitorTime), m_macdTime(macdTime),
     m_seocdebuyCountMap(seocdebuyCountMap), m_secodeNameList(secodeNameList),
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
-    m_bTestRealTime(bTestRealTime),
-    QObject(parent)
+    m_bTestRealTime(bTestRealTime), m_dbConnId(dbConnId), m_dbhost(dbhost),
+    m_database(NULL),QObject(parent)
 {
     initIndexHedgeMetaInfo();
     if (m_bTestRealTime) {
@@ -34,6 +35,7 @@ MonitorRealTimeData::MonitorRealTimeData(int monitorTime,  QList<int> macdTime,
         QList<double> tmp;
         m_vot.insert(m_secodeNameList[i], tmp);
     }
+    m_database = new Database(m_dbConnId, m_dbhost);
 }
 
 void MonitorRealTimeData::initIndexHedgeMetaInfo() {
@@ -61,7 +63,8 @@ void MonitorRealTimeData::wsqRealTimeData() {
 //    preprecessRealTimeData(wsqSnaphootData(m_secodeNameList));
 
     if (isTradingTime(QTime::currentTime())) {
-        preprecessRealTimeData(wsqSnaphootData(m_secodeNameList));
+//        preprecessRealTimeData(wsqSnaphootData(m_secodeNameList));
+        preprecessRealTimeData(m_database->getSnapShootData());
     } else {
         return;
     }
@@ -145,4 +148,11 @@ void MonitorRealTimeData::computeChartData() {
     ChartData curChartData(strategyData, votData, timeData, macdData);
     m_macdData.append(macdData);
     emit sendRealTimeData(curChartData);
+}
+
+MonitorRealTimeData::~MonitorRealTimeData() {
+    if (NULL != m_database) {
+        delete m_database;
+        m_database = NULL;
+    }
 }

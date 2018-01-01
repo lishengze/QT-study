@@ -35,6 +35,8 @@ public:
     QList<TableData> getOriData(QString startDate, QString endDate, QString keyValue,
                                              QString tableName, QString databaseName="MarketData");
 
+    QMap<QString, QStringList> getSnapShootData(QString tableName="AllData", QString databaseName="MarketData_RealTime");
+
     QList<QPointF> transData(QList<TableData> oriData, int minuteInterval, QString dataType);
 
 private:

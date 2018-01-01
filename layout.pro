@@ -65,4 +65,4 @@ FORMS    += widget.ui \
     dialog.ui
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
-LIBS += -LE:/github/work-program/client/client-work-changeRefresh -lWAPIWrapperCpp
+LIBS += -LD:/github/workprogram/client/client-update -lWAPIWrapperCpp

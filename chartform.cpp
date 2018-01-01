@@ -155,7 +155,8 @@ void ChartForm::initMonitorTimer() {
 void ChartForm::initMonitorThread() {
     m_monitorWorker = new MonitorRealTimeData(m_updateTime, m_macdTime,
                                               m_seocdebuyCountMap, m_secodeNameList,
-                                              m_hedgeIndexCode, m_hedgeIndexCount, m_bTestRealTime);
+                                              m_hedgeIndexCode, m_hedgeIndexCount, m_bTestRealTime,
+                                              QString("%1").arg(m_chartViewID), m_dbhost);
 
     connect(m_monitorWorker, SIGNAL(sendRealTimeData(ChartData)),
             this, SLOT(receiveRealTimeData(ChartData)));

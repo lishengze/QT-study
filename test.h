@@ -43,4 +43,6 @@ void testTransSecode();
 
 void testWindWsq();
 
+void testGetSnapShootData();
+
 #endif // TEST_H
