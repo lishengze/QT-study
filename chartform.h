@@ -115,6 +115,7 @@ signals:
     void sendStartProcessDataSignal(QString dataType);
     void sendCloseSignal(int ChartViewID);
     void getPreData(QList<QString> secodeList);
+    void getPreData();
     void startMonitorRealTimeData();
 
 protected:
@@ -166,7 +167,7 @@ private:
     MonitorRealTimeData* m_monitorWorker;
     QThread m_MonitorThread;
     QMap<QString, QStringList> m_realTimeData;
-    double m_OldStrategySpread;
+    double m_preSpread;
 
     double m_timeAxisUpdatePercent;
     QList<double> m_timeAxisUpdateData;
@@ -190,7 +191,7 @@ private:
     QString m_title;
     int m_chartXaxisTickCount;
 
-    QLineSeries* m_oldStrategySpreadSeries;
+    QLineSeries* m_preSpreadSeries;
     QLineSeries* m_strategySeries;
     QMyChartView* m_strategyChartView;
     QChart* m_strategyChart;

@@ -7,12 +7,13 @@ class ChartData
 public:
     ChartData();
     ChartData(double strategyValue, double votValue,
-              double timeValue, MACD macdValue);
+              double timeValue, MACD macdValue, double preSpread);
 
 public:
     double strategyData;
     double votData;
     double timeData;
+    double preSpread;
     MACD macdData;
 };
 

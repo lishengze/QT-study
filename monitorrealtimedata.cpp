@@ -56,15 +56,20 @@ void MonitorRealTimeData::stopTimer() {
      m_timer.stop();
 }
 
+void MonitorRealTimeData::getPreData() {
+    qDebug() << "MonitorRealTimeData::getPreData";
+    QMap<QString, QStringList> allPreCLoseData = m_database->getPreCloseData("PreCloseData");
+    emit sendPreData(allPreCLoseData);
+}
+
 void MonitorRealTimeData::wsqRealTimeData() {
 //    qDebug() << "startWsqOneTime(m_secodeNameList): ";
-//    emit startWsqOneTime(m_secodeNameList);
-
 //    preprecessRealTimeData(wsqSnaphootData(m_secodeNameList));
 
     if (isTradingTime(QTime::currentTime())) {
 //        preprecessRealTimeData(wsqSnaphootData(m_secodeNameList));
-        preprecessRealTimeData(m_database->getSnapShootData());
+//        preprecessRealTimeData(m_database->getSnapShootData());
+        preprecessRealTimeData(m_database->getSnapShootData(m_secodeNameList));
     } else {
         return;
     }
@@ -99,17 +104,23 @@ void MonitorRealTimeData::monitorRealTimeData() {
 }
 
 void MonitorRealTimeData::preprecessRealTimeData(QMap<QString, QStringList> realTimeData) {
-    if (realTimeData.size() != m_secodeNameList.size()) {
-        return;
-    }
+//    if (realTimeData.size() != m_secodeNameList.size()) {
+//        return;
+//    }
+//    qDebug() << "realTimeData.size: " << realTimeData.size();
+    QList<QString> realTimeDataSecodeList = realTimeData.keys();
     for (int i = 0; i < m_secodeNameList.size(); ++i) {
         QString secode = m_secodeNameList[i];
-        if (m_vot[secode].size() == 0 || m_vot[secode][m_vot[secode].size()-1] <= realTimeData[secode][4].toDouble() ) {
+        if (realTimeDataSecodeList.indexOf(secode) < 0) {
+            qDebug() << "secode: " << secode;
+            continue;
+        }
+        if (m_vot[secode].size() == 0 || m_vot[secode].last() <= realTimeData[secode][4].toDouble() ) {
             m_vot[secode].append(realTimeData[secode][4].toDouble());
         }
         m_realTimeData[secode] = realTimeData[secode];
         if ( m_vot[secode].size() > 1) {
-            m_realTimeData[secode][4] = QString("%1").arg(m_vot[secode].last() -  m_vot[secode][m_vot[secode].size()-2]);
+            m_realTimeData[secode][4] = QString("%1").arg(m_vot[secode].last() - m_vot[secode][m_vot[secode].size()-2]);
         } else {
             m_realTimeData[secode][4] = QString("%1").arg(0);
         }
@@ -121,6 +132,7 @@ void MonitorRealTimeData::computeChartData() {
     double strategyData = 0;
     double votData = 0;
     double timeData = QDateTime::currentDateTime().toMSecsSinceEpoch();
+    double preSpread = 0;
     MACD macdData;
     for (int i = 0; i < m_secodeNameList.size(); ++i) {
         QString secode = m_secodeNameList[i];
@@ -132,11 +144,20 @@ void MonitorRealTimeData::computeChartData() {
         } else {
             strategyData += m_realTimeData[secode][2].toDouble() * m_seocdebuyCountMap[secode];
         }
+        preSpread += m_realTimeData[secode][3].toDouble() * m_seocdebuyCountMap[secode];
         votData += m_realTimeData[secode][4].toDouble();
     }
 
+
     strategyData = strategyData / (m_hedgeIndexCount * m_indexHedgeMetaInfo[m_hedgeIndexCode])
                    - m_realTimeData[m_hedgeIndexCode][2].toDouble();
+
+    preSpread = preSpread / (m_hedgeIndexCount * m_indexHedgeMetaInfo[m_hedgeIndexCode])
+                - m_realTimeData[m_hedgeIndexCode][3].toDouble();
+
+    if (votData == 0) {
+        qDebug() << "votData: " << votData <<", strategyData: " << strategyData;
+    }
 
     if (m_macdData.size() > 0) {
         MACD latestData = m_macdData[m_macdData.size()-1];
@@ -145,7 +166,7 @@ void MonitorRealTimeData::computeChartData() {
         macdData = MACD(strategyData, strategyData, 0, 0, 0);
     }
 
-    ChartData curChartData(strategyData, votData, timeData, macdData);
+    ChartData curChartData(strategyData, votData, timeData, macdData, preSpread);
     m_macdData.append(macdData);
     emit sendRealTimeData(curChartData);
 }

@@ -25,12 +25,15 @@ public:
     void initIndexHedgeMetaInfo();
     void preprecessRealTimeData(QMap<QString,QStringList> realTimeData);
     void computeChartData();
+
 signals:
     void sendRealTimeData(ChartData data);
+    void sendPreData(QMap<QString,QStringList>);
 
 public slots:
     void monitorRealTimeData();
     void wsqRealTimeData();
+    void getPreData();
 
 private:
     QMap<QString, QStringList> m_realTimeData;

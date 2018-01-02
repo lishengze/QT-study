@@ -37,6 +37,12 @@ public:
 
     QMap<QString, QStringList> getSnapShootData(QString tableName="AllData", QString databaseName="MarketData_RealTime");
 
+    QMap<QString, QStringList> getSnapShootData(QList<QString> tableNameArray, QString databaseName="MarketData_RealTime");
+
+    QMap<QString, QList<QStringList>> getSnapShootHistoryData(QList<QString> tableNameArray, QString databaseName="MarketData_RealTime");
+
+    QMap<QString, QStringList> getPreCloseData(QString tableName = "PreCloseData", QString databaseName="MarketData_RealTime");
+
     QList<QPointF> transData(QList<TableData> oriData, int minuteInterval, QString dataType);
 
 private:

@@ -6,9 +6,9 @@ ChartData::ChartData()
 }
 
 ChartData::ChartData(double strategyValue, double votValue,
-          double timeValue, MACD macdValue) :
+          double timeValue, MACD macdValue, double preSpread) :
     strategyData(strategyValue), votData(votValue),
-    timeData(timeValue), macdData(macdValue)
+    timeData(timeValue), macdData(macdValue), preSpread(preSpread)
 {
 
 }

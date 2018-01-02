@@ -75,7 +75,7 @@ ChartForm::ChartForm(QWidget *parent, RealTimeDataRead* readRealTimeData,
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
     m_updateTime(updateTime), m_macdTime(macdTime), m_bTestRealTime(isTestRealTime),
     m_macdTooltip(NULL), m_strategyTooltip(NULL), m_votrunoverTooltip(NULL),
-    m_isRealTime(true), m_isclosed(false), m_OldStrategySpread(6),
+    m_isRealTime(true), m_isclosed(false), m_preSpread(6),
     m_keyMoveCount(0), m_mouseInitPos(-1, -1), m_oldPointDistance(-1),
     m_timeAxisUpdatePercent(0.2), m_monitorWorker(NULL),
     ui(new Ui::ChartForm)
@@ -93,8 +93,8 @@ void ChartForm::registSignalParamsType () {
 }
 
 void ChartForm::initData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
-    m_dbhost = "192.168.211.165";
-//    m_dbhost = "localhost";
+//    m_dbhost = "192.168.211.165";
+    m_dbhost = "localhost";
     m_databaseName = databaseName + "_" + timeType;
     m_keyValueList << "TCLOSE" << "VOTRUNOVER";
 
@@ -133,15 +133,15 @@ void ChartForm::initRealTimeData() {
     m_timeTypeFormat = "yyyy-MM-dd hh:mm:ss";
     m_chartXaxisTickCount = 5;
 
-    connect(this, SIGNAL(getPreData(QList<QString>)),
-            m_readRealTimeData, SLOT(getPreData(QList<QString>)));
+//    connect(this, SIGNAL(getPreData(QList<QString>)),
+//            m_readRealTimeData, SLOT(getPreData(QList<QString>)));
 
-    connect(m_readRealTimeData, SIGNAL(sendPreData(QMap<QString,QStringList>)),
-            this, SLOT(receivePreData(QMap<QString,QStringList>)));
+//    connect(m_readRealTimeData, SIGNAL(sendPreData(QMap<QString,QStringList>)),
+//            this, SLOT(receivePreData(QMap<QString,QStringList>)));
 
-    if (!m_bTestRealTime) {
-        emit getPreData(oriSecodeList);
-    }
+//    if (!m_bTestRealTime) {
+//        emit getPreData(oriSecodeList);
+//    }
 
     initMonitorThread();
 //    initMonitorTimer();
@@ -161,6 +161,12 @@ void ChartForm::initMonitorThread() {
     connect(m_monitorWorker, SIGNAL(sendRealTimeData(ChartData)),
             this, SLOT(receiveRealTimeData(ChartData)));
 
+    connect(this, SIGNAL(getPreData()),
+            m_monitorWorker, SLOT(getPreData()));
+
+    connect(m_monitorWorker, SIGNAL(sendPreData(QMap<QString,QStringList>)),
+            this, SLOT(receivePreData(QMap<QString,QStringList>)));
+
     m_monitorWorker->startTimer();
 
     m_monitorWorker->moveToThread(&m_MonitorThread);
@@ -169,6 +175,10 @@ void ChartForm::initMonitorThread() {
             m_monitorWorker, SLOT(deleteLater()));
 
     m_MonitorThread.start();
+
+    if (!m_bTestRealTime) {
+        emit getPreData();
+    }
 }
 
 void ChartForm::initIndexHedgeMetaInfo() {
@@ -191,9 +201,9 @@ void ChartForm::receivePreData(QMap<QString, QStringList> preCLose) {
         }
     }
     result = result / (m_hedgeIndexCount * m_indexHedgeMetaInfo[m_hedgeIndexCode]) - preCLose[m_hedgeIndexCode][0].toDouble();
-    m_OldStrategySpread = result;
-    ui->preCLoseSpreadValue_Label->setText(QString("\346\230\250\346\227\245\347\202\271\345\267\256: %1").arg(m_OldStrategySpread));
-    qDebug() << "m_PreSpread: " << m_OldStrategySpread;
+    m_preSpread = result;
+    ui->preCLoseSpreadValue_Label->setText(QString("\346\230\250\346\227\245\347\202\271\345\267\256: %1").arg(m_preSpread));
+    qDebug() << "m_PreSpread: " << m_preSpread;
 
     disconnect(m_readRealTimeData, SIGNAL(sendPreData(QMap<QString,QStringList>)),
             this, SLOT(receivePreData(QMap<QString,QStringList>)));
@@ -291,7 +301,7 @@ QCategoryAxis* ChartForm::getTimeAxis() {
 
 void ChartForm::setTimeAxisUpdateData() {
     int addedNumb = m_timeData.size() * m_timeAxisUpdatePercent;
-    qDebug() << "addedNumb: " << addedNumb;
+//    qDebug() << "addedNumb: " << addedNumb;
     QDateTime curDateTime = QDateTime::fromMSecsSinceEpoch (m_timeData[m_timeData.size()-1]);
     QTime amStopTime = QTime(11, 30, 20);
     QTime pmStopTime = QTime(15, 0, 20);
@@ -320,9 +330,9 @@ void ChartForm::updateAxis() {
     QValueAxis *strategyAxisY = dynamic_cast<QValueAxis *>(m_strategyChart->axisY());
     QList<double> allStrategyData = m_strategyData;
     if (m_bTestRealTime) {
-        m_OldStrategySpread = getAveValue(m_strategyData);
+        m_preSpread = getAveValue(m_strategyData);
     }
-    allStrategyData.append(m_OldStrategySpread);
+    allStrategyData.append(m_preSpread);
     if (m_strategyData.last() > strategyAxisY->max() || m_strategyData.last() < strategyAxisY->min()) {
         QList<double>  strategyAxisYRange = getChartYvalueRange(allStrategyData);
         strategyAxisY -> setRange (strategyAxisYRange[0], strategyAxisYRange[1]);
@@ -346,8 +356,8 @@ void ChartForm::updateAxis() {
     QCategoryAxis* votAxisX = dynamic_cast<QCategoryAxis*> (m_votrunoverChart->axisX());
     QCategoryAxis* macdAxisX = dynamic_cast<QCategoryAxis*> (m_macdChart->axisX());
 
-    qDebug() << "m_timeAxisUpdateData.size(): " << m_timeAxisUpdateData.size();
-    qDebug() << "m_timeData.size(): " << m_timeData.size();
+//    qDebug() << "m_timeAxisUpdateData.size(): " << m_timeAxisUpdateData.size();
+//    qDebug() << "m_timeData.size(): " << m_timeData.size();
 
     if (curPointNumb < m_chartXaxisTickCount) {
         strategyAxisX->append (QDateTime::fromMSecsSinceEpoch(m_timeData[curPointNumb-1]).toString (m_timeTypeFormat),
@@ -369,7 +379,7 @@ void ChartForm::updateAxis() {
         QCategoryAxis* newStrategyAxisX = getTimeAxis();
         m_strategyChart->addAxis (newStrategyAxisX, Qt::AlignBottom);
         m_strategySeries->attachAxis (newStrategyAxisX);
-        m_oldStrategySpreadSeries->attachAxis(newStrategyAxisX);
+        m_preSpreadSeries->attachAxis(newStrategyAxisX);
 
         m_votrunoverChart->removeAxis(votAxisX);
         QCategoryAxis* newVotAxisX = getTimeAxis();
@@ -385,8 +395,8 @@ void ChartForm::updateAxis() {
 
         updateMousePos();
     } else {
-        qDebug() << "m_timeAxisUpdateData.size(): " << m_timeAxisUpdateData.size();
-        qDebug() << "m_timeData.size(): " << m_timeData.size();
+//        qDebug() << "m_timeAxisUpdateData.size(): " << m_timeAxisUpdateData.size();
+//        qDebug() << "m_timeData.size(): " << m_timeData.size();
     }
 
 }
@@ -394,7 +404,7 @@ void ChartForm::updateAxis() {
 void ChartForm::updateSeries() {
     int curPointNumb = m_timeData.size();
     m_strategySeries->append(curPointNumb-1, m_strategyData[curPointNumb-1]);
-    m_oldStrategySpreadSeries->append(curPointNumb-1, m_OldStrategySpread);
+    m_preSpreadSeries->append(curPointNumb-1, m_preSpread);
 
     QList<QBarSet *> votSetList = m_votBarSeries->barSets();
     votSetList[0]->append(m_votData[curPointNumb-1]);
@@ -425,7 +435,7 @@ void ChartForm::updateMousePos() {
         double rollbackDistance = m_oldPointDistance - newPointDistance;
         m_mouseInitPos.setX(m_mouseInitPos.x() - rollbackDistance);
         m_oldPointDistance = newPointDistance;
-//        QCursor::setPos(QCursor::pos().x() - rollbackDistance, QCursor::pos().y());
+        QCursor::setPos(QCursor::pos().x() - rollbackDistance, QCursor::pos().y());
     }
 }
 
@@ -601,7 +611,7 @@ void ChartForm::setStrategyChartView () {
     QCategoryAxis* axisX = getAxisX();
     QValueAxis *axisY = new QValueAxis;
     m_strategySeries = new QLineSeries;
-    m_oldStrategySpreadSeries = new QLineSeries;
+    m_preSpreadSeries = new QLineSeries;
     for (int i = 0; i < m_strategyData.size (); ++i) {
         m_strategySeries->append (i, m_strategyData.at (i));
     }
@@ -610,8 +620,8 @@ void ChartForm::setStrategyChartView () {
     m_strategySeries->setPen(red);
     m_strategySeries->setName("点差");
     m_strategySeries->setUseOpenGL (true);
-    m_oldStrategySpreadSeries->setName("昨日点差");
-    m_oldStrategySpreadSeries->setUseOpenGL(true);
+    m_preSpreadSeries->setName("昨日点差");
+    m_preSpreadSeries->setUseOpenGL(true);
 
     QList<double>  axisYRange = getChartYvalueRange(m_strategyData);
     axisY -> setRange (axisYRange[0], axisYRange[1]);
@@ -619,7 +629,7 @@ void ChartForm::setStrategyChartView () {
 
     m_strategyChart = new QChart();
     m_strategyChart->addSeries (m_strategySeries);
-    m_strategyChart->addSeries(m_oldStrategySpreadSeries);
+    m_strategyChart->addSeries(m_preSpreadSeries);
 //    m_strategyChart->legend()->setAlignment(Qt::AlignTop);
     m_strategyChart->legend()->hide();
     m_strategyChart->setAnimationOptions(QChart::NoAnimation);
@@ -631,10 +641,10 @@ void ChartForm::setStrategyChartView () {
 
     m_strategyChart->addAxis (axisX, Qt::AlignBottom);
     m_strategySeries->attachAxis (axisX);
-    m_oldStrategySpreadSeries->attachAxis(axisX);
+    m_preSpreadSeries->attachAxis(axisX);
     m_strategyChart->addAxis (axisY, Qt::AlignLeft);
     m_strategySeries->attachAxis (axisY);
-    m_oldStrategySpreadSeries->attachAxis(axisY);
+    m_preSpreadSeries->attachAxis(axisY);
 }
 
 void ChartForm::setVotRunoverChartView () {
