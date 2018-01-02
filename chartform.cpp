@@ -506,27 +506,27 @@ void ChartForm::receiveOriginalData (QMap<QString, QList<QStringList>> subThread
 //        testCLosePrice(m_completeTableData);
         releaseDataReaderSrc ();
         m_readDataThreadCount = 0;
-        startProcessData();
+        startProcessHistoryData();
         m_completeTableData.clear ();
     }
 }
 
-void ChartForm::startProcessData () {
+void ChartForm::startProcessHistoryData () {
     int oridataCount = 0;
     for (int i = 0; i < m_secodeNameList.size (); ++i) {
         oridataCount += m_completeTableData[m_secodeNameList[i]].size ();
     }
     updateProgramInfo (m_programInfoTableView, QString("原始数据获取完成, 原始数据总数: %1").arg(oridataCount));
     updateProgramInfo (m_programInfoTableView, QString("计算数据"));
-    DataProcess* curDataProcess = new DataProcess(m_completeTableData, m_seocdebuyCountMap, m_macdTime);
+    DataProcess* curDataProcess = new DataProcess(m_completeTableData, m_seocdebuyCountMap, m_macdTime, m_isRealTime);
     QThread* curDataProcessThread = new QThread();
     curDataProcess->moveToThread (curDataProcessThread);
 
     connect (curDataProcessThread, SIGNAL(finished()),
              curDataProcess, SLOT(deleteLater()));
 
-    connect (this, SIGNAL(sendStartProcessDataSignal(QString)),
-             curDataProcess, SLOT(receiveStartProcessData(QString)));
+    connect (this, SIGNAL(sendstartProcessHistoryDataSignal(QString)),
+             curDataProcess, SLOT(receivestartProcessHistoryData(QString)));
 
     connect(curDataProcess, SIGNAL(sendAllData(QList<QList<double>>)),
             this, SLOT(receiveAllProcessedData (QList<QList<double>>)));
@@ -534,7 +534,7 @@ void ChartForm::startProcessData () {
     curDataProcessThread->start ();
     m_dataProcessList.append (curDataProcess);
     m_dataProcessThreadList.append (curDataProcessThread);   
-    emit sendStartProcessDataSignal("all");
+    emit sendstartProcessHistoryDataSignal("all");
 }
 
 void ChartForm::receiveAllProcessedData (QList<QList<double>> allData) {

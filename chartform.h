@@ -66,7 +66,7 @@ public:
     QList<QStringList> allocateThreadData();
 
     void startReadData();
-    void startProcessData();
+    void startProcessHistoryData();
 
     void releaseDataReaderSrc();
     void releaseDataProcessSrc();
@@ -112,7 +112,7 @@ public slots:
 
 signals:
     void sendStartReadDataSignal(QString dataType);
-    void sendStartProcessDataSignal(QString dataType);
+    void sendstartProcessHistoryDataSignal(QString dataType);
     void sendCloseSignal(int ChartViewID);
     void getPreData(QList<QString> secodeList);
     void getPreData();
