@@ -250,7 +250,7 @@ QMap<QString, QList<QStringList>> Database::getSnapShootHistoryData(QList<QStrin
             QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
             QString sqlstr = "select * from" + completeTableName;
             queryObj.exec(sqlstr);
-            int valueNumb = 6;
+            int valueNumb = 7;
             QList<QStringList> oneSecodeData;
              while(queryObj.next ()) {
                  QStringList signalData;

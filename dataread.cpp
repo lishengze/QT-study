@@ -4,11 +4,19 @@ DataRead::DataRead(QString databaseConnID, QString dbhost,
                    QString dbName, QStringList tableNameList,
                    QString startDate, QString endDate, QStringList keyValueList,
                    QObject *parent):
-    m_dbName(dbName), m_tableNameList(tableNameList),
+    m_dbName(dbName),  m_tableNameList(tableNameList),
     m_startDate(startDate), m_endDate(endDate), m_keyValueList(keyValueList),
     QObject(parent)
 {
     m_database = new Database(QString(databaseConnID), dbhost);
+}
+
+DataRead::DataRead(QString databaseConnID, QString dbhost,
+         QString dbName, QStringList tableNameList,
+         QObject *parent):
+    m_dbName(dbName), m_tableNameList(tableNameList),  QObject(parent)
+{
+    m_database = new Database(databaseConnID, dbhost);
 }
 
 void DataRead::receiveStartReadData(QString dataType) {
@@ -17,12 +25,13 @@ void DataRead::receiveStartReadData(QString dataType) {
         emit sendHistoryData (readHistoryData());
     }
     if (dataType == "RealTimeData") {
-        emit sendRealTimeData (readRealTimeData());
+        emit sendHistoryData (readRealTimeData());
     }
 }
 
 QMap<QString, QList<QStringList>> DataRead::readHistoryData () {
-    qDebug() << "DataRead::readHistoryData: " << QThread::currentThreadId();
+    qDebug() << "DataRead::readHistoryData: " << QThread::currentThreadId()
+             << ", tableList.size: " << m_tableNameList.size();
     QMap<QString, QList<QStringList>> result;
     for (int i = 0; i < m_tableNameList.size (); ++i) {
         QString secode = m_tableNameList[i];
@@ -33,7 +42,8 @@ QMap<QString, QList<QStringList>> DataRead::readHistoryData () {
 }
 
 QMap<QString, QList<QStringList>> DataRead::readRealTimeData () {
-    qDebug() << "DataRead::readRealTimeData: " << QThread::currentThreadId();
+    qDebug() << "DataRead::readRealTimeData: " << QThread::currentThreadId()
+             << ", tableList.size: " << m_tableNameList.size();
     QMap<QString, QList<QStringList>> result = m_database->getSnapShootHistoryData(m_tableNameList);
     return result;
 }
@@ -43,5 +53,4 @@ DataRead::~DataRead () {
         delete m_database;
         m_database = NULL;
     }
-//    qDebug() << "~DataRead";
 }

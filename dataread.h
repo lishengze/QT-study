@@ -16,6 +16,11 @@ public:
              QString dbName, QStringList tableNameList,
              QString startDate, QString endDate, QStringList keyValueList,
              QObject *parent = Q_NULLPTR);
+
+    DataRead(QString databaseConnID, QString dbhost,
+             QString dbName, QStringList tableNameList,
+             QObject *parent = Q_NULLPTR);
+
     ~DataRead();
 
     QMap<QString, QList<QStringList>> readHistoryData();

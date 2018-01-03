@@ -35,7 +35,8 @@ SOURCES += main.cpp\
     realtimedataprocess.cpp \
     realtimedataread.cpp \
     monitorrealtimedata.cpp \
-    chartdata.cpp
+    chartdata.cpp \
+    historydata.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -58,12 +59,13 @@ HEADERS  += widget.h \
     WAPIWrapperCpp.h \
     realtimedataread.h \
     monitorrealtimedata.h \
-    chartdata.h
+    chartdata.h \
+    historydata.h
 
 FORMS    += widget.ui \
     chartform.ui \
     dialog.ui
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
-LIBS += -LD:/github/workprogram/client/client-database -lWAPIWrapperCpp
-#LIBS += -LE:/github/work-program/client/client-database -lWAPIWrapperCpp
+#LIBS += -LD:/github/workprogram/client/client-database -lWAPIWrapperCpp
+LIBS += -LE:/github/work-program/client/client-database -lWAPIWrapperCpp

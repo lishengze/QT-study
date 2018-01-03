@@ -25,10 +25,11 @@ public:
     void initIndexHedgeMetaInfo();
     void preprecessRealTimeData(QMap<QString,QStringList> realTimeData);
     void computeChartData();
+    void computePreCloseData(QMap<QString, QStringList> allPreCLoseData);
 
 signals:
     void sendRealTimeData(ChartData data);
-    void sendPreData(QMap<QString,QStringList>);
+    void sendPreCloseData(double);
 
 public slots:
     void monitorRealTimeData();
@@ -42,6 +43,7 @@ private:
     int m_hedgeIndexCount;
     QList<int> m_macdTime;
     QMap<QString, QList<double>> m_vot;
+    QMap<QString, QList<QString>> m_time;
 
     QMap<QString, double> m_indexHedgeMetaInfo;
     QString m_hedgeIndexCode;

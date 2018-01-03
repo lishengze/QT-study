@@ -32,8 +32,10 @@ MonitorRealTimeData::MonitorRealTimeData(int monitorTime,  QList<int> macdTime,
     }
 
     for (int i = 0; i < m_secodeNameList.size(); ++i) {
-        QList<double> tmp;
-        m_vot.insert(m_secodeNameList[i], tmp);
+        QList<double> tmpVot;
+        QList<QString> tmpTime;
+        m_vot.insert(m_secodeNameList[i], tmpVot);
+        m_time.insert(m_secodeNameList[i], tmpTime);
     }
     m_database = new Database(m_dbConnId, m_dbhost);
 }
@@ -59,12 +61,27 @@ void MonitorRealTimeData::stopTimer() {
 void MonitorRealTimeData::getPreData() {
     qDebug() << "MonitorRealTimeData::getPreData";
     QMap<QString, QStringList> allPreCLoseData = m_database->getPreCloseData("PreCloseData");
-    emit sendPreData(allPreCLoseData);
+    computePreCloseData(allPreCLoseData);
+}
+
+void MonitorRealTimeData::computePreCloseData(QMap<QString, QStringList> preCLose) {
+    double result = 0;
+    for (int i = 0; i < m_secodeNameList.size(); ++i) {
+        QString secode = m_secodeNameList[i];
+        if (secode != m_hedgeIndexCode) {
+            result += preCLose[secode][0].toDouble() * m_seocdebuyCountMap[secode];
+        }
+    }
+    result = result / (m_seocdebuyCountMap[m_hedgeIndexCode] * m_indexHedgeMetaInfo[m_hedgeIndexCode])
+            - preCLose[m_hedgeIndexCode][0].toDouble();
+
+    emit sendPreCloseData(result);
 }
 
 void MonitorRealTimeData::wsqRealTimeData() {
 //    qDebug() << "startWsqOneTime(m_secodeNameList): ";
 //    preprecessRealTimeData(wsqSnaphootData(m_secodeNameList));
+//      preprecessRealTimeData(m_database->getSnapShootData(m_secodeNameList));
 
     if (isTradingTime(QTime::currentTime())) {
 //        preprecessRealTimeData(wsqSnaphootData(m_secodeNameList));
@@ -104,28 +121,44 @@ void MonitorRealTimeData::monitorRealTimeData() {
 }
 
 void MonitorRealTimeData::preprecessRealTimeData(QMap<QString, QStringList> realTimeData) {
-//    if (realTimeData.size() != m_secodeNameList.size()) {
-//        return;
-//    }
 //    qDebug() << "realTimeData.size: " << realTimeData.size();
     QList<QString> realTimeDataSecodeList = realTimeData.keys();
+    int sameTimeCount = 0;
+    double unUpdatedDataPercent = 0.5;
     for (int i = 0; i < m_secodeNameList.size(); ++i) {
         QString secode = m_secodeNameList[i];
         if (realTimeDataSecodeList.indexOf(secode) < 0) {
             qDebug() << "secode: " << secode;
             continue;
         }
-        if (m_vot[secode].size() == 0 || m_vot[secode].last() <= realTimeData[secode][4].toDouble() ) {
-            m_vot[secode].append(realTimeData[secode][4].toDouble());
+
+        m_vot[secode].append(realTimeData[secode][4].toDouble());
+        m_time[secode].append(realTimeData[secode][1]);
+
+        if (m_time[secode].size() > 1 && m_time[secode].last() == m_time[secode][m_time[secode].size()-2]) {
+            ++sameTimeCount ;
+            qDebug() << secode << ": " << m_time[secode];
         }
+
         m_realTimeData[secode] = realTimeData[secode];
         if ( m_vot[secode].size() > 1) {
             m_realTimeData[secode][4] = QString("%1").arg(m_vot[secode].last() - m_vot[secode][m_vot[secode].size()-2]);
         } else {
             m_realTimeData[secode][4] = QString("%1").arg(0);
         }
+
+        if (m_realTimeData[secode][4].toDouble() == 0.0 && m_vot[secode].size() > 1) {
+//            qDebug() << secode <<" amt is 0: " << m_realTimeData[secode];
+//            qDebug() << m_vot[secode];
+//            qDebug() << m_time[secode];
+//            qDebug() << "m_vot[secode].last() : " << m_vot[secode].last()
+//                     << ",  m_vot[secode][m_vot[secode].size()-2]: " <<  m_vot[secode][m_vot[secode].size()-2];
+        }
     }
-    computeChartData();
+    qDebug() << "sameTimeCount: " << sameTimeCount;
+    if (sameTimeCount < m_secodeNameList.size() * unUpdatedDataPercent) {
+        computeChartData();
+    }
 }
 
 void MonitorRealTimeData::computeChartData() {
@@ -147,7 +180,6 @@ void MonitorRealTimeData::computeChartData() {
         preSpread += m_realTimeData[secode][3].toDouble() * m_seocdebuyCountMap[secode];
         votData += m_realTimeData[secode][4].toDouble();
     }
-
 
     strategyData = strategyData / (m_hedgeIndexCount * m_indexHedgeMetaInfo[m_hedgeIndexCode])
                    - m_realTimeData[m_hedgeIndexCode][2].toDouble();

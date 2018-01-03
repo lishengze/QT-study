@@ -44,8 +44,6 @@ public:
     void setMacdTime();
 
     void setTestRealTimeData();
-
-
     ~Widget();
 
 protected:
@@ -58,10 +56,6 @@ signals:
     void cancelAllWsqRequest();
 
 public slots:
-    void loginWindFailed(int errcode);
-    void loginWindSucc();
-    void startWsqFailed(int errcode, int reqID);
-    void startWsqSucc();
     void addTestRealTimeData();
     void receiveChartCLoseSignal(int chartViewID);
 

@@ -60,7 +60,7 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int char
     ui(new Ui::ChartForm)
 {
     registSignalParamsType();
-    initData(databaseName, timeType, strategyList);
+    initHistoryData(databaseName, timeType, strategyList);
     startReadData ();
 }
 
@@ -68,12 +68,13 @@ ChartForm::ChartForm(QWidget *parent, RealTimeDataRead* readRealTimeData,
                      QTableView* programInfoTableView, int chartViewID,
                      QList<strategy_ceil> strategyList, QString strategyName,
                      QString hedgeIndexCode, int hedgeIndexCount,
-                     int updateTime, QList<int> macdTime, bool isTestRealTime):
+                     int updateTime, QList<int> macdTime, bool isTestRealTime,
+                     int threadNumb):
     QWidget(parent), m_readRealTimeData(readRealTimeData),
     m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
     m_strategy(strategyList), m_strategyName(strategyName),
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
-    m_updateTime(updateTime), m_macdTime(macdTime), m_bTestRealTime(isTestRealTime),
+    m_updateTime(updateTime), m_macdTime(macdTime), m_threadNumb(threadNumb), m_bTestRealTime(isTestRealTime),
     m_macdTooltip(NULL), m_strategyTooltip(NULL), m_votrunoverTooltip(NULL),
     m_isRealTime(true), m_isclosed(false), m_preSpread(6),
     m_keyMoveCount(0), m_mouseInitPos(-1, -1), m_oldPointDistance(-1),
@@ -92,9 +93,9 @@ void ChartForm::registSignalParamsType () {
     qRegisterMetaType<ChartData>("ChartData");
 }
 
-void ChartForm::initData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
-//    m_dbhost = "192.168.211.165";
-    m_dbhost = "localhost";
+void ChartForm::initHistoryData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
+    m_dbhost = "192.168.211.165";
+//    m_dbhost = "localhost";
     m_databaseName = databaseName + "_" + timeType;
     m_keyValueList << "TCLOSE" << "VOTRUNOVER";
 
@@ -113,6 +114,9 @@ void ChartForm::initData (QString databaseName, QString timeType, QList<strategy
 }
 
 void ChartForm::initRealTimeData() {
+    m_dbhost = "192.168.211.165";
+//    m_dbhost = "localhost";
+    m_databaseName = "MarketData_RealTime";
     QList<QString> oriSecodeList;
     for (int i = 0; i < m_strategy.size (); ++i) {
         m_seocdebuyCountMap.insert (getWindSecode(m_strategy[i].m_secode), m_strategy[i].m_buyCount);
@@ -128,28 +132,11 @@ void ChartForm::initRealTimeData() {
     }
     g_secodeNameList = m_secodeNameList;
 
-    initIndexHedgeMetaInfo();
-
-    m_timeTypeFormat = "yyyy-MM-dd hh:mm:ss";
+    m_timeTypeFormat = "hh:mm:ss";
     m_chartXaxisTickCount = 5;
 
-//    connect(this, SIGNAL(getPreData(QList<QString>)),
-//            m_readRealTimeData, SLOT(getPreData(QList<QString>)));
-
-//    connect(m_readRealTimeData, SIGNAL(sendPreData(QMap<QString,QStringList>)),
-//            this, SLOT(receivePreData(QMap<QString,QStringList>)));
-
-//    if (!m_bTestRealTime) {
-//        emit getPreData(oriSecodeList);
-//    }
-
     initMonitorThread();
-//    initMonitorTimer();
-}
 
-void ChartForm::initMonitorTimer() {
-    connect(&m_timer, SIGNAL(timeout()), this, SLOT(checkRealTimeData()));
-    m_timer.start(m_updateTime);
 }
 
 void ChartForm::initMonitorThread() {
@@ -164,8 +151,8 @@ void ChartForm::initMonitorThread() {
     connect(this, SIGNAL(getPreData()),
             m_monitorWorker, SLOT(getPreData()));
 
-    connect(m_monitorWorker, SIGNAL(sendPreData(QMap<QString,QStringList>)),
-            this, SLOT(receivePreData(QMap<QString,QStringList>)));
+    connect(m_monitorWorker, SIGNAL(sendPreCloseData(double)),
+            this, SLOT(receivePreCloseData(double)));
 
     m_monitorWorker->startTimer();
 
@@ -181,32 +168,14 @@ void ChartForm::initMonitorThread() {
     }
 }
 
-void ChartForm::initIndexHedgeMetaInfo() {
-    m_indexHedgeMetaInfo.insert("000300.SH", 300);
-    m_indexHedgeMetaInfo.insert("000016.SH", 50);
-    m_indexHedgeMetaInfo.insert("000852.SH", 1000);
-    m_indexHedgeMetaInfo.insert("000904.SH", 200);
-    m_indexHedgeMetaInfo.insert("000905.SH", 500);
-    m_indexHedgeMetaInfo.insert("000906.SH", 800);
-    m_indexHedgeMetaInfo.insert("399903.SZ", 100);
-}
-
-void ChartForm::receivePreData(QMap<QString, QStringList> preCLose) {
-//    qDebug() << "preClose: " << preCLose;
-    double result = 0;
-    for (int i = 0; i < m_secodeNameList.size(); ++i) {
-        QString secode = m_secodeNameList[i];
-        if (secode != m_hedgeIndexCode) {
-            result += preCLose[secode][0].toDouble() * m_seocdebuyCountMap[secode];
-        }
-    }
-    result = result / (m_hedgeIndexCount * m_indexHedgeMetaInfo[m_hedgeIndexCode]) - preCLose[m_hedgeIndexCode][0].toDouble();
-    m_preSpread = result;
+void ChartForm::receivePreCloseData(double preSpread) {
+    m_preSpread = preSpread;
     ui->preCLoseSpreadValue_Label->setText(QString("\346\230\250\346\227\245\347\202\271\345\267\256: %1").arg(m_preSpread));
     qDebug() << "m_PreSpread: " << m_preSpread;
+    disconnect(m_monitorWorker, SIGNAL(sendPreCloseData(double)),
+               this, SLOT(receivePreCloseData(double)));
 
-    disconnect(m_readRealTimeData, SIGNAL(sendPreData(QMap<QString,QStringList>)),
-            this, SLOT(receivePreData(QMap<QString,QStringList>)));
+    startReadData();
 }
 
 void ChartForm::receiveRealTimeData(ChartData curChartData) {
@@ -216,69 +185,10 @@ void ChartForm::receiveRealTimeData(ChartData curChartData) {
     m_timeData.append(curChartData.timeData);
     m_macdData.append(curChartData.macdData);
     updateChart();
-}
 
-void ChartForm::checkRealTimeData() {
-    bool dataChange = false;
-    QList<QString> global_secodeList = g_wsqData.keys();
-    for (int i = 0; i < m_secodeNameList.size(); ++i) {
-       QString secode = m_secodeNameList[i];
-       if (global_secodeList.indexOf(secode) >= 0) {
-           QList<QStringList> currData = g_wsqData[secode];
-           QStringList latestData = currData[currData.size()-1];
-           if (m_realTimeData[secode].size() == 0
-                   || latestData[1].toDouble() > m_realTimeData[secode][1].toDouble()) {
-               m_realTimeData[secode] = latestData;
-               m_realTimeData[secode][4] = QString("%1").arg(0);
-               if (currData.size() == 2) {
-                   m_realTimeData[secode][4] = QString("%1").arg(g_wsqData[secode][1][4].toDouble()
-                           - g_wsqData[secode][0][4].toDouble());
-               }
-               dataChange = true;
-           }
-       } else {
-           dataChange = false;
-           break;
-       }
+    if (isTradingOver(QTime::currentTime())) {
+        m_monitorWorker->stopTimer();
     }
-    if(dataChange) {
-        updateData();
-        updateChart();
-        dataChange = false;
-    }
-}
-
-void ChartForm::updateData() {
-    double strategyData = 0;
-    double votData = 0;
-    double timeData = QDateTime::currentDateTime().toMSecsSinceEpoch();
-    MACD macdData;
-    for (int i = 0; i < m_secodeNameList.size(); ++i) {
-        QString secode = m_secodeNameList[i];
-        if (secode == m_hedgeIndexCode) {
-            continue;
-        }
-        if (m_realTimeData[secode][2] == "0.0000") {
-            strategyData += m_realTimeData[secode][3].toDouble() * m_seocdebuyCountMap[secode];
-        } else {
-            strategyData += m_realTimeData[secode][2].toDouble() * m_seocdebuyCountMap[secode];
-        }
-        votData += m_realTimeData[secode][4].toDouble();
-    }
-
-    strategyData = strategyData / (m_hedgeIndexCount * m_indexHedgeMetaInfo[m_hedgeIndexCode])
-                   - m_realTimeData[m_hedgeIndexCode][2].toDouble();
-
-    if (m_macdData.size() > 0) {
-        MACD latestData = m_macdData[m_macdData.size()-1];
-        macdData = computeMACDData(strategyData, latestData, m_macdTime[0], m_macdTime[1], m_macdTime[2]);
-    } else {
-        macdData = MACD(strategyData, strategyData, 0, 0, 0);
-    }
-    m_strategyData.append(strategyData);
-    m_votData.append(votData);
-    m_timeData.append(timeData);
-    m_macdData.append(macdData);
 }
 
 void ChartForm::updateChart() {
@@ -455,10 +365,19 @@ QList<QStringList> ChartForm::allocateThreadData() {
 }
 
 void ChartForm::startReadData (){
-    QList<QStringList> oriThreadData = allocateThreadData ();
-    for (int i = 0; i < oriThreadData.size (); ++i) {
-        DataRead* curDataReader = new DataRead(QString("%1").arg(i + m_chartViewID * m_threadNumb), m_dbhost, m_databaseName,
-                                               oriThreadData[i], m_startDate, m_endDate, m_keyValueList);
+    QList<QStringList> allocatedTableList = allocateThreadData ();
+//    qDebug() << "allocatedTableList: " << allocatedTableList;
+    for (int i = 0; i < allocatedTableList.size (); ++i) {
+        DataRead* curDataReader;
+        if (m_isRealTime) {
+            curDataReader = new DataRead(QString("%1").arg(i + m_chartViewID * m_threadNumb),
+                                         m_dbhost, m_databaseName, allocatedTableList[i]);
+
+        } else {
+            curDataReader = new DataRead(QString("%1").arg(i + m_chartViewID * m_threadNumb),
+                                         m_dbhost, m_databaseName,allocatedTableList[i],
+                                         m_startDate, m_endDate, m_keyValueList);
+        }
         QThread* curThread = new QThread();
         curDataReader->moveToThread(curThread);
 
@@ -477,7 +396,12 @@ void ChartForm::startReadData (){
     }
 
     qDebug() << "ChartForm::sendStartReadDataSignal: " << QThread::currentThreadId();
-    emit sendStartReadDataSignal("HistoryData");
+
+    if (m_isRealTime) {
+        emit sendStartReadDataSignal("RealTimeData");
+    } else {
+        emit sendStartReadDataSignal("HistoryData");
+    }
 }
 
 void testCLosePrice(QMap<QString, QList<QStringList>> oriData) {
@@ -498,7 +422,7 @@ void ChartForm::receiveOriginalData (QMap<QString, QList<QStringList>> subThread
     m_completeTableData.unite (subThreadData);
     ++m_readDataThreadCount;
     qDebug() << "ChartForm::receiveOriginalData: " << QThread::currentThreadId()
-             << " dataNumb: " << subThreadData.size ();
+             << ", dataNumb: " << subThreadData.size ();
     qDebug() << "m_readDataThreadCount: " << m_readDataThreadCount << "\n";
 
     updateProgramInfo (m_programInfoTableView, QString("完成股票指数读取数目: %1").arg(m_completeTableData.size ()));
@@ -518,7 +442,10 @@ void ChartForm::startProcessHistoryData () {
     }
     updateProgramInfo (m_programInfoTableView, QString("原始数据获取完成, 原始数据总数: %1").arg(oridataCount));
     updateProgramInfo (m_programInfoTableView, QString("计算数据"));
-    DataProcess* curDataProcess = new DataProcess(m_completeTableData, m_seocdebuyCountMap, m_macdTime, m_isRealTime);
+//    DataProcess* curDataProcess = new DataProcess(m_completeTableData, m_seocdebuyCountMap, m_macdTime);
+    DataProcess* curDataProcess = new DataProcess(m_isRealTime, m_completeTableData,
+                                                  m_seocdebuyCountMap, m_hedgeIndexCode, m_macdTime);
+
     QThread* curDataProcessThread = new QThread();
     curDataProcess->moveToThread (curDataProcessThread);
 
@@ -526,19 +453,20 @@ void ChartForm::startProcessHistoryData () {
              curDataProcess, SLOT(deleteLater()));
 
     connect (this, SIGNAL(sendstartProcessHistoryDataSignal(QString)),
-             curDataProcess, SLOT(receivestartProcessHistoryData(QString)));
+             curDataProcess, SLOT(receiveOrigianlHistoryData(QString)));
 
     connect(curDataProcess, SIGNAL(sendAllData(QList<QList<double>>)),
-            this, SLOT(receiveAllProcessedData (QList<QList<double>>)));
+            this, SLOT(receiveProcessedHistoryData (QList<QList<double>>)));
 
     curDataProcessThread->start ();
     m_dataProcessList.append (curDataProcess);
     m_dataProcessThreadList.append (curDataProcessThread);   
+
     emit sendstartProcessHistoryDataSignal("all");
 }
 
-void ChartForm::receiveAllProcessedData (QList<QList<double>> allData) {
-    qDebug() << "ChartForm::receiveAllProcessedData: " << QThread::currentThreadId();
+void ChartForm::receiveProcessedHistoryData (QList<QList<double>> allData) {
+    qDebug() << "ChartForm::receiveProcessedHistoryData: " << QThread::currentThreadId();
     m_timeData = allData[0];
     m_strategyData = allData[1];
     m_votData = allData[2];
@@ -554,18 +482,18 @@ void ChartForm::receiveAllProcessedData (QList<QList<double>> allData) {
     qDebug() << "votData.size:      " << m_votData.size ();
     qDebug() << "macdData.size:     " << m_macdData.size ();
     releaseDataProcessSrc ();
-    setLayout ();
+//    setLayout ();
 }
 
 void ChartForm::releaseDataReaderSrc () {
-    qDebug() << " m_dataReaderThreadList.size(): " <<  m_dataReaderThreadList.size();
+    qDebug() << "m_dataReaderThreadList.size(): " <<  m_dataReaderThreadList.size();
     for (int i = 0; i < m_dataReaderThreadList.size(); ++i) {
          m_dataReaderThreadList[i]->quit ();
     }
 }
 
 void ChartForm::releaseDataProcessSrc () {
-    qDebug() << " m_dataProcessThreadList.size(): " <<  m_dataProcessThreadList.size();
+    qDebug() << "m_dataProcessThreadList.size(): " <<  m_dataProcessThreadList.size();
     for (int i = 0; i < m_dataProcessThreadList.size (); ++i) {
         m_dataProcessThreadList[i]->quit ();
     }
@@ -931,6 +859,21 @@ ChartForm::~ChartForm()
     }
 }
 
+//void ChartForm::initMonitorTimer() {
+//    connect(&m_timer, SIGNAL(timeout()), this, SLOT(checkRealTimeData()));
+//    m_timer.start(m_updateTime);
+//}
+
+//void ChartForm::initIndexHedgeMetaInfo() {
+//    m_indexHedgeMetaInfo.insert("000300.SH", 300);
+//    m_indexHedgeMetaInfo.insert("000016.SH", 50);
+//    m_indexHedgeMetaInfo.insert("000852.SH", 1000);
+//    m_indexHedgeMetaInfo.insert("000904.SH", 200);
+//    m_indexHedgeMetaInfo.insert("000905.SH", 500);
+//    m_indexHedgeMetaInfo.insert("000906.SH", 800);
+//    m_indexHedgeMetaInfo.insert("399903.SZ", 100);
+//}
+
 //void ChartForm::checkRealTimeData() {
 //    bool dataChange = false;
 //    QList<QString> global_secodeList = g_wsqData.keys();
@@ -971,7 +914,7 @@ ChartForm::~ChartForm()
 //        if (secode == m_hedgeIndexCode) {
 //            continue;
 //        }
-//        if (m_realTimeData[secode][2] == "") {
+//        if (m_realTimeData[secode][2] == "0.0000") {
 //            strategyData += m_realTimeData[secode][3].toDouble() * m_seocdebuyCountMap[secode];
 //        } else {
 //            strategyData += m_realTimeData[secode][2].toDouble() * m_seocdebuyCountMap[secode];

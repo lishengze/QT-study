@@ -57,27 +57,22 @@ public:
               QTableView* programInfoTableView, int chartViewID,
               QList<strategy_ceil> strategy, QString strategyName,
               QString hedgeIndexCode, int hedgeIndexCount,
-              int updateTime, QList<int> macdTime, bool isTestRealTime);
+              int updateTime, QList<int> macdTime, bool isTestRealTime,
+              int threadNumb = 8);
 
     void registSignalParamsType();
-    void initData(QString databaseName, QString timeType,
+    void initHistoryData(QString databaseName, QString timeType,
                   QList<strategy_ceil> strategyList);
+    void initRealTimeData();
 
     QList<QStringList> allocateThreadData();
 
     void startReadData();
     void startProcessHistoryData();
-
     void releaseDataReaderSrc();
     void releaseDataProcessSrc();
 
-    void initRealTimeData();
     void initMonitorThread();
-    void initMonitorTimer();
-
-    void initIndexHedgeMetaInfo();
-
-
     void updateData();
     void updateChart();
     void updateAxis();
@@ -105,9 +100,9 @@ public:
 
 public slots:
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
-    void receiveAllProcessedData(QList<QList<double>> allData);
-    void checkRealTimeData();
-    void receivePreData(QMap<QString, QStringList> result);
+    void receiveProcessedHistoryData(QList<QList<double>> allData);
+
+    void receivePreCloseData(double preSpread);
     void receiveRealTimeData(ChartData curChartData);
 
 signals:
@@ -214,6 +209,10 @@ private:
     Callout *m_testTooltip;
 
 };
+
+//    void initMonitorTimer();
+//    void initIndexHedgeMetaInfo();
+//    void checkRealTimeData();
 
 //    QList<QPointF> m_strategyData;
 //    QList<QPointF> m_strategyHedgeData;

@@ -13,10 +13,17 @@ class DataProcess: public QObject
 {
     Q_OBJECT
 public:
-    DataProcess(QMap<QString, QList<QStringList>> oridata, QMap<QString, int> buyCount,
-                QList<int> macdTime, bool isRealTime, QObject *parent = Q_NULLPTR);
+    DataProcess(bool isRealTime, QMap<QString, QList<QStringList>> oridata,
+                QMap<QString, int> buyCount, QString hedgeIndexCode, QList<int> macdTime, QObject *parent = Q_NULLPTR);
+
+    DataProcess(QMap<QString, QList<QStringList>> oridata,
+                QMap<QString, int> buyCount, QList<int> macdTime, QObject *parent = Q_NULLPTR);
+
     ~DataProcess();
-    void filterIndexHedegeData();
+
+    void initIndexHedgeMetaInfo();
+    void filterHedgeIndexData();
+
     QList<QList<double>> computeAllData();
     QList<QList<double>> computeStrategyData();
     QList<QList<double>> computeVotData();
@@ -25,9 +32,8 @@ public:
     QList<QList<double>> computeSnapshootData();
     void computeChartData(QMap<QString, QStringList> oneTimeData);
 
-
 public slots:
-    void receiveStartProcessData(QString dataType);
+    void receiveOrigianlHistoryData(QString dataType);
 
 signals:
     void sendAllData(QList<QList<double>> allData);
@@ -39,11 +45,11 @@ private:
     bool m_isRealTime;
     QMap<QString, QList<QStringList>> m_oriData;
     QMap<QString, int> m_seocdebuyCountMap;
+    QStringList m_secodeNameList;
 
     QMap<QString, int> m_indexHedgeMetaInfo;
-    QString m_hedgeIndexCode;
     QMap<QString, QStringList> m_indexHedgeData;
-    int m_hedgeIndexCount;
+    QString m_hedgeIndexCode;    
 
     QList<int> m_macdTime;
     QList<double> m_strategyData;
