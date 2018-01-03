@@ -36,7 +36,6 @@ Database::Database(QString connName, QString host,
 }
 
 Database::~Database () {
-//    qDebug() << "m_db.close()";
     m_db.close ();
 }
 
@@ -196,7 +195,6 @@ QMap<QString, QStringList> Database::getSnapShootData(QString tableName, QString
     QString sqlstr = QString("select * from [") + databaseName + "].[dbo].[" + tableName + "] ";
     queryObj.exec(sqlstr);
     int valueNumb = 6;
-    int i = 0;
      while(queryObj.next ()) {
          QStringList signalData;
          QString secode = queryObj.value (0).toString();

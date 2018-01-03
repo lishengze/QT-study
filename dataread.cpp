@@ -16,7 +16,7 @@ DataRead::DataRead(QString databaseConnID, QString dbhost,
          QObject *parent):
     m_dbName(dbName), m_tableNameList(tableNameList),  QObject(parent)
 {
-    m_database = new Database(databaseConnID, dbhost);
+    m_database = new Database(QString(databaseConnID), dbhost);
 }
 
 void DataRead::receiveStartReadData(QString dataType) {

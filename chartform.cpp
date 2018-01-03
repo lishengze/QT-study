@@ -74,7 +74,8 @@ ChartForm::ChartForm(QWidget *parent, RealTimeDataRead* readRealTimeData,
     m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
     m_strategy(strategyList), m_strategyName(strategyName),
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
-    m_updateTime(updateTime), m_macdTime(macdTime), m_threadNumb(threadNumb), m_bTestRealTime(isTestRealTime),
+    m_updateTime(updateTime), m_macdTime(macdTime), m_readDataThreadCount(0),
+    m_threadNumb(threadNumb), m_bTestRealTime(isTestRealTime),
     m_macdTooltip(NULL), m_strategyTooltip(NULL), m_votrunoverTooltip(NULL),
     m_isRealTime(true), m_isclosed(false), m_preSpread(6),
     m_keyMoveCount(0), m_mouseInitPos(-1, -1), m_oldPointDistance(-1),
@@ -94,8 +95,8 @@ void ChartForm::registSignalParamsType () {
 }
 
 void ChartForm::initHistoryData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
-    m_dbhost = "192.168.211.165";
-//    m_dbhost = "localhost";
+//    m_dbhost = "192.168.211.165";
+    m_dbhost = "localhost";
     m_databaseName = databaseName + "_" + timeType;
     m_keyValueList << "TCLOSE" << "VOTRUNOVER";
 
@@ -114,8 +115,8 @@ void ChartForm::initHistoryData (QString databaseName, QString timeType, QList<s
 }
 
 void ChartForm::initRealTimeData() {
-    m_dbhost = "192.168.211.165";
-//    m_dbhost = "localhost";
+//    m_dbhost = "192.168.211.165";
+    m_dbhost = "localhost";
     m_databaseName = "MarketData_RealTime";
     QList<QString> oriSecodeList;
     for (int i = 0; i < m_strategy.size (); ++i) {
@@ -137,6 +138,7 @@ void ChartForm::initRealTimeData() {
 
     initMonitorThread();
 
+    startReadData();
 }
 
 void ChartForm::initMonitorThread() {
@@ -174,8 +176,6 @@ void ChartForm::receivePreCloseData(double preSpread) {
     qDebug() << "m_PreSpread: " << m_preSpread;
     disconnect(m_monitorWorker, SIGNAL(sendPreCloseData(double)),
                this, SLOT(receivePreCloseData(double)));
-
-    startReadData();
 }
 
 void ChartForm::receiveRealTimeData(ChartData curChartData) {
@@ -369,14 +369,22 @@ void ChartForm::startReadData (){
 //    qDebug() << "allocatedTableList: " << allocatedTableList;
     for (int i = 0; i < allocatedTableList.size (); ++i) {
         DataRead* curDataReader;
-        if (m_isRealTime) {
-            curDataReader = new DataRead(QString("%1").arg(i + m_chartViewID * m_threadNumb),
-                                         m_dbhost, m_databaseName, allocatedTableList[i]);
+        if (allocatedTableList[i].size() > 0) {
+            QString databaseId = QString("%1").arg(i + m_chartViewID * m_threadNumb + 1);
+            qDebug() << "databaseId: " << databaseId;
 
-        } else {
-            curDataReader = new DataRead(QString("%1").arg(i + m_chartViewID * m_threadNumb),
-                                         m_dbhost, m_databaseName,allocatedTableList[i],
-                                         m_startDate, m_endDate, m_keyValueList);
+            if (m_isRealTime) {
+                curDataReader = new DataRead(databaseId, m_dbhost, m_databaseName, allocatedTableList[i]);
+//                m_startDate = "20170101";
+//                m_endDate = "20170202";
+//                m_keyValueList << "TOPEN";
+//                curDataReader = new DataRead(databaseId, m_dbhost, m_databaseName, allocatedTableList[i],
+//                                             m_startDate, m_endDate, m_keyValueList);
+
+            } else {
+                curDataReader = new DataRead(databaseId, m_dbhost, m_databaseName, allocatedTableList[i],
+                                             m_startDate, m_endDate, m_keyValueList);
+            }
         }
         QThread* curThread = new QThread();
         curDataReader->moveToThread(curThread);
@@ -433,6 +441,7 @@ void ChartForm::receiveOriginalData (QMap<QString, QList<QStringList>> subThread
         startProcessHistoryData();
         m_completeTableData.clear ();
     }
+    qDebug() << "receiveOriginalData end!";
 }
 
 void ChartForm::startProcessHistoryData () {
@@ -481,8 +490,12 @@ void ChartForm::receiveProcessedHistoryData (QList<QList<double>> allData) {
     qDebug() << "strategyData.size: " << m_strategyData.size ();
     qDebug() << "votData.size:      " << m_votData.size ();
     qDebug() << "macdData.size:     " << m_macdData.size ();
+//    qDebug() << "timeData:     " << m_timeData;
+//    qDebug() << "strategyData: " << m_strategyData;
+//    qDebug() << "votData:      " << m_votData;
+//    qDebug() << "macdData:     " << m_macdData;
     releaseDataProcessSrc ();
-//    setLayout ();
+    setLayout ();
 }
 
 void ChartForm::releaseDataReaderSrc () {

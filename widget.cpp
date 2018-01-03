@@ -123,8 +123,8 @@ void Widget::setHedgeValue() {
 }
 
 void Widget::setStrategyTableView () {
-//    m_strategyFileDir = "D:/strategy";
-    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
+    m_strategyFileDir = "D:/strategy";
+//    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
@@ -140,7 +140,7 @@ void Widget::setProgramInfoTableView () {
     initModel -> setHorizontalHeaderItem (1, new QStandardItem(QObject::tr("消息")));
     initModel -> setHorizontalHeaderItem (2, new QStandardItem(QObject::tr("备注")));
     ui->programInfo_tableView->setModel (initModel);
-    ui->programInfo_tableView->setColumnWidth (0, 150);
+    ui->programInfo_tableView->setColumnWidth (0, 250);
     ui->programInfo_tableView->setColumnWidth (1, 600);
     ui->programInfo_tableView->setColumnWidth (2, 150);
     ui->programInfo_tableView->setShowGrid (false);
