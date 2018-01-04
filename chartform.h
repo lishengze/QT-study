@@ -31,7 +31,6 @@
 #include "database.h"
 #include "macd.h"
 #include "qmychartview.h"
-#include "realtimedataread.h"
 #include "monitorrealtimedata.h"
 #include "chartdata.h"
 
@@ -53,8 +52,7 @@ public:
               QList<int> macdTime, int threadNumb = 8,
               QString databaseName="MarketData");
 
-    ChartForm(QWidget *parent, RealTimeDataRead* readRealTimeData,
-              QTableView* programInfoTableView, int chartViewID,
+    ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
               QList<strategy_ceil> strategy, QString strategyName,
               QString hedgeIndexCode, int hedgeIndexCount,
               int updateTime, QList<int> macdTime, bool isTestRealTime,
@@ -81,6 +79,9 @@ public:
 
     void setTimeAxisUpdateData();
     QCategoryAxis* getTimeAxis();
+
+    void setPureHistoryDataChart(QList<QList<double>> allData);
+    void setRealTimeHistDataChart(QList<QList<double>> allData);
 
     void setLayout ();
     void setVotRunoverChartView();
@@ -125,7 +126,6 @@ private:
     bool m_bTestRealTime;
     bool m_isclosed;
     int m_chartViewID;
-    RealTimeDataRead* m_readRealTimeData;
     QTableView* m_programInfoTableView;
     QList<strategy_ceil> m_strategy;
     QString m_strategyName;

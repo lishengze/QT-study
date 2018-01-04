@@ -5,8 +5,9 @@
 #include <QPointF>
 #include <QWidget>
 #include <QTableView>
+#include <QTime>
 #include "macd.h"
-#include "WAPIWrapperCpp.h"
+//#include "WAPIWrapperCpp.h"
 
 QList<int> getDateList(int intDate);
 
@@ -55,15 +56,6 @@ void updateProgramInfo(QTableView* programInfoTableView, QString message, QStrin
 
 QString getWindSecode(QString secode);
 
-LPCWSTR transSecode(QStringList secodeList);
-
-LPCWSTR transSecodeB(QStringList secodeList);
-
-LPCWSTR transSecode(QString qString);
-
-QString variantToQString(const LPVARIANT data);
-
-LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd);
 
 void testSpread(QMap<QString, QStringList> data);
 
@@ -71,10 +63,26 @@ void writeWsqData(QString secode, QStringList data);
 
 double getAveValue(QList<double>);
 
-bool isTradingTime(QTime time);
+bool isTradingTime(QTime time = QTime::currentTime());
 
-bool isTradingOver(QTime time);
+bool isTradingOver(QTime time = QTime::currentTime());
 
-QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList);
+bool isTradingStart(QTime time = QTime::currentTime());
+
+void testCLosePrice(QMap<QString, QList<QStringList>> oriData);
+
+qint64 transDateTime(double oridata);
+
+//LPCWSTR transSecode(QStringList secodeList);
+
+//LPCWSTR transSecodeB(QStringList secodeList);
+
+//LPCWSTR transSecode(QString qString);
+
+//QString variantToQString(const LPVARIANT data);
+
+//LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd);
+
+//QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList);
 
 #endif // TOOLFUNC_H

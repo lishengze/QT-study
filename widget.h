@@ -19,9 +19,6 @@
 #include "database.h"
 #include "excel.h"
 
-#include "realtimedataread.h"
-#include "realtimedataprocess.h"
-
 QT_CHARTS_USE_NAMESPACE
 
 namespace Ui {
@@ -86,7 +83,6 @@ private:
 
     bool m_loginWind;
     QThread m_windWorkThread;
-    RealTimeDataRead* m_readRealTimeData;
     QMap<QString, QStringList> m_realTimeData;
 
     Excel* m_excel;

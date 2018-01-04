@@ -36,7 +36,9 @@ Database::Database(QString connName, QString host,
 }
 
 Database::~Database () {
+//    qDebug() << "~Database" << 0;
     m_db.close ();
+//    qDebug() << "~Database" << 1;
 }
 
 void Database::initDatabase() {
@@ -60,7 +62,7 @@ void Database::initDatabase() {
         qDebug() << m_db.lastError ();
         QMessageBox::information (m_window, "Error", m_db.lastError().text());
     } else {
-        QString succStr = "Open database: " + m_dataSourceName  + " successfully!";
+        QString succStr = "Open database: " + m_dataSourceName  + ", " + m_connName +" successfully!";
         qDebug() << succStr;
 //        QMessageBox::information (m_window, "Succeed", succStr);
         m_bdatabaseOpen = true;

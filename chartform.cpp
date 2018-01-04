@@ -56,7 +56,7 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int char
     m_macdTime(macdTime), m_readDataThreadCount(0), m_threadNumb(threadNumb),
     m_macdTooltip(NULL), m_strategyTooltip(NULL), m_votrunoverTooltip(NULL),
     m_isRealTime(false), m_isclosed(false),
-    m_keyMoveCount(0), m_mouseInitPos(-1, -1),
+    m_keyMoveCount(0), m_mouseInitPos(-1, -1), m_monitorWorker(NULL),
     ui(new Ui::ChartForm)
 {
     registSignalParamsType();
@@ -64,27 +64,26 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int char
     startReadData ();
 }
 
-ChartForm::ChartForm(QWidget *parent, RealTimeDataRead* readRealTimeData,
+ChartForm::ChartForm(QWidget *parent,
                      QTableView* programInfoTableView, int chartViewID,
                      QList<strategy_ceil> strategyList, QString strategyName,
                      QString hedgeIndexCode, int hedgeIndexCount,
                      int updateTime, QList<int> macdTime, bool isTestRealTime,
                      int threadNumb):
-    QWidget(parent), m_readRealTimeData(readRealTimeData),
+    QWidget(parent),
     m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
     m_strategy(strategyList), m_strategyName(strategyName),
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
     m_updateTime(updateTime), m_macdTime(macdTime), m_readDataThreadCount(0),
     m_threadNumb(threadNumb), m_bTestRealTime(isTestRealTime),
     m_macdTooltip(NULL), m_strategyTooltip(NULL), m_votrunoverTooltip(NULL),
-    m_isRealTime(true), m_isclosed(false), m_preSpread(6),
+    m_isRealTime(true), m_isclosed(false), m_preSpread(0),
     m_keyMoveCount(0), m_mouseInitPos(-1, -1), m_oldPointDistance(-1),
     m_timeAxisUpdatePercent(0.2), m_monitorWorker(NULL),
     ui(new Ui::ChartForm)
 {
     registSignalParamsType();
     initRealTimeData();
-    setLayout();
 }
 
 void ChartForm::registSignalParamsType () {
@@ -95,8 +94,8 @@ void ChartForm::registSignalParamsType () {
 }
 
 void ChartForm::initHistoryData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
-//    m_dbhost = "192.168.211.165";
-    m_dbhost = "localhost";
+    m_dbhost = "192.168.211.165";
+//    m_dbhost = "localhost";
     m_databaseName = databaseName + "_" + timeType;
     m_keyValueList << "TCLOSE" << "VOTRUNOVER";
 
@@ -115,8 +114,8 @@ void ChartForm::initHistoryData (QString databaseName, QString timeType, QList<s
 }
 
 void ChartForm::initRealTimeData() {
-//    m_dbhost = "192.168.211.165";
-    m_dbhost = "localhost";
+    m_dbhost = "192.168.211.165";
+//    m_dbhost = "localhost";
     m_databaseName = "MarketData_RealTime";
     QList<QString> oriSecodeList;
     for (int i = 0; i < m_strategy.size (); ++i) {
@@ -138,7 +137,11 @@ void ChartForm::initRealTimeData() {
 
     initMonitorThread();
 
-    startReadData();
+    if (isTradingStart()) {
+        startReadData();
+    } else {
+        setLayout();
+    }
 }
 
 void ChartForm::initMonitorThread() {
@@ -156,8 +159,6 @@ void ChartForm::initMonitorThread() {
     connect(m_monitorWorker, SIGNAL(sendPreCloseData(double)),
             this, SLOT(receivePreCloseData(double)));
 
-    m_monitorWorker->startTimer();
-
     m_monitorWorker->moveToThread(&m_MonitorThread);
 
     connect(&m_MonitorThread, SIGNAL(finished()),
@@ -172,7 +173,7 @@ void ChartForm::initMonitorThread() {
 
 void ChartForm::receivePreCloseData(double preSpread) {
     m_preSpread = preSpread;
-    ui->preCLoseSpreadValue_Label->setText(QString("\346\230\250\346\227\245\347\202\271\345\267\256: %1").arg(m_preSpread));
+//    ui->preCLoseSpreadValue_Label->setText(QString("\346\230\250\346\227\245\347\202\271\345\267\256: %1").arg(m_preSpread));
     qDebug() << "m_PreSpread: " << m_preSpread;
     disconnect(m_monitorWorker, SIGNAL(sendPreCloseData(double)),
                this, SLOT(receivePreCloseData(double)));
@@ -236,14 +237,15 @@ void ChartForm::setTimeAxisUpdateData() {
 
 void ChartForm::updateAxis() {
     int curPointNumb = m_timeData.size();
-//    qDebug() << "curPointNumb: " << curPointNumb;
     QValueAxis *strategyAxisY = dynamic_cast<QValueAxis *>(m_strategyChart->axisY());
     QList<double> allStrategyData = m_strategyData;
     if (m_bTestRealTime) {
         m_preSpread = getAveValue(m_strategyData);
     }
     allStrategyData.append(m_preSpread);
-    if (m_strategyData.last() > strategyAxisY->max() || m_strategyData.last() < strategyAxisY->min()) {
+//    qDebug() << "updateAxis: m_preSpread " << m_preSpread;
+
+    if (allStrategyData.last() > strategyAxisY->max() || allStrategyData.last() < strategyAxisY->min()) {
         QList<double>  strategyAxisYRange = getChartYvalueRange(allStrategyData);
         strategyAxisY -> setRange (strategyAxisYRange[0], strategyAxisYRange[1]);
     }
@@ -314,6 +316,15 @@ void ChartForm::updateAxis() {
 void ChartForm::updateSeries() {
     int curPointNumb = m_timeData.size();
     m_strategySeries->append(curPointNumb-1, m_strategyData[curPointNumb-1]);
+
+    if (m_preSpreadSeries->points().size() != m_strategySeries->points().size()-1) {
+        qDebug() << "m_perSpread: " << m_preSpread << ", m_preSpreadSeries->points().size(): " << m_preSpreadSeries->points().size()
+                 << ", m_strategySeries->points().size(): " << m_strategySeries->points().size();
+        m_preSpreadSeries->clear();
+        for (int i = 0; i < m_strategySeries->points().size()-1; ++i) {
+            m_preSpreadSeries->append(i, m_preSpread);
+        }
+    }
     m_preSpreadSeries->append(curPointNumb-1, m_preSpread);
 
     QList<QBarSet *> votSetList = m_votBarSeries->barSets();
@@ -371,16 +382,8 @@ void ChartForm::startReadData (){
         DataRead* curDataReader;
         if (allocatedTableList[i].size() > 0) {
             QString databaseId = QString("%1").arg(i + m_chartViewID * m_threadNumb + 1);
-            qDebug() << "databaseId: " << databaseId;
-
             if (m_isRealTime) {
                 curDataReader = new DataRead(databaseId, m_dbhost, m_databaseName, allocatedTableList[i]);
-//                m_startDate = "20170101";
-//                m_endDate = "20170202";
-//                m_keyValueList << "TOPEN";
-//                curDataReader = new DataRead(databaseId, m_dbhost, m_databaseName, allocatedTableList[i],
-//                                             m_startDate, m_endDate, m_keyValueList);
-
             } else {
                 curDataReader = new DataRead(databaseId, m_dbhost, m_databaseName, allocatedTableList[i],
                                              m_startDate, m_endDate, m_keyValueList);
@@ -412,36 +415,22 @@ void ChartForm::startReadData (){
     }
 }
 
-void testCLosePrice(QMap<QString, QList<QStringList>> oriData) {
-    QList<QString> secodeList = oriData.keys();
-    for (int i = 0; i < secodeList.size(); ++i) {
-        QString secode = secodeList[i];
-        QList<QStringList> currData = oriData[secode];
-        if (currData.size() == 0) {
-            qDebug() << "secode : " << secode << " has no data";
-        } else {
-            qDebug() << secode << ", TCLOSE: " << currData[currData.size()-1];
-        }
-    }
-}
-
 void ChartForm::receiveOriginalData (QMap<QString, QList<QStringList>> subThreadData) {
     QMutexLocker locker(&m_mutex);
     m_completeTableData.unite (subThreadData);
     ++m_readDataThreadCount;
     qDebug() << "ChartForm::receiveOriginalData: " << QThread::currentThreadId()
-             << ", dataNumb: " << subThreadData.size ();
-    qDebug() << "m_readDataThreadCount: " << m_readDataThreadCount << "\n";
+             << ", dataNumb: " << subThreadData.size ()
+             << ", m_readDataThreadCount: " << m_readDataThreadCount << "\n";
 
     updateProgramInfo (m_programInfoTableView, QString("完成股票指数读取数目: %1").arg(m_completeTableData.size ()));
     if (m_readDataThreadCount == m_threadNumb) {
-//        testCLosePrice(m_completeTableData);
         releaseDataReaderSrc ();
         m_readDataThreadCount = 0;
         startProcessHistoryData();
         m_completeTableData.clear ();
     }
-    qDebug() << "receiveOriginalData end!";
+//    qDebug() << "receiveOriginalData end!";
 }
 
 void ChartForm::startProcessHistoryData () {
@@ -472,10 +461,13 @@ void ChartForm::startProcessHistoryData () {
     m_dataProcessThreadList.append (curDataProcessThread);   
 
     emit sendstartProcessHistoryDataSignal("all");
+
+    qDebug() << "startProcessHistoryData end!";
 }
 
 void ChartForm::receiveProcessedHistoryData (QList<QList<double>> allData) {
     qDebug() << "ChartForm::receiveProcessedHistoryData: " << QThread::currentThreadId();
+
     m_timeData = allData[0];
     m_strategyData = allData[1];
     m_votData = allData[2];
@@ -490,12 +482,12 @@ void ChartForm::receiveProcessedHistoryData (QList<QList<double>> allData) {
     qDebug() << "strategyData.size: " << m_strategyData.size ();
     qDebug() << "votData.size:      " << m_votData.size ();
     qDebug() << "macdData.size:     " << m_macdData.size ();
-//    qDebug() << "timeData:     " << m_timeData;
-//    qDebug() << "strategyData: " << m_strategyData;
-//    qDebug() << "votData:      " << m_votData;
-//    qDebug() << "macdData:     " << m_macdData;
     releaseDataProcessSrc ();
     setLayout ();
+
+    if (m_isRealTime) {
+        m_monitorWorker->startTimer();
+    }
 }
 
 void ChartForm::releaseDataReaderSrc () {
@@ -534,6 +526,7 @@ void ChartForm::setLayout () {
         ui->gridLayout->addWidget (m_macdChartView, 3, 0);
     }
     this->setMouseTracking(true);
+    m_timeAxisUpdateData = m_timeData;
 }
 
 QCategoryAxis* ChartForm::getAxisX () {
@@ -553,9 +546,17 @@ void ChartForm::setStrategyChartView () {
     QValueAxis *axisY = new QValueAxis;
     m_strategySeries = new QLineSeries;
     m_preSpreadSeries = new QLineSeries;
+
     for (int i = 0; i < m_strategyData.size (); ++i) {
         m_strategySeries->append (i, m_strategyData.at (i));
     }
+    if (m_isRealTime) {
+        ui->preCLoseSpreadValue_Label->setText(QString("\346\230\250\346\227\245\347\202\271\345\267\256: %1").arg(m_preSpread));
+        for (int i = 0; i < m_strategyData.size (); ++i) {
+            m_preSpreadSeries->append(i, m_preSpread);
+        }
+    }
+
     QPen red(Qt::red);
     red.setWidth(3);
     m_strategySeries->setPen(red);
@@ -564,7 +565,15 @@ void ChartForm::setStrategyChartView () {
     m_preSpreadSeries->setName("昨日点差");
     m_preSpreadSeries->setUseOpenGL(true);
 
-    QList<double>  axisYRange = getChartYvalueRange(m_strategyData);
+    QList<double>  axisYRange;
+    if (m_isRealTime) {
+        QList<double> allYdata = m_strategyData;
+        allYdata.append(m_preSpread);
+        axisYRange = getChartYvalueRange(allYdata);
+    } else {
+        axisYRange = getChartYvalueRange(m_strategyData);
+    }
+
     axisY -> setRange (axisYRange[0], axisYRange[1]);
     axisY -> setLabelFormat ("%1.1e");
 
@@ -833,16 +842,18 @@ void ChartForm::closeEvent(QCloseEvent *event) {
         if (m_isRealTime) {
             m_timer.stop();
             if (NULL != m_monitorWorker) {
+                qDebug() << "m_monitorWorker->stopTimer() ";
                 m_monitorWorker->stopTimer();
-            }
-            emit sendCloseSignal(m_chartViewID);
+            }            
         }
+//        emit sendCloseSignal(m_chartViewID);
         m_isclosed = true;
     }
 }
 
 ChartForm::~ChartForm()
 {
+//    qDebug() << "~ChartForm " << 0;
     delete ui;
     m_MonitorThread.quit();
     m_MonitorThread.wait();
@@ -867,9 +878,9 @@ ChartForm::~ChartForm()
          m_dataReaderThreadList[i] = NULL;
     }
     if (NULL != m_monitorWorker) {
-        delete m_monitorWorker;
         m_monitorWorker = NULL;
     }
+//    qDebug() << "~ChartForm " << 1;
 }
 
 //void ChartForm::initMonitorTimer() {

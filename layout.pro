@@ -32,8 +32,8 @@ SOURCES += main.cpp\
     dataread.cpp \
     dataprocess.cpp \
     dialog.cpp \
-    realtimedataprocess.cpp \
-    realtimedataread.cpp \
+#    realtimedataprocess.cpp \
+#    realtimedataread.cpp \
     monitorrealtimedata.cpp \
     chartdata.cpp \
     historydata.cpp
@@ -55,9 +55,9 @@ HEADERS  += widget.h \
     dataread.h \
     dataprocess.h \
     dialog.h \
-    realtimedataprocess.h \
-    WAPIWrapperCpp.h \
-    realtimedataread.h \
+#    realtimedataprocess.h \
+#    WAPIWrapperCpp.h \
+#    realtimedataread.h \
     monitorrealtimedata.h \
     chartdata.h \
     historydata.h
@@ -67,5 +67,5 @@ FORMS    += widget.ui \
     dialog.ui
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
-LIBS += -LD:/github/workprogram/client/client-database -lWAPIWrapperCpp
+#LIBS += -LD:/github/workprogram/client/client-database -lWAPIWrapperCpp
 #LIBS += -LE:/github/work-program/client/client-database -lWAPIWrapperCpp

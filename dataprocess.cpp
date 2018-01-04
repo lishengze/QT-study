@@ -181,29 +181,56 @@ QList<QList<double>> DataProcess::computeMacdData () {
 }
 
 QList<QList<double>> DataProcess::computeSnapshootData() {
+    qDebug()<< "DataProcess::computeSnapshootData begin!";
     QList<QString> secodeList = m_oriData.keys();
-    int timeNumb = m_oriData[secodeList[0]].size();
+
+    QList<int> timeNumbList;
+    int timeNumb = -1;
+    for (int i = 0; i < secodeList.size(); ++i) {
+        QString secode = secodeList[i];
+        if (timeNumbList.indexOf(m_oriData[secode].size()) < 0) {
+            timeNumbList.append(m_oriData[secode].size());
+            if (timeNumb < m_oriData[secode].size()) {
+                timeNumb = m_oriData[secode].size();
+            }
+        }
+    }
+    qDebug() << "timeNumbList: " << timeNumbList;
+    qDebug() << "timeNumb: " <<timeNumb;
+
     for (int i = 0; i < timeNumb; ++i) {
         QMap<QString, QStringList> oneTimeData;
         for (int j = 0; j < secodeList.size(); ++j) {
             QString secode = secodeList[j];
-            oneTimeData.insert(secode, m_oriData[secode][i]);
+            int t = i;
+            while (t >= m_oriData[secode].size()) --t;
+            QStringList tmpData = m_oriData[secode][t];
+            if (t > 0) {
+                tmpData[4] = QString("%1").arg(m_oriData[secode][t][4].toDouble()
+                                               - m_oriData[secode][t-1][4].toDouble());
+            } else {
+                tmpData[4] = QString("%1").arg(0);
+            }
+            oneTimeData.insert(secode, tmpData);
         }
         computeChartData(oneTimeData);
     }
+
     QList<QList<double>> allData;
     allData.append (m_timeData);
     allData.append (m_strategyData);
     allData.append (m_votData);
     allData.append (m_macdData);
+    qDebug()<< "DataProcess::computeSnapshootData end!";
     return allData;
 }
 
 void DataProcess::computeChartData(QMap<QString, QStringList> oneTimeData) {
     double strategyData = 0;
     double votData = 0;
-    double timeData = QDateTime::currentDateTime().toMSecsSinceEpoch();
+    double timeData = 0;
     MACD macdData;
+    int timeCount = 0;
     for (int i = 0; i < m_secodeNameList.size(); ++i) {
         QString secode = m_secodeNameList[i];
         if (secode == m_hedgeIndexCode) {
@@ -215,13 +242,21 @@ void DataProcess::computeChartData(QMap<QString, QStringList> oneTimeData) {
             strategyData += oneTimeData[secode][2].toDouble() * m_seocdebuyCountMap[secode];
         }
         votData += oneTimeData[secode][4].toDouble();
+        timeData += oneTimeData[secode][5].toDouble();
+        ++timeCount;
+//        qDebug() << "oneTimeData[secode][5].toDouble(): " << oneTimeData[secode][5].toDouble();
     }
+    timeData = timeData / timeCount;
+//    qDebug() << "timeData: " << timeData;
+    timeData = transDateTime(timeData);
+
+//    qDebug() << "timeData: " << QDateTime::fromMSecsSinceEpoch(timeData);
 
     strategyData = strategyData / (m_seocdebuyCountMap[m_hedgeIndexCode] * m_indexHedgeMetaInfo[m_hedgeIndexCode])
                    - oneTimeData[m_hedgeIndexCode][2].toDouble();
 
     if (m_MACDData.size() > 0) {
-        MACD latestData = m_MACDData[m_macdData.size()-1];
+        MACD latestData = m_MACDData[m_MACDData.size()-1];
         macdData = computeMACDData(strategyData, latestData, m_macdTime[0], m_macdTime[1], m_macdTime[2]);
     } else {
         macdData = MACD(strategyData, strategyData, 0, 0, 0);

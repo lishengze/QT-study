@@ -59,7 +59,7 @@ void MonitorRealTimeData::stopTimer() {
 }
 
 void MonitorRealTimeData::getPreData() {
-    qDebug() << "MonitorRealTimeData::getPreData";
+//    qDebug() << "MonitorRealTimeData::getPreData" << QThread::currentThreadId();
     QMap<QString, QStringList> allPreCLoseData = m_database->getPreCloseData("PreCloseData");
     computePreCloseData(allPreCLoseData);
 }
@@ -79,7 +79,7 @@ void MonitorRealTimeData::computePreCloseData(QMap<QString, QStringList> preCLos
 }
 
 void MonitorRealTimeData::wsqRealTimeData() {
-//    qDebug() << "startWsqOneTime(m_secodeNameList): ";
+//    qDebug() << "startWsqOneTime(m_secodeNameList): " << QThread::currentThreadId();
 //    preprecessRealTimeData(wsqSnaphootData(m_secodeNameList));
 //      preprecessRealTimeData(m_database->getSnapShootData(m_secodeNameList));
 
@@ -137,7 +137,6 @@ void MonitorRealTimeData::preprecessRealTimeData(QMap<QString, QStringList> real
 
         if (m_time[secode].size() > 1 && m_time[secode].last() == m_time[secode][m_time[secode].size()-2]) {
             ++sameTimeCount ;
-            qDebug() << secode << ": " << m_time[secode];
         }
 
         m_realTimeData[secode] = realTimeData[secode];
@@ -147,15 +146,15 @@ void MonitorRealTimeData::preprecessRealTimeData(QMap<QString, QStringList> real
             m_realTimeData[secode][4] = QString("%1").arg(0);
         }
 
-        if (m_realTimeData[secode][4].toDouble() == 0.0 && m_vot[secode].size() > 1) {
+//        if (m_realTimeData[secode][4].toDouble() == 0.0 && m_vot[secode].size() > 1) {
 //            qDebug() << secode <<" amt is 0: " << m_realTimeData[secode];
 //            qDebug() << m_vot[secode];
 //            qDebug() << m_time[secode];
 //            qDebug() << "m_vot[secode].last() : " << m_vot[secode].last()
 //                     << ",  m_vot[secode][m_vot[secode].size()-2]: " <<  m_vot[secode][m_vot[secode].size()-2];
-        }
+//        }
     }
-    qDebug() << "sameTimeCount: " << sameTimeCount;
+//    qDebug() << "sameTimeCount: " << sameTimeCount;
     if (sameTimeCount < m_secodeNameList.size() * unUpdatedDataPercent) {
         computeChartData();
     }
@@ -204,8 +203,10 @@ void MonitorRealTimeData::computeChartData() {
 }
 
 MonitorRealTimeData::~MonitorRealTimeData() {
+//    qDebug() << "~MonitorRealTimeData " << 0;
     if (NULL != m_database) {
         delete m_database;
         m_database = NULL;
     }
+//    qDebug() << "~MonitorRealTimeData " << 1;
 }

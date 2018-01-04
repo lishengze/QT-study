@@ -23,7 +23,6 @@
 #include "setdata.h"
 #include "strategymodel.h"
 #include "chartform.h"
-#include "realtimedataread.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -33,7 +32,6 @@ QMutex g_wsqMutex;
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
     m_loginWind(false),
-    m_readRealTimeData(NULL),
     m_strategyTalbeView(NULL),
     m_strategyModel(NULL),
     m_excel(NULL),
@@ -123,8 +121,8 @@ void Widget::setHedgeValue() {
 }
 
 void Widget::setStrategyTableView () {
-    m_strategyFileDir = "D:/strategy";
-//    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
+//    m_strategyFileDir = "D:/strategy";
+    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
@@ -259,12 +257,11 @@ void Widget::on_realDateTime_pushButton_clicked()
         secodeList.append(hedgeIndexCode);
 
         int chartViewID = m_chartViews.count();
-        QWidget* charView = new ChartForm(0, m_readRealTimeData,
-                                          ui->programInfo_tableView, chartViewID,
+        QWidget* charView = new ChartForm(0, ui->programInfo_tableView, chartViewID,
                                           m_currStrategy, m_strategyName,
                                           hedgeIndexCode, hedgeIndexCount,
                                           updateTime, macdTime, m_bTestRealTime);
-        connect(charView,SIGNAL(sendCloseSignal(int)), this, SLOT(receiveChartCLoseSignal(int)));
+//        connect(charView,SIGNAL(sendCloseSignal(int)), this, SLOT(receiveChartCLoseSignal(int)));
 
         charView->show ();
         m_chartViews.append (charView);
@@ -287,15 +284,17 @@ void Widget::closeEvent(QCloseEvent *event) {
     }
 
     for(int i = 0; i < m_chartViews.size(); ++i) {
-        if (m_chartViews[i]->isActiveWindow()) {
-            m_chartViews[i] -> close();
-        }
+//        if (m_chartViews[i]->isActiveWindow()) {
+//            m_chartViews[i] -> close();
+//        }
+        m_chartViews[i] -> close();
     }
 
 }
 
 Widget::~Widget()
 {
+//    qDebug() << "~Widget: " << 0;
     delete ui;
 
     if (NULL != m_strategyModel) {
@@ -307,13 +306,14 @@ Widget::~Widget()
         delete m_excel;
         m_excel = NULL;
     }
-//    qDebug() << 5;
-//    for (int i = 0; i < m_chartViews.size (); ++i) {
-//        qDebug() << i;
-//        if (NULL != m_chartViews[i]) {
-//            delete m_chartViews[i];
-//            m_chartViews[i] = NULL;
-//        }
-//    }
-//    qDebug() << 6;
+
+//    qDebug() << "~Widget: " << 1;
+    for (int i = 0; i < m_chartViews.size (); ++i) {
+        qDebug() << i;
+        if (NULL != m_chartViews[i]) {
+            delete m_chartViews[i];
+            m_chartViews[i] = NULL;
+        }
+    }
+//    qDebug() << "~Widget: " << 2;
 }

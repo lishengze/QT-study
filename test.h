@@ -39,10 +39,12 @@ void testDatabase();
 
 void testDataRead();
 
-void testTransSecode();
+//void testTransSecode();
 
-void testWindWsq();
+//void testWindWsq();
 
 void testGetSnapShootData();
+
+void testTransDateTime();
 
 #endif // TEST_H
