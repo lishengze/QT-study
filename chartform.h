@@ -16,6 +16,7 @@
 #include <QLineSeries>
 #include <QStackedBarSeries>
 #include <QTimer>
+#include <QTime>
 
 #include <QThread>
 #include <QObject>
@@ -59,6 +60,7 @@ public:
               int threadNumb = 8);
 
     void registSignalParamsType();
+    void initCommonData();
     void initHistoryData(QString databaseName, QString timeType,
                   QList<strategy_ceil> strategyList);
     void initRealTimeData();
@@ -105,6 +107,8 @@ public slots:
 
     void receivePreCloseData(double preSpread);
     void receiveRealTimeData(ChartData curChartData);
+
+    void receiveTradeOver();
 
 signals:
     void sendStartReadDataSignal(QString dataType);
@@ -164,6 +168,8 @@ private:
     QMap<QString, QStringList> m_realTimeData;
     double m_preSpread;
 
+    bool m_isLayoutSetted;
+
     double m_timeAxisUpdatePercent;
     QList<double> m_timeAxisUpdateData;
 
@@ -208,6 +214,8 @@ private:
     QChart* m_testChart;
     Callout *m_testTooltip;
 
+    QTime m_startTime;
+    QTime m_endTime;
 };
 
 //    void initMonitorTimer();

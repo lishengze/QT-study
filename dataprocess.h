@@ -32,6 +32,9 @@ public:
     QList<QList<double>> computeSnapshootData();
     void computeChartData(QMap<QString, QStringList> oneTimeData);
 
+    QList<QList<double>> computeSnapshootDataReverse();
+    void computeChartDataReverse(QMap<QString, QStringList> oneTimeData);
+
 public slots:
     void receiveOrigianlHistoryData(QString dataType);
 

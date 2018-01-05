@@ -30,6 +30,7 @@ public:
 signals:
     void sendRealTimeData(ChartData data);
     void sendPreCloseData(double);
+    void sendTradeOver();
 
 public slots:
     void monitorRealTimeData();

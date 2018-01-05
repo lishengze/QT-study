@@ -37,6 +37,7 @@ Widget::Widget(QWidget *parent) :
     m_excel(NULL),
     m_strategyFileDir(""),
     m_bTestRealTime(false),
+    m_databaseReadThreadNumb(48),
     ui(new Ui::Widget)
 {
     m_excel = new Excel();
@@ -122,7 +123,7 @@ void Widget::setHedgeValue() {
 
 void Widget::setStrategyTableView () {
 //    m_strategyFileDir = "D:/strategy";
-    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910";
+    m_strategyFileDir = "//192.168.211.182/1分钟数据 20160910-20170910/strategy";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 
@@ -219,7 +220,7 @@ void Widget::on_historyData_clicked()
                                           startDate, endDate, timeType,
                                           m_currStrategy, m_strategyName,
                                           hedgeIndexCode, hedgeIndexCount,
-                                          macdTime);
+                                          macdTime, m_databaseReadThreadNumb);
         charView->show ();
 
         m_chartViews.append (charView);
@@ -260,7 +261,7 @@ void Widget::on_realDateTime_pushButton_clicked()
         QWidget* charView = new ChartForm(0, ui->programInfo_tableView, chartViewID,
                                           m_currStrategy, m_strategyName,
                                           hedgeIndexCode, hedgeIndexCount,
-                                          updateTime, macdTime, m_bTestRealTime);
+                                          updateTime, macdTime, m_bTestRealTime, m_databaseReadThreadNumb);
 //        connect(charView,SIGNAL(sendCloseSignal(int)), this, SLOT(receiveChartCLoseSignal(int)));
 
         charView->show ();

@@ -86,7 +86,7 @@ private:
     QMap<QString, QStringList> m_realTimeData;
 
     Excel* m_excel;
-
+    int m_databaseReadThreadNumb;
     bool m_bTestRealTime;
 };
 

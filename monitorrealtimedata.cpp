@@ -79,7 +79,7 @@ void MonitorRealTimeData::computePreCloseData(QMap<QString, QStringList> preCLos
 }
 
 void MonitorRealTimeData::wsqRealTimeData() {
-//    qDebug() << "startWsqOneTime(m_secodeNameList): " << QThread::currentThreadId();
+    qDebug() << "wsqRealTimeData, " << QTime::currentTime().toString("HHmmss");
 //    preprecessRealTimeData(wsqSnaphootData(m_secodeNameList));
 //      preprecessRealTimeData(m_database->getSnapShootData(m_secodeNameList));
 
@@ -87,6 +87,8 @@ void MonitorRealTimeData::wsqRealTimeData() {
 //        preprecessRealTimeData(wsqSnaphootData(m_secodeNameList));
 //        preprecessRealTimeData(m_database->getSnapShootData());
         preprecessRealTimeData(m_database->getSnapShootData(m_secodeNameList));
+    } else if (isTradingOver()){
+        emit sendTradeOver();
     } else {
         return;
     }
