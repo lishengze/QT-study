@@ -168,23 +168,48 @@ QList<TableData> Database::getOriData(QString startDate, QString endDate, QStrin
     return tableDataList;
 }
 
-QMap<QString, QStringList> Database::getSnapShootData(QString tableName, QString databaseName) {
-    QMap<QString, QStringList> result;
-    if(m_db.open ()) {
-    QSqlQuery queryObj(m_db);
-    QString sqlstr = QString("select * from [") + databaseName + "].[dbo].[" + tableName + "] ";
-    queryObj.exec(sqlstr);
-    int valueNumb = 6;
-     while(queryObj.next ()) {
-         QStringList signalData;
-         QString secode = queryObj.value (0).toString();
-         for (int i = 1; i < valueNumb; ++i) {
-             signalData.append(queryObj.value (i).toString());
-         }
-         result.insert(secode, signalData);
-     }
-    }else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-    return result;
+
+
+void Database::checkData(QString tableName, QString colName, QString value) {
+
 }
+
+void Database::createTable(QString tableName) {
+
+}
+
+void Database::insertData(QString tableName, QList<QString> data) {
+
+}
+
+void Database::updateData(QString tableName, QList<QString> data) {
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
