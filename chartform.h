@@ -46,18 +46,26 @@ class ChartForm : public QWidget
 public:
     explicit ChartForm(QWidget *parent = 0);
     ~ChartForm();
-    ChartForm(QWidget *parent, QTableView* programInfoTableView, int charViewID,
+    ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
               QString startDate, QString endDate, QString timeType,
-              QList<strategy_ceil> strategy, QString strategyName,
+              QList<strategy_ceil> strategyList, QString strategyName,
               QString hedgeIndexCode, int hedgeIndexCount,
               QList<int> macdTime, int threadNumb = 8,
               QString databaseName="MarketData");
 
     ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
-              QList<strategy_ceil> strategy, QString strategyName,
+              QList<strategy_ceil> strategyList, QString strategyName,
               QString hedgeIndexCode, int hedgeIndexCount,
               int updateTime, QList<int> macdTime, bool isTestRealTime,
               int threadNumb = 8);
+
+    ChartForm(QWidget *parent, QTableView* programInfoTableView, int charViewID,
+              QList<strategy_ceil> strategyList, QString strategyName,
+              QString hedgeIndexCode, int hedgeIndexCount,
+              QList<int> macdTime, bool isTestRealTime=false,
+              int threadNumb=8, int updateTime=3000,
+              QString startDate ="", QString endDate="", QString timeType ="",
+              QString databaseName="MarketData");
 
     void registSignalParamsType();
     void initCommonData();
@@ -152,6 +160,8 @@ private:
     QPoint m_mouseInitPos;
     QString m_mouseChartName;
     double m_oldPointDistance;
+    bool m_setMouseTimeIndex;
+    bool m_setKeyMove;
     int m_currTimeIndex;
     int m_keyMoveCount;
     int m_addedTimeNumb;

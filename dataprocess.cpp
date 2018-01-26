@@ -206,7 +206,8 @@ QList<QList<double>> DataProcess::computeSnapshootData() {
             int t = i;
             while (t >= m_oriData[secode].size()) --t;
             QStringList tmpData = m_oriData[secode][t];
-            if (t > 0 && (m_oriData[secode][t][1].toDouble() -  m_oriData[secode][t-1][1].toDouble()) < 10) {
+            double currUpdateTime = m_oriData[secode][t][1].toDouble() -  m_oriData[secode][t-1][1].toDouble();
+            if (t > 0 && (currUpdateTime < 6) || currUpdateTime >= 2*60*60) {
                 tmpData[4] = QString("%1").arg(m_oriData[secode][t][4].toDouble()
                                                - m_oriData[secode][t-1][4].toDouble());
             } else {
@@ -291,13 +292,15 @@ QList<QList<double>> DataProcess::computeSnapshootDataReverse() {
     qDebug() << "timeNumb: " <<timeNumb;
 
     for (int i = timeNumb-1; i > -1; --i) {
-//        qDebug() << i;
         QMap<QString, QStringList> oneTimeData;
         for (int j = 0; j < secodeList.size(); ++j) {
             QString secode = secodeList[j];
             QStringList tmpData = m_oriData[secode][i];
-
-            if (i > 0 && (m_oriData[secode][i][1].toDouble() -  m_oriData[secode][i-1][1].toDouble()) < 8) {
+            double currUpdateTime = 100;
+            if (i > 0) {
+                currUpdateTime = m_oriData[secode][i][1].toDouble() -  m_oriData[secode][i-1][1].toDouble();
+            }
+            if (currUpdateTime < 8 || currUpdateTime >= 2*60*60) {
                 tmpData[4] = QString("%1").arg(m_oriData[secode][i][4].toDouble()
                                                - m_oriData[secode][i-1][4].toDouble());
             } else {

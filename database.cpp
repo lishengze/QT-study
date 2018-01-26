@@ -267,3 +267,52 @@ QMap<QString, QList<QStringList>> Database::getSnapShootHistoryData(QList<QStrin
     }
     return result;
 }
+
+QList<QString> Database::getTableList(QString databaseName) {
+    QList<QString> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString sqlstr = "select name from "+ databaseName +"..sysobjects where xtype= 'U'";
+        queryObj.exec(sqlstr);
+        while(queryObj.next ()) {
+             result.append(queryObj.value (0).toString());
+        }
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> tableNameArray, QString startDate,
+                                                        QString endDate, QString databaseName) {
+    QMap<QString, QList<QStringList>> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        for (int i = 0; i < tableNameArray.size(); ++i) {
+            QString secode = tableNameArray[i];
+            QString tableName = secode;
+            QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
+            QString sqlstr = "select * from" + completeTableName  + " where Date <= " + endDate + " and Date >= " + startDate;
+            queryObj.exec(sqlstr);
+            int valueNumb = 3;
+            QList<QStringList> oneSecodeData;
+             while(queryObj.next ()) {
+                 QStringList signalData;
+                 QString secode = queryObj.value (0).toString();
+                 for (int j = 0; j < valueNumb; ++j) {
+                     signalData.append(queryObj.value (j).toString());
+                 }
+                 oneSecodeData.append(signalData);
+             }
+             if (oneSecodeData.size() > 0) {
+                 result.insert(secode, oneSecodeData);
+             }
+        }
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+
+
+}
+

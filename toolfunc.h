@@ -73,6 +73,7 @@ void testCLosePrice(QMap<QString, QList<QStringList>> oriData);
 
 qint64 transDateTime(double oridata);
 
+
 //LPCWSTR transSecode(QStringList secodeList);
 
 //LPCWSTR transSecodeB(QStringList secodeList);

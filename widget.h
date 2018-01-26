@@ -16,6 +16,7 @@
 #include <QTimer>
 
 #include "strategymodel.h"
+#include "announcementform.h"
 #include "database.h"
 #include "excel.h"
 
@@ -65,6 +66,8 @@ private slots:
 
     void on_realDateTime_pushButton_clicked();
 
+    void on_Annoucnement_Button_clicked();
+
 private:
     Ui::Widget *ui;
     QList<QWidget*> m_chartViews;
@@ -84,6 +87,8 @@ private:
     bool m_loginWind;
     QThread m_windWorkThread;
     QMap<QString, QStringList> m_realTimeData;
+
+    AnnouncementForm* m_announcementView;
 
     Excel* m_excel;
     int m_databaseReadThreadNumb;

@@ -94,34 +94,6 @@ void MonitorRealTimeData::wsqRealTimeData() {
     }
 }
 
-void MonitorRealTimeData::monitorRealTimeData() {
-    bool dataChange = false;
-    QList<QString> global_secodeList = g_wsqData.keys();
-    for (int i = 0; i < m_secodeNameList.size(); ++i) {
-       QString secode = m_secodeNameList[i];
-       if (global_secodeList.indexOf(secode) >= 0) {
-           QList<QStringList> currData = g_wsqData[secode];
-           QStringList latestData = currData[currData.size()-1];
-           if (m_realTimeData[secode].size() == 0
-                   || latestData[1].toDouble() > m_realTimeData[secode][1].toDouble()) {
-               m_realTimeData[secode] = latestData;
-               m_realTimeData[secode][4] = QString("%1").arg(0);
-               if (currData.size() == 2) {
-                   m_realTimeData[secode][4] = QString("%1").arg(g_wsqData[secode][1][4].toDouble() - g_wsqData[secode][0][4].toDouble());
-               }
-               dataChange = true;
-           }
-       } else {
-           dataChange = false;
-           break;
-       }
-    }
-    if(dataChange) {
-        dataChange = false;
-        computeChartData();
-    }
-}
-
 void MonitorRealTimeData::preprecessRealTimeData(QMap<QString, QStringList> realTimeData) {
 //    qDebug() << "realTimeData.size: " << realTimeData.size();
     QList<QString> realTimeDataSecodeList = realTimeData.keys();
@@ -142,7 +114,11 @@ void MonitorRealTimeData::preprecessRealTimeData(QMap<QString, QStringList> real
         }
 
         m_realTimeData[secode] = realTimeData[secode];
-        if ( m_vot[secode].size() > 1) {
+        double currUpdateTime = 100;
+        if(m_time[secode].size()>1) {
+           currUpdateTime = m_time[secode].last().toDouble() - m_time[secode][m_time[secode].size()-2].toDouble();
+        }
+        if ( m_vot[secode].size() > 1 && (currUpdateTime < 8 || currUpdateTime >= 2*60*60)) {
             m_realTimeData[secode][4] = QString("%1").arg(m_vot[secode].last() - m_vot[secode][m_vot[secode].size()-2]);
         } else {
             m_realTimeData[secode][4] = QString("%1").arg(0);
@@ -212,3 +188,31 @@ MonitorRealTimeData::~MonitorRealTimeData() {
     }
 //    qDebug() << "~MonitorRealTimeData " << 1;
 }
+
+//void MonitorRealTimeData::monitorRealTimeData() {
+//    bool dataChange = false;
+//    QList<QString> global_secodeList = g_wsqData.keys();
+//    for (int i = 0; i < m_secodeNameList.size(); ++i) {
+//       QString secode = m_secodeNameList[i];
+//       if (global_secodeList.indexOf(secode) >= 0) {
+//           QList<QStringList> currData = g_wsqData[secode];
+//           QStringList latestData = currData[currData.size()-1];
+//           if (m_realTimeData[secode].size() == 0
+//                   || latestData[1].toDouble() > m_realTimeData[secode][1].toDouble()) {
+//               m_realTimeData[secode] = latestData;
+//               m_realTimeData[secode][4] = QString("%1").arg(0);
+//               if (currData.size() == 2) {
+//                   m_realTimeData[secode][4] = QString("%1").arg(g_wsqData[secode][1][4].toDouble() - g_wsqData[secode][0][4].toDouble());
+//               }
+//               dataChange = true;
+//           }
+//       } else {
+//           dataChange = false;
+//           break;
+//       }
+//    }
+//    if(dataChange) {
+//        dataChange = false;
+//        computeChartData();
+//    }
+//}

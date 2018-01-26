@@ -33,7 +33,7 @@ signals:
     void sendTradeOver();
 
 public slots:
-    void monitorRealTimeData();
+//    void monitorRealTimeData();
     void wsqRealTimeData();
     void getPreData();
 

@@ -47,4 +47,8 @@ void testGetSnapShootData();
 
 void testTransDateTime();
 
+void testGetAnnounce();
+
+void testGetTableList();
+
 #endif // TEST_H

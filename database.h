@@ -45,6 +45,11 @@ public:
 
     QList<QPointF> transData(QList<TableData> oriData, int minuteInterval, QString dataType);
 
+    QList<QString> getTableList(QString databaseName);
+
+    QMap<QString, QList<QStringList>> getAnnouncement(QList<QString> tableNameArray, QString startDate, QString endDate,
+                                                      QString databaseName="Announcement");
+
 private:
     QString m_connName;
     QString m_hostName;

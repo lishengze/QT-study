@@ -23,6 +23,7 @@
 #include "setdata.h"
 #include "strategymodel.h"
 #include "chartform.h"
+#include "announcementform.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -38,6 +39,7 @@ Widget::Widget(QWidget *parent) :
     m_strategyFileDir(""),
     m_bTestRealTime(false),
     m_databaseReadThreadNumb(48),
+    m_announcementView(NULL),
     ui(new Ui::Widget)
 {
     m_excel = new Excel();
@@ -67,8 +69,13 @@ void Widget::setCalendarValue () {
     ui->chooseStartDate->setCalendarPopup (true);
     ui->chooseEndDate->setCalendarPopup (true);
 
-    ui->chooseStartDate->setDate (QDate(2017, 12, 8));
+    ui->chooseStartDate->setDate (QDate(2014, 1, 1));
     ui->chooseEndDate->setDate (QDate(2017, 12, 20));
+
+    QDate today = QDate::currentDate();
+    QDate sevenDayAgo = today.addDays(-7);
+    ui->AnnouncementStartDate->setDate(sevenDayAgo);
+    ui->AnnouncementEndDate->setDate(today);
 }
 
 void Widget::setTestRealTimeData() {
@@ -273,12 +280,19 @@ void Widget::on_realDateTime_pushButton_clicked()
     }
 }
 
+void Widget::on_Annoucnement_Button_clicked()
+{
+    QString startDate = ui->AnnouncementStartDate->date ().toString ("yyyyMMdd");
+    QString endDate = ui->AnnouncementEndDate->date ().toString ("yyyyMMdd");
+    m_announcementView = new AnnouncementForm(startDate, endDate);
+    m_announcementView->show();
+}
+
 void Widget::receiveChartCLoseSignal(int chartViewID) {
     qDebug() << "Widget::receiveChartCLoseSignal chartViewID: " << chartViewID;
 }
 
 void Widget::closeEvent(QCloseEvent *event) {
-
     event;
     if (m_bTestRealTime) {
         m_testRealTimer.stop();
@@ -290,7 +304,9 @@ void Widget::closeEvent(QCloseEvent *event) {
 //        }
         m_chartViews[i] -> close();
     }
-
+    if (NULL != m_announcementView) {
+        m_announcementView->close();
+    }
 }
 
 Widget::~Widget()
@@ -316,5 +332,12 @@ Widget::~Widget()
             m_chartViews[i] = NULL;
         }
     }
+
+    if (NULL != m_announcementView) {
+        delete m_announcementView;
+        m_announcementView = NULL;
+    }
 //    qDebug() << "~Widget: " << 2;
 }
+
+
