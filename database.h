@@ -20,7 +20,7 @@ public:
              QString connDbName = "master", QString port ="1433",
              QString dataSourceName="SqlServer", QString databaseDriver="QODBC");
 
-    virtual ~Database();
+    ~Database();
 
     void initDatabase();
     QSqlDatabase getDatabase();
@@ -35,25 +35,42 @@ public:
     QList<TableData> getOriData(QString startDate, QString endDate, QString keyValue,
                                              QString tableName, QString databaseName="MarketData");
 
+    QMap<QString, QStringList> getSnapShootData(QString tableName="AllData", QString databaseName="MarketData_RealTime");
+
+    QMap<QString, QStringList> getSnapShootData(QList<QString> tableNameArray, QString databaseName="MarketData_RealTime");
+
+    QMap<QString, QList<QStringList>> getSnapShootHistoryData(QList<QString> tableNameArray, QString databaseName="MarketData_RealTime");
+
+    QMap<QString, QStringList> getPreCloseData(QString tableName = "PreCloseData", QString databaseName="MarketData_RealTime");
+
     QList<QPointF> transData(QList<TableData> oriData, int minuteInterval, QString dataType);
 
+    QList<QString> getTableList(QString databaseName);
+
+    QMap<QString, QList<QStringList>> getAnnouncement(QList<QString> tableNameArray, QString startDate, QString endDate,
+                                                      QString databaseName="Announcement");
+
+    virtual void completeTable(QList<QString> tableList);
     virtual void checkData(QString tableName, QString colName, QString value);
 
+    virtual QString getCreateStr(QString tableName);
     virtual void createTable(QString tableName);
 
+    virtual QString getInsertStr(QString tableName, QList<QString> data);
     virtual void insertData(QString tableName, QList<QString> data);
 
+    virtual QString getUpdateStr(QString tableName, QList<QString> data);
     virtual void updateData(QString tableName, QList<QString> data);
 
-
+protected:
+    QString m_connDbName;
 
 private:
     QString m_connName;
     QString m_hostName;
     QString m_userName;
     QString m_userPwd;
-    QString m_port;
-    QString m_connDbName;
+    QString m_port;    
     QString m_dataSourceName;
     QString m_databaseDriver;
     QWidget* m_window;

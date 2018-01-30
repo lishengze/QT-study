@@ -21,6 +21,7 @@
 #include <WinNls.h>
 
 #include "WAPIWrapperCpp.h"
+#include "realtimedatabase.h"
 
 using namespace  std;
 
@@ -306,6 +307,54 @@ void testWindWsq() {
     qDebug() << "wsq errcode: " << errcode;
 }
 
+void testGetSnapShootData() {
+    Database databaseObj;
+//    qDebug() << databaseObj.getSnapShootData();
+    QList<QString> secodeList;
+    secodeList << "000001.SZ" << "000002.SZ" << "000016.SH" << "000300.SH";
+    qDebug() << databaseObj.getSnapShootData(secodeList);
+//    qDebug() << databaseObj.getSnapShootHistoryData(secodeList);
+}
+
+void testTransDateTime() {
+    double oriDatetime = 20180104110956.98776;
+//    transDateTime(oriDatetime);
+}
+
+
+void testGetAnnounce() {
+    QString host = "192.168.211.165";
+    Database databaseObj("0", host);
+    QList<QString> secodeList;
+    secodeList << "000513" << "000877" << "002236";
+    QString startDate = QDate::currentDate().toString("yyyyMMdd");
+    QString endDate = startDate;
+    qDebug() << "startdate: " << startDate;
+    QMap<QString, QList<QStringList>> result = databaseObj.getAnnouncement(secodeList, startDate, endDate);
+    qDebug() << "result: " << result;
+}
+
+void testGetTableList() {
+    QString host = "192.168.211.165";
+    Database databaseObj("0", host);
+    QList<QString> result = databaseObj.getTableList("Announcement");
+    qDebug() << "result: " << result;
+}
+
+void testRealtimeDatabaseApi() {
+    RealTimeDatabase realtimeDatabaseObj = RealTimeDatabase("0", "Test");
+    QString testTableName = "test3";
+    QList<QString> secodeList;
+    secodeList << "000001.SZ" << "600000.SH";
+
+//    realtimeDatabaseObj.completeTable(secodeList);
+//    realtimeDatabaseObj.createTable(testTableName);
+
+//    QList<QString> data;
+//    realtimeDatabaseObj.insertData(dbName, testTableName, data);
+    wsqSnaphootData(secodeList);
+}
+
 void testMain() {
     //    testReadExcelData ();
     //    testGetExcelFileName();
@@ -327,7 +376,8 @@ void testMain() {
 //    testComputeMACD();
 //    testTransSecode();
 //    testComputeMACDDoubleData();
-    testWindWsq();
+//    testWindWsq();
+    testRealtimeDatabaseApi();
 }
 
 

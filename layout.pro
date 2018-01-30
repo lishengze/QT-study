@@ -37,7 +37,11 @@ SOURCES += main.cpp\
     monitorrealtimedata.cpp \
     chartdata.cpp \
     realtimedatabase.cpp \
-    preclosedatabase.cpp
+    preclosedatabase.cpp \
+#    updatedataform.cpp
+#    testdiaform.cpp \
+#    updatedataform.cpp
+    updaterealtimedataform.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -62,11 +66,19 @@ HEADERS  += widget.h \
     monitorrealtimedata.h \
     chartdata.h \
     realtimedatabase.h \
-    preclosedatabase.h
+    preclosedatabase.h \
+#    updatedataform.h
+#    testdiaform.h \
+#    updatedataform.h
+    updaterealtimedataform.h
 
 FORMS    += widget.ui \
     chartform.ui \
-    dialog.ui
+    dialog.ui \
+#    updatedataform.ui
+#    testdiaform.ui \
+#    updatedataform.ui
+    updaterealtimedataform.ui
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
 LIBS += -LE:/github/work-program/client/client-work-changeRefresh -lWAPIWrapperCpp

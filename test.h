@@ -43,4 +43,14 @@ void testTransSecode();
 
 void testWindWsq();
 
+void testGetSnapShootData();
+
+void testTransDateTime();
+
+void testGetAnnounce();
+
+void testGetTableList();
+
+void testRealtimeDatabaseApi();
+
 #endif // TEST_H
