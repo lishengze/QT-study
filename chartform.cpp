@@ -153,9 +153,9 @@ void ChartForm::initMonitorTimer() {
 }
 
 void ChartForm::initMonitorThread() {
-    m_monitorWorker = new MonitorRealTimeData(m_updateTime, m_macdTime,
-                                              m_seocdebuyCountMap, m_secodeNameList,
-                                              m_hedgeIndexCode, m_hedgeIndexCount, m_bTestRealTime);
+//    m_monitorWorker = new MonitorRealTimeData(m_updateTime, m_macdTime,
+//                                              m_seocdebuyCountMap, m_secodeNameList,
+//                                              m_hedgeIndexCode, m_hedgeIndexCount, m_bTestRealTime);
 
     connect(m_monitorWorker, SIGNAL(sendRealTimeData(ChartData)),
             this, SLOT(receiveRealTimeData(ChartData)));

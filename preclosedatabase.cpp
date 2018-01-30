@@ -1,18 +1,18 @@
 #include "preclosedatabase.h"
 
-PreCloseDatabase::PreCloseDatabase(QWidget* window, QString connName="0", QString host="localhost",
-                                   QString userName="sa", QString userPwd="sasa",
-                                   QString connDbName = "master", QString port ="1433",
-                                   QString dataSourceName="SqlServer", QString databaseDriver="QODBC"):
+PreCloseDatabase::PreCloseDatabase(QWidget* window, QString connName, QString host,
+                                   QString userName, QString userPwd,
+                                   QString connDbName, QString port,
+                                   QString dataSourceName, QString databaseDriver):
     Database(window, connName, host, userName, userPwd, connDbName, port, dataSourceName, databaseDriver)
 {
 
 }
 
-PreCloseDatabase::PreCloseDatabase(QString connName="0", QString host="localhost",
-                                   QString userName="sa", QString userPwd="sasa",
-                                   QString connDbName = "master", QString port ="1433",
-                                   QString dataSourceName="SqlServer", QString databaseDriver="QODBC"):
+PreCloseDatabase::PreCloseDatabase(QString connName, QString host,
+                                   QString userName, QString userPwd,
+                                   QString connDbName, QString port,
+                                   QString dataSourceName, QString databaseDriver):
     Database(connName, host, userName, userPwd, connDbName, port, dataSourceName, databaseDriver)
 {
 

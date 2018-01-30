@@ -422,6 +422,30 @@ QString getWindSecode(QString secode) {
     return windSecode;
 }
 
+QString completeSecode(QString secode, QString style="tinysoft") {
+    while (secode.size() < 6) {
+        secode.prepend("0");
+    }
+
+    if (style == "tinysoft") {
+        if (secode.startsWith("6")) {
+            secode.prepend("SH");
+        } else {
+            secode.prepend("SZ");
+        }
+    }
+
+    if (style == "wind") {
+        if (secode.startsWith("6")) {
+            secode.append(".SH");
+        } else {
+            secode.prepend(".SZ");
+        }
+    }
+
+    return secode;
+}
+
 QString variantToQString(const LPVARIANT data)
 {
     QString str;
@@ -568,7 +592,7 @@ bool isTradingOver(QTime time) {
 }
 
 QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList) {
-    bool bOutputMsg = false;
+    bool bOutputMsg = true;
 //    qDebug() << "toolFunc::wsqSnaphootData";
 //    qDebug() << "Thread: " << QThread::currentThreadId();
     QMap<QString, QStringList> result;
@@ -580,6 +604,7 @@ QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList) {
     if (true) {
         WindData wd;
         LPCWSTR windcodes = transSecodeB(secodeList);
+//        LPCWSTR windcodes = TEXT("000001.SZ");
         if (bOutputMsg) wcout << "windcodes: " << windcodes << endl;
         LPCWSTR indicators = TEXT("rt_date,rt_time,rt_latest,rt_pre_close,rt_amt");
         LPCWSTR options = TEXT("");
