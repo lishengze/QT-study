@@ -15,70 +15,68 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        widget.cpp \
-    setdata.cpp \
-    callout.cpp \
-    toolfunc.cpp \
-    test.cpp \
+    updaterealtimedataform.cpp \
+    realtimedatabase.cpp \
+    database.cpp \
+    realtimedataread.cpp \
+    excel.cpp \
     strategy.cpp \
     strategymodel.cpp \
-    database.cpp \
-    chartform.cpp \
-    excel.cpp \
-    tabledata.cpp \
-    macd.cpp \
-    qmychartview.cpp \
-    processfunc.cpp \
-    dataread.cpp \
-    dataprocess.cpp \
-    dialog.cpp \
-    realtimedataprocess.cpp \
-    realtimedataread.cpp \
-    monitorrealtimedata.cpp \
-    chartdata.cpp \
-    realtimedatabase.cpp \
-    preclosedatabase.cpp \
-#    updatedataform.cpp
-#    testdiaform.cpp \
-#    updatedataform.cpp
-    updaterealtimedataform.cpp
+    toolfunc.cpp \
 
-HEADERS  += widget.h \
-    setdata.h \
-    callout.h \
-    toolfunc.h \
-    test.h \
+#    setdata.cpp \
+#        widget.cpp \
+
+#    callout.cpp \
+#    test.cpp \
+#    chartform.cpp \
+
+#    tabledata.cpp \
+#    macd.cpp \
+#    qmychartview.cpp \
+#    processfunc.cpp \
+#    dataread.cpp \
+#    dataprocess.cpp \
+#    dialog.cpp \
+#    realtimedataprocess.cpp \
+#    monitorrealtimedata.cpp \
+#    chartdata.cpp \
+#    preclosedatabase.cpp \
+
+
+HEADERS  += updaterealtimedataform.h \
+    realtimedatabase.h \
+    realtimedataread.h \
+    database.h \
+    excel.h \
     strategy.h \
     strategymodel.h \
-    database.h \
-    chartform.h \
-    excel.h \
-    tabledata.h \
-    macd.h \
-    qmychartview.h \
-    processfunc.h \
-    dataread.h \
-    dataprocess.h \
-    dialog.h \
-    realtimedataprocess.h \
+    toolfunc.h \
     WAPIWrapperCpp.h \
-    realtimedataread.h \
-    monitorrealtimedata.h \
-    chartdata.h \
-    realtimedatabase.h \
-    preclosedatabase.h \
-#    updatedataform.h
-#    testdiaform.h \
-#    updatedataform.h
-    updaterealtimedataform.h
 
-FORMS    += widget.ui \
-    chartform.ui \
-    dialog.ui \
-#    updatedataform.ui
-#    testdiaform.ui \
-#    updatedataform.ui
-    updaterealtimedataform.ui
+#    setdata.h \
+#    widget.h \
+#    callout.h \
+#    test.h \
+#    chartform.h \
+#    tabledata.h \
+#    macd.h \
+#    qmychartview.h \
+#    processfunc.h \
+#    dataread.h \
+#    dataprocess.h \
+#    dialog.h \
+#    realtimedataprocess.h \
+#    monitorrealtimedata.h \
+#    chartdata.h \
+#    preclosedatabase.h \
+
+
+FORMS    += updaterealtimedataform.ui \
+#    widget.ui \
+#    chartform.ui \
+#    dialog.ui \
+
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
 LIBS += -LE:/github/work-program/client/client-work-changeRefresh -lWAPIWrapperCpp

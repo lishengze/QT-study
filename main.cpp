@@ -1,12 +1,13 @@
-#include "widget.h"
 #include <QApplication>
-#include "test.h"
-#include "testform.h"
 #include <QTextCodec>
 #include <QProcess>
-#include "processfunc.h"
-#include "dialog.h"
 #include <QDebug>
+//#include "test.h"
+//#include "testform.h"
+//#include "processfunc.h"
+//#include "dialog.h"
+//#include "widget.h"
+
 #include "updaterealtimedataform.h"
 
 void setLibPath() {

@@ -17,11 +17,11 @@ public:
 
     ~PreCloseDatabase();
 
-    virtual void createTable(QString tableName);
+    virtual QString createTable(QString tableName);
 
-    virtual void insertData(QString tableName, QList<QString> data);
+    virtual QString insertData(QString tableName, QList<QString> data);
 
-    virtual void updateData(QString tableName, QList<QString> data);
+    virtual QString updateData(QString tableName, QList<QString> data);
 
 };
 

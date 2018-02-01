@@ -1,6 +1,6 @@
 #ifndef REALTIMEDATABASE_H
 #define REALTIMEDATABASE_H
-
+#include <QDate>
 #include "database.h"
 
 class RealTimeDatabase : public Database
@@ -16,15 +16,24 @@ public:
                      QString userName="sa", QString userPwd="sasa",                     
                      QString dataSourceName="SqlServer", QString databaseDriver="QODBC");
 
+    QDate getDatabaseDataDate();
+
+    bool checkdataTime();
+
+    bool checkData(QString colname, QString keyvalue, QString table_name);
+
     virtual QString getCreateStr(QString tableName);
 //    virtual void createTable(QString tableName);
 
     virtual QString getInsertStr(QString tableName, QList<QString> data);
-    virtual void insertData(QString tableName, QList<QString> data);
+//    virtual void insertData(QString tableName, QList<QString> data);
 
     virtual QString getUpdateStr(QString tableName, QList<QString> data);
-    virtual void updateData(QString tableName, QList<QString> data);
+//    virtual void updateData(QString tableName, QList<QString> data);
 
+    void createPreCloseTable(QString tableName);
+    void insertPreCloseData(QString tableName, QList<QString> data);
+    void updatePreCloseData(QString tableName, QList<QString> data);
     ~RealTimeDatabase();
 };
 

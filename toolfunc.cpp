@@ -10,13 +10,15 @@
 #include <QStandardItemModel>
 #include <QThread>
 #include <QDateTime>
-#include "macd.h"
+#include <QDir>
+#include <QFileInfo>
+#include <QScrollBar>
+//#include "macd.h"
 using std::sort;
 using std::max;
 using std::min;
 
-extern QMap<QString, QList<QStringList>> g_wsqData;
-extern QMutex g_wsqMutex;
+
 
 // 20170911 -> [2017, 9, 11]
 QList<int> getDateList(int intDate) {
@@ -97,30 +99,30 @@ QList<QPointF> mergeSortedPointedList(QList<QPointF> firstList, int firstBuyCoun
     return result;
 }
 
-QList<MACD> computeMACD(QList<double> oriData, int t1, int t2, int t3) {
-    double EMA1[2] = {oriData[0], 0.0};
-    double EMA2[2] = {oriData[0], 0.0};
-    double DIFF;
-    double DEA[2];
-    double Macd;
-    QList<MACD> result;
-    for (int i = 0; i < oriData.size (); ++i) {
-        EMA1[1] = EMA1[0] * (t1-1) / (t1 + 1) + oriData[i] * 2 / (t1 + 1);
-        EMA2[1] = EMA2[0] * (t2-1) / (t2 + 1) + oriData[i] * 2 / (t2 + 1);
-        DIFF = EMA1[1] - EMA2[1];
-        if (i == 0) {
-            DEA[0] = DIFF;
-        }
-        DEA[1] = DEA[0] * (t3 -1) / (t3 + 1) + DIFF * 2 / (t3 + 1);
-        Macd = 2 * (DIFF - DEA[1]);
-        result.append (MACD(EMA1[1], EMA2[1], DIFF, DEA[1], Macd));
+//QList<MACD> computeMACD(QList<double> oriData, int t1, int t2, int t3) {
+//    double EMA1[2] = {oriData[0], 0.0};
+//    double EMA2[2] = {oriData[0], 0.0};
+//    double DIFF;
+//    double DEA[2];
+//    double Macd;
+//    QList<MACD> result;
+//    for (int i = 0; i < oriData.size (); ++i) {
+//        EMA1[1] = EMA1[0] * (t1-1) / (t1 + 1) + oriData[i] * 2 / (t1 + 1);
+//        EMA2[1] = EMA2[0] * (t2-1) / (t2 + 1) + oriData[i] * 2 / (t2 + 1);
+//        DIFF = EMA1[1] - EMA2[1];
+//        if (i == 0) {
+//            DEA[0] = DIFF;
+//        }
+//        DEA[1] = DEA[0] * (t3 -1) / (t3 + 1) + DIFF * 2 / (t3 + 1);
+//        Macd = 2 * (DIFF - DEA[1]);
+//        result.append (MACD(EMA1[1], EMA2[1], DIFF, DEA[1], Macd));
 
-        EMA1[0] = EMA1[1];
-        EMA2[0] = EMA2[1];
-        DEA[0] = DEA[1];
-    }
-    return result;
-}
+//        EMA1[0] = EMA1[1];
+//        EMA2[0] = EMA2[1];
+//        DEA[0] = DEA[1];
+//    }
+//    return result;
+//}
 
 QList<double> computeMACDDoubleData(QList<double> oriData, int t1, int t2, int t3) {
     double EMA1[2] = {oriData[0], 0.0};
@@ -147,20 +149,20 @@ QList<double> computeMACDDoubleData(QList<double> oriData, int t1, int t2, int t
     return result;
 }
 
-MACD computeMACDData(double newData,  MACD oldData, int t1, int t2, int t3)  {
-    double EMA1;
-    double EMA2;
-    double DIFF;
-    double DEA;
-    double Macd;
-    MACD result;
-    EMA1 = oldData.m_ema1 * (t1-1) / (t1 + 1) + newData * 2 / (t1 + 1);
-    EMA2 = oldData.m_ema2 * (t2-1) / (t2 + 1) + newData * 2 / (t2 + 1);
-    DIFF = EMA1 - EMA2;
-    DEA = oldData.m_dea * (t3 -1) / (t3 + 1) + DIFF * 2 / (t3 + 1);
-    Macd = 2 * (DIFF - DEA);
-    return MACD(EMA1, EMA2, DIFF, DEA, Macd);
-}
+//MACD computeMACDData(double newData,  MACD oldData, int t1, int t2, int t3)  {
+//    double EMA1;
+//    double EMA2;
+//    double DIFF;
+//    double DEA;
+//    double Macd;
+//    MACD result;
+//    EMA1 = oldData.m_ema1 * (t1-1) / (t1 + 1) + newData * 2 / (t1 + 1);
+//    EMA2 = oldData.m_ema2 * (t2-1) / (t2 + 1) + newData * 2 / (t2 + 1);
+//    DIFF = EMA1 - EMA2;
+//    DEA = oldData.m_dea * (t3 -1) / (t3 + 1) + DIFF * 2 / (t3 + 1);
+//    Macd = 2 * (DIFF - DEA);
+//    return MACD(EMA1, EMA2, DIFF, DEA, Macd);
+//}
 
 void ErrorMessage(QString msg) {
     qDebug() << msg;
@@ -361,7 +363,9 @@ void updateProgramInfo(QTableView* programInfoTableView, QString message, QStrin
         testMode->setItem (row, 0,  new QStandardItem(datetime));
         testMode->setItem (row, 1,  new QStandardItem(message));
         testMode->setItem (row, 2,  new QStandardItem(remark));
-        programInfoTableView->setRowHeight (row, 20);
+//        programInfoTableView->setRowHeight (row, 20);
+        QScrollBar* verScrollBar = programInfoTableView->verticalScrollBar();
+        verScrollBar->setSliderPosition(verScrollBar->maximum());
     }
 }
 
@@ -423,7 +427,25 @@ QString getWindSecode(QString secode) {
     return windSecode;
 }
 
-QString completeSecode(QString secode, QString style="tinysoft") {
+QList<QString> getIndexCode(QString style) {
+    QList<QString> indexCodeList;
+    if (style == "wind") {
+        indexCodeList << "000300.SH" << "000016.SH" << "000852.SH"
+                      << "000904.SH" << "000905.SH" << "000906.SH" << "399903.SZ";
+    }
+    if (style == "tinysoft") {
+        indexCodeList  << "SH000300" << "SH000016" << "SH000852"
+                        << "SH000904" << "SH000905" << "SH000906" <<"SZ399903";
+    }
+    if (style == "ori") {
+        indexCodeList << "000300" << "000016" << "000852"
+                       << "000904" << "000905" << "000906" << "399903";
+    }
+
+    return indexCodeList;
+}
+
+QString completeSecode(QString secode, QString style) {
     while (secode.size() < 6) {
         secode.prepend("0");
     }
@@ -440,7 +462,7 @@ QString completeSecode(QString secode, QString style="tinysoft") {
         if (secode.startsWith("6")) {
             secode.append(".SH");
         } else {
-            secode.prepend(".SZ");
+            secode.append(".SZ");
         }
     }
 
@@ -480,29 +502,6 @@ QString variantToQString(const LPVARIANT data)
     return str;
 }
 
-extern QMap<QString, double> g_seocdebuyCountMap;
-extern QList<QString> g_secodeNameList;
-
-void testSpread(QMap<QString, QStringList> data) {
-    double strategyData = 0;
-    QString hedgeIndexCode = "000300.SH";
-    int hedgeIndexCount = 2;
-    for (int i = 0; i < g_secodeNameList.size(); ++i) {
-        QString secode = g_secodeNameList[i];
-        if (secode == hedgeIndexCode) {
-            continue;
-        }
-        if (data[secode][2] == "0.0000") {
-            strategyData += data[secode][3].toDouble() * g_seocdebuyCountMap[secode];
-        } else {
-            strategyData += data[secode][2].toDouble() * g_seocdebuyCountMap[secode];
-        }
-    }
-
-    strategyData = strategyData / (hedgeIndexCount * 300) - data[hedgeIndexCode][2].toDouble();
-    qDebug() << "spread: " << strategyData << ", time: " << QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-}
-
 //功能：WSQ回调函数输出行情数值至控制台
 int g_count = 0;
 LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd)
@@ -535,31 +534,14 @@ LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd)
             cout << temp.toStdString() << "    ";
         }
         cout << endl;
-        writeWsqData(codes, singleCodeData);
+//        writeWsqData(codes, singleCodeData);
         tmpResult.insert(codes, singleCodeData);
     }
 //    testSpread(tmpResult);
     return 0;
 }
 
-void writeWsqData(QString secode, QStringList data) {
-    QList<QString> keys = g_wsqData.keys();
-    if (keys.indexOf(secode) < 0) {
-        QList<QStringList> initData;
-        g_wsqData.insert(secode, initData);
-    }
-    if (g_wsqData[secode].size() == 0) {
-        g_wsqData[secode].append(data);
-    } else {
-        QList<QStringList> currData = g_wsqData[secode];
-        QStringList latestData = currData[currData.size()-1];
-        if (latestData[1].toDouble() < data[1].toDouble()) {
-            g_wsqData[secode].clear();
-            g_wsqData[secode].append(latestData);
-            g_wsqData[secode].append(data);
-        }
-    }
-}
+
 
 double getAveValue(QList<double> oriData) {
     double result = 0;
@@ -580,6 +562,16 @@ bool isTradingTime(QTime time) {
         return true;
     } else {
         return false;
+    }
+}
+
+bool isTradingStart() {
+    QTime amStartTime = QTime(9,30,0);
+    QTime time = QTime::currentTime();
+    if (time < amStartTime) {
+        return false;
+    } else {
+        return true;
     }
 }
 
@@ -652,8 +644,65 @@ QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList) {
     return result;
 }
 
+QList<QString> getExcelFileName(QString dirName) {
+    QDir *dir=new QDir(dirName);
+    QStringList filter;
+    filter<<"*.xlsx";
+    dir->setNameFilters(filter);
+    QList<QFileInfo> *fileInfo=new QList<QFileInfo>(dir->entryInfoList(filter));
+    QList<QString> filaPathList;
 
+//    qDebug() << "fileCount: " <<fileInfo->count ();
+    for (int i = 0; i < fileInfo->count (); ++i) {
+        filaPathList.append (fileInfo->at(i).filePath());
+    }
+    return filaPathList;
+}
 
+//extern QMap<QString, QList<QStringList>> g_wsqData;
+//extern QMutex g_wsqMutex;
+
+//extern QMap<QString, double> g_seocdebuyCountMap;
+//extern QList<QString> g_secodeNameList;
+
+//void testSpread(QMap<QString, QStringList> data) {
+//    double strategyData = 0;
+//    QString hedgeIndexCode = "000300.SH";
+//    int hedgeIndexCount = 2;
+//    for (int i = 0; i < g_secodeNameList.size(); ++i) {
+//        QString secode = g_secodeNameList[i];
+//        if (secode == hedgeIndexCode) {
+//            continue;
+//        }
+//        if (data[secode][2] == "0.0000") {
+//            strategyData += data[secode][3].toDouble() * g_seocdebuyCountMap[secode];
+//        } else {
+//            strategyData += data[secode][2].toDouble() * g_seocdebuyCountMap[secode];
+//        }
+//    }
+
+//    strategyData = strategyData / (hedgeIndexCount * 300) - data[hedgeIndexCode][2].toDouble();
+//    qDebug() << "spread: " << strategyData << ", time: " << QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+//}
+
+//void writeWsqData(QString secode, QStringList data) {
+//    QList<QString> keys = g_wsqData.keys();
+//    if (keys.indexOf(secode) < 0) {
+//        QList<QStringList> initData;
+//        g_wsqData.insert(secode, initData);
+//    }
+//    if (g_wsqData[secode].size() == 0) {
+//        g_wsqData[secode].append(data);
+//    } else {
+//        QList<QStringList> currData = g_wsqData[secode];
+//        QStringList latestData = currData[currData.size()-1];
+//        if (latestData[1].toDouble() < data[1].toDouble()) {
+//            g_wsqData[secode].clear();
+//            g_wsqData[secode].append(latestData);
+//            g_wsqData[secode].append(data);
+//        }
+//    }
+//}
 
 
 

@@ -18,16 +18,17 @@ PreCloseDatabase::PreCloseDatabase(QString connName, QString host,
 
 }
 
-void PreCloseDatabase::createTable(QString tableName) {
+QString PreCloseDatabase::createTable(QString tableName) {
+    return "";
 
 }
 
-void PreCloseDatabase::insertData(QString tableName, QList<QString> data) {
-
+QString PreCloseDatabase::insertData(QString tableName, QList<QString> data) {
+    return "";
 }
 
-void PreCloseDatabase::updateData(QString tableName, QList<QString> data) {
-
+QString PreCloseDatabase::updateData(QString tableName, QList<QString> data) {
+    return "";
 }
 
 PreCloseDatabase::~PreCloseDatabase() {

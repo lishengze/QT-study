@@ -5,17 +5,36 @@
 #include <QMessageBox>
 #include <QStandardItemModel>
 #include <QStandardItem>
+#include <QPersistentModelIndex>
+#include <QAbstractItemModel>
 #include "test.h"
 
 UpdateRealtimeDataForm::UpdateRealtimeDataForm(QWidget *parent) :
-    QWidget(parent), m_readRealTimeData(NULL),
-    m_strategyFileDir( "//192.168.211.182/1分钟数据 20160910-20170910"),
+    QWidget(parent), m_readRealTimeData(NULL), m_realtimeDatabase(NULL), m_strategyModel(NULL),
+    m_strategyFileDir( "//192.168.211.182/1分钟数据 20160910-20170910/strategy"),
     ui(new Ui::UpdateRealtimeDataForm)
 {
     ui->setupUi(this);
-    initSecodeList();
+    initDatabase();
+    initWidget();
     setTableView();
+    setSecodeList();
+    registeParams();
     connectSignal();
+}
+
+void UpdateRealtimeDataForm::initDatabase() {
+//    m_realtimeDatabase = new RealTimeDatabase("0", "Test");
+}
+
+void UpdateRealtimeDataForm::initWidget() {
+    ui->updateTimeSpinBox->setValue(3);
+}
+
+void UpdateRealtimeDataForm::registeParams() {
+    qRegisterMetaType<QAbstractItemModel::LayoutChangeHint>("QAbstractItemModel::LayoutChangeHint");
+    qRegisterMetaType<QList<QPersistentModelIndex>>("QList<QPersistentModelIndex>");
+    qRegisterMetaType<QVector<int>>("QVector<int>>");
 }
 
 void UpdateRealtimeDataForm::setTableView () {
@@ -41,11 +60,16 @@ void UpdateRealtimeDataForm::setTableView () {
 }
 
 void UpdateRealtimeDataForm::connectSignal() {
-    m_readRealTimeData = new RealTimeDataRead(ui->regularMsgTableView, m_strategyFileDir, 3000);
+    int updateTime = ui->updateTimeSpinBox->value() * 1000 - 800;
+    if (updateTime < 0) updateTime = 2200;
+    qDebug() << "updatetime: " << updateTime;
+    m_readRealTimeData = new RealTimeDataRead(ui->regularMsgTableView, ui->errorMsgTableView,
+                                              m_strategyFileDir, m_secodeList, &m_excel, updateTime);
     m_readRealTimeData->moveToThread(&m_windWorkThread);
 
     connect(&m_windWorkThread, SIGNAL(finished()), m_readRealTimeData, SLOT(deleteLater()));
     connect(this, SIGNAL(loginWind()), m_readRealTimeData, SLOT(loginWind()));
+    connect(m_readRealTimeData, SIGNAL(sendStopTimerSignal()), this, SLOT(stopTimer()));
 
     connect(m_readRealTimeData, SIGNAL(loginWindFailed(int)), this, SLOT(loginWindFailed(int)));
     connect(m_readRealTimeData, SIGNAL(loginWindSucc()), this, SLOT(loginWindSucc()));
@@ -53,6 +77,31 @@ void UpdateRealtimeDataForm::connectSignal() {
     m_windWorkThread.start();
     emit loginWind();
     updateProgramInfo(ui->regularMsgTableView, "正在登陆万得");
+}
+
+void UpdateRealtimeDataForm::setSecodeList() {
+//    m_secodeList << "000001.SZ" << "600000.SH";
+    m_strategyModel = new StrategyModel(m_strategyFileDir);
+    QList<QString> new_strategyFileList = m_strategyModel->getStrategyFileList();
+//    qDebug() << "new_strategyFileList: " << new_strategyFileList;
+    bool isNewFileIn = false;
+    for (int i = 0; i < new_strategyFileList.size(); ++i) {
+        QString file = new_strategyFileList[i];
+        if (m_strategyFileList.indexOf(file) < 0) {
+            m_strategyFileList.append(file);
+            QList<QString> appendSecodeList = m_excel.getSecodeFromeExcel(file);
+            for (int j = 0; j < appendSecodeList.size(); ++j) {
+                QString secode = completeSecode(appendSecodeList[j], "wind");
+                if (m_secodeList.indexOf(secode) < 0) {
+                    m_secodeList.append(secode);
+                }
+            }
+            isNewFileIn = true;
+        }
+    }
+    m_secodeList += getIndexCode("wind");
+//    qDebug() << "m_secodeList: " << m_secodeList;
+    updateProgramInfo(ui->regularMsgTableView,QString("完成读取策略股票代码"));
 }
 
 void UpdateRealtimeDataForm::loginWindFailed(int errcode) {
@@ -71,19 +120,42 @@ void UpdateRealtimeDataForm::loginWindSucc() {
     ui->startGetRealtimeData->setDisabled(false);
 }
 
+void UpdateRealtimeDataForm::stopTimer() {
+    qDebug() << "UpdateRealtimeDataForm::stopTimer()";
+    m_readRealTimeData->stopTimer();
+}
+
 void UpdateRealtimeDataForm::on_startGetRealtimeData_clicked()
 {
 //    testRealtimeDatabaseApi();
     m_readRealTimeData->startTimer();
+    ui->startGetRealtimeData->setEnabled(false);
+    ui->stopGetRealtimeData->setEnabled(true);
+    updateProgramInfo(ui->regularMsgTableView, QString("获取实时数据"));
+}
+
+void UpdateRealtimeDataForm::on_stopGetRealtimeData_clicked()
+{
+    m_readRealTimeData->stopTimer();
+    ui->startGetRealtimeData->setEnabled(true);
+    ui->stopGetRealtimeData->setEnabled(false);
+    updateProgramInfo(ui->regularMsgTableView, QString("停止获取实时数据"));
 }
 
 UpdateRealtimeDataForm::~UpdateRealtimeDataForm()
 {
     m_readRealTimeData->stopTimer();
-
     m_windWorkThread.quit();
     m_windWorkThread.wait();
     delete ui;
+
+    if (NULL != m_strategyModel) {
+        delete m_strategyModel;
+        m_strategyModel = NULL;
+    }
+
+    if (NULL != m_realtimeDatabase) {
+        delete m_realtimeDatabase;
+        m_realtimeDatabase = NULL;
+    }
 }
-
-

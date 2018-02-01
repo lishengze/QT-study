@@ -1,5 +1,5 @@
 #include "strategymodel.h"
-#include "setdata.h"
+//#include "setdata.h"
 #include "toolfunc.h"
 #include <QStandardItem>
 

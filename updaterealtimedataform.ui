@@ -33,6 +33,22 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="stopGetRealtimeData">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>130</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>停止获取实时数据</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="label">
        <property name="maximumSize">
         <size>
@@ -49,7 +65,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="updateTime">
+      <widget class="QSpinBox" name="updateTimeSpinBox">
        <property name="maximumSize">
         <size>
          <width>50</width>

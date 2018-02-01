@@ -13,6 +13,8 @@ public:
     Excel();
     ~Excel();
     QList<strategy_ceil> readStrategyDataFromExcel(QString excelFilePath);
+    QList<QString> getSecodeFromeExcel(QString excelFilePath);
+
 private:
     QAxObject* m_excel;
     QAxObject* m_work_books;
