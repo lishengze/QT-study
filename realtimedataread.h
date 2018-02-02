@@ -55,6 +55,8 @@ private:
     QTimer m_timer;
     int m_updateTime;
     bool m_login;
+    bool m_isTooEarly;
+    bool m_isRestTime;
     QString m_strategyFileDir;
     QList<QString> m_secodeList;
     QList<QString> m_strategyFileList;

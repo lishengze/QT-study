@@ -77,6 +77,8 @@ FORMS    += updaterealtimedataform.ui \
 #    chartform.ui \
 #    dialog.ui \
 
+#RC_ICONS = stable.ico
+RC_ICONS = dev.ico
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
 LIBS += -LE:/github/work-program/client/client-work-changeRefresh -lWAPIWrapperCpp

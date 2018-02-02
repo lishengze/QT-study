@@ -23,6 +23,7 @@ RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView, QTableView*
     m_programInfoTableView(programInfoTableView), m_errorMsgTableView(errorMsgTableView),
     m_strategyFileDir(dirName), m_secodeList(secodeList), m_realtimeDatabase(NULL),
     m_strategyModel(NULL), m_excel(excel), m_updateTime(updateTime), m_realtimeDataNumb(0),
+    m_isTooEarly(false),m_isRestTime(false),
     m_login(false),
     QObject(parent)
 {
@@ -122,7 +123,6 @@ void RealTimeDataRead::loginWind() {
 
 void RealTimeDataRead::getPreData(QList<QString> secodeList) {
     int errcode;
-//    qDebug() << "RealTimeDataRead::getOldStrategySpread ";
     if (m_login) {
         WindData wd;
         LPCWSTR windcodes = transSecode(secodeList);
@@ -260,9 +260,15 @@ void RealTimeDataRead::getRealTimeData() {
         QMap<QString, QStringList> result = wsqSnapshootData();
         insertSnapshootData(result);
     } else if(!isTradingStart()){
-        updateProgramInfo(m_programInfoTableView, QString("时间太早"));
+        if (!m_isTooEarly) {
+            m_isTooEarly = true;
+            updateProgramInfo(m_programInfoTableView, QString("时间太早"));
+        }
     } else {
-        updateProgramInfo(m_programInfoTableView, QString("午休时间"));
+        if (!m_isRestTime) {
+            updateProgramInfo(m_programInfoTableView, QString("午休时间"));
+            m_isRestTime = true;
+        }
     }
 
 //    QMap<QString, QStringList> result = wsqSnapshootData();

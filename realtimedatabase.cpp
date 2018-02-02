@@ -26,7 +26,7 @@ RealTimeDatabase::RealTimeDatabase(QString connName, QString connDbName,
 
 QDate RealTimeDatabase::getDatabaseDataDate() {
     QList<QString> tableList = getTableList(m_connDbName);
-    QDate date = QDate::currentDate().addDays(-1);
+    QDate date = QDate::currentDate();
     if (tableList.size() != 0 && m_db.open ()) {
         QSqlQuery queryObj(m_db);
         QString complete_tablename = "[" + m_connDbName + "].[dbo].["+ tableList[0] + "]";
@@ -38,8 +38,11 @@ QDate RealTimeDatabase::getDatabaseDataDate() {
              tmpDate = getDateList(queryObj.value (0).toInt ());
 //             qDebug() << "tmpDate: " << tmpDate;
          }
-         date = QDate(tmpDate[0], tmpDate[1], tmpDate[2]);
+         if (tmpDate.size() > 0) {
+             date = QDate(tmpDate[0], tmpDate[1], tmpDate[2]);
+         }
     } else {
+        date.addDays(-1);
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }
     return date;
