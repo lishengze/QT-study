@@ -51,4 +51,8 @@ void testGetAnnounce();
 
 void testGetTableList();
 
+void testRealtimeDatabaseApi();
+
+void testOpenUrl();
+
 #endif // TEST_H

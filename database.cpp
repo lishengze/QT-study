@@ -62,7 +62,8 @@ void Database::initDatabase() {
         qDebug() << m_db.lastError ();
         QMessageBox::information (m_window, "Error", m_db.lastError().text());
     } else {
-        QString succStr = "Open database: " + m_dataSourceName  + ", " + m_connName +" successfully!";
+        QString succStr = "Open database: " + m_connDbName  + ", "+ m_hostName
+                        + ", " + m_connName +" successfully!";
         qDebug() << succStr;
 //        QMessageBox::information (m_window, "Succeed", succStr);
         m_bdatabaseOpen = true;
@@ -283,6 +284,8 @@ QList<QString> Database::getTableList(QString databaseName) {
     return result;
 }
 
+
+
 QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> tableNameArray, QString startDate,
                                                         QString endDate, QString databaseName) {
     QMap<QString, QList<QStringList>> result;
@@ -300,7 +303,9 @@ QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> table
                  QStringList signalData;
                  QString secode = queryObj.value (0).toString();
                  for (int j = 0; j < valueNumb; ++j) {
-                     signalData.append(queryObj.value (j).toString());
+                     QString tmpdata = queryObj.value (j).toString();
+                     tmpdata.remove("\t");
+                     signalData.append(tmpdata);
                  }
                  oneSecodeData.append(signalData);
              }
@@ -312,7 +317,66 @@ QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> table
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }
     return result;
+}
 
+QString Database::getCreateStr(QString tableName) {
+    return "";
+}
+
+QString Database::getInsertStr(QString tableName, QList<QString> data) {
+    return "";
+}
+
+QString Database::getUpdateStr(QString tableName, QList<QString> data) {
+    return "";
+}
+
+void Database::completeTable(QList<QString> tableList) {
+//    QList<QString> oriTableList = getTableList(m_connDbName);
+//    for (int i = 0; i < tableList.size(); ++i) {
+//        QString secode = tableList[i];
+//        if (oriTableList.indexOf(secode) < -1) {
+//            createTable(secode);
+//        }
+//    }
+}
+
+void Database::createTable(QString tableName) {
+    if (m_db.open()) {
+        QString create_str = getCreateStr(tableName);
+        QSqlQuery queryObj(m_db);
+        bool result = queryObj.exec(create_str);
+        qDebug() << "create rst: " << result;
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+}
+
+void Database::insertData(QString tableName, QList<QString> data) {
+    if (m_db.open()) {
+        QString insert_str = getInsertStr(tableName, data);
+        qDebug() << "insert str: " << insert_str;
+        QSqlQuery queryObj(m_db);
+        bool result = queryObj.exec(insert_str);
+        qDebug() << "insert rst: " << result;
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+}
+
+void Database::updateData(QString tableName, QList<QString> data) {
+    if (m_db.open()) {
+        QString update_str = getUpdateStr(tableName, data);
+        qDebug() << "update str: " << update_str;
+        QSqlQuery queryObj(m_db);
+        bool result = queryObj.exec(update_str);
+        qDebug() << "update rst: " << result;
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+}
+
+void Database::checkData(QString tableName, QString colName, QString value) {
 
 }
 
