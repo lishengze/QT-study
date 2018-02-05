@@ -309,6 +309,44 @@ void Widget::closeEvent(QCloseEvent *event) {
     }
 }
 
+void Widget::on_testSale_clicked()
+{
+//    QString dirName = "//192.168.211.182/1分钟数据 20160910-20170910/买入卖出组合";
+//    qDebug() << "dirName: " << dirName;
+//    QList<QString> fileNameList = getExcelFileName(dirName);
+//    qDebug() << "fileNameList: " << fileNameList;
+
+//    QString buyStrategyFileName = "\\192.168.211.182\1分钟数据 20160910-20170910\买入卖出组合\第1账户_1_买入组合_因子学习.xlsx";
+//    QString saleStrategyFileName = "\\192.168.211.182\1分钟数据 20160910-20170910\买入卖出组合\第1账户_2_卖出组合_因子学习.xlsx";
+    QString startDate = ui->chooseStartDate->date ().toString ("yyyyMMdd");
+    QString endDate = ui->chooseEndDate->date ().toString ("yyyyMMdd");
+    QString timeType = ui->dataFrequency->currentText();
+
+    int EVA1Time = ui->EMA1TimeSpinBox->value ();
+    int EVA2Time = ui->EMA2TimeSpinBox->value ();
+    int DIFFTime = ui->DIFFTimeSpinBox->value ();
+    QList<int> macdTime;
+    macdTime << EVA1Time << EVA2Time << DIFFTime;
+
+    QString buyStrategyFileName = "D:/strategy/buy.xlsx";
+    QString saleStrategyFileName = "D:/strategy/sale.xlsx";
+    QList<strategy_ceil> buyStrategy = m_excel->readStrategyDataFromExcel (buyStrategyFileName);
+    QList<strategy_ceil> saleStrategy = m_excel->readStrategyDataFromExcel (saleStrategyFileName);
+    QWidget* charView = new ChartForm(0, ui->programInfo_tableView, m_chartViews.count(),
+                                      buyStrategy, saleStrategy,
+                                      macdTime, false, 0,
+                                      startDate, endDate, timeType);
+//    qDebug() << "buyStrategy";
+//    for (int i  = 0; i < buyStrategy.size(); ++i) {
+//        qDebug() << buyStrategy[i].m_secode << ", " << buyStrategy[i].m_buyCount;
+//    }
+
+//    qDebug() << "saleStrategy";
+//    for (int i  = 0; i < saleStrategy.size(); ++i) {
+//        qDebug() << saleStrategy[i].m_secode << ", " << saleStrategy[i].m_buyCount;
+//    }
+}
+
 Widget::~Widget()
 {
 //    qDebug() << "~Widget: " << 0;
@@ -339,5 +377,7 @@ Widget::~Widget()
     }
 //    qDebug() << "~Widget: " << 2;
 }
+
+
 
 

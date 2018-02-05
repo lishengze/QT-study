@@ -18,6 +18,16 @@ DataProcess::DataProcess(bool isRealTime, QMap<QString, QList<QStringList>> orid
     }
 }
 
+DataProcess::DataProcess(bool isRealTime, QMap<QString, QList<QStringList>> oridata,
+            QMap<QString, int> buyStrategy, QMap<QString, int> saleStrategy,
+            QList<int> macdTime, QObject *parent):
+    m_isRealTime(isRealTime), m_oriData(oridata),
+    m_buyStrategy(buyStrategy), m_saleStrategy(saleStrategy),
+    m_macdTime(macdTime), QObject(parent)
+{
+
+}
+
 DataProcess::DataProcess(QMap<QString, QList<QStringList>> oridata,
             QMap<QString, int> buyCount, QList<int> macdTime, QObject *parent):
     m_oriData(oridata), m_seocdebuyCountMap(buyCount),
@@ -70,10 +80,8 @@ void DataProcess::filterHedgeIndexData() {
 }
 
 void DataProcess::receiveOrigianlHistoryData (QString dataType) {
-//    qDebug() << "DataProcess::receiveStartProcessData: " << QThread::currentThreadId();
     if (dataType == "all") {
         if (m_isRealTime) {
-//            emit sendAllData(computeSnapshootData());
             emit sendAllData(computeSnapshootDataReverse());
         } else {
             emit sendAllData(computeAllData());
@@ -105,43 +113,39 @@ QList<QList<double>> DataProcess::computeAllData() {
 
 QList<QList<double>> DataProcess::computeStrategyData () {
     QList<QList<double>> result;
-    QList<QString> keyList = m_oriData.keys ();
     QList<QPointF> pointDataList;
-    for (int i = 0; i < keyList.size (); ++i) {
-        QString key = keyList[i];
-        QList<QStringList> tmpStringList = m_oriData[key];
-        QList<QPointF> tmpPointData;
-        for (int i = 0; i < tmpStringList.size (); ++i) {
-            tmpPointData.append (QPointF(tmpStringList[i][0].toDouble(), tmpStringList[i][1].toDouble() * m_seocdebuyCountMap[key]));
+
+    if (m_buyStrategy.size() != 0 && m_saleStrategy.size() != 0) {
+        QList<QPointF> buyPointDataList = getStrategyPointList(m_oriData, m_buyStrategy);
+        QList<QPointF> salePointDataList = getStrategyPointList(m_oriData, m_saleStrategy);
+        pointDataList = getHedgedData(buyPointDataList, salePointDataList);
+        for (int i  = 0; i < pointDataList.size(); ++i) {
+            m_strategyData.append(pointDataList[i].y());
         }
-        tmpPointData = sortPointFList(tmpPointData);
-        pointDataList = mergeSortedPointedList (pointDataList, 1, tmpPointData, 1);
+        qDebug() << "buyPointDataList: " << buyPointDataList.size();
+        qDebug() << "salePointDataList: " << salePointDataList.size();
+        qDebug() << "pointDataList: " << pointDataList.size();
+
+
+    } else {
+        QMap<QString, int> seocdebuyCountMap = m_seocdebuyCountMap;
+        seocdebuyCountMap.remove(m_hedgeIndexCode);
+        pointDataList = getStrategyPointList(m_oriData, m_seocdebuyCountMap);
+        m_strategyData = getHedgedData(pointDataList, m_indexHedgeData,
+                                       m_seocdebuyCountMap[m_hedgeIndexCode],  m_indexHedgeMetaInfo[m_hedgeIndexCode]);
     }
+
     if (m_timeData.size() == 0) {
         for (int i = 0; i < pointDataList.size(); ++i) {
             m_timeData.append(pointDataList[i].x());
         }
     }
-
-    qDebug() << "pointDataList.size:    " << pointDataList.size ();
-    qDebug() << "m_indexHedgeData.size: " << m_indexHedgeData.size();
-
-    QList<QString> indexHedgedataTimeKey = m_indexHedgeData.keys ();
-    for (int i = 0; i < pointDataList.size(); ++i) {
-        QString timeKeyStr = QDateTime::fromMSecsSinceEpoch(qint64(pointDataList[i].x())).toString ("yyyyMMddhhmmss");
-        if (indexHedgedataTimeKey.indexOf (timeKeyStr) >= 0) {
-            m_strategyData.append(pointDataList[i].y() / (m_seocdebuyCountMap[m_hedgeIndexCode] * m_indexHedgeMetaInfo[m_hedgeIndexCode])
-                                  - m_indexHedgeData[timeKeyStr][0].toDouble());
-        } else {
-            m_strategyData.append(pointDataList[i].y() / (m_seocdebuyCountMap[m_hedgeIndexCode] * m_indexHedgeMetaInfo[m_hedgeIndexCode]));
-            qDebug() << "time not in indexHedgeData: " << timeKeyStr;
-        }
-    }
-
     result.append(m_timeData);
     result.append(m_strategyData);
     return result;
 }
+
+
 
 QList<QList<double>> DataProcess::computeVotData () {
     QList<QList<double>> result;
@@ -273,8 +277,9 @@ void DataProcess::computeChartData(QMap<QString, QStringList> oneTimeData) {
                << macdData.m_diff << macdData.m_dea << macdData.m_macd;
 }
 
+// 逆序计算的原因: 实时数据的同时获取的数据各个股票的时间不一致，也无法排序进行计算，根据获取的时间顺序来进行计算;
 QList<QList<double>> DataProcess::computeSnapshootDataReverse() {
-    qDebug()<< "DataProcess::computeSnapshootData begin!";
+//    qDebug()<< "DataProcess::computeSnapshootData begin!";
     QList<QString> secodeList = m_oriData.keys();
 
     QList<int> timeNumbList;
@@ -288,8 +293,9 @@ QList<QList<double>> DataProcess::computeSnapshootDataReverse() {
             }
         }
     }
-    qDebug() << "timeNumbList: " << timeNumbList;
-    qDebug() << "timeNumb: " <<timeNumb;
+
+//    qDebug() << "timeNumbList: " << timeNumbList;
+//    qDebug() << "timeNumb: " <<timeNumb;
 
     for (int i = timeNumb-1; i > -1; --i) {
         QMap<QString, QStringList> oneTimeData;
@@ -376,3 +382,44 @@ void DataProcess::computeChartDataReverse(QMap<QString, QStringList> oneTimeData
 DataProcess::~DataProcess () {
 //    qDebug() << "~DataProcess";
 }
+
+//QList<QList<double>> DataProcess::computeStrategyData () {
+//    QList<QList<double>> result;
+//    QList<QString> keyList = m_oriData.keys ();
+//    QList<QPointF> pointDataList;
+//    for (int i = 0; i < keyList.size (); ++i) {
+//        QString key = keyList[i];
+//        QList<QStringList> tmpStringList = m_oriData[key];
+//        QList<QPointF> tmpPointData;
+//        for (int i = 0; i < tmpStringList.size (); ++i) {
+//            tmpPointData.append (QPointF(tmpStringList[i][0].toDouble(), tmpStringList[i][1].toDouble() * m_seocdebuyCountMap[key]));
+//        }
+//        tmpPointData = sortPointFList(tmpPointData);
+//        pointDataList = mergeSortedPointedList (pointDataList, 1, tmpPointData, 1);
+//    }
+
+//    if (m_timeData.size() == 0) {
+//        for (int i = 0; i < pointDataList.size(); ++i) {
+//            m_timeData.append(pointDataList[i].x());
+//        }
+//    }
+
+//    qDebug() << "pointDataList.size:    " << pointDataList.size ();
+//    qDebug() << "m_indexHedgeData.size: " << m_indexHedgeData.size();
+
+//    QList<QString> indexHedgedataTimeKey = m_indexHedgeData.keys ();
+//    for (int i = 0; i < pointDataList.size(); ++i) {
+//        QString timeKeyStr = QDateTime::fromMSecsSinceEpoch(qint64(pointDataList[i].x())).toString ("yyyyMMddhhmmss");
+//        if (indexHedgedataTimeKey.indexOf (timeKeyStr) >= 0) {
+//            m_strategyData.append(pointDataList[i].y() / (m_seocdebuyCountMap[m_hedgeIndexCode] * m_indexHedgeMetaInfo[m_hedgeIndexCode])
+//                                  - m_indexHedgeData[timeKeyStr][0].toDouble());
+//        } else {
+//            m_strategyData.append(pointDataList[i].y() / (m_seocdebuyCountMap[m_hedgeIndexCode] * m_indexHedgeMetaInfo[m_hedgeIndexCode]));
+//            qDebug() << "time not in indexHedgeData: " << timeKeyStr;
+//        }
+//    }
+
+//    result.append(m_timeData);
+//    result.append(m_strategyData);
+//    return result;
+//}

@@ -68,6 +68,8 @@ private slots:
 
     void on_Annoucnement_Button_clicked();
 
+    void on_testSale_clicked();
+
 private:
     Ui::Widget *ui;
     QList<QWidget*> m_chartViews;

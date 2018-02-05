@@ -67,10 +67,20 @@ public:
               QString startDate ="", QString endDate="", QString timeType ="",
               QString databaseName="MarketData");
 
+    ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
+              QList<strategy_ceil> buyStrategyList, QList<strategy_ceil> saleStrategyList,
+              QList<int> macdTime, bool isRealTime=true, int updateTime=3000,
+              QString startDate ="", QString endDate="", QString timeType ="",
+              QString databaseName="MarketData");
+
+
     void registSignalParamsType();
     void initCommonData();
+    void initSecodeList();
     void initHistoryData(QString databaseName, QString timeType,
                   QList<strategy_ceil> strategyList);
+
+    void initHistoryData();
     void initRealTimeData();
 
     QList<QStringList> allocateThreadData();
@@ -138,6 +148,7 @@ private:
     bool m_bTestRealTime;
     bool m_isclosed;
     int m_chartViewID;
+
     QTableView* m_programInfoTableView;
     QList<strategy_ceil> m_strategy;
     QString m_strategyName;
@@ -154,6 +165,11 @@ private:
     QString m_dbhost;
 
     int m_threadNumb;
+
+    QList<strategy_ceil> m_buyStrategy;
+    QMap<QString, int> m_buyStrategyMap;
+    QList<strategy_ceil> m_saleStrategy;
+    QMap<QString, int> m_saleStrategyMap;
 
 private:
     mutable QMutex m_mutex;

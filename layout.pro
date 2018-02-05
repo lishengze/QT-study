@@ -39,7 +39,7 @@ SOURCES += main.cpp\
     historydata.cpp \
     announcementform.cpp \
     realtimedatabase.cpp \
-    webviewform.cpp
+#    webviewform.cpp
 
 HEADERS  += widget.h \
     setdata.h \
@@ -66,17 +66,17 @@ HEADERS  += widget.h \
     historydata.h \
     announcementform.h \
     realtimedatabase.h \
-    webviewform.h
+#    webviewform.h
 
 FORMS    += widget.ui \
     chartform.ui \
     dialog.ui \
     announcementform.ui \
-    webviewform.ui
+#    webviewform.ui
 
-RC_ICONS = dev.ico
+#RC_ICONS = dev.ico
 
-#RC_ICONS = stable.ico
+RC_ICONS = stable.ico
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
 #LIBS += -LD:/github/workprogram/client/client-database -lWAPIWrapperCpp

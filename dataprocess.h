@@ -14,7 +14,12 @@ class DataProcess: public QObject
     Q_OBJECT
 public:
     DataProcess(bool isRealTime, QMap<QString, QList<QStringList>> oridata,
-                QMap<QString, int> buyCount, QString hedgeIndexCode, QList<int> macdTime, QObject *parent = Q_NULLPTR);
+                QMap<QString, int> buyCount, QString hedgeIndexCode,
+                QList<int> macdTime, QObject *parent = Q_NULLPTR);
+
+    DataProcess(bool isRealTime, QMap<QString, QList<QStringList>> oridata,
+                QMap<QString, int> buyStrategy, QMap<QString, int> saleStrategy,
+                QList<int> macdTime, QObject *parent = Q_NULLPTR);
 
     DataProcess(QMap<QString, QList<QStringList>> oridata,
                 QMap<QString, int> buyCount, QList<int> macdTime, QObject *parent = Q_NULLPTR);
@@ -49,6 +54,9 @@ private:
     QMap<QString, QList<QStringList>> m_oriData;
     QMap<QString, int> m_seocdebuyCountMap;
     QStringList m_secodeNameList;
+
+    QMap<QString, int> m_buyStrategy;
+    QMap<QString, int> m_saleStrategy;
 
     QMap<QString, int> m_indexHedgeMetaInfo;
     QMap<QString, QStringList> m_indexHedgeData;

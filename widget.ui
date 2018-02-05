@@ -143,12 +143,12 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>10</x>
           <y>150</y>
-          <width>341</width>
+          <width>331</width>
           <height>101</height>
          </rect>
         </property>
@@ -238,7 +238,7 @@
            </property>
            <property name="maximumSize">
             <size>
-             <width>100</width>
+             <width>80</width>
              <height>16777215</height>
             </size>
            </property>
@@ -247,7 +247,7 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="3">
+         <item row="2" column="2">
           <widget class="QPushButton" name="realDateTime_pushButton">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -257,7 +257,7 @@
            </property>
            <property name="maximumSize">
             <size>
-             <width>100</width>
+             <width>80</width>
              <height>16777215</height>
             </size>
            </property>
@@ -272,30 +272,21 @@
            </property>
           </widget>
          </item>
+         <item row="2" column="3">
+          <widget class="QPushButton" name="testSale">
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>买入卖出组合</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
-       <zorder>layoutWidget</zorder>
-       <zorder>layoutWidget</zorder>
-       <zorder></zorder>
-       <zorder>timeFre_label</zorder>
-       <zorder>dataFrequency</zorder>
-       <zorder>hedgeTarget_Label</zorder>
-       <zorder>hedgeTarget_comboBox</zorder>
-       <zorder>hedgeCount_label</zorder>
-       <zorder>hedgeCount_spinBox</zorder>
-       <zorder>realDateTime_pushButton</zorder>
-       <zorder>historyData</zorder>
-       <zorder>hedgeTarget_Label</zorder>
-       <zorder>hedgeTarget_comboBox</zorder>
-       <zorder>realDateTime_pushButton</zorder>
-       <zorder>timeFre_label</zorder>
-       <zorder>dataFrequency</zorder>
-       <zorder>historyData</zorder>
-       <zorder>realDateTime_pushButton</zorder>
-       <zorder>hedgeTarget_Label</zorder>
-       <zorder>hedgeTarget_comboBox</zorder>
-       <zorder>hedgeCount_label</zorder>
-       <zorder>hedgeCount_spinBox</zorder>
       </widget>
      </item>
     </layout>

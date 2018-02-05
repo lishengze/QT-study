@@ -6,6 +6,9 @@
 #include <QWidget>
 #include <QTableView>
 #include <QTime>
+#include <QDir>
+#include <QStringList>
+#include <QFileInfo>
 #include "macd.h"
 //#include "WAPIWrapperCpp.h"
 
@@ -56,6 +59,7 @@ void updateProgramInfo(QTableView* programInfoTableView, QString message, QStrin
 
 QString getWindSecode(QString secode);
 
+QString getCompleteSecode(QString secode, bool isRealtime);
 
 void testSpread(QMap<QString, QStringList> data);
 
@@ -73,6 +77,15 @@ void testCLosePrice(QMap<QString, QList<QStringList>> oriData);
 
 qint64 transDateTime(double oridata);
 
+QList<QString> getExcelFileName(QString dirName);
+
+QList<QPointF> getStrategyPointList(QMap<QString, QList<QStringList>> oriData,
+                                    QMap<QString, int> seocdebuyCountMap);
+
+QList<double> getHedgedData(QList<QPointF> pointDataList, QMap<QString, QStringList> indexHedgeData,
+                            int indexBuyCount, int indexBaseCount);
+
+QList<QPointF> getHedgedData(QList<QPointF> buyPointDataList, QList<QPointF> salePointDataList);
 
 //LPCWSTR transSecode(QStringList secodeList);
 
