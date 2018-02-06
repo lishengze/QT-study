@@ -26,6 +26,7 @@ public:
     void preprecessRealTimeData(QMap<QString,QStringList> realTimeData);
     void computeChartData();
     void computePreCloseData(QMap<QString, QStringList> allPreCLoseData);
+    void setInitMacd(MACD initMacdData);
 
 signals:
     void sendRealTimeData(ChartData data);

@@ -120,13 +120,11 @@ QList<QList<double>> DataProcess::computeStrategyData () {
         QList<QPointF> salePointDataList = getStrategyPointList(m_oriData, m_saleStrategy);
         pointDataList = getHedgedData(buyPointDataList, salePointDataList);
         for (int i  = 0; i < pointDataList.size(); ++i) {
-            m_strategyData.append(pointDataList[i].y());
+            m_strategyData.append(pointDataList[i].y()/300);
         }
         qDebug() << "buyPointDataList: " << buyPointDataList.size();
         qDebug() << "salePointDataList: " << salePointDataList.size();
         qDebug() << "pointDataList: " << pointDataList.size();
-
-
     } else {
         QMap<QString, int> seocdebuyCountMap = m_seocdebuyCountMap;
         seocdebuyCountMap.remove(m_hedgeIndexCode);

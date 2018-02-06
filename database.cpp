@@ -297,7 +297,7 @@ QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> table
             QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
             QString sqlstr = "select * from" + completeTableName  + " where Date <= " + endDate + " and Date >= " + startDate;
             queryObj.exec(sqlstr);
-            int valueNumb = 3;
+            int valueNumb = 4;
             QList<QStringList> oneSecodeData;
              while(queryObj.next ()) {
                  QStringList signalData;

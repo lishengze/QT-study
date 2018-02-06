@@ -50,6 +50,10 @@ void MonitorRealTimeData::initIndexHedgeMetaInfo() {
     m_indexHedgeMetaInfo.insert("399903.SZ", 100);
 }
 
+void MonitorRealTimeData::setInitMacd(MACD initMacdData) {
+    m_macdData.append(initMacdData);
+}
+
 void MonitorRealTimeData::startTimer() {
      m_timer.start(m_monitorTime);
 }

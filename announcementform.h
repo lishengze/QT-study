@@ -23,11 +23,14 @@ public:
 private slots:
     void on_refreshTable_clicked();
 
+    void on_AnnouncementTableView_doubleClicked(const QModelIndex &index);
+
 private:
     Ui::AnnouncementForm *ui;
     QString m_startDate;
     QString m_endDate;
     Database* m_database;
+    QList<QString> m_hrefList;
 };
 
 #endif // ANNOUNCEMENTFORM_H

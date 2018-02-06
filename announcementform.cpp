@@ -2,6 +2,8 @@
 #include "ui_announcementform.h"
 #include <QStandardItemModel>
 #include <QDebug>
+#include <QDesktopServices>
+#include <QUrl>
 
 AnnouncementForm::AnnouncementForm(QWidget *parent) :
     QWidget(parent),
@@ -36,8 +38,10 @@ void AnnouncementForm::initTableView() {
 }
 
 void AnnouncementForm::setTableView() {
-    QList<QString> oriSecodeList = m_database->getTableList("Announcement");
-    QMap<QString, QList<QStringList>> result = m_database->getAnnouncement(oriSecodeList, m_startDate, m_endDate);
+//    QString databaseName = "AnnouncementNew";
+    QString databaseName = "Announcement";
+    QList<QString> oriSecodeList = m_database->getTableList(databaseName);
+    QMap<QString, QList<QStringList>> result = m_database->getAnnouncement(oriSecodeList, m_startDate, m_endDate, databaseName);
 //    qDebug() << "result: " << result;
 
     QStandardItemModel* tableItemMode = dynamic_cast<QStandardItemModel*>(ui->AnnouncementTableView->model ());
@@ -54,6 +58,7 @@ void AnnouncementForm::setTableView() {
                 tableItemMode->setItem (row, 2,  new QStandardItem(result[secode][j][2]));
                 ui->AnnouncementTableView->setRowHeight (row, 20);
                 ++row;
+                m_hrefList.append(result[secode][j][3]);
             }
         }
     }
@@ -72,4 +77,11 @@ void AnnouncementForm::on_refreshTable_clicked()
        initTableView();
    }
    setTableView();
+}
+
+void AnnouncementForm::on_AnnouncementTableView_doubleClicked(const QModelIndex &index)
+{
+    int intIndex = index.row ();
+    QString currHerf = m_hrefList[intIndex];
+    QDesktopServices::openUrl(QUrl(currHerf));
 }

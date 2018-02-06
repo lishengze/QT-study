@@ -636,6 +636,9 @@ void ChartForm::receiveProcessedHistoryData (QList<QList<double>> allData) {
     setLayout ();
 
     if (m_isRealTime) {
+        if (m_macdData.size() > 0) {
+            m_monitorWorker->setInitMacd(m_macdData[m_macdData.size()-1]);
+        }
         m_monitorWorker->startTimer();
     }
 }
