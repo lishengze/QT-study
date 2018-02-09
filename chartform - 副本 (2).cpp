@@ -30,12 +30,12 @@
 ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
                      QString hedgeIndexCode, int hedgeIndexCount, QList<int> macdTime,
                      QMap<QString, int> strategyMap, QString strategyName,
-                     QMap<QString, int> buyStrategyMap, QMap<QString, int> saleStrategyMap,
+                     QMap<QString, int> buyStrategyList, QMap<QString, int> saleStrategyList,
                      bool isRealTime, QString startDate, QString endDate, QString timeType):
     QWidget(parent), m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount), m_macdTime(macdTime),
-    m_secodebuyCountMap(strategyMap), m_strategyName(strategyName),
-    m_buyStrategyMap(buyStrategyMap), m_saleStrategyMap(saleStrategyMap),
+    m_seocdebuyCountMap(strategyMap), m_strategyName(strategyName),
+    m_buyStrategyMap(buyStrategyList), m_saleStrategyMap(saleStrategyList),
     m_isRealTime(isRealTime), m_startDate(startDate), m_endDate(endDate), m_timeType(timeType),
     ui(new Ui::ChartForm)
 {
@@ -47,42 +47,27 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int char
     }
 }
 
-void ChartForm::initSecodeList() {
-    if (m_buyStrategyMap.size() != 0 && m_saleStrategyMap.size() != 0) {
-        m_secodebuyCountMap.unite(m_buyStrategyMap);
-        m_secodebuyCountMap.unite(m_saleStrategyMap);
-        m_buyStrategyMap = transStrategyMap(m_buyStrategyMap, m_secodeStyle);
-        m_saleStrategyMap = transStrategyMap(m_saleStrategyMap, m_secodeStyle);
-        qDebug() << "m_buyStrategyMap.size: " << m_buyStrategyMap.size() << ", "
-                 << "m_saleStrategyMap.size: " << m_saleStrategyMap.size() << ", "
-                 << "m_secodebuyCountMap.size: " << m_secodebuyCountMap.size();
-    }
-    m_secodebuyCountMap = transStrategyMap(m_secodebuyCountMap, m_secodeStyle);
-
-    if (m_hedgeIndexCount != -1) {
-        m_hedgeIndexCode = getCompleteIndexCode(m_hedgeIndexCode, m_secodeStyle);
-        m_secodebuyCountMap.insert (m_hedgeIndexCode, m_hedgeIndexCount);
-    }
-
-    m_secodeNameList = m_secodebuyCountMap.keys();
-}
-
-void ChartForm::initSecodeStyle() {
+ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
+                     QList<strategy_ceil> buyStrategyList, QList<strategy_ceil> saleStrategyList,
+                     QList<int> macdTime, bool isRealTime, int updateTime,
+                     QString startDate, QString endDate, QString timeType):
+            QWidget(parent), m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
+            m_buyStrategy(buyStrategyList), m_saleStrategy(saleStrategyList),
+            m_macdTime(macdTime), m_isRealTime(isRealTime), m_updateTime(updateTime),
+            m_startDate(startDate), m_endDate(endDate), m_timeType(timeType),
+            m_hedgeIndexCode(""), m_hedgeIndexCount(-1),
+            ui(new Ui::ChartForm)
+{
+    initCommonData();
     if (m_isRealTime) {
-        m_secodeStyle = "wind";
-    } else {
-        m_secodeStyle = "tinysoft";
-    }
-}
 
-void ChartForm::registSignalParamsType () {
-    qRegisterMetaType<QMap<QString, QList<QStringList>>>("QMap<QString, QList<QStringList>>");
-    qRegisterMetaType<QList<QList<double>>>("QList<QList<double>>");
-    qRegisterMetaType<QMap<QString,QStringList>>("QMap<QString,QStringList>");
-    qRegisterMetaType<ChartData>("ChartData");
+    } else {
+        initHistoryData();
+    }
 }
 
 void ChartForm::initCommonData() {
+    m_readDataThreadCount = 0;
     m_startTime = QTime::currentTime();
     m_dbhost = "192.168.211.165";
 
@@ -92,15 +77,51 @@ void ChartForm::initCommonData() {
     m_keyMoveCount = 0;
     m_mouseInitPos = QPoint(-1, -1);
     m_monitorWorker = NULL;
-    m_histdataWorker = NULL;
     m_preSpread = 0;
     m_isclosed = false;
     m_isLayoutSetted = false;
     m_setKeyMove = false;
+//    m_macdTooltip = NULL;
+//    m_strategyTooltip = NULL;
+//    m_votrunoverTooltip = NULL;
 
     initSecodeStyle();
     initSecodeList();
     registSignalParamsType();
+}
+
+void ChartForm::registSignalParamsType () {
+    qRegisterMetaType<QMap<QString, QList<QStringList>>>("QMap<QString, QList<QStringList>>");
+    qRegisterMetaType<QList<QList<double>>>("QList<QList<double>>");
+    qRegisterMetaType<QMap<QString,QStringList>>("QMap<QString,QStringList>");
+    qRegisterMetaType<ChartData>("ChartData");
+}
+
+void ChartForm::initSecodeList() {
+    if (m_buyStrategy.size() != 0 && m_saleStrategy.size() != 0) {
+        m_seocdebuyCountMap.unite(m_buyStrategyMap);
+        m_seocdebuyCountMap.unite(m_saleStrategyMap);
+        m_buyStrategyMap = transStrategyMap(m_buyStrategyMap, m_secodeStyle);
+        m_saleStrategyMap = transStrategyMap(m_saleStrategyMap, m_secodeStyle);
+
+    }
+    m_seocdebuyCountMap = transStrategyMap(m_seocdebuyCountMap, m_secodeStyle);
+
+    if (m_hedgeIndexCount != -1) {
+        m_hedgeIndexCode = getCompleteIndexCode(m_hedgeIndexCode, m_secodeStyle);
+        m_seocdebuyCountMap.insert (m_hedgeIndexCode, m_hedgeIndexCount);
+    }
+
+    m_secodeNameList = m_seocdebuyCountMap.keys();
+    qDebug() << "m_seocdebuyCountMap: " << m_seocdebuyCountMap;
+}
+
+void ChartForm::initSecodeStyle() {
+    if (m_isRealTime) {
+        m_secodeStyle = "wind";
+    } else {
+        m_secodeStyle = "tinysoft";
+    }
 }
 
 void ChartForm::initHistoryData () {
@@ -114,11 +135,7 @@ void ChartForm::initHistoryData () {
         m_timeTypeFormat = "yyyy-MM-dd";
     }
     m_chartXaxisTickCount = 10;
-
-    initHistdataThread();
-
-    emit getHistDataSignal();
-    qDebug() << "ChartForm::initHistoryData: " << QThread::currentThreadId();
+    startReadData ();
 }
 
 void ChartForm::initRealTimeData() {
@@ -129,53 +146,26 @@ void ChartForm::initRealTimeData() {
     m_chartXaxisTickCount = 5;
 
     initMonitorThread();
-    emit getPreCloseSpread();
 
     if (isTradingStart()) {
-        initHistdataThread();
-        emit getHistDataSignal();
+        startReadData();
     } else {
         setLayout();
         m_monitorWorker->startTimer();
     }
 }
 
-void ChartForm::initHistdataThread() {
-    m_histdataWorker = new HistoryData(m_chartViewID, m_dbhost, m_databaseName,
-                                       m_isRealTime, m_threadNumb, m_secodeNameList,
-                                       m_macdTime, m_hedgeIndexCode,
-                                       m_startDate, m_endDate, m_keyValueList,
-                                       m_secodebuyCountMap, m_buyStrategyMap, m_saleStrategyMap);
-
-    connect(&m_histdataThread, SIGNAL(finished()),
-             m_histdataWorker, SLOT(deleteLater()));
-
-    connect(this, SIGNAL(getHistDataSignal()),
-            m_histdataWorker, SLOT(getHistData()));
-
-    connect(m_histdataWorker, SIGNAL(receiveHistDataSignal(QList<QList<double>>)),
-            this, SLOT(receiveHistData(QList<QList<double>>)));
-
-    connect(m_histdataWorker, SIGNAL(tableViewInfoSignal(QString)),
-            this, SLOT(receiveTableViewInfo(QString)));
-
-    m_histdataWorker->moveToThread(&m_histdataThread);
-
-    m_histdataThread.start();
-}
-
 void ChartForm::initMonitorThread() {
-    m_monitorWorker = new MonitorRealTimeData(QString("%1").arg(m_chartViewID), m_dbhost,
-                                              m_updateTime, m_macdTime,
+    m_monitorWorker = new MonitorRealTimeData(m_updateTime, m_macdTime,
+                                              m_seocdebuyCountMap, m_secodeNameList,
                                               m_hedgeIndexCode, m_hedgeIndexCount,
-                                              m_secodebuyCountMap, m_secodeNameList,
-                                              m_buyStrategyMap, m_saleStrategyMap);
+                                              QString("%1").arg(m_chartViewID), m_dbhost);
 
     connect(m_monitorWorker, SIGNAL(sendRealTimeData(ChartData)),
             this, SLOT(receiveRealTimeData(ChartData)));
 
-    connect(this, SIGNAL(getPreCloseSpread()),
-            m_monitorWorker, SLOT(getPreCloseSpread()));
+    connect(this, SIGNAL(getPreData()),
+            m_monitorWorker, SLOT(getPreData()));
 
     connect(m_monitorWorker, SIGNAL(sendPreCloseData(double)),
             this, SLOT(receivePreCloseData(double)));
@@ -189,6 +179,8 @@ void ChartForm::initMonitorThread() {
             m_monitorWorker, SLOT(deleteLater()));
 
     m_MonitorThread.start();
+
+    emit getPreData();
 }
 
 void ChartForm::receivePreCloseData(double preSpread) {
@@ -217,37 +209,6 @@ void ChartForm::receiveRealTimeData(ChartData curChartData) {
 void ChartForm::receiveTradeOver() {
     qDebug() << "Trade is over: " << QTime::currentTime().toString("HHmmss");
     m_monitorWorker->stopTimer();
-}
-
-void ChartForm::receiveHistData(QList<QList<double> > allData) {
-    qDebug() << "ChartForm::receiveProcessedHistoryData: " << QThread::currentThreadId();
-
-    m_timeData = allData[0];
-    m_strategyData = allData[1];
-    m_votData = allData[2];
-    QList<double> macdData = allData[3];
-    for (int i = 0; i < macdData.size (); i += 5){
-        m_macdData.append (MACD(macdData[i], macdData[i+1],
-                                macdData[i+2], macdData[i+3], macdData[i+4]));
-    }
-    updateProgramInfo (m_programInfoTableView, QString("完成数据计算, 计算后数据总数: %1").arg(m_timeData.size () * 6));
-    updateProgramInfo (m_programInfoTableView, QString("显示图像"));
-    qDebug() << "timeData.size:     " << m_timeData.size ();
-    qDebug() << "strategyData.size: " << m_strategyData.size ();
-    qDebug() << "votData.size:      " << m_votData.size ();
-    qDebug() << "macdData.size:     " << m_macdData.size ();
-    setLayout ();
-
-    if (m_isRealTime) {
-        if (m_macdData.size() > 0) {
-            m_monitorWorker->setInitMacd(m_macdData[m_macdData.size()-1]);
-        }
-        m_monitorWorker->startTimer();
-    }
-}
-
-void ChartForm::receiveTableViewInfo(QString msg) {
-    updateProgramInfo (m_programInfoTableView, msg);
 }
 
 void ChartForm::updateChart() {
@@ -292,7 +253,7 @@ void ChartForm::updateAxis() {
     QList<double> allStrategyData = m_strategyData;
 
     if (m_preSpread == 0) {
-        emit(getPreCloseSpread());
+        emit(getPreData());
         if (m_strategyData.last() > strategyAxisY->max() || m_strategyData.last() < strategyAxisY->min()) {
             QList<double>  strategyAxisYRange = getChartYvalueRange(allStrategyData);
             strategyAxisY -> setRange (strategyAxisYRange[0], strategyAxisYRange[1]);
@@ -413,6 +374,159 @@ void ChartForm::updateMousePos() {
         m_mouseInitPos.setX(m_mouseInitPos.x() - rollbackDistance);
         m_oldPointDistance = newPointDistance;
         QCursor::setPos(QCursor::pos().x() - rollbackDistance, QCursor::pos().y());
+    }
+}
+
+QList<QStringList> ChartForm::allocateThreadData() {
+    QList<QStringList> result;
+    for (int i = 0; i < m_threadNumb; ++i) {
+        QStringList emptyList;
+        result.append (emptyList);
+    }
+
+    for (int i = 0; i < m_secodeNameList.size(); i+=m_threadNumb) {
+        for (int j = 0; j < m_threadNumb && i + j < m_secodeNameList.size(); ++j) {
+            result[j].append (m_secodeNameList[i+j]);
+        }
+    }
+    return result;
+}
+
+void ChartForm::startReadData (){
+    QList<QStringList> allocatedTableList = allocateThreadData ();
+//    qDebug() << "allocatedTableList: " << allocatedTableList;
+    for (int i = 0; i < allocatedTableList.size (); ++i) {
+        DataRead* curDataReader;
+        if (allocatedTableList[i].size() > 0) {
+            QString databaseId = QString("%1").arg(i + m_chartViewID * m_threadNumb + 1);
+            if (m_isRealTime) {
+                curDataReader = new DataRead(databaseId, m_dbhost, m_databaseName, allocatedTableList[i]);
+            } else {
+                curDataReader = new DataRead(databaseId, m_dbhost, m_databaseName, allocatedTableList[i],
+                                             m_startDate, m_endDate, m_keyValueList);
+            }
+        }
+        QThread* curThread = new QThread();
+        curDataReader->moveToThread(curThread);
+
+        connect (curThread, SIGNAL(finished()),
+                 curDataReader, SLOT(deleteLater()));
+
+        connect (this, SIGNAL(sendStartReadDataSignal(QString)),
+                 curDataReader, SLOT(receiveStartReadData(QString)));
+
+        connect (curDataReader, SIGNAL(sendHistoryData(QMap<QString, QList<QStringList>>)),
+                 this, SLOT(receiveOriginalData(QMap<QString, QList<QStringList>>)), Qt::QueuedConnection);
+
+        curThread->start();
+        m_dataReaderList.append(curDataReader);
+        m_dataReaderThreadList.append(curThread);
+    }
+
+    qDebug() << "ChartForm::sendStartReadDataSignal: " << QThread::currentThreadId();
+
+    if (m_isRealTime) {
+        emit sendStartReadDataSignal("RealTimeData");
+    } else {
+        emit sendStartReadDataSignal("HistoryData");
+    }
+}
+
+void ChartForm::receiveOriginalData (QMap<QString, QList<QStringList>> subThreadData) {
+    QMutexLocker locker(&m_mutex);
+    m_completeTableData.unite (subThreadData);
+    ++m_readDataThreadCount;
+//    qDebug() << "ChartForm::receiveOriginalData: " << QThread::currentThreadId()
+//             << ", dataNumb: " << subThreadData.size ()
+//             << ", m_readDataThreadCount: " << m_readDataThreadCount << "\n";
+
+    updateProgramInfo (m_programInfoTableView, QString("完成股票指数读取数目: %1").arg(m_completeTableData.size ()));
+    if (m_readDataThreadCount == m_threadNumb) {
+        releaseDataReaderSrc ();
+        m_readDataThreadCount = 0;
+        startProcessHistoryData();
+        m_completeTableData.clear ();
+    }
+//    qDebug() << "receiveOriginalData end!";
+}
+
+void ChartForm::startProcessHistoryData () {
+    int oridataCount = 0;
+    for (int i = 0; i < m_secodeNameList.size (); ++i) {
+        oridataCount += m_completeTableData[m_secodeNameList[i]].size ();
+    }
+    updateProgramInfo (m_programInfoTableView, QString("原始数据获取完成, 原始数据总数: %1").arg(oridataCount));
+    updateProgramInfo (m_programInfoTableView, QString("计算数据"));
+//    DataProcess* curDataProcess = new DataProcess(m_completeTableData, m_seocdebuyCountMap, m_macdTime);
+    DataProcess* curDataProcess;
+    if (m_buyStrategy.size() != 0 && m_saleStrategy.size() != 0) {
+        curDataProcess = new DataProcess(m_isRealTime, m_completeTableData,
+                                         m_buyStrategyMap, m_saleStrategyMap, m_macdTime);
+    } else {
+        curDataProcess = new DataProcess(m_isRealTime, m_completeTableData,
+                                         m_seocdebuyCountMap, m_hedgeIndexCode, m_macdTime);
+    }
+
+    QThread* curDataProcessThread = new QThread();
+    curDataProcess->moveToThread (curDataProcessThread);
+
+    connect (curDataProcessThread, SIGNAL(finished()),
+             curDataProcess, SLOT(deleteLater()));
+
+    connect (this, SIGNAL(sendstartProcessHistoryDataSignal(QString)),
+             curDataProcess, SLOT(receiveOrigianlHistoryData(QString)));
+
+    connect(curDataProcess, SIGNAL(sendAllData(QList<QList<double>>)),
+            this, SLOT(receiveProcessedHistoryData (QList<QList<double>>)));
+
+    curDataProcessThread->start ();
+    m_dataProcessList.append (curDataProcess);
+    m_dataProcessThreadList.append (curDataProcessThread);   
+
+    emit sendstartProcessHistoryDataSignal("all");
+
+    qDebug() << "startProcessHistoryData end!";
+}
+
+void ChartForm::receiveProcessedHistoryData (QList<QList<double>> allData) {
+    qDebug() << "ChartForm::receiveProcessedHistoryData: " << QThread::currentThreadId();
+
+    m_timeData = allData[0];
+    m_strategyData = allData[1];
+    m_votData = allData[2];
+    QList<double> macdData = allData[3];
+    for (int i = 0; i < macdData.size (); i += 5){
+        m_macdData.append (MACD(macdData[i], macdData[i+1],
+                                macdData[i+2], macdData[i+3], macdData[i+4]));
+    }
+    updateProgramInfo (m_programInfoTableView, QString("完成数据计算, 计算后数据总数: %1").arg(m_timeData.size () * 6));
+    updateProgramInfo (m_programInfoTableView, QString("显示图像"));
+    qDebug() << "timeData.size:     " << m_timeData.size ();
+    qDebug() << "strategyData.size: " << m_strategyData.size ();
+    qDebug() << "votData.size:      " << m_votData.size ();
+    qDebug() << "macdData.size:     " << m_macdData.size ();
+    releaseDataProcessSrc ();
+    setLayout ();
+
+    if (m_isRealTime) {
+        if (m_macdData.size() > 0) {
+            m_monitorWorker->setInitMacd(m_macdData[m_macdData.size()-1]);
+        }
+        m_monitorWorker->startTimer();
+    }
+}
+
+void ChartForm::releaseDataReaderSrc () {
+    qDebug() << "m_dataReaderThreadList.size(): " <<  m_dataReaderThreadList.size();
+    for (int i = 0; i < m_dataReaderThreadList.size(); ++i) {
+         m_dataReaderThreadList[i]->quit ();
+    }
+}
+
+void ChartForm::releaseDataProcessSrc () {
+    qDebug() << "m_dataProcessThreadList.size(): " <<  m_dataProcessThreadList.size();
+    for (int i = 0; i < m_dataProcessThreadList.size (); ++i) {
+        m_dataProcessThreadList[i]->quit ();
     }
 }
 
@@ -788,7 +902,9 @@ void ChartForm::closeEvent(QCloseEvent *event) {
     if (!m_isclosed) {
         qDebug() << "--- Close -- ";
         if (m_isRealTime) {
+            m_timer.stop();
             if (NULL != m_monitorWorker) {
+                qDebug() << "m_monitorWorker->stopTimer() ";
                 m_monitorWorker->stopTimer();
             }            
         }
@@ -804,15 +920,271 @@ ChartForm::~ChartForm()
     m_MonitorThread.quit();
     m_MonitorThread.wait();
 
-    m_histdataThread.quit();
-    m_histdataThread.wait();
-
     if (NULL != m_monitorWorker) {
         m_monitorWorker = NULL;
     }
-
-    if (NULL != m_histdataWorker) {
-        m_histdataWorker = NULL;
-    }
+//    qDebug() << "~ChartForm " << 1;
 }
+
+//extern QMap<QString, QList<QStringList>> g_wsqData;
+//extern QMutex g_wsqMutex;
+
+//QMap<QString, double> g_seocdebuyCountMap;
+//QList<QString> g_secodeNameList;
+
+//ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
+//          QString startDate, QString endDate, QString timeType,
+//          QMap<QString, int> strategyMap, QString strategyName,
+//          QString hedgeIndexCode, int hedgeIndexCount,
+//          QList<int> macdTime, QString databaseName):
+//    QWidget(parent), m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
+//    m_startDate(startDate), m_endDate(endDate), m_timeType(timeType),
+//    m_seocdebuyCountMap(strategyMap), m_strategyName(strategyName),
+//    m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
+//    m_macdTime(macdTime), m_databaseName(databaseName),
+//    m_isRealTime(false),
+//    ui(new Ui::ChartForm)
+//{
+//    initCommonData();
+//    initHistoryData();
+//}
+
+
+//ChartForm::ChartForm(QWidget *parent) :
+//    QWidget(parent),
+//    ui(new Ui::ChartForm)
+//{
+//    ui->setupUi(this);
+////    QGridLayout* mainLayout = new QGridLayout(this);
+////    mainLayout->addWidget (ui->gridLayoutWidget);
+//}
+
+//ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
+//                     QString startDate, QString endDate, QString timeType,
+//                     QList<strategy_ceil> strategyList, QString strategyName,
+//                     QString hedgeIndexCode, int hedgeIndexCount,
+//                     QList<int> macdTime, QString databaseName):
+//    QWidget(parent), m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
+//    m_startDate(startDate), m_endDate(endDate), m_timeType(timeType),
+//    m_strategy(strategyList), m_strategyName(strategyName),
+//    m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
+//    m_macdTime(macdTime),m_databaseName(databaseName),
+//    m_isRealTime(false),
+//    ui(new Ui::ChartForm)
+//{
+//    initCommonData();
+//    initHistoryData();
+//}
+
+//void ChartForm::initHistoryData (QString databaseName, QString timeType, QList<strategy_ceil> strategyList) {
+//    m_databaseName = databaseName + "_" + timeType;
+//    m_keyValueList << "TCLOSE" << "VOTRUNOVER";
+
+//    m_threadNumb = m_secodeNameList.size();
+//    if (m_timeType.contains("m") && m_timeType != "month") {
+//        m_timeTypeFormat = "yyyy-MM-dd h:mm";
+//    } else {
+//        m_timeTypeFormat = "yyyy-MM-dd";
+//    }
+//    m_chartXaxisTickCount = 10;
+//    startReadData ();
+//}
+
+
+//void ChartForm::initMonitorTimer() {
+//    connect(&m_timer, SIGNAL(timeout()), this, SLOT(checkRealTimeData()));
+//    m_timer.start(m_updateTime);
+//}
+
+//void ChartForm::initIndexHedgeMetaInfo() {
+//    m_indexHedgeMetaInfo.insert("000300.SH", 300);
+//    m_indexHedgeMetaInfo.insert("000016.SH", 50);
+//    m_indexHedgeMetaInfo.insert("000852.SH", 1000);
+//    m_indexHedgeMetaInfo.insert("000904.SH", 200);
+//    m_indexHedgeMetaInfo.insert("000905.SH", 500);
+//    m_indexHedgeMetaInfo.insert("000906.SH", 800);
+//    m_indexHedgeMetaInfo.insert("399903.SZ", 100);
+//}
+
+//void ChartForm::checkRealTimeData() {
+//    bool dataChange = false;
+//    QList<QString> global_secodeList = g_wsqData.keys();
+//    for (int i = 0; i < m_secodeNameList.size(); ++i) {
+//       QString secode = m_secodeNameList[i];
+//       if (global_secodeList.indexOf(secode) >= 0) {
+//           QList<QStringList> currData = g_wsqData[secode];
+//           QStringList latestData = currData[currData.size()-1];
+//           if (m_realTimeData[secode].size() == 0
+//                   || latestData[1].toDouble() > m_realTimeData[secode][1].toDouble()) {
+//               m_realTimeData[secode] = latestData;
+//               m_realTimeData[secode][4] = QString("%1").arg(0);
+//               if (currData.size() == 2) {
+//                   m_realTimeData[secode][4] = QString("%1").arg(g_wsqData[secode][1][4].toDouble()
+//                           - g_wsqData[secode][0][4].toDouble());
+//               }
+//               dataChange = true;
+//           }
+//       } else {
+//           dataChange = false;
+//           break;
+//       }
+//    }
+//    if(dataChange) {
+//        updateData();
+//        updateChart();
+//        dataChange = false;
+//    }
+//}
+
+//void ChartForm::updateData() {
+//    double strategyData = 0;
+//    double votData = 0;
+//    double timeData = QDateTime::currentDateTime().toMSecsSinceEpoch();
+//    MACD macdData;
+//    for (int i = 0; i < m_secodeNameList.size(); ++i) {
+//        QString secode = m_secodeNameList[i];
+//        if (secode == m_hedgeIndexCode) {
+//            continue;
+//        }
+//        if (m_realTimeData[secode][2] == "0.0000") {
+//            strategyData += m_realTimeData[secode][3].toDouble() * m_seocdebuyCountMap[secode];
+//        } else {
+//            strategyData += m_realTimeData[secode][2].toDouble() * m_seocdebuyCountMap[secode];
+//        }
+//        votData += m_realTimeData[secode][4].toDouble();
+//    }
+
+//    strategyData = strategyData / (m_hedgeIndexCount * m_indexHedgeMetaInfo[m_hedgeIndexCode])
+//                   - m_realTimeData[m_hedgeIndexCode][2].toDouble();
+
+//    if (m_macdData.size() > 0) {
+//        MACD latestData = m_macdData[m_macdData.size()-1];
+//        macdData = computeMACDData(strategyData, latestData, m_macdTime[0], m_macdTime[1], m_macdTime[2]);
+//    } else {
+//        macdData = MACD(strategyData, strategyData, 0, 0, 0);
+//    }
+//    m_strategyData.append(strategyData);
+//    m_votData.append(votData);
+//    m_timeData.append(timeData);
+//    m_macdData.append(macdData);
+//}
+
+//void ChartForm::setTestView () {
+//    int dataCount = 10;
+//    QCategoryAxis* axisX = new QCategoryAxis;
+//    QLineSeries* series = new QLineSeries;
+//    for (int i = 0; i < dataCount; ++i) {
+//        qreal xPos = i;
+//        series->append (xPos, i);
+//        QDateTime tmpDatetime = QDateTime(QDate(2017,11,i), QTime(12, 12, 12));
+//        axisX->append (tmpDatetime.toString ("yyyy-MM-dd h:mm"), xPos);
+//    }
+
+//    QValueAxis *axisY = new QValueAxis;
+//    QList<double>  axisYRange = getChartYvalueRange(series->points());
+//    axisY -> setRange (axisYRange[0], axisYRange[1]);
+
+//    m_testChart = new QChart();
+//    m_testChart->addSeries (series);
+//    m_testChart->setTitle("Test Category!");
+
+//    m_testChartView = new QChartView(m_testChart);
+//    m_testChartView->setRenderHint(QPainter::Antialiasing);
+//    m_testChartView->installEventFilter(this);
+//    m_testChartView->setMouseTracking(true);
+
+//    m_testChart->addAxis (axisX, Qt::AlignBottom);
+//    series->attachAxis (axisX);
+//    m_testChart->addAxis (axisY, Qt::AlignLeft);
+//    series->attachAxis (axisY);
+
+//}
+
+//void ChartForm::initSecodeList() {
+//    if (m_buyStrategy.size() != 0 && m_saleStrategy.size() != 0) {
+//        m_strategy = m_buyStrategy + m_saleStrategy;
+//        if (m_isRealTime) {
+//            for (int i = 0; i < m_buyStrategy.size (); ++i) {
+//                m_buyStrategyMap.insert (getWindSecode(m_buyStrategy[i].m_secode), m_buyStrategy[i].m_buyCount);
+//            }
+//            for (int i = 0; i < m_saleStrategy.size (); ++i) {
+//                m_saleStrategyMap.insert (getWindSecode(m_saleStrategy[i].m_secode), m_saleStrategy[i].m_buyCount);
+//            }
+//        } else {
+//            for (int i = 0; i < m_buyStrategy.size (); ++i) {
+//                m_buyStrategyMap.insert (m_buyStrategy[i].m_secode, m_buyStrategy[i].m_buyCount);
+//            }
+//            for (int i = 0; i < m_saleStrategy.size (); ++i) {
+//                m_saleStrategyMap.insert (m_saleStrategy[i].m_secode, m_saleStrategy[i].m_buyCount);
+//            }
+//        }
+//    }
+//    if (m_isRealTime) {
+//        for (int i = 0; i < m_strategy.size (); ++i) {
+//            if (m_seocdebuyCountMap.keys().indexOf(getWindSecode(m_strategy[i].m_secode)) < 0) {
+//                m_seocdebuyCountMap.insert (getWindSecode(m_strategy[i].m_secode), m_strategy[i].m_buyCount);
+//            }
+//        }
+//        if (m_hedgeIndexCount != -1) {
+//            m_hedgeIndexCode = getWindSecode(m_hedgeIndexCode);
+//            m_seocdebuyCountMap.insert (m_hedgeIndexCode, m_hedgeIndexCount);
+//        }
+//        m_secodeNameList = m_seocdebuyCountMap.keys();
+//    } else {
+//        for (int i = 0; i < m_strategy.size (); ++i) {
+//            if (m_seocdebuyCountMap.keys().indexOf(m_strategy[i].m_secode) < 0) {
+//                m_seocdebuyCountMap.insert (m_strategy[i].m_secode, m_strategy[i].m_buyCount);
+//            }
+//        }
+//        if (m_hedgeIndexCount != -1) {
+//            m_seocdebuyCountMap.insert (m_hedgeIndexCode, m_hedgeIndexCount);
+//        }
+//        m_secodeNameList = m_seocdebuyCountMap.keys();
+//    }
+
+////    for (int i = 0; i < m_secodeNameList.size(); ++i) {
+////        QString secode = m_secodeNameList[i];
+////        if (m_buyStrategyMap.keys().indexOf(secode) < 0 &&  m_saleStrategyMap.keys().indexOf(secode) < 0) {
+////            qDebug() << "secode: " << secode;
+////        }
+////    }
+////    qDebug() << "m_secodeNameList.size: " << m_secodeNameList.size() << ", "
+////             << "m_buyStrategyMap.size: " << m_buyStrategyMap.size()<< ", "
+////             << "m_saleStrategyMap.size: " << m_saleStrategyMap.size();
+//}
+
+//ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
+//                     QList<strategy_ceil> strategyList, QString strategyName,
+//                     QString hedgeIndexCode, int hedgeIndexCount,
+//                     QList<int> macdTime, int updateTime,
+//                     QString startDate, QString endDate, QString timeType,
+//                     QString databaseName):
+//    QWidget(parent),
+//    m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
+//    m_strategy(strategyList), m_strategyName(strategyName),
+//    m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
+//    m_macdTime(macdTime), m_updateTime(updateTime),
+//    m_isRealTime(true),
+//    ui(new Ui::ChartForm)
+//{
+//    initCommonData();
+//    initRealTimeData();
+//}
+
+//ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView, int chartViewID,
+//                     QList<strategy_ceil> strategyList, QString strategyName,
+//                     QString hedgeIndexCode, int hedgeIndexCount, QList<int> macdTime,
+//                     bool isRealTime, QString startDate, QString endDate, QString timeType,
+//                     QString databaseName):
+//    QWidget(parent),
+//    m_programInfoTableView(programInfoTableView), m_chartViewID(chartViewID),
+//    m_strategy(strategyList), m_strategyName(strategyName),
+//    m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount), m_macdTime(macdTime),
+//    m_isRealTime(isRealTime), m_startDate(startDate), m_endDate(endDate), m_timeType(timeType),
+//    m_databaseName(databaseName), m_setKeyMove(false),
+//    ui(new Ui::ChartForm)
+//{
+//    initCommonData();
+//    initRealTimeData();
+//}
 

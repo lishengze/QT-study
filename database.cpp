@@ -64,7 +64,7 @@ void Database::initDatabase() {
     } else {
         QString succStr = "Open database: " + m_connDbName  + ", "+ m_hostName
                         + ", " + m_connName +" successfully!";
-        qDebug() << succStr;
+//        qDebug() << succStr;
 //        QMessageBox::information (m_window, "Succeed", succStr);
         m_bdatabaseOpen = true;
     }
@@ -224,7 +224,7 @@ QMap<QString, QStringList> Database::getSnapShootData(QList<QString> tableNameAr
             QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
             QString sqlstr = "select * from" + completeTableName + "where 时间 = (select max(时间) from " + completeTableName + ")";
             queryObj.exec(sqlstr);
-            int valueNumb = 6;
+            int valueNumb = 7;
              while(queryObj.next ()) {
                  QStringList signalData;
                  QString secode = queryObj.value (0).toString();
@@ -283,8 +283,6 @@ QList<QString> Database::getTableList(QString databaseName) {
     }
     return result;
 }
-
-
 
 QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> tableNameArray, QString startDate,
                                                         QString endDate, QString databaseName) {

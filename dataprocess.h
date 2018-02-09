@@ -35,10 +35,7 @@ public:
     QList<QList<double>> computeMacdData();
 
     QList<QList<double>> computeSnapshootData();
-    void computeChartData(QMap<QString, QStringList> oneTimeData);
 
-    QList<QList<double>> computeSnapshootDataReverse();
-    void computeChartDataReverse(QMap<QString, QStringList> oneTimeData);
 
 public slots:
     void receiveOrigianlHistoryData(QString dataType);
@@ -55,8 +52,8 @@ private:
     QMap<QString, int> m_seocdebuyCountMap;
     QStringList m_secodeNameList;
 
-    QMap<QString, int> m_buyStrategy;
-    QMap<QString, int> m_saleStrategy;
+    QMap<QString, int> m_buyStrategyMap;
+    QMap<QString, int> m_saleStrategyMap;
 
     QMap<QString, int> m_indexHedgeMetaInfo;
     QMap<QString, QStringList> m_indexHedgeData;
@@ -70,5 +67,10 @@ private:
     QList<double> m_timeData;
 };
 
+//    QList<QList<double>> computeSnapshootDataReverse();
+//    void computeChartDataReverse(QMap<QString, QStringList> oneTimeData);
+
+//    QList<QList<double>> computeSnapshootData();
+//    void computeChartData(QMap<QString, QStringList> oneTimeData);
 
 #endif // DATAPROCESS_H

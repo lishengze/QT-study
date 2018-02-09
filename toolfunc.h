@@ -59,9 +59,13 @@ void updateProgramInfo(QTableView* programInfoTableView, QString message, QStrin
 
 QString getWindSecode(QString secode);
 
-QString getCompleteSecode(QString secode, bool isRealtime);
+QString getCompleteSecode(QString secode, QString style);
 
-void testSpread(QMap<QString, QStringList> data);
+QString getCompleteIndexCode(QString secode, QString style);
+
+QMap<QString, int> transStrategyMap(QMap<QString, int> oriStrategyMap, QString codeStyle);
+
+//void testSpread(QMap<QString, QStringList> data);
 
 void writeWsqData(QString secode, QStringList data);
 
@@ -86,6 +90,22 @@ QList<double> getHedgedData(QList<QPointF> pointDataList, QMap<QString, QStringL
                             int indexBuyCount, int indexBaseCount);
 
 QList<QPointF> getHedgedData(QList<QPointF> buyPointDataList, QList<QPointF> salePointDataList);
+
+QList<double> getHedgedData(QMap<QString, QStringList> oneTimeData, QMap<QString, int> seocdebuyCountMap,
+                            QString indexCode, int indexBuyCount, int indexBaseCount);
+
+QList<double> getHedgedData(QMap<QString, QStringList> oneTimeData,
+                            QMap<QString, int> buyStrategy, QMap<QString, int> saleStrategy);
+
+double getHedgedSpread(QMap<QString, QStringList> preCloseData, QMap<QString, int> seocdebuyCountMap,
+                                QString indexCode, int indexBuyCount, int indexBaseCount);
+
+double getHedgedSpread(QMap<QString, QStringList> preCloseData,
+                         QMap<QString, int> buyStrategy, QMap<QString, int> saleStrategy);
+
+QMap<QString, int> EmpytQStringIntMap();
+
+QStringList EmpytStringList();
 
 //LPCWSTR transSecode(QStringList secodeList);
 

@@ -42,8 +42,8 @@ QMap<QString, QList<QStringList>> DataRead::readHistoryData () {
 }
 
 QMap<QString, QList<QStringList>> DataRead::readRealTimeData () {
-    qDebug() << "DataRead::readRealTimeData: " << QThread::currentThreadId()
-             << ", tableList.size: " << m_tableNameList.size();
+//    qDebug() << "DataRead::readRealTimeData: " << QThread::currentThreadId()
+//             << ", tableList.size: " << m_tableNameList.size();
     QMap<QString, QList<QStringList>> result = m_database->getSnapShootHistoryData(m_tableNameList);
     return result;
 }

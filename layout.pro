@@ -16,8 +16,8 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         widget.cpp \
-    setdata.cpp \
-    callout.cpp \
+#    setdata.cpp \
+#    callout.cpp \
     toolfunc.cpp \
     test.cpp \
     strategy.cpp \
@@ -28,7 +28,7 @@ SOURCES += main.cpp\
     tabledata.cpp \
     macd.cpp \
     qmychartview.cpp \
-    processfunc.cpp \
+#    processfunc.cpp \
     dataread.cpp \
     dataprocess.cpp \
     dialog.cpp \
@@ -42,8 +42,8 @@ SOURCES += main.cpp\
 #    webviewform.cpp
 
 HEADERS  += widget.h \
-    setdata.h \
-    callout.h \
+#    setdata.h \
+#    callout.h \
     toolfunc.h \
     test.h \
     strategy.h \
@@ -54,7 +54,7 @@ HEADERS  += widget.h \
     tabledata.h \
     macd.h \
     qmychartview.h \
-    processfunc.h \
+#    processfunc.h \
     dataread.h \
     dataprocess.h \
     dialog.h \

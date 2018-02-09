@@ -9,8 +9,6 @@ void testGetExcelFileName();
 
 void testRemovePathName();
 
-void testReadStrategyDataFromExcel();
-
 void testExcel();
 
 void testSortPointList();

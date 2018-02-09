@@ -37,6 +37,7 @@ public:
     void setCalendarValue();
     void setHedgeValue();
     void setStrategyTableView();
+    void setBuySaleStrategyTableView();
     void setProgramInfoTableView();
     void setDataFrequency();
     void setMacdTime();
@@ -54,21 +55,24 @@ signals:
     void cancelAllWsqRequest();
 
 public slots:
-    void addTestRealTimeData();
     void receiveChartCLoseSignal(int chartViewID);
 
 private slots:
-    void on_historyData_clicked();
-
     void on_chooseStartDate_editingFinished();
 
-    void on_tableView_clicked(const QModelIndex &index);
+    void on_hedgeIndexStrategyTable_clicked(const QModelIndex &index);
 
-    void on_realDateTime_pushButton_clicked();
+    void on_buySaleStrategyTable_clicked(const QModelIndex &index);
 
     void on_Annoucnement_Button_clicked();
 
-//    void on_testSale_clicked();
+    void on_realTimeBuySaleChart_clicked();
+
+    void on_historyHedgeIndexChart_clicked();
+
+    void on_realTimeHedgeIndexChart_clicked();
+
+    void on_historyBuySaleChart_clicked();
 
 private:
     Ui::Widget *ui;
@@ -80,6 +84,13 @@ private:
     QString m_strategyFileDir;
     QString m_strategyName;
     QList<strategy_ceil> m_currStrategy;
+    QMap<QString, int> m_strategyMap;
+
+    StrategyModel* m_buySaleStrategyModel;
+    QString m_buySaleStrategyFileDir;
+    QMap<QString, int> m_buyStrategyMap;
+    QMap<QString, int> m_saleStrategyMap;
+    QString m_buySaleStrategyFileName;
 
     QMap<QString, int> m_seocdebuyCountMap;
     QStringList m_secodeNameList;
@@ -93,8 +104,6 @@ private:
     AnnouncementForm* m_announcementView;
 
     Excel* m_excel;
-    int m_databaseReadThreadNumb;
-    bool m_bTestRealTime;
 };
 
 #endif // WIDGET_H
