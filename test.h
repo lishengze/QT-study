@@ -53,4 +53,6 @@ void testRealtimeDatabaseApi();
 
 void testOpenUrl();
 
+void testGetDirName();
+
 #endif // TEST_H

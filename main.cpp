@@ -6,6 +6,7 @@
 #include <QProcess>
 #include "processfunc.h"
 #include "dialog.h"
+#include "generateportfolioform.h"
 
 void setLibPath() {
     QApplication::addLibraryPath(".");
@@ -16,9 +17,14 @@ int main(int argc, char *argv[])
 {
     setLibPath();
     QApplication a(argc, argv);
-    Widget w;
-    w.setWindowTitle("Client");
-    w.show();
+
+//    Widget w;
+//    w.setWindowTitle("Client");
+//    w.show();
+
+    GeneratePortfolioForm genePorfolioWindow;
+    genePorfolioWindow.setWindowTitle("生成组合");
+    genePorfolioWindow.show();
 
 //    Dialog testDialog(8);
 //    testDialog.show ();

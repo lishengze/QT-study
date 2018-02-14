@@ -9,6 +9,8 @@
 #include <QDir>
 #include <QStringList>
 #include <QFileInfo>
+#include <QStandardItemModel>
+#include <QStandardItem>
 #include "macd.h"
 //#include "WAPIWrapperCpp.h"
 
@@ -82,6 +84,14 @@ void testCLosePrice(QMap<QString, QList<QStringList>> oriData);
 qint64 transDateTime(double oridata);
 
 QList<QString> getExcelFileName(QString dirName);
+
+QList<QFileInfo> getExcelFileInfo(QString dirName);
+
+QList<QFileInfo> getDirName(QString dirName);
+
+QStandardItemModel* getStandardItemModel(QString title, QList<QString> valueList);
+
+QStandardItemModel* getStandardItemModel(QString title, QList<QFileInfo> valueList);
 
 QList<QPointF> getStrategyPointList(QMap<QString, QList<QStringList>> oriData,
                                     QMap<QString, int> seocdebuyCountMap);

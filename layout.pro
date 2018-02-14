@@ -40,6 +40,7 @@ SOURCES += main.cpp\
     announcementform.cpp \
     realtimedatabase.cpp \
 #    webviewform.cpp
+    generateportfolioform.cpp
 
 HEADERS  += widget.h \
 #    setdata.h \
@@ -67,12 +68,14 @@ HEADERS  += widget.h \
     announcementform.h \
     realtimedatabase.h \
 #    webviewform.h
+    generateportfolioform.h
 
 FORMS    += widget.ui \
     chartform.ui \
     dialog.ui \
     announcementform.ui \
 #    webviewform.ui
+    generateportfolioform.ui
 
 #RC_ICONS = dev.ico
 
