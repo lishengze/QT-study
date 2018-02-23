@@ -43,6 +43,8 @@ public:
 
     QMap<QString, QStringList> getPreCloseData(QString tableName = "PreCloseData", QString databaseName="MarketData_RealTime");
 
+    double getClosePrice(QString secode, QString date);
+
     QList<QPointF> transData(QList<TableData> oriData, int minuteInterval, QString dataType);
 
     QList<QString> getTableList(QString databaseName);

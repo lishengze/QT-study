@@ -113,9 +113,12 @@ double getHedgedSpread(QMap<QString, QStringList> preCloseData, QMap<QString, in
 double getHedgedSpread(QMap<QString, QStringList> preCloseData,
                          QMap<QString, int> buyStrategy, QMap<QString, int> saleStrategy);
 
+
 QMap<QString, int> EmpytQStringIntMap();
 
 QStringList EmpytStringList();
+
+bool isSecodeValid(QString secode);
 
 //LPCWSTR transSecode(QStringList secodeList);
 

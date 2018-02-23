@@ -83,7 +83,8 @@ void Widget::setHedgeValue() {
 }
 
 void Widget::setBuySaleStrategyTableView () {
-    m_buySaleStrategyFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/买入卖出组合/");
+//    m_buySaleStrategyFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/买入卖出组合/");
+    m_buySaleStrategyFileDir = "//192.168.211.182/it程序设计/买入卖出组合/";
     m_buySaleStrategyModel = new StrategyModel(m_buySaleStrategyFileDir);
     QStandardItemModel* tableModel = m_buySaleStrategyModel->getTableModel ();
 
@@ -94,7 +95,8 @@ void Widget::setBuySaleStrategyTableView () {
 }
 
 void Widget::setStrategyTableView () {
-    m_strategyFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/strategy");
+//    m_strategyFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/strategy");
+    m_strategyFileDir = "//192.168.211.182/it程序设计/strategy";
     m_strategyModel = new StrategyModel(m_strategyFileDir);
     QStandardItemModel* tableModel = m_strategyModel->getTableModel ();
 

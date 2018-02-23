@@ -55,4 +55,6 @@ void testOpenUrl();
 
 void testGetDirName();
 
+void testDatabaseBasic();
+
 #endif // TEST_H

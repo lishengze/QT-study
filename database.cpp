@@ -64,7 +64,7 @@ void Database::initDatabase() {
     } else {
         QString succStr = "Open database: " + m_connDbName  + ", "+ m_hostName
                         + ", " + m_connName +" successfully!";
-//        qDebug() << succStr;
+        qDebug() << succStr;
 //        QMessageBox::information (m_window, "Succeed", succStr);
         m_bdatabaseOpen = true;
     }
@@ -222,7 +222,7 @@ QMap<QString, QStringList> Database::getSnapShootData(QList<QString> tableNameAr
             QString secode = tableNameArray[i];
             QString tableName = secode;
             QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
-            QString sqlstr = "select * from" + completeTableName + "where 时间 = (select max(时间) from " + completeTableName + ")";
+            QString sqlstr = "select * from " + completeTableName + " where 时间 = (select max(时间) from " + completeTableName + ")";
             queryObj.exec(sqlstr);
             int valueNumb = 7;
              while(queryObj.next ()) {
@@ -266,6 +266,38 @@ QMap<QString, QList<QStringList>> Database::getSnapShootHistoryData(QList<QStrin
     } else {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }
+    return result;
+}
+
+double Database::getClosePrice(QString secode, QString date) {
+    double result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString tableName;
+        QString completeTableName;
+        QString sqlstr;
+        if (date == "realtime") {
+            tableName = getCompleteSecode(secode, "wind");
+            completeTableName = "[MarketData_RealTime].[dbo].[" + tableName + "]";
+            sqlstr = "select 最新成交价 from" + completeTableName + " where 时间 = (select max(时间) from " + completeTableName + ")";
+//            qDebug() << "sqlstr: " << sqlstr;
+        } else {
+            tableName = getCompleteSecode(secode, "tinysoft");
+            completeTableName = "[MarketData_day].[dbo].[" + tableName + "]";
+            sqlstr = "select TCLOSE from " + completeTableName + " where TDATE = "+ date ;
+//            qDebug() << "sqlstr: " << sqlstr;
+        }
+
+        queryObj.exec(sqlstr);
+
+        while(queryObj.next ()) {
+            result = queryObj.value (0).toDouble();
+        }
+//        qDebug() << secode << ", " << date << ", " << result;
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+
     return result;
 }
 

@@ -15,6 +15,7 @@ public:
     QList<strategy_ceil> readStrategyDataFromExcel(QString excelFilePath);
     QMap<QString, int> readStrategyData(QString excelFilePath, int sheetIndex=1);
     QList<QMap<QString, int>> getBuySaleStrategy(QString excelFilePath);
+    QList<QStringList> readOriData(QString excelFilePath, int columnNumb, int sheetIndex=1);
 
 private:
     QAxObject* m_excel;
