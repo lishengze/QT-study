@@ -24,6 +24,7 @@
 #include "strategymodel.h"
 #include "chartform.h"
 #include "announcementform.h"
+#include "generateportfolioform.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -301,6 +302,14 @@ void Widget::on_Annoucnement_Button_clicked()
     m_announcementView->show();
 }
 
+//void Widget::on_genePortfolioButton_clicked()
+//{
+//    m_genePortfolioWindow = new GeneratePortfolioForm();
+//    m_genePortfolioWindow->setWindowTitle("生成组合");
+//    m_genePortfolioWindow->show();
+//    m_chartViews.append(m_genePortfolioWindow);
+//}
+
 void Widget::receiveChartCLoseSignal(int chartViewID) {
     qDebug() << "Widget::receiveChartCLoseSignal chartViewID: " << chartViewID;
 }
@@ -308,7 +317,9 @@ void Widget::receiveChartCLoseSignal(int chartViewID) {
 void Widget::closeEvent(QCloseEvent *event) {
     event;
     for(int i = 0; i < m_chartViews.size(); ++i) {
-        m_chartViews[i] -> close();
+        if (NULL != m_chartViews[i]) {
+            m_chartViews[i] -> close();
+        }
     }
     if (NULL != m_announcementView) {
         m_announcementView->close();
@@ -330,7 +341,6 @@ Widget::~Widget()
     }
 
     for (int i = 0; i < m_chartViews.size (); ++i) {
-        qDebug() << i;
         if (NULL != m_chartViews[i]) {
             delete m_chartViews[i];
             m_chartViews[i] = NULL;
@@ -343,6 +353,10 @@ Widget::~Widget()
     }
 
 }
+
+
+
+
 
 //    QString buyStrategyFileName = "D:/strategy/buy.xlsx";
 //    QString saleStrategyFileName = "D:/strategy/sale.xlsx";

@@ -77,9 +77,12 @@ FORMS    += widget.ui \
 #    webviewform.ui
     generateportfolioform.ui
 
+include(qtxlsx/src/xlsx/qtxlsx.pri)
+
 #RC_ICONS = dev.ico
 
-RC_ICONS = stable.ico
+#RC_ICONS = stable.ico
+RC_ICONS = Wondo.ico
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
 #LIBS += -LD:/github/workprogram/client/client-database -lWAPIWrapperCpp

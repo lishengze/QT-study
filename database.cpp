@@ -270,7 +270,7 @@ QMap<QString, QList<QStringList>> Database::getSnapShootHistoryData(QList<QStrin
 }
 
 double Database::getClosePrice(QString secode, QString date) {
-    double result;
+    double result = -1;
     if(m_db.open ()) {
         QSqlQuery queryObj(m_db);
         QString tableName;

@@ -19,6 +19,7 @@
 #include "announcementform.h"
 #include "database.h"
 #include "excel.h"
+#include "generateportfolioform.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -74,6 +75,8 @@ private slots:
 
     void on_historyBuySaleChart_clicked();
 
+//    void on_genePortfolioButton_clicked();
+
 private:
     Ui::Widget *ui;
     QList<QWidget*> m_chartViews;
@@ -102,6 +105,7 @@ private:
     QMap<QString, QStringList> m_realTimeData;
 
     AnnouncementForm* m_announcementView;
+    GeneratePortfolioForm* m_genePortfolioWindow;
 
     Excel* m_excel;
 };

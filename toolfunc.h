@@ -120,6 +120,17 @@ QStringList EmpytStringList();
 
 bool isSecodeValid(QString secode);
 
+void writePortfolio(QMap<QString, int> portfolio, QString fileName);
+
+template<class keyType, class valueType>
+void printMap(QMap<keyType, valueType> data, QString message) {
+    qDebug() << "message: " << message;
+    for ( QMap<keyType, valueType>::iterator it = data.begin();
+          it != data.end(); ++it) {
+        qDebug() << it.key() << ": " << it.value();
+    }
+}
+
 //LPCWSTR transSecode(QStringList secodeList);
 
 //LPCWSTR transSecodeB(QStringList secodeList);

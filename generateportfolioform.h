@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QFileInfo>
+#include <QTimer>
 #include "database.h"
 #include "excel.h"
 
@@ -28,22 +29,31 @@ public:
     void initStrategyTable();
     void initProgramInfoTable();
 
+    void initAllStrategy();
+
     void setAccountTable();
+    void setStrategyTable();
     void setBuySalePortfolioTable();
+
+    bool isClosePriceValid(QMap<QString, double> secodePrice);
+    bool isCapitalizationValid(double Capitalization);
+    bool isStrategyWeightValid();
 
     QMap<QString, double> getClosePrice();
     double getCapitalization();
 
-    QMap<QString, double> getNewPortfolio();
-    QList<QMap<QString, double>> getBuySalePortfolio();
+    QMap<QString, int> getNewPortfolio();
+    QList<QMap<QString, int>> getBuySalePortfolio();
     void storeBuySalePortfolio();
 
+    QMap<QString, double> getStrategyWeight();
+    QMap<QString, double> getCurStrategy();
+
+    void clearGeneInfo();
     ~GeneratePortfolioForm();
 
 private slots:
     void on_chooseAccount_ComboBox_currentIndexChanged(int index);
-
-    void on_strategy_table_clicked(const QModelIndex &index);
 
     void on_account_table_clicked(const QModelIndex &index);
 
@@ -52,6 +62,12 @@ private slots:
     void on_chooseHistDate_editingFinished();
 
     void on_chooseRealTimeRatio_clicked(bool checked);
+
+    void on_buySalePortfolio_table_doubleClicked(const QModelIndex &index);
+
+    void on_account_table_doubleClicked(const QModelIndex &index);
+
+    void on_refreshAllTable_clicked();
 
 private:
     Ui::GeneratePortfolioForm *ui;
@@ -79,9 +95,21 @@ private:
     QMap<QString, double> m_currPriceMap;
     QString m_priceTime;
 
+    double m_currMarketCapitalization;
+    QMap<QString, double> m_strategyWeight;
+    QMap<QString, double> m_currSecodeClosePrice;
+    QMap<QString, int> m_currNewPortfolio;
+    QMap<QString, int> m_currBuyPortfolio;
+    QMap<QString, int> m_currSalePortfolio;
+    QMap<QString, QMap<QString, double>> m_allStrategy;
+
     Database* m_database;
     Excel m_excel;
     bool m_isInit;
+
+    QTimer m_timer;
+    int m_refreshTime;
+
 };
 
 #endif // GENERATEPORTFOLIOFORM_H
