@@ -9,11 +9,11 @@
 #include "realtimedataread.h"
 using namespace std;
 
-RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView, QTableView* errorMsgTableView,
-                                   QString dbConnID, QString dbName, QString dbHost,
+RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView,
+                                   QTableView* errorMsgTableView,
                                    QObject* parent):
     m_programInfoTableView(programInfoTableView), m_errorMsgTableView(errorMsgTableView),
-    m_dbConnID(dbConnID), m_dbHost(dbHost), m_dbName(dbName),
+
     QObject(parent)
 {
     initCommonData();
@@ -28,21 +28,23 @@ void RealTimeDataRead::initCommonData() {
     m_updateTime = 3000;
 }
 
-void RealTimeDataRead::initDatabase() {
-    m_realtimeDatabase = new RealTimeDatabase(m_dbConnID, m_dbName, m_dbHost);
+void RealTimeDataRead::setSecodeList() {
+    m_secodeList = wsqRealTimeSecodeList();
+    QList<QString> indexCodeList = getIndexCode("wind");
+    m_secodeList += indexCodeList;
+    emit setSecodeList_signal(m_secodeList);
 }
 
 void RealTimeDataRead::loginWind_slot() {
     int errcode = CWAPIWrapperCpp::start();
     if (0 == errcode) {
         m_login = true;
-        QThread::sleep(10);
         setSecodeList();
         setPreCloseData();
 
         updateProgramInfo(m_programInfoTableView, "登陆万得成功");
         emit loginWindSucc_signal();
-    }else {
+    }else {      
         updateProgramInfo(m_errorMsgTableView, QString("登录万得失败, 错误代码: %1").arg(errcode));
         emit loginWindFailed_signal();
         //        WCHAR buffer[128];
@@ -68,14 +70,6 @@ void RealTimeDataRead::stopTimer() {
         qDebug() << "RealTimeDataRead::stopTimer()";
         m_timer.stop();
     }
-}
-
-void RealTimeDataRead::setSecodeList() {
-    m_secodeList = m_realtimeDatabase->getSecodeList();
-    QList<QString> indexCodeList = getIndexCode("wind");
-    m_secodeList += indexCodeList;
-    m_secodeList = getSubList(m_secodeList, 0, 150);
-    emit setSecodeList_signal(m_secodeList);
 }
 
 void RealTimeDataRead::setPreCloseData() {
@@ -121,6 +115,7 @@ void RealTimeDataRead::writeComplete_slot() {
 
 QMap<QString, QStringList> RealTimeDataRead::getSnapshootData() {
     QMap<QString, QStringList> result;
+    m_secodeList = getSubList(m_secodeList, 0, 1000);
     for(int i = 0; i < m_secodeList.size(); i+= m_wsqSnapshootDataNumb) {
         QList<QString> subSecodeList = getSubList(m_secodeList, i, i + m_wsqSnapshootDataNumb);
         result.unite(wsqSnapshootData(subSecodeList));
@@ -246,10 +241,12 @@ QList<QString> RealTimeDataRead::wsqRealTimeSecodeList() {
         LPCWSTR options = TEXT("sectorconstituent");
 
         WindData wd;
-//        errcode = CWAPIWrapperCpp::wset(wd, options, conditions);
-        errcode = CWAPIWrapperCpp::wset(wd,L"sectorconstituent",L"date=2018-03-09;sectorid=a001010100000000");
+        errcode = CWAPIWrapperCpp::wset(wd, options, conditions);
+        errcode = CWAPIWrapperCpp::wset(wd, L"indexconstituent",L"date=2018-03-09;windcode=000906.SH");
+
 
         qDebug() << "conditionStr: " << conditionStr;
+//        qDebug() << "RealTimeDataRead::wsqRealTimeSecodeList ";
 
         if (bOutputMsg) qDebug() << "wsd errcode: " << errcode;
         if (errcode == 0) {
@@ -265,12 +262,6 @@ QList<QString> RealTimeDataRead::wsqRealTimeSecodeList() {
                 result.append(temp);
             }
         } else {
-            WCHAR buffer[128];
-            int bufferSize = 128;
-            CWAPIWrapperCpp::getErrorMsg(errcode, eCHN, buffer, bufferSize);
-            cout << buffer << endl;
-            std::wcout.imbue(std::locale("chs"));
-            std::wcout << buffer << std::endl;
             updateProgramInfo(m_errorMsgTableView, QString("获取股票代码列表失败, 错误代码: %1").arg(errcode));
         }
         delete[] conditions;
@@ -281,10 +272,6 @@ QList<QString> RealTimeDataRead::wsqRealTimeSecodeList() {
 }
 
 RealTimeDataRead::~RealTimeDataRead() {
-    if (NULL != m_realtimeDatabase) {
-        delete m_realtimeDatabase;
-        m_realtimeDatabase = NULL;
-    }
 }
 
 //void RealTimeDataRead::setSecodeList(QList<QString> secodeList) {

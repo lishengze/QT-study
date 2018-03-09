@@ -34,6 +34,9 @@ public:
     void createPreCloseTable(QString tableName);
     void insertPreCloseData(QString tableName, QList<QString> data);
     void updatePreCloseData(QString tableName, QList<QString> data);
+
+    QList<QString> getSecodeList();
+
     ~RealTimeDatabase();
 };
 

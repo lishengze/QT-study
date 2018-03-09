@@ -50,6 +50,8 @@ public:
     QMap<QString, QList<QStringList>> getAnnouncement(QList<QString> tableNameArray, QString startDate, QString endDate,
                                                       QString databaseName="Announcement");
 
+
+
     QString getDatabaseName();
     QString dropTable(QString tableName);
     QString clear();

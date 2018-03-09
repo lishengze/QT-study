@@ -64,7 +64,7 @@ void Database::initDatabase() {
     } else {
         QString succStr = "Open database: " + m_connDbName  + ", "+ m_hostName
                         + ", " + m_connName +" successfully!";
-        qDebug() << succStr;
+//        qDebug() << succStr;
 //        QMessageBox::information (m_window, "Succeed", succStr);
         m_bdatabaseOpen = true;
     }
@@ -361,7 +361,7 @@ QString Database::createTable(QString tableName) {
         QSqlQuery queryObj(m_db);
         bool result = queryObj.exec(create_str);
         if (!result) {
-            msg = "createTable " + tableName +"faild";
+            msg = "createTable " + tableName +" faild";
         }
 //        qDebug() << "create str: " << create_str;
 //        qDebug() << "create " <<tableName << " rst: " << result;
@@ -380,7 +380,7 @@ QString Database::insertData(QString tableName, QList<QString> data) {
         QSqlQuery queryObj(m_db);
         bool result = queryObj.exec(insert_str);
         if (!result) {
-            msg = "createTable " + tableName +"faild";
+            msg = "insert " + tableName +" faild";
         }
 //        qDebug() << "insert rst: " << result;
     } else {
@@ -398,7 +398,7 @@ QString Database::updateData(QString tableName, QList<QString> data) {
         QSqlQuery queryObj(m_db);
         bool result = queryObj.exec(update_str);
         if (!result) {
-            msg = "createTable " + tableName +"faild";
+            msg = "update " + tableName +" faild";
         }
         qDebug() << "update rst: " << result;
     } else {

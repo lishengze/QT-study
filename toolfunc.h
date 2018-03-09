@@ -85,4 +85,21 @@ QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList);
 
 QList<QString> getExcelFileName(QString dirName);
 
+QMap<QString, QStringList> EmptyQStringQStringListMap();
+
+template<class T>
+QList<T> getSubList(QList<T> oriData, int startIndex, int endIndex) {
+    QList<T> result;
+    if (startIndex < 0) return result;
+
+    if (endIndex > oriData.size()) {
+        endIndex = oriData.size();
+    }
+
+    for (int i = startIndex; i < endIndex; ++i) {
+        result.append(oriData[i]);
+    }
+    return result;
+}
+
 #endif // TOOLFUNC_H

@@ -3,12 +3,13 @@
 
 #include <QWidget>
 #include <QThread>
+#include <QTimer>
 #include "strategymodel.h"
 #include "database.h"
 
 #include "realtimedataread.h"
 #include "realtimedatabase.h"
-
+#include "realtimedatawrite.h"
 #include "excel.h"
 
 namespace Ui {
@@ -22,45 +23,64 @@ class UpdateRealtimeDataForm : public QWidget
 public:
     explicit UpdateRealtimeDataForm(QWidget *parent = 0);
 
-    void initDatabase();
+    void initCommonData();
+    void initTableView();
     void initWidget();
-    void setSecodeList();
+
+//    void initDatabase();
+
     void connectSignal();
-    void setTableView();
+
     void registeParams();
+
+//    bool setSecodeList();
+//    void startCheckSecodeTimer();
+//    void stopCheckSecodeTimer();
 
     ~UpdateRealtimeDataForm();
 
 signals:
-    void loginWind();
+    void loginWind_signal();
     void startWsq(QStringList secodeList, int reqID);
 
-
 public slots:
-    void loginWindFailed(int errcode);
-    void loginWindSucc();
-    void stopTimer();
+    void loginWindFailed_slot();
+
+    void startReadRealTimeData_slot();
+    void stopReadRealTimeData_slot();
+
+//    void loginWindSucc_slot();
+//    void checkSecodeList();
 
 private slots:
-    void on_startGetRealtimeData_clicked();
+//    void on_startGetRealtimeData_clicked();
 
-    void on_stopGetRealtimeData_clicked();
+//    void on_stopGetRealtimeData_clicked();
 
 private:
     Ui::UpdateRealtimeDataForm *ui;
 
-    QList<QString> m_secodeList;
-    QList<QString> m_strategyFileList;
-    StrategyModel* m_strategyModel;
-    QString m_strategyFileDir;
-    Excel m_excel;
-     RealTimeDatabase* m_realtimeDatabase;
+    QString             m_dbHost;
+    QString             m_dbName;
 
-    bool m_loginWind;
-    QThread m_windWorkThread;
-    QThread m_getSnapshootDataThread;
-    RealTimeDataRead* m_readRealTimeData;
+    QThread             m_realTimeDataReadThread;
+    RealTimeDataRead*   m_realTimeDataRead;
 
+    QThread             m_realTimeDataWriteThread;
+    RealTimeDataWrite*  m_realTimeDataWrite;
+
+    QTimer          m_timer;
+    int             m_updateTime;
+    bool            m_initSecodeList;
+
+    QList<QString>  m_secodeList;
+    QList<QString>  m_strategyFileList;
+    StrategyModel*  m_strategyModel;
+
+    QString         m_hedgeIndexStrategyFileDir;
+    QString         m_buySaleStrategyFileDir;
+    Excel           m_excel;
+    bool            m_loginWind;
 };
 
 #endif // UPDATEREALTIMEDATAFORM_H

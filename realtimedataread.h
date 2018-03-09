@@ -11,58 +11,61 @@ class RealTimeDataRead:public QObject
 {
     Q_OBJECT
 public:
-    RealTimeDataRead(QTableView* programInfoTableView, QObject* parent = 0);
-    RealTimeDataRead(QTableView* programInfoTableView, QTableView* errorMsgTableView,QString m_dirName,
-                     QList<QString> secodeList, Excel* excel,
-                     int updateTime = 3000, QObject* parent = 0);
+    RealTimeDataRead(QTableView* programInfoTableView, QTableView* errorMsgTableView,
+                     QString dbConnID, QString dbName, QString dbHost,
+                     QObject* parent = 0);
 
     ~RealTimeDataRead();
-
-    void initComEnv();
+    void initCommonData();
     void initDatabase();
-    void clearDatabase();
-    void setPreCloseData();
+
     void initTimer();
     void startTimer();
-    void setSecodeList();
-    void insertSnapshootData(QMap<QString, QStringList> data);
-    QMap<QString, QStringList> wsqSnapshootData();
-    QMap<QString, QStringList> wsqPreCloseData();
-
-public slots:
-    void loginWind();
-    void startWsq(QStringList secodeList, int reqID);
-    void cancelWsqRequest(int reqID);
-    void cancelAllWsqRequest();
-    void getPreData(QList<QString> secodeList);
-    void getRealTimeData();
     void stopTimer();
 
+    void setSecodeList();
+
+    QMap<QString, QStringList> getSnapshootData();
+    QMap<QString, QStringList> wsqSnapshootData(QList<QString> secodeList);
+
+    void setPreCloseData();
+    QMap<QString, QStringList> wsqPreCloseData();
+
+    QList<QString> wsqRealTimeSecodeList();
+
+public slots:
+    void loginWind_slot();
+    void setRealTimeData_slot();
+    void writeComplete_slot();
+
 signals:
-    void loginWindFailed(int errcode);
-    void loginWindSucc();
-    void startWsqFailed(int errcode, int reqID);
-    void startWsqSucc();
-    void sendPreData(QMap<QString,QStringList>);
-    void sendRealTimeData(QMap<QString,QStringList>);
-    void sendStopTimerSignal();
+    void loginWindFailed_signal();
+    void loginWindSucc_signal();
+
+    void setSecodeList_signal(QList<QString> data);
+
+    void writePreCloseData_signal(QMap<QString,QStringList>);
+    void writeRealTimeData_signal(QMap<QString,QStringList>);
+
+    void stopReadRealTimeData_signal();
+    void startReadRealTimeData_signal();
 
 private:
-    RealTimeDatabase* m_realtimeDatabase;
-    StrategyModel* m_strategyModel;
-    Excel* m_excel;
+    QTimer             m_timer;
+    QString            m_dbConnID;
+    QString            m_dbHost;
+    QString            m_dbName;
+    RealTimeDatabase*  m_realtimeDatabase;
 
-    QTimer m_timer;
-    int m_updateTime;
-    bool m_login;
-    bool m_isTooEarly;
-    bool m_isRestTime;
-    QString m_strategyFileDir;
-    QList<QString> m_secodeList;
-    QList<QString> m_strategyFileList;
-    QTableView* m_programInfoTableView;
-    QTableView* m_errorMsgTableView;
-    int m_realtimeDataNumb;
+    bool               m_isTimerStart;
+    bool               m_login;
+    bool               m_isTooEarly;
+    bool               m_isRestTime;
+    QList<QString>     m_secodeList;
+    QTableView*        m_programInfoTableView;
+    QTableView*        m_errorMsgTableView;
+    int                m_updateTime;
+    int                m_wsqSnapshootDataNumb;
 };
 
 #endif // REALTIMEDATAREAD_H

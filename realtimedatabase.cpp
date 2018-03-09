@@ -27,16 +27,17 @@ RealTimeDatabase::RealTimeDatabase(QString connName, QString connDbName,
 QDate RealTimeDatabase::getDatabaseDataDate() {
     QList<QString> tableList = getTableList(m_connDbName);
     QDate date = QDate::currentDate();
+//    qDebug() << "tableList: " << tableList;
     if (tableList.size() != 0 && m_db.open ()) {
         QSqlQuery queryObj(m_db);
         QString complete_tablename = "[" + m_connDbName + "].[dbo].["+ tableList[0] + "]";
         QString sqlstr = "select top 1 [日期] from" + complete_tablename;
-
+//        qDebug() << "sqlstr: " << sqlstr;
         queryObj.exec(sqlstr);
         QList<int> tmpDate;
          while(queryObj.next ()) {
              tmpDate = getDateList(queryObj.value (0).toInt ());
-//             qDebug() << "tmpDate: " << tmpDate;
+             qDebug() << "CurrDate: " << tmpDate;
          }
          if (tmpDate.size() > 0) {
              date = QDate(tmpDate[0], tmpDate[1], tmpDate[2]);
@@ -96,6 +97,7 @@ void RealTimeDatabase::createPreCloseTable(QString tableName) {
         QString create_str = "create table " + complete_tablename + value_str;
         QSqlQuery queryObj(m_db);
         bool result = queryObj.exec(create_str);
+        result;
 //        qDebug() << "create str: " << create_str;
 //        qDebug() << "create " <<tableName << " rst: " << result;
     } else {
@@ -114,10 +116,28 @@ void RealTimeDatabase::insertPreCloseData(QString tableName, QList<QString> orid
 //        qDebug() << "insert str: " << insert_str;
         QSqlQuery queryObj(m_db);
         bool result = queryObj.exec(insert_str);
+        result;
 //        qDebug() << "insert rst: " << result;
     } else {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }
+}
+
+QList<QString> RealTimeDatabase::getSecodeList() {
+    QList<QString> result;
+    if (m_db.open()) {
+        QString tableName = "secodeList";
+        QString completeTableName = "[" + m_connDbName + "].[dbo].[" + tableName + "]";
+        QString sqlstr = "select * from" + completeTableName ;
+        queryObj.exec(sqlstr);
+        while(queryObj.next ()) {
+            QString secode = queryObj.value (0).toString();
+            result.append(secode);
+        }
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
 }
 
 void RealTimeDatabase::updatePreCloseData(QString tableName, QList<QString> oridata) {
