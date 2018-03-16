@@ -11,10 +11,12 @@ SubWriteClass::SubWriteClass(QMap<QString, QStringList> data, QString connectId,
 }
 
 SubWriteClass::~SubWriteClass() {
+
     if (NULL != m_realtimeDatabase) {
         delete m_realtimeDatabase;
         m_realtimeDatabase = NULL;
     }
+//    qDebug() << "Release database: " << m_realtimeDatabase->getDatabaseName();
 }
 
 void SubWriteClass::writeRealTimeData_slot() {

@@ -22,6 +22,10 @@ public:
 
     bool checkData(QString colname, QString keyvalue, QString table_name);
 
+    int getDatabaseWorkingFlag(QString tableName);
+
+    bool setDatabaseWorkingState(QString tableName, int flag);
+
     virtual QString getCreateStr(QString tableName);
 //    virtual void createTable(QString tableName);
 
@@ -35,7 +39,9 @@ public:
     void insertPreCloseData(QString tableName, QList<QString> data);
     void updatePreCloseData(QString tableName, QList<QString> data);
 
-    QList<QString> getSecodeList();
+
+
+    QList<QString> getSecodeList(QString tableName);
 
     ~RealTimeDatabase();
 };

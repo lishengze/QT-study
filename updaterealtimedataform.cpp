@@ -13,29 +13,50 @@ UpdateRealtimeDataForm::UpdateRealtimeDataForm(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::UpdateRealtimeDataForm)
 {
-    ui->setupUi(this);
     initCommonData();
-    initWidget();
-    initTableView();
+    initDatabase();
+    if (isDatabaseWorking()) {
+        m_workingState = false;
+        QMessageBox::warning(this, "Error", "已有客户端在下载");
+        this->close();
+    } else {
+        m_workingState = true;
+        ui->setupUi(this);
+        initWidget();
+        initTableView();
 
-    registeParams();
-    connectSignal();
+        m_realtimeDatabase->setDatabaseWorkingState(m_programInfoTableName, 1);
+        registeParams();
+        connectSignal();
+    }
 }
 
 void UpdateRealtimeDataForm::initCommonData() {
+    m_realtimeDatabase = NULL;
     m_realTimeDataRead = NULL;
-    m_strategyModel = NULL;
-    m_hedgeIndexStrategyFileDir = "//192.168.211.182/it程序设计/strategy";
-    m_buySaleStrategyFileDir = "//192.168.211.182/it程序设计/买入卖出组合/";
-    m_initSecodeList = true;
-    m_updateTime = 3000;
-
-    m_dbHost = "192.168.211.165";
-    m_dbName = "Test";
+    m_realTimeDataWrite = NULL;
+    m_realTimeDataWriteThread = NULL;
+    m_realTimeDataReadThread = NULL;
 }
 
 void UpdateRealtimeDataForm::initWidget() {
 
+}
+
+void UpdateRealtimeDataForm::initDatabase() {
+    m_dbName ="MarketData_RealTime";
+    m_dbHost = "192.168.211.165";
+    m_dbConnID = "0";
+    m_realtimeDatabase = new RealTimeDatabase(m_dbConnID, m_dbName, m_dbHost);
+    m_programInfoTableName = "ProgramInfo";
+}
+
+bool UpdateRealtimeDataForm::isDatabaseWorking() {
+    if (1 == m_realtimeDatabase->getDatabaseWorkingFlag(m_programInfoTableName)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void UpdateRealtimeDataForm::registeParams() {
@@ -69,10 +90,11 @@ void UpdateRealtimeDataForm::initTableView () {
 
 void UpdateRealtimeDataForm::connectSignal() {
     m_realTimeDataRead = new RealTimeDataRead(ui->regularMsgTableView, ui->errorMsgTableView,
-                                              "0", m_dbName, m_dbHost);
-    m_realTimeDataRead->moveToThread(&m_realTimeDataReadThread);
+                                              "1", m_dbHost);
+    m_realTimeDataReadThread= new QThread();
+    m_realTimeDataRead->moveToThread(m_realTimeDataReadThread);
 
-    connect(&m_realTimeDataReadThread, SIGNAL(finished()),
+    connect(m_realTimeDataReadThread, SIGNAL(finished()),
             m_realTimeDataRead, SLOT(deleteLater()));
 
     connect(this, SIGNAL(loginWind_signal()),
@@ -88,11 +110,12 @@ void UpdateRealtimeDataForm::connectSignal() {
             this, SLOT(stopReadRealTimeData_slot()));
 
     m_realTimeDataWrite = new RealTimeDataWrite(ui->regularMsgTableView, ui->errorMsgTableView,
-                                                "1", m_dbName, m_dbHost);
+                                                "2", m_dbHost);
 
-    m_realTimeDataWrite->moveToThread(&m_realTimeDataWriteThread);
+    m_realTimeDataWriteThread = new QThread();
+    m_realTimeDataWrite->moveToThread(m_realTimeDataWriteThread);
 
-    connect(&m_realTimeDataWriteThread, SIGNAL(finished()),
+    connect(m_realTimeDataWriteThread, SIGNAL(finished()),
             m_realTimeDataWrite, SLOT(deleteLater()));
 
     connect(m_realTimeDataRead, SIGNAL(setSecodeList_signal(QList<QString>)),
@@ -110,8 +133,8 @@ void UpdateRealtimeDataForm::connectSignal() {
     connect(m_realTimeDataWrite, SIGNAL(writeComplete_signal()),
             m_realTimeDataRead, SLOT(writeComplete_slot()));
 
-    m_realTimeDataWriteThread.start();
-    m_realTimeDataReadThread.start();
+    m_realTimeDataWriteThread->start();
+    m_realTimeDataReadThread->start();
 
     emit loginWind_signal();
 
@@ -138,19 +161,57 @@ void UpdateRealtimeDataForm::startReadRealTimeData_slot() {
 
 UpdateRealtimeDataForm::~UpdateRealtimeDataForm()
 {
-    m_realTimeDataRead->stopTimer();
-    m_realTimeDataReadThread.quit();
-    m_realTimeDataReadThread.wait();
-    m_realTimeDataWriteThread.quit();
-    m_realTimeDataWriteThread.wait();
-
-    delete ui;
-
-    if (NULL != m_strategyModel) {
-        delete m_strategyModel;
-        m_strategyModel = NULL;
+    qDebug() << 0;
+    if (m_workingState) {
+        m_realTimeDataRead->stopTimer();
     }
 
+    qDebug() << 1;
+    if (NULL != m_realTimeDataReadThread && !m_realTimeDataReadThread->isFinished()) {
+        m_realTimeDataReadThread->quit();
+    }
+
+    qDebug() << 2;
+    if (NULL != m_realTimeDataWriteThread && !m_realTimeDataWriteThread->isFinished()) {
+        m_realTimeDataWriteThread->quit();
+    }
+
+    qDebug() << 3;
+    if (NULL != m_realTimeDataRead) {
+        m_realTimeDataRead = NULL;
+        delete m_realTimeDataRead;
+    }
+
+    qDebug() << 4;
+    if (NULL != m_realTimeDataWrite) {
+        m_realTimeDataWrite = NULL;
+        delete m_realTimeDataWrite;
+    }
+
+    qDebug() << 5;
+    if (NULL != m_realTimeDataReadThread) {
+        m_realTimeDataReadThread = NULL;
+        delete m_realTimeDataReadThread;
+    }
+
+    qDebug() << 6;
+    if (NULL != m_realTimeDataWriteThread) {
+        m_realTimeDataWriteThread = NULL;
+        delete m_realTimeDataWriteThread;
+    }
+
+    qDebug() << 7;
+    delete ui;
+    if (true == m_workingState) {
+        m_realtimeDatabase->setDatabaseWorkingState(m_programInfoTableName, 0);
+    }
+
+    qDebug() << 8;
+    if (NULL != m_realtimeDatabase) {
+        delete m_realtimeDatabase;
+        m_realtimeDatabase = NULL;
+    }
+    qDebug() << 9;
 }
 
 //void UpdateRealtimeDataForm::initDatabase() {

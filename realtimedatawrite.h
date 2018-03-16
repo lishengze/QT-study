@@ -15,7 +15,7 @@ class RealTimeDataWrite:public QObject
     Q_OBJECT
 public:
     RealTimeDataWrite(QTableView *programInfoTableView, QTableView *errorMsgTableView,
-                      QString dbConnID, QString dbName, QString dbHost,
+                      QString dbConnID, QString dbHost,
                       QObject *parent = 0);
 
     ~RealTimeDataWrite();
@@ -62,11 +62,13 @@ private:
     QList<QString>          m_currWriteReuslt;
 
     int                     m_writeRealTimeDataCount;                   
+    int                     m_writeMinimumTime;
 
     int                     m_testWriteStartTime;
     int                     m_testWriteSumTime;
     int                     m_testWriteCount;
     int                     m_testWriteAveTime;
+
 };
 
 #endif // REALTIMEDATAWRITE_H

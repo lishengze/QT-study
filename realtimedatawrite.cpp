@@ -4,13 +4,14 @@
 #include "toolfunc.h"
 
 RealTimeDataWrite::RealTimeDataWrite(QTableView* programInfoTableView, QTableView* errorMsgTableView,
-                                     QString dbConnID, QString dbName, QString dbHost,
+                                     QString dbConnID, QString dbHost,
                                      QObject* parent):
     m_programInfoTableView(programInfoTableView), m_errorMsgTableView(errorMsgTableView),
-    m_dbConnID(dbConnID), m_dbHost(dbHost), m_dbName(dbName),
+    m_dbConnID(dbConnID), m_dbHost(dbHost),
     QObject(parent)
 {
     m_realtimeDataNumb = 0;
+    m_writeMinimumTime = 2000;
     m_writeRealTimeDataCount = 0;
     m_currCompleteThreadCount = 0;
     m_currSuccessNumb = 0;
@@ -26,6 +27,8 @@ RealTimeDataWrite::RealTimeDataWrite(QTableView* programInfoTableView, QTableVie
 }
 
 void RealTimeDataWrite::initDatabase() {
+//    m_dbName ="Test";
+    m_dbName ="MarketData_RealTime";
     m_realtimeDatabase = new RealTimeDatabase(m_dbConnID, m_dbName, m_dbHost);
 }
 
@@ -45,7 +48,7 @@ void RealTimeDataWrite::checkDatabase() {
     if (compTableMsg != "SUCCESS") {
         updateProgramInfo(m_errorMsgTableView, QString("补完Database 失败, 错误消息为: %1").arg(compTableMsg));
     } else {
-        updateProgramInfo(m_programInfoTableView, QString("根据股票代码补全Database"));
+//        updateProgramInfo(m_programInfoTableView, QString("根据股票代码补全Database"));
     }
 }
 
@@ -53,9 +56,10 @@ void RealTimeDataWrite::clearDatabase() {
     QString clearMsg = "SUCCESS";
     QString curMsg = "";
     QList<QString> tableList = m_realtimeDatabase->getTableList(m_dbName);
-    tableList.removeOne("secodeList");
+    QString programStartTable = "ProgramInfo";
+    tableList.removeOne(programStartTable);
     for (int i = 0; i < tableList.size(); ++i) {
-        QString tmpMsg = dropTable(tableList[i]);
+        QString tmpMsg = m_realtimeDatabase->dropTable(tableList[i]);
         if (tmpMsg != "SUCCESS") {
             curMsg += tmpMsg + "\n";
         }
@@ -69,18 +73,12 @@ void RealTimeDataWrite::clearDatabase() {
     } else {
         updateProgramInfo(m_programInfoTableView, QString("完成Database清空工作"));
     }
-
-    QString compTableMsg = m_realtimeDatabase->completeTable(m_secodeList);
-    if (compTableMsg != "SUCCESS") {
-        updateProgramInfo(m_errorMsgTableView, QString("补完Database 失败, 错误消息为: %1").arg(compTableMsg));
-    } else {
-        updateProgramInfo(m_programInfoTableView, QString("根据策略股票代码补全Database"));
-    }
 }
 
 void RealTimeDataWrite::setSecodeList_slot(QList<QString> data) {
     m_secodeList = data;
     checkDatabase();
+    qDebug() << "emit setRealTimeData_signal() ";
     emit setRealTimeData_signal();
 }
 
@@ -109,8 +107,9 @@ QList<QMap<QString, QStringList>> RealTimeDataWrite::allocateData(QMap<QString, 
 void RealTimeDataWrite::createSubWriteThreads(QList<QMap<QString, QStringList>> data) {
     ++m_writeRealTimeDataCount;
     for (int i = 0; i < data.size(); ++i) {
-        SubWriteClass* subWriteObj = new SubWriteClass(data[i], QString("%1").arg(10 + i +  m_writeRealTimeDataCount * (m_subWriteThreadNumb + 1)),
-                                                       m_dbName, m_dbHost);
+        QString currConnId = QString("%1").arg(5 + i +  m_writeRealTimeDataCount * (m_subWriteThreadNumb + 1));
+//        qDebug() << "currConnId: " << currConnId;
+        SubWriteClass* subWriteObj = new SubWriteClass(data[i], currConnId, m_dbName, m_dbHost);
         QThread* subWriteThread = new QThread();
 
         subWriteObj->moveToThread(subWriteThread);
@@ -135,8 +134,7 @@ void RealTimeDataWrite::writeRealTimeResult_slot(QList<QString> result) {
     m_currSuccessNumb += result[result.size()-1].toInt();
     result.removeLast();
     m_currWriteReuslt += result;
-//    qDebug() << "m_currSuccessNumb: " << m_currSuccessNumb;
-    qDebug() << "m_currCompleteThreadCount: " << m_currCompleteThreadCount;
+//    qDebug() << "m_currCompleteThreadCount: " << m_currCompleteThreadCount;
     if (++m_currCompleteThreadCount == m_subWriteThreadNumb) {
 
         updateProgramInfo(m_programInfoTableView,
@@ -152,13 +150,13 @@ void RealTimeDataWrite::writeRealTimeResult_slot(QList<QString> result) {
         m_testWriteSumTime += costMSecs;
         m_testWriteAveTime = m_testWriteSumTime/++m_testWriteCount;
 
-        qDebug() << "m_currSuccessNumb: " << m_currSuccessNumb
-                 << "errorMsg_numb: " << m_currWriteReuslt.size()
-                 << ", costMSecs: " << costMSecs
-                 << ", costAveMSecs: " << m_testWriteAveTime;
+        qDebug() << "m_currSuccessNumb: " << m_currSuccessNumb << ", "
+                 << "errorMsg_numb: " << m_currWriteReuslt.size() << ", "
+                 << "costMSecs: " << costMSecs <<", "
+                 << "costAveMSecs: " << m_testWriteAveTime;
 
-        if (costMSecs < 1000) {
-            QThread::msleep(1000-costMSecs);
+        if (costMSecs < m_writeMinimumTime) {
+            QThread::msleep(m_writeMinimumTime - costMSecs);
         }
 
         m_currCompleteThreadCount = 0;
@@ -171,7 +169,10 @@ void RealTimeDataWrite::writeRealTimeResult_slot(QList<QString> result) {
 
 void RealTimeDataWrite::releaseSubClassThreads() {
     for (int i = 0; i < m_subWriteThreadList.size(); ++i) {
-         m_subWriteThreadList[i]->quit ();
+        if (!m_subWriteThreadList[i]->isFinished()) {
+             m_subWriteThreadList[i]->quit();
+//             qDebug() << "Release thread: "  << i;
+        }
     }
 }
 
@@ -183,25 +184,36 @@ void RealTimeDataWrite::writeRealTimeData_slot(QMap<QString, QStringList> result
 }
 
 void RealTimeDataWrite::writePreCloseData_slot(QMap<QString, QStringList> result) {
-    qDebug() << "RealTimeDataWrite::writePreCloseData";
+//    qDebug() << "RealTimeDataWrite::writePreCloseData";
     QString tableName = "PreCloseData";
     QList<QString> tableList = m_realtimeDatabase->getTableList(m_realtimeDatabase->getDatabaseName());
     if (tableList.indexOf(tableName) < 0 ) {
+        m_realtimeDatabase->createPreCloseTable(tableName);
         for (QMap<QString, QStringList>::iterator it = result.begin();
              it != result.end(); ++it) {
             m_realtimeDatabase->insertPreCloseData(tableName, it.value());
         }
         updateProgramInfo(m_programInfoTableView, QString("插入昨收数据"));
     } else {
-        updateProgramInfo(m_programInfoTableView, QString("昨收数据已经存在"));
+//        updateProgramInfo(m_programInfoTableView, QString("昨收数据已经存在"));
     }
 }
 
 RealTimeDataWrite::~RealTimeDataWrite() {
     qDebug() << "m_subWriteThreadList.size: "  << m_subWriteThreadList.size();
     for (int i = 0; i < m_subWriteThreadList.size(); ++i) {
-         m_subWriteThreadList[i]->wait();
-         m_subWriteThreadList[i]->quit();
+        if (!m_subWriteThreadList[i]->isFinished()) {
+             m_subWriteThreadList[i]->quit();
+//            qDebug() << "Thread " << i << " is waiting";
+//            m_subWriteThreadList[i]->wait();
+        }
+    }
+
+    for (int i = 0; i < m_subWriteObjList.size(); ++i) {
+        if (m_subWriteObjList[i] != NULL) {
+            delete m_subWriteObjList[i];
+            m_subWriteObjList[i] = NULL;
+        }
     }
 
     for (int i = 0; i < m_subWriteThreadList.size(); ++i) {

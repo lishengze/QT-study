@@ -12,7 +12,7 @@ class RealTimeDataRead:public QObject
     Q_OBJECT
 public:
     RealTimeDataRead(QTableView* programInfoTableView, QTableView* errorMsgTableView,
-                     QString dbConnID, QString dbName, QString dbHost,
+                     QString dbConnID, QString dbHost,
                      QObject* parent = 0);
 
     ~RealTimeDataRead();
@@ -60,7 +60,8 @@ private:
     bool               m_isTimerStart;
     bool               m_login;
     bool               m_isTooEarly;
-    bool               m_isRestTime;
+    bool               m_isRestTime;  
+    QString            m_secodeList_IndexCode;
     QList<QString>     m_secodeList;
     QTableView*        m_programInfoTableView;
     QTableView*        m_errorMsgTableView;

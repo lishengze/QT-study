@@ -57,7 +57,6 @@ bool RealTimeDatabase::checkdataTime() {
     }
 }
 
-
 QString RealTimeDatabase::getCreateStr(QString tableName) {
     QString value_str = " (股票 varchar(15) not null, 日期 int not null, 时间 int not null, \
                           最新成交价 decimal(15,4), 前收 decimal(15,4), 成交金额 decimal(25,4), \
@@ -123,12 +122,13 @@ void RealTimeDatabase::insertPreCloseData(QString tableName, QList<QString> orid
     }
 }
 
-QList<QString> RealTimeDatabase::getSecodeList() {
+QList<QString> RealTimeDatabase::getSecodeList(QString tableName) {
     QList<QString> result;
     if (m_db.open()) {
-        QString tableName = "secodeList";
         QString completeTableName = "[" + m_connDbName + "].[dbo].[" + tableName + "]";
-        QString sqlstr = "select * from" + completeTableName ;
+        QString sqlstr = "select * from" + completeTableName;
+//        qDebug() << "sqlstr: " << sqlstr;
+        QSqlQuery queryObj(m_db);
         queryObj.exec(sqlstr);
         while(queryObj.next ()) {
             QString secode = queryObj.value (0).toString();
@@ -167,6 +167,47 @@ bool RealTimeDatabase::checkData(QString colname, QString keyvalue, QString tabl
         while(queryObj.next())  {
             result = true;
         }
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+int RealTimeDatabase::getDatabaseWorkingFlag(QString tableName) {
+    int result = -1;
+    if (m_db.open()) {
+        QString complete_tablename = "[" + m_connDbName+ "].[dbo].[" + tableName + "]";
+        QString check_str = "select top 1 [Flag] from "  + complete_tablename;
+        QString sql_str = "select [Flag] from" + complete_tablename
+                        +  "where Date = (select max(Date) from " + complete_tablename + ")";
+        QSqlQuery queryObj(m_db);
+        queryObj.exec(sql_str);
+//        qDebug() << "check_str: " << sql_str;
+        while(queryObj.next())  {
+            result = queryObj.value (0).toInt ();
+//            qDebug() << "result: " << result;
+        }
+        qDebug() <<"Working Flag: " << result;
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+bool RealTimeDatabase::setDatabaseWorkingState(QString tableName, int flag) {
+    bool result = false;
+    if (m_db.open()) {
+        QString col_str = QString::fromLocal8Bit(" (Date, Time, Flag) ");
+        QString date = QDateTime::currentDateTime().toString("yyyyMMdd");
+        QString time = QDateTime::currentDateTime().toString("hhmmss");
+        QString flagValue = QString("%1").arg(flag);
+        QString valStr = date + ", " + time + ", " + flagValue;
+        QString complete_tablename = "[" + m_connDbName + "].[dbo].[" + tableName + "]" ;
+        QString insert_str = "insert into "+ complete_tablename + col_str + "values ("+ valStr +")";
+        qDebug() << "insert str: " << insert_str;
+        QSqlQuery queryObj(m_db);
+        result = queryObj.exec(insert_str);
+        qDebug() << "insert rst: " << result;
     } else {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }

@@ -69,21 +69,21 @@ public:
     virtual QString updateData(QString tableName, QList<QString> data);
 
 protected:
-    QString m_connDbName;
+    QString        m_connDbName;
 
 private:
-    QString m_connName;
-    QString m_hostName;
-    QString m_userName;
-    QString m_userPwd;
-    QString m_port;    
-    QString m_dataSourceName;
-    QString m_databaseDriver;
-    QWidget* m_window;
+    QString        m_connName;
+    QString        m_hostName;
+    QString        m_userName;
+    QString        m_userPwd;
+    QString        m_port;
+    QString        m_dataSourceName;
+    QString        m_databaseDriver;
+    QWidget*       m_window;
 
 public:
-    QSqlDatabase m_db;
-    bool m_bdatabaseOpen;
+    QSqlDatabase   m_db;
+    bool           m_bdatabaseOpen;
 };
 
 #endif // DATABASE_H
