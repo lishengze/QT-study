@@ -13,73 +13,38 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_3">
+  <layout class="QGridLayout" name="gridLayout_4">
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>选择成交时间: </string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="chooseRealTimeRatio">
-         <property name="text">
-          <string>实时</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QDateEdit" name="chooseHistDate"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QLabel" name="chooseAccount_Label">
-         <property name="maximumSize">
-          <size>
-           <width>500</width>
-           <height>10000</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>选择账户：</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="chooseAccount_ComboBox">
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>150</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </item>
-   <item row="0" column="1">
-    <layout class="QGridLayout" name="gridLayout_2">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_2">
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="3" column="1">
+      <widget class="QRadioButton" name="chooseRealTimeRatio">
        <property name="text">
-        <string>选择沪深300张数： </string>
+        <string>实时</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QDoubleSpinBox" name="chooseHS300Count"/>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>选择成交时间: </string>
+       </property>
+      </widget>
      </item>
-     <item row="0" column="2">
-      <widget class="QPushButton" name="refreshAllTable">
+     <item row="3" column="2">
+      <widget class="QDateEdit" name="chooseHistDate">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>20</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0" colspan="3">
+      <widget class="QTableView" name="account_table"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QPushButton" name="choose_account_button">
        <property name="maximumSize">
         <size>
          <width>120</width>
@@ -87,28 +52,25 @@
         </size>
        </property>
        <property name="text">
-        <string>刷新所有表格</string>
+        <string>选择账户文件夹</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="strategy_Label">
-       <property name="maximumSize">
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="2" column="0" colspan="3">
+      <widget class="QTableView" name="strategy_table"/>
+     </item>
+     <item row="0" column="1">
+      <widget class="QPushButton" name="geneBuySalePortfolio">
+       <property name="minimumSize">
         <size>
-         <width>200</width>
-         <height>16777215</height>
+         <width>120</width>
+         <height>0</height>
         </size>
        </property>
-       <property name="text">
-        <string>策略信息:</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <widget class="QPushButton" name="geneBuySalePortfolio">
        <property name="maximumSize">
         <size>
          <width>120</width>
@@ -120,32 +82,92 @@
        </property>
       </widget>
      </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="strategy_Label">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>120</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>策略信息:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="choose_strategy_button">
+       <property name="minimumSize">
+        <size>
+         <width>120</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>120</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>选择策略文件夹</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item row="0" column="2">
-    <widget class="QLabel" name="buySalePortfolio_Label">
-     <property name="text">
-      <string>对应账户买卖组合：</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="3">
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="1">
-      <widget class="QTableView" name="strategy_table"/>
-     </item>
-     <item row="0" column="0">
-      <widget class="QTableView" name="account_table"/>
-     </item>
-     <item row="0" column="2">
+     <item row="3" column="0" colspan="2">
       <widget class="QTableView" name="buySalePortfolio_table"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="buySalePortfolio_Label">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>对应账户买卖组合：</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPushButton" name="choose_portfolio_button">
+       <property name="maximumSize">
+        <size>
+         <width>120</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>选择买卖组合文件夹</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
-   <item row="2" column="0" colspan="3">
+   <item row="1" column="0" colspan="3">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <widget class="QLabel" name="programInfo_Label">

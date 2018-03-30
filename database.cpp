@@ -1,4 +1,4 @@
-#include "database.h"
+﻿#include "database.h"
 #include <QDebug>
 #include <QSqlQuery>
 #include <QSqlError>
@@ -64,7 +64,7 @@ void Database::initDatabase() {
     } else {
         QString succStr = "Open database: " + m_connDbName  + ", "+ m_hostName
                         + ", " + m_connName +" successfully!";
-        qDebug() << succStr;
+//        qDebug() << succStr;
 //        QMessageBox::information (m_window, "Succeed", succStr);
         m_bdatabaseOpen = true;
     }
@@ -76,6 +76,315 @@ bool Database::isDatabaseOpen () {
 
 QSqlDatabase Database::getDatabase () {
     return m_db;
+}
+
+QList<QStringList> Database::getOriChartData(QString startDate, QString endDate, QStringList keyValueList,
+                                         QString tableName, QString databaseName){
+
+    QList<QStringList> resultList;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString keyValueStr = "";
+        for (int i = 0; i < keyValueList.size (); ++i) {
+            keyValueStr += ", [" + keyValueList[i] + "] ";
+        }
+
+        QString sqlstr = QString("select [TDATE], [TIME] ") + keyValueStr  \
+                       + QString("from [") + databaseName + "].[dbo].[" + tableName + "] " \
+                       + "where TDATE <= " + endDate + " and TDATE >= " + startDate;
+//        qDebug() <<sqlstr;
+
+        if (queryObj.exec(sqlstr) ) {
+            while(queryObj.next ()) {
+               QStringList tmpResult;
+               QList<int> tmpDate = getDateList(queryObj.value (0).toInt ());
+               QList<int> tmpTime = getTimeList (queryObj.value (1).toInt ());
+               QDateTime timeValue;
+               timeValue.setDate (QDate(tmpDate[0], tmpDate[1], tmpDate[2]));
+               timeValue.setTime (QTime(tmpTime[0], tmpTime[1], tmpTime[2]));
+               tmpResult.append (QString("%1").arg(timeValue.toMSecsSinceEpoch ()));
+               for (int i = 0; i < keyValueList.size(); ++i) {
+                   tmpResult.append(queryObj.value (i+2).toString ());
+               }
+               resultList.append (tmpResult);
+            }
+        } else {
+            QStringList tmp; tmp.append("Error");
+            resultList.append(tmp);
+        }
+
+    } else {
+        QMessageBox::information (m_window, "Error", m_db.lastError().text());
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return resultList;
+}
+
+QMap<QString, QList<QStringList>> Database::getLongTimeHistoryData(QString startDate, QString endDate, QStringList keyValueList,
+                                                                   QStringList tableNameList, QString databaseName) {
+   QMap<QString, QList<QStringList>> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString keyValueStr = "";
+        for (int i = 0; i < keyValueList.size (); ++i) {
+            keyValueStr += ", [" + keyValueList[i] + "] ";
+        }
+        for (QString tableName : tableNameList) {
+            QString sqlstr = QString("select [TDATE], [TIME] ") + keyValueStr  \
+                           + QString("from [") + databaseName + "].[dbo].[" + tableName + "] " \
+                           + "where TDATE <= " + endDate + " and TDATE >= " + startDate;
+             QList<QStringList> oneSecodeData;
+            if (queryObj.exec(sqlstr) ) {
+                while(queryObj.next ()) {
+                   QStringList tmpResult;
+                   QList<int> tmpDate = getDateList(queryObj.value (0).toInt ());
+                   QList<int> tmpTime = getTimeList (queryObj.value (1).toInt ());
+                   QDateTime timeValue;
+                   timeValue.setDate (QDate(tmpDate[0], tmpDate[1], tmpDate[2]));
+                   timeValue.setTime (QTime(tmpTime[0], tmpTime[1], tmpTime[2]));
+                   tmpResult.append (QString("%1").arg(timeValue.toMSecsSinceEpoch ()));
+                   for (int i = 0; i < keyValueList.size(); ++i) {
+                       tmpResult.append(queryObj.value (i+2).toString ());
+                   }
+                   oneSecodeData.append (tmpResult);
+                }
+                result.insert(tableName, oneSecodeData);
+            } else {
+                result.insert("Error", oneSecodeData);
+            }
+        }
+    } else {
+        QList<QStringList> oneSecodeData;
+        QStringList errorData;
+        errorData.append(QString::fromLocal8Bit(m_db.lastError().text().toStdString().c_str()));
+        oneSecodeData.append(errorData);
+        result.insert("Error", oneSecodeData);
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+QMap<QString, QList<QStringList>> Database::getSnapShootHistoryData(QList<QString> tableNameArray, QString databaseName) {
+    QMap<QString, QList<QStringList>> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        for (int i = 0; i < tableNameArray.size(); ++i) {
+            QString secode = tableNameArray[i];
+            QString tableName = secode;
+            QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
+            QString sqlstr = "select * from" + completeTableName;
+            QList<QStringList> oneSecodeData;
+//            qDebug() << sqlstr;
+            if (queryObj.exec(sqlstr) ) {
+                int valueNumb = 7;
+                while(queryObj.next ()) {
+                     QStringList signalData;
+                     QString secode = queryObj.value (0).toString();
+                     for (int j = 1; j < valueNumb; ++j) {
+                         signalData.append(queryObj.value (j).toString());
+                     }
+                     oneSecodeData.append(signalData);
+                 }
+                 result.insert(secode, oneSecodeData);
+            } else {
+                result.insert("Error", oneSecodeData);
+            }
+        }
+    } else {
+        QList<QStringList> oneSecodeData;
+        QStringList errorData;
+        errorData.append(QString::fromLocal8Bit(m_db.lastError().text().toStdString().c_str()));
+        oneSecodeData.append(errorData);
+        result.insert("Error", oneSecodeData);
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+
+QMap<QString, QStringList> Database::getPreCloseData(QString tableName, QString databaseName) {
+    QMap<QString, QStringList> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString sqlstr = QString("select * from [") + databaseName + "].[dbo].[" + tableName + "] ";
+
+        if (queryObj.exec(sqlstr)) {
+            int valueNumb = 2;
+             while(queryObj.next ()) {
+                 QStringList signalData;
+                 QString secode = queryObj.value (0).toString();
+                 for (int i = 1; i < valueNumb; ++i) {
+                     signalData.append(queryObj.value (i).toString());
+                 }
+                 result.insert(secode, signalData);
+             }
+        } else {
+            QStringList tmpdata;
+            result.insert("Error", tmpdata);
+        }
+    }else {
+        QStringList errorData;
+        errorData.append(QString::fromLocal8Bit(m_db.lastError().text().toStdString().c_str()));
+        result.insert("Error", errorData);
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+QMap<QString, QStringList> Database::getSnapShootData(QString tableName, QString databaseName) {
+    QMap<QString, QStringList> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString sqlstr = QString("select * from [") + databaseName + "].[dbo].[" + tableName + "] ";
+
+        if (queryObj.exec(sqlstr)) {
+            int valueNumb = 6;
+             while(queryObj.next ()) {
+                 QStringList signalData;
+                 QString secode = queryObj.value (0).toString();
+                 for (int i = 1; i < valueNumb; ++i) {
+                     signalData.append(queryObj.value (i).toString());
+                 }
+                 result.insert(secode, signalData);
+             }
+        } else {
+            QStringList tmpdata;
+            result.insert("Error", tmpdata);
+        }
+    } else {
+        QStringList errorData;
+        errorData.append(QString::fromLocal8Bit(m_db.lastError().text().toStdString().c_str()));
+        result.insert("Error", errorData);
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+QMap<QString, QStringList> Database::getSnapShootData(QList<QString> tableNameArray, QString databaseName) {
+    QMap<QString, QStringList> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        for (int i = 0; i < tableNameArray.size(); ++i) {
+            QString secode = tableNameArray[i];
+            QString tableName = secode;
+            QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
+            QString sqlstr = "select * from " + completeTableName + QString::fromLocal8Bit(" where 时间 = (select max(时间) from ") + completeTableName + ")";
+//            qDebug() << "sqlstr: " << sqlstr;
+            if (queryObj.exec(sqlstr) ) {
+                 int valueNumb = 7;
+                 while(queryObj.next ()) {
+                     QStringList signalData;
+                     QString secode = queryObj.value (0).toString();
+                     for (int j = 1; j < valueNumb; ++j) {
+                         signalData.append(queryObj.value (j).toString());
+                     }
+                     result.insert(secode, signalData);
+                 }
+            } else {
+                QStringList tmpdata;
+                result.insert("Error", tmpdata);
+            }
+        }
+    } else {
+        QStringList errorData;
+        errorData.append(QString::fromLocal8Bit(m_db.lastError().text().toStdString().c_str()));
+        result.insert("Error", errorData);
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+double Database::getClosePrice(QString secode, QString date) {
+    double result = -1;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString tableName;
+        QString completeTableName;
+        QString sqlstr;
+        if (date == "realtime") {
+            tableName = getCompleteSecode(secode, "wind");
+            completeTableName = "[MarketData_RealTime].[dbo].[" + tableName + "]";
+            sqlstr = QString::fromLocal8Bit("select 最新成交价 from") + completeTableName +
+                     QString::fromLocal8Bit(" where 时间 = (select max(时间) from ") + completeTableName + ")";
+//            qDebug() << "sqlstr: " << sqlstr;
+        } else {
+            tableName = getCompleteSecode(secode, "tinysoft");
+            completeTableName = "[MarketData_day].[dbo].[" + tableName + "]";
+            sqlstr = "select TCLOSE from " + completeTableName + " where TDATE = "+ date ;
+//            qDebug() << "sqlstr: " << sqlstr;
+        }
+
+        if (queryObj.exec(sqlstr)) {
+            while(queryObj.next ()) {
+                result = queryObj.value (0).toDouble();
+            }
+        }
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+
+    return result;
+}
+
+QList<QString> Database::getTableList(QString databaseName) {
+    QList<QString> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString sqlstr = "select name from "+ databaseName +"..sysobjects where xtype= 'U'";
+        if (queryObj.exec(sqlstr) ) {
+            while(queryObj.next ()) {
+                 result.append(queryObj.value (0).toString());
+            }
+        } else {
+            result.append("Error");
+        }
+    } else {
+        result.append("Error");
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> tableNameArray, QString startDate,
+                                                        QString endDate, QString databaseName) {
+    QMap<QString, QList<QStringList>> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        for (int i = 0; i < tableNameArray.size(); ++i) {
+            QString secode = tableNameArray[i];
+            QString tableName = secode;
+            QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
+            QString sqlstr = "select * from" + completeTableName  + " where Date <= " + endDate + " and Date >= " + startDate;
+            QList<QStringList> oneSecodeData;
+            if (queryObj.exec(sqlstr) ) {
+                int valueNumb = 4;
+
+                 while(queryObj.next ()) {
+                     QStringList signalData;
+                     QString secode = queryObj.value (0).toString();
+                     for (int j = 0; j < valueNumb; ++j) {
+                         QString tmpdata = queryObj.value (j).toString();
+                         tmpdata.remove("\t");
+                         signalData.append(tmpdata);
+                     }
+                     oneSecodeData.append(signalData);
+                 }
+                 if (oneSecodeData.size() > 0) {
+                     result.insert(secode, oneSecodeData);
+                 }
+            } else {
+                result.insert("Error", oneSecodeData);
+            }
+        }
+    } else {
+        QList<QStringList> oneSecodeData;
+        QStringList errorData;
+        errorData.append(QString::fromLocal8Bit(m_db.lastError().text().toStdString().c_str()));
+        oneSecodeData.append(errorData);
+        result.insert("Error", oneSecodeData);
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
 }
 
 QList<QPointF> Database::getOriChartData(QString startDate, QString endDate, QString keyValue,
@@ -105,43 +414,6 @@ QList<QPointF> Database::getOriChartData(QString startDate, QString endDate, QSt
     return pointList;
 }
 
-QList<QStringList> Database::getOriChartData(QString startDate, QString endDate, QStringList keyValueList,
-                                         QString tableName, QString databaseName){
-
-    QList<QStringList> resultList;
-    if(m_db.open ()) {
-        QSqlQuery queryObj(m_db);
-        QString keyValueStr = "";
-        for (int i = 0; i < keyValueList.size (); ++i) {
-            keyValueStr += ", [" + keyValueList[i] + "] ";
-        }
-
-        QString sqlstr = QString("select [TDATE], [TIME] ") + keyValueStr  \
-                       + QString("from [") + databaseName + "].[dbo].[" + tableName + "] " \
-                       + "where TDATE <= " + endDate + " and TDATE >= " + startDate;
-//        qDebug() <<sqlstr;
-        queryObj.exec(sqlstr);
-         while(queryObj.next ()) {
-            QStringList tmpResult;
-            QList<int> tmpDate = getDateList(queryObj.value (0).toInt ());
-            QList<int> tmpTime = getTimeList (queryObj.value (1).toInt ());
-            QDateTime timeValue;
-            timeValue.setDate (QDate(tmpDate[0], tmpDate[1], tmpDate[2]));
-            timeValue.setTime (QTime(tmpTime[0], tmpTime[1], tmpTime[2]));
-            tmpResult.append (QString("%1").arg(timeValue.toMSecsSinceEpoch ()));
-            for (int i = 0; i < keyValueList.size(); ++i) {
-                tmpResult.append(queryObj.value (i+2).toString ());
-            }
-            resultList.append (tmpResult);
-         }
-    } else {
-        QMessageBox::information (m_window, "Error", m_db.lastError().text());
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-    return resultList;
-}
-
-
 QList<TableData> Database::getOriData(QString startDate, QString endDate, QString keyValue,
                                          QString tableName, QString databaseName){
 
@@ -170,184 +442,6 @@ QList<TableData> Database::getOriData(QString startDate, QString endDate, QStrin
     return tableDataList;
 }
 
-QMap<QString, QStringList> Database::getPreCloseData(QString tableName, QString databaseName) {
-    QMap<QString, QStringList> result;
-    if(m_db.open ()) {
-    QSqlQuery queryObj(m_db);
-    QString sqlstr = QString("select * from [") + databaseName + "].[dbo].[" + tableName + "] ";
-    queryObj.exec(sqlstr);
-    int valueNumb = 2;
-     while(queryObj.next ()) {
-         QStringList signalData;
-         QString secode = queryObj.value (0).toString();
-         for (int i = 1; i < valueNumb; ++i) {
-             signalData.append(queryObj.value (i).toString());
-         }
-         result.insert(secode, signalData);
-     }
-    }else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-    return result;
-}
-
-QMap<QString, QStringList> Database::getSnapShootData(QString tableName, QString databaseName) {
-    QMap<QString, QStringList> result;
-    if(m_db.open ()) {
-    QSqlQuery queryObj(m_db);
-    QString sqlstr = QString("select * from [") + databaseName + "].[dbo].[" + tableName + "] ";
-    queryObj.exec(sqlstr);
-    int valueNumb = 6;
-     while(queryObj.next ()) {
-         QStringList signalData;
-         QString secode = queryObj.value (0).toString();
-         for (int i = 1; i < valueNumb; ++i) {
-             signalData.append(queryObj.value (i).toString());
-         }
-//         qDebug() << "i: " << ++i << secode << ":  " << signalData;
-         result.insert(secode, signalData);
-     }
-    } else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-//    qDebug() << "Database::getSnapShootData End!";
-    return result;
-}
-
-QMap<QString, QStringList> Database::getSnapShootData(QList<QString> tableNameArray, QString databaseName) {
-    QMap<QString, QStringList> result;
-    if(m_db.open ()) {
-        QSqlQuery queryObj(m_db);
-        for (int i = 0; i < tableNameArray.size(); ++i) {
-            QString secode = tableNameArray[i];
-            QString tableName = secode;
-            QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
-            QString sqlstr = "select * from " + completeTableName + " where 时间 = (select max(时间) from " + completeTableName + ")";
-            queryObj.exec(sqlstr);
-            int valueNumb = 7;
-             while(queryObj.next ()) {
-                 QStringList signalData;
-                 QString secode = queryObj.value (0).toString();
-                 for (int j = 1; j < valueNumb; ++j) {
-                     signalData.append(queryObj.value (j).toString());
-                 }
-                 result.insert(secode, signalData);
-             }
-        }
-    } else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-//    qDebug() << "Database::getSnapShootData End!";
-    return result;
-}
-
-QMap<QString, QList<QStringList>> Database::getSnapShootHistoryData(QList<QString> tableNameArray, QString databaseName) {
-    QMap<QString, QList<QStringList>> result;
-    if(m_db.open ()) {
-        QSqlQuery queryObj(m_db);
-        for (int i = 0; i < tableNameArray.size(); ++i) {
-            QString secode = tableNameArray[i];
-            QString tableName = secode;
-            QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
-            QString sqlstr = "select * from" + completeTableName;
-            queryObj.exec(sqlstr);
-            int valueNumb = 7;
-            QList<QStringList> oneSecodeData;
-             while(queryObj.next ()) {
-                 QStringList signalData;
-                 QString secode = queryObj.value (0).toString();
-                 for (int j = 1; j < valueNumb; ++j) {
-                     signalData.append(queryObj.value (j).toString());
-                 }
-                 oneSecodeData.append(signalData);
-             }
-             result.insert(secode, oneSecodeData);
-        }
-    } else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-    return result;
-}
-
-double Database::getClosePrice(QString secode, QString date) {
-    double result = -1;
-    if(m_db.open ()) {
-        QSqlQuery queryObj(m_db);
-        QString tableName;
-        QString completeTableName;
-        QString sqlstr;
-        if (date == "realtime") {
-            tableName = getCompleteSecode(secode, "wind");
-            completeTableName = "[MarketData_RealTime].[dbo].[" + tableName + "]";
-            sqlstr = "select 最新成交价 from" + completeTableName + " where 时间 = (select max(时间) from " + completeTableName + ")";
-//            qDebug() << "sqlstr: " << sqlstr;
-        } else {
-            tableName = getCompleteSecode(secode, "tinysoft");
-            completeTableName = "[MarketData_day].[dbo].[" + tableName + "]";
-            sqlstr = "select TCLOSE from " + completeTableName + " where TDATE = "+ date ;
-//            qDebug() << "sqlstr: " << sqlstr;
-        }
-
-        queryObj.exec(sqlstr);
-
-        while(queryObj.next ()) {
-            result = queryObj.value (0).toDouble();
-        }
-//        qDebug() << secode << ", " << date << ", " << result;
-    } else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-
-    return result;
-}
-
-QList<QString> Database::getTableList(QString databaseName) {
-    QList<QString> result;
-    if(m_db.open ()) {
-        QSqlQuery queryObj(m_db);
-        QString sqlstr = "select name from "+ databaseName +"..sysobjects where xtype= 'U'";
-        queryObj.exec(sqlstr);
-        while(queryObj.next ()) {
-             result.append(queryObj.value (0).toString());
-        }
-    } else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-    return result;
-}
-
-QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> tableNameArray, QString startDate,
-                                                        QString endDate, QString databaseName) {
-    QMap<QString, QList<QStringList>> result;
-    if(m_db.open ()) {
-        QSqlQuery queryObj(m_db);
-        for (int i = 0; i < tableNameArray.size(); ++i) {
-            QString secode = tableNameArray[i];
-            QString tableName = secode;
-            QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
-            QString sqlstr = "select * from" + completeTableName  + " where Date <= " + endDate + " and Date >= " + startDate;
-            queryObj.exec(sqlstr);
-            int valueNumb = 4;
-            QList<QStringList> oneSecodeData;
-             while(queryObj.next ()) {
-                 QStringList signalData;
-                 QString secode = queryObj.value (0).toString();
-                 for (int j = 0; j < valueNumb; ++j) {
-                     QString tmpdata = queryObj.value (j).toString();
-                     tmpdata.remove("\t");
-                     signalData.append(tmpdata);
-                 }
-                 oneSecodeData.append(signalData);
-             }
-             if (oneSecodeData.size() > 0) {
-                 result.insert(secode, oneSecodeData);
-             }
-        }
-    } else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-    return result;
-}
 
 QString Database::getCreateStr(QString tableName) {
     return "";

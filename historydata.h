@@ -49,33 +49,33 @@ public slots:
     void receiveProcessedData(QList<QList<double>> allData);
 
 private:
-    bool m_isRealTime;
-    int m_threadNumb;
-    QString m_signalType;
-    mutable QMutex m_mutex;
+    bool                               m_isRealTime;
+    int                                m_threadNumb;
+    QString                            m_signalType;
+    mutable QMutex                    m_mutex;
 
-    int m_chartViewID;
-    QString m_dbhost;
-    QString m_databaseName;
-    QString m_hedgeIndexCode;
-    QList<int> m_macdTime;
-    QString m_startDate;
-    QString m_endDate;
-    QStringList m_keyValueList;
+    int                                m_chartViewID;
+    QString                            m_dbhost;
+    QString                            m_databaseName;
+    QString                            m_hedgeIndexCode;
+    QList<int>                         m_macdTime;
+    QString                            m_startDate;
+    QString                            m_endDate;
+    QStringList                        m_keyValueList;
 
-    QMap<QString, int> m_buyStrategyMap;
-    QMap<QString, int> m_saleStrategyMap;
-    QMap<QString, int> m_seocdebuyCountMap;
-    QList<QString> m_secodeNameList;
+    QMap<QString, int>                 m_buyStrategyMap;
+    QMap<QString, int>                 m_saleStrategyMap;
+    QMap<QString, int>                 m_seocdebuyCountMap;
+    QList<QString>                     m_secodeNameList;
 
-    QList<DataProcess*> m_dataProcessList;
-    QList<QThread*> m_dataProcessThreadList;
+    QList<DataProcess*>                m_dataProcessList;
+    QList<QThread*>                    m_dataProcessThreadList;
 
-    QList<QStringList> m_threadSecodeList;
-    QList<DataRead*> m_dataReaderList;
-    QList<QThread*> m_dataReaderThreadList;
-    int m_readDataThreadCount;
-    QMap<QString, QList<QStringList>> m_completeTableData;
+    QList<QStringList>                 m_threadSecodeList;
+    QList<DataRead*>                   m_dataReaderList;
+    QList<QThread*>                    m_dataReaderThreadList;
+    int                                m_readDataThreadCount;
+    QMap<QString, QList<QStringList>>  m_completeTableData;
 };
 
 #endif // HISTORYDATA_H

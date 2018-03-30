@@ -1,4 +1,4 @@
-#include "widget.h"
+﻿#include "widget.h"
 #include <QApplication>
 #include "test.h"
 #include "testform.h"
@@ -7,6 +7,7 @@
 #include "processfunc.h"
 #include "dialog.h"
 #include "generateportfolioform.h"
+#pragma execution_character_set("utf-8");
 
 void setLibPath() {
     QApplication::addLibraryPath(".");
@@ -18,13 +19,13 @@ int main(int argc, char *argv[])
     setLibPath();
     QApplication a(argc, argv);
 
-//    Widget w;
-//    w.setWindowTitle("Client");
-//    w.show();
+    Widget spreadWindow;
+    spreadWindow.setWindowTitle("Client");
+    spreadWindow.show();
 
-    GeneratePortfolioForm genePorfolioWindow;
-    genePorfolioWindow.setWindowTitle("生成组合");
-    genePorfolioWindow.show();
+//    GeneratePortfolioForm genePorfolioWindow;
+//    genePorfolioWindow.setWindowTitle("生成组合");
+//    genePorfolioWindow.show();
 
 //    Dialog testDialog(8);
 //    testDialog.show ();

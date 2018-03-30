@@ -1,4 +1,4 @@
-#include "historydata.h"
+﻿#include "historydata.h"
 #include "toolfunc.h"
 
 HistoryData::HistoryData(int chartViewID, QString dbhost, QString databaseName,
@@ -74,7 +74,7 @@ void HistoryData::initReadDataSignal() {
         m_dataReaderThreadList.append(curThread);
     }
 
-    qDebug() << "HistoryData::initReadDataSignal: " << QThread::currentThreadId();
+//    qDebug() << "HistoryData::initReadDataSignal: " << QThread::currentThreadId();
 }
 
 void HistoryData::getHistData() {
@@ -86,15 +86,23 @@ void HistoryData::receiveOriginalData (QMap<QString, QList<QStringList>> subThre
     QMutexLocker locker(&m_mutex);
     m_completeTableData.unite (subThreadData);
     ++m_readDataThreadCount;
+
 //    qDebug() << "HistoryData::receiveOriginalData: " << QThread::currentThreadId()
 //             << ", dataNumb: " << subThreadData.size ()
 //             << ", m_readDataThreadCount: " << m_readDataThreadCount << "\n";
 
-    emit tableViewInfoSignal(QString("完成股票指数读取数目: %1").arg(m_completeTableData.size ()));
+    emit tableViewInfoSignal(QString(QString::fromLocal8Bit("完成股票指数读取数目: %1"))
+                             .arg(m_completeTableData.size ()));
+
     if (m_readDataThreadCount == m_threadNumb) {
+
         releaseDataReaderSrc ();
         m_readDataThreadCount = 0;
-        startProcessData();
+        if (m_completeTableData.find("Error")!= m_completeTableData.end()) {
+            emit tableViewInfoSignal(QString::fromLocal8Bit("Error: 读取数据出错"));
+        } else {
+            startProcessData();
+        }
         m_completeTableData.clear ();
     }
 }
@@ -104,8 +112,9 @@ void HistoryData::initProcessDataSignal() {
     for (int i = 0; i < m_secodeNameList.size (); ++i) {
         oridataCount += m_completeTableData[m_secodeNameList[i]].size ();
     }
-    emit tableViewInfoSignal(QString("原始数据获取完成, 原始数据总数: %1").arg(oridataCount));
-    emit tableViewInfoSignal(QString("计算数据"));
+    emit tableViewInfoSignal(QString(QString::fromLocal8Bit("原始数据获取完成, 原始数据总数: %1"))
+                             .arg(oridataCount));
+
     DataProcess* curDataProcess;
     if (m_buyStrategyMap.size() != 0 && m_saleStrategyMap.size() != 0) {
         curDataProcess = new DataProcess(m_isRealTime, m_completeTableData,
@@ -135,13 +144,12 @@ void HistoryData::initProcessDataSignal() {
 void HistoryData::startProcessData () {
     initProcessDataSignal();
     emit startProcessDataSignal("all");
-    qDebug() << "Start Process History Data!!";
-    emit tableViewInfoSignal("Start Process History Data!");
+//    qDebug() << "Start Process History Data!!";
+    emit tableViewInfoSignal(QString::fromLocal8Bit("开始计算历史数据"));
 }
 
 void HistoryData::receiveProcessedData (QList<QList<double>> allData) {
-    qDebug() << "HistoryData::receiveProcessedHistoryData: " << QThread::currentThreadId();
-    emit tableViewInfoSignal("HistoryData Receive Processed HistoryData!");
+//    qDebug() << "HistoryData::receiveProcessedHistoryData: " << QThread::currentThreadId();
     emit receiveHistDataSignal(allData);
     releaseDataProcessSrc();
 }

@@ -1,4 +1,4 @@
-#ifndef TOOLFUNC_H
+﻿#ifndef TOOLFUNC_H
 #define TOOLFUNC_H
 #include <QString>
 #include <QList>
@@ -11,6 +11,7 @@
 #include <QFileInfo>
 #include <QStandardItemModel>
 #include <QStandardItem>
+#include <QModelIndexList>
 #include "macd.h"
 //#include "WAPIWrapperCpp.h"
 
@@ -61,7 +62,9 @@ void updateProgramInfo(QTableView* programInfoTableView, QString message, QStrin
 
 QString getWindSecode(QString secode);
 
-QString getCompleteSecode(QString secode, QString style);
+QString getCompleteSecode(QString secode, QString style, QString letterCase = "capital");
+
+QString getSimpleSecode(QString secode);
 
 QString getCompleteIndexCode(QString secode, QString style);
 
@@ -89,9 +92,9 @@ QList<QFileInfo> getExcelFileInfo(QString dirName);
 
 QList<QFileInfo> getDirName(QString dirName);
 
-QStandardItemModel* getStandardItemModel(QString title, QList<QString> valueList);
+QStandardItemModel* getStandardItemModel(QList<QString> valueList);
 
-QStandardItemModel* getStandardItemModel(QString title, QList<QFileInfo> valueList);
+QStandardItemModel* getStandardItemModel(QList<QFileInfo> valueList);
 
 QList<QPointF> getStrategyPointList(QMap<QString, QList<QStringList>> oriData,
                                     QMap<QString, int> seocdebuyCountMap);
@@ -120,7 +123,34 @@ QStringList EmpytStringList();
 
 bool isSecodeValid(QString secode);
 
-void writePortfolio(QMap<QString, int> portfolio, QString fileName);
+void initExcelFile(QString fileName);
+
+int writePortfolio(QMap<QString, double> portfolio, QString fileName,
+                    QString accountName, QString type, QString sheetName="Sheet1");
+
+//void writePortfolio(QMap<QString, double> portfolio, QString fileName,
+//                    QString accountName, QString type, QString sheetName="1");
+
+int writeFileInfo(QString fileName, QString colName,
+                   QString value, QString sheetName = "Sheet1");
+
+QString readlFileData(QString fileName, int row, int col, QString sheetName = "Sheet1");
+
+QMap <int, int>  getSelectRows(QTableView* tableView);
+
+QList<QString> getSelectTableData(QTableView* tableView, QMap<int, int> selectInfo);
+
+QMap<QString, int> readExcelMapInt(QString fileName, QString sheetName="Sheet1");
+
+QMap<QString, double> readExcelMapDouble(QString fileName, QString sheetName="Sheet1");
+
+QList<QStringList> readExcelData(QString fileName, QString sheetName="Sheet1");
+
+double getPortfolioAmount(QMap<QString, double> priceMap, QMap<QString, double> porfolioMap);
+
+QList<int> DefaultExcelColIndex();
+
+QMap<QString, QString> getPortfolioAmountMap(QList<QFileInfo> fileInfoList);
 
 template<class keyType, class valueType>
 void printMap(QMap<keyType, valueType> data, QString message) {
@@ -130,6 +160,7 @@ void printMap(QMap<keyType, valueType> data, QString message) {
         qDebug() << it.key() << ": " << it.value();
     }
 }
+
 
 //LPCWSTR transSecode(QStringList secodeList);
 

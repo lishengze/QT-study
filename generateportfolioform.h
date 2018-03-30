@@ -1,9 +1,11 @@
-#ifndef GENERATEPORTFOLIOFORM_H
+﻿#ifndef GENERATEPORTFOLIOFORM_H
 #define GENERATEPORTFOLIOFORM_H
 
 #include <QWidget>
 #include <QFileInfo>
 #include <QTimer>
+#include <QMenu>
+#include <QFileDialog>
 #include "database.h"
 #include "excel.h"
 
@@ -18,18 +20,14 @@ class GeneratePortfolioForm : public QWidget
 public:
     explicit GeneratePortfolioForm(QWidget *parent = 0);
     void initCommnData();
+    void initFileDir();
     void initExcelFileInfo();
-    void initAccountNameList();
 
     void initWidget();
     void initChoosePriceDate();
-    void initAccountCombox();
-    void initAccountTable();
-    void initSalePortfolioTable();
-    void initStrategyTable();
-    void initProgramInfoTable();
 
-    void initAllStrategy();
+    void initProgramInfoTable();
+    void initTableContextMenu();
 
     void setAccountTable();
     void setStrategyTable();
@@ -40,20 +38,35 @@ public:
     bool isStrategyWeightValid();
 
     QMap<QString, double> getClosePrice();
-    double getCapitalization();
+    QMap<QString, double> getClosePrice(QList<QString> secodeList, QString indexCode, QString timepType);
 
-    QMap<QString, int> getNewPortfolio();
-    QList<QMap<QString, int>> getBuySalePortfolio();
+    double getCapitalization(double HS300Count);
+
+    QMap<QString, double> getNewPortfolio(QMap<QString, double> strategyMap,
+                                          QMap<QString, double> secodePrice,
+                                          double marketCapitalization);
+
+    QMap<QString, double> unitePortfolio(QMap<QString, double> desMap,
+                                         QMap<QString, double> oriMap);
+
+    QMap<QString, double> intPorfolio(QMap<QString, double> oriPortfolio);
+
+    QList<QMap<QString, double>> getBuySalePortfolio();
     void storeBuySalePortfolio();
 
     QMap<QString, double> getStrategyWeight();
+    QMap<QString, QMap<QString, double>> getCurrStrategy(QMap<QString, double> strategyWeight);
+    QList<QString> getCurrSecodeList(QMap<QString, QMap<QString, double>> allStrategyMap);
     QMap<QString, double> getCurStrategy();
+
+    QString getStrategyWeightStringInfo(QMap<QString, double>  strategyWeight);
+    QList<QString> getAccountStringInfo(QString accountFileName);
 
     void clearGeneInfo();
     ~GeneratePortfolioForm();
 
 private slots:
-    void on_chooseAccount_ComboBox_currentIndexChanged(int index);
+//    void on_chooseAccount_ComboBox_currentIndexChanged(int index);
 
     void on_account_table_clicked(const QModelIndex &index);
 
@@ -65,51 +78,85 @@ private slots:
 
     void on_buySalePortfolio_table_doubleClicked(const QModelIndex &index);
 
+    void on_strategy_table_doubleClicked(const QModelIndex &index);
+
     void on_account_table_doubleClicked(const QModelIndex &index);
 
-    void on_refreshAllTable_clicked();
+    void show_accountTable_contextMenu(QPoint);
+
+    void show_strategyTable_contextMenu(QPoint);
+
+    void show_portfolioTable_contextMenu(QPoint);
+
+    void refresh_account_table();
+
+    void refresh_strategy_table();
+
+    void refresh_portfolio_table();
+
+    void delete_account_file();
+
+    void delete_strategy_file();
+
+    void delete_portfolio_file();
+
+    void on_choose_account_button_clicked();
+
+    void on_choose_strategy_button_clicked();
+
+    void on_choose_portfolio_button_clicked();
 
 private:
-    Ui::GeneratePortfolioForm *ui;
-    QString m_mainDir;
-    QString m_accountFatherDir;
-    QString m_accountCurrDir;
-    QString m_accountPortfolioDir;
-    QString m_strategyDir;
-    QFileInfo m_currAccountInfo;
+    Ui::GeneratePortfolioForm *            ui;
+    QString                                m_indexCode;
+    QList<QString>                         m_currSecodeList;
 
-    QList<QFileInfo> m_accountDirList;
-    QList<QFileInfo> m_currAccountFileList;
-    QList<QFileInfo> m_strategyFileList;   
-    QList<QFileInfo> m_buySalePortfolioFileList;
+    QString                                m_nativeFileName;
+    QString                                m_mainDir;
+    QString                                m_accountFatherDir;
+    QString                                m_accountCurrDir;
+    QString                                m_accountPortfolioDir;
+    QString                                m_strategyDir;
 
-    QFileInfo m_currStrategFileInfo;
-    QFileInfo m_currAccountFileInfo;
 
-    int m_strategyExcelFileColNumb;
-    QList<int> m_accoutnExcelFileColNumbList;
-    QList<QList<int>> m_accountExcelFileUsefulColNumbList;
+    QList<QFileInfo>                       m_accountDirList;
+    QList<QFileInfo>                       m_currAccountFileList;
+    QList<QFileInfo>                       m_strategyFileList;
+    QList<QFileInfo>                       m_buySalePortfolioFileList;
 
-    QMap<QString, double> m_currStrategyMap;
-    QMap<QString, int> m_currAccountMap;
-    QMap<QString, double> m_currPriceMap;
-    QString m_priceTime;
+    QFileInfo                              m_currAccountInfo;
+    QFileInfo                              m_currStrategFileInfo;
+    QFileInfo                              m_currAccountFileInfo;
 
-    double m_currMarketCapitalization;
-    QMap<QString, double> m_strategyWeight;
-    QMap<QString, double> m_currSecodeClosePrice;
-    QMap<QString, int> m_currNewPortfolio;
-    QMap<QString, int> m_currBuyPortfolio;
-    QMap<QString, int> m_currSalePortfolio;
-    QMap<QString, QMap<QString, double>> m_allStrategy;
+    int                                    m_strategyExcelFileColNumb;
+    QList<int>                             m_accoutnExcelFileColNumbList;
+    QList<QList<int>>                      m_accountExcelFileUsefulColNumbList;
 
-    Database* m_database;
-    Excel m_excel;
-    bool m_isInit;
+    QMap<QString, double>                  m_currStrategyMap;
+    QMap<QString, int>                     m_currAccountMap;
+    QMap<QString, double>                  m_currPriceMap;
+    QString                                m_priceTime;
 
-    QTimer m_timer;
-    int m_refreshTime;
+    double                                 m_currMarketCapitalization;
+    QMap<QString, double>                  m_strategyWeight;
+    QMap<QString, double>                  m_currSecodeClosePrice;
+    QMap<QString, double>                  m_currNewPortfolio;
+    QMap<QString, double>                  m_currBuyPortfolio;
+    QMap<QString, double>                  m_currSalePortfolio;
+    QMap<QString, QMap<QString, double>>   m_allStrategy;
 
+    QMap<QString, QString>                 m_portfolioAmount;
+
+    Database*                              m_database;
+    Excel                                  m_excel;
+    bool                                   m_isInit;
+
+    QTimer                                 m_timer;
+    int                                    m_refreshTime;
 };
+
+
+//    void on_refreshAllTable_clicked();
+
 
 #endif // GENERATEPORTFOLIOFORM_H

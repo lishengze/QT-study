@@ -1,4 +1,4 @@
-#ifndef MONITORREALTIMEDATA_H
+﻿#ifndef MONITORREALTIMEDATA_H
 #define MONITORREALTIMEDATA_H
 #include <QMap>
 #include <QString>
@@ -43,27 +43,29 @@ public slots:
     void getPreCloseSpread();
 
 private:
-    QMap<QString, QStringList> m_realTimeData;
-    int m_monitorTime;
-    QTimer m_timer;
-    int m_hedgeIndexCount;
-    QList<int> m_macdTime;
-    QMap<QString, QList<double>> m_vot;
-    QMap<QString, QList<QString>> m_time;
+    QMap<QString, QStringList>      m_realTimeData;
+    int                             m_monitorTime;
+    int                             m_singleSecodeReadTime;
+    int                             m_maxWaitTime;
+    QTimer                          m_timer;
+    int                             m_hedgeIndexCount;
+    QList<int>                      m_macdTime;
+    QMap<QString, QList<double>>    m_vot;
+    QMap<QString, QList<QString>>   m_time;
 
-    QMap<QString, double> m_indexHedgeMetaInfo;
-    QString m_hedgeIndexCode;
-    QStringList m_secodeNameList;
-    QMap<QString, int> m_seocdebuyCountMap;
+    QMap<QString, double>           m_indexHedgeMetaInfo;
+    QString                         m_hedgeIndexCode;
+    QStringList                     m_secodeNameList;
+    QMap<QString, int>              m_seocdebuyCountMap;
 
-    QMap<QString, int> m_buyStrategyMap;
-    QMap<QString, int> m_saleStrategyMap;
+    QMap<QString, int>              m_buyStrategyMap;
+    QMap<QString, int>              m_saleStrategyMap;
 
-    QList<MACD> m_macdData;
+    QList<MACD>                     m_macdData;
 
-    QString m_dbConnId;
-    QString m_dbhost;
-    Database* m_database;
+    QString                         m_dbConnId;
+    QString                         m_dbhost;
+    Database*                       m_database;
 };
 
 //    void computePreCloseData(QMap<QString, QStringList> allPreCLoseData);

@@ -1,4 +1,4 @@
-#ifndef DATABASE_H
+﻿#ifndef DATABASE_H
 #define DATABASE_H
 #include <QString>
 #include <QList>
@@ -40,6 +40,9 @@ public:
     QMap<QString, QStringList> getSnapShootData(QList<QString> tableNameArray, QString databaseName="MarketData_RealTime");
 
     QMap<QString, QList<QStringList>> getSnapShootHistoryData(QList<QString> tableNameArray, QString databaseName="MarketData_RealTime");
+
+    QMap<QString, QList<QStringList>> getLongTimeHistoryData(QString startDate, QString endDate, QStringList keyValueList,
+                                                             QStringList tableNameList, QString databaseName="MarketData");
 
     QMap<QString, QStringList> getPreCloseData(QString tableName = "PreCloseData", QString databaseName="MarketData_RealTime");
 

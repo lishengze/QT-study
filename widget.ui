@@ -308,6 +308,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="chooseStrategyDir_Button">
+        <property name="text">
+         <string>选择策略组合文件夹</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QLabel" name="strategy_label_2">
         <property name="minimumSize">
          <size>
@@ -320,15 +327,22 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="choosePortfolioDir_Button">
+        <property name="text">
+         <string>选择买卖组合文件夹</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QTableView" name="hedgeIndexStrategyTable"/>
+       <widget class="QTableView" name="strategy_table"/>
       </item>
       <item>
-       <widget class="QTableView" name="buySaleStrategyTable"/>
+       <widget class="QTableView" name="buySalePortfolio_table"/>
       </item>
      </layout>
     </item>

@@ -1,8 +1,10 @@
-#include "monitorrealtimedata.h"
+﻿#include "monitorrealtimedata.h"
 #include <QDateTime>
 #include <QDebug>
 #include <QThread>
+#include <algorithm>
 #include "toolfunc.h"
+using namespace  std;
 
 MonitorRealTimeData::MonitorRealTimeData(QString dbConnId, QString dbhost,
                                         int monitorTime,  QList<int> macdTime,
@@ -22,6 +24,10 @@ MonitorRealTimeData::MonitorRealTimeData(QString dbConnId, QString dbhost,
 
 void MonitorRealTimeData::initCommonData() {
     initIndexHedgeMetaInfo();
+    m_singleSecodeReadTime = 20;
+    m_maxWaitTime = 3000;
+    m_monitorTime = max(m_maxWaitTime - m_singleSecodeReadTime * m_secodeNameList.size(), 0);
+    qDebug() << "m_monitorTime: " << m_monitorTime;
 
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(getRealTimeData()));
 
@@ -50,6 +56,7 @@ void MonitorRealTimeData::setInitMacd(MACD initMacdData) {
 
 void MonitorRealTimeData::startTimer() {
      m_timer.start(m_monitorTime);
+
 }
 
 void MonitorRealTimeData::stopTimer() {
@@ -77,6 +84,7 @@ void MonitorRealTimeData::getRealTimeData() {
 
     if (isTradingTime(QTime::currentTime())) {
         QMap<QString, QStringList> oriRealTimeData = m_database->getSnapShootData(m_secodeNameList);
+        qDebug() << "oriRealTimeData.size: " << oriRealTimeData.size();
         bool isDataUseful = preProcessRealTimeData(oriRealTimeData);
         if (isDataUseful) {
             emit sendRealTimeData(computeRealTimeData());
@@ -85,15 +93,14 @@ void MonitorRealTimeData::getRealTimeData() {
 }
 
 bool MonitorRealTimeData::preProcessRealTimeData(QMap<QString, QStringList> realTimeData) {
-    QList<QString> realTimeDataSecodeList = realTimeData.keys();
     int sameTimeCount = 0;
-    double unUpdatedDataPercent = 0.5;
-    for (int i = 0; i < m_secodeNameList.size(); ++i) {
-        QString secode = m_secodeNameList[i];
-        if (realTimeDataSecodeList.indexOf(secode) < 0) {
-            qDebug() << "secode: " << secode;
-            continue;
-        }
+    double unUpdatedDataPercent = 0.8;
+    if (realTimeData.find("Error") != realTimeData.end()) {
+        return false;
+    }
+    for (QMap<QString, QStringList>::iterator it = realTimeData.begin();
+         it != realTimeData.end(); ++it) {
+        QString secode = it.key();
 
         m_vot[secode].append(realTimeData[secode][4].toDouble());
         m_time[secode].append(realTimeData[secode][1]);
@@ -114,7 +121,9 @@ bool MonitorRealTimeData::preProcessRealTimeData(QMap<QString, QStringList> real
         }
     }
 
-    if (sameTimeCount < m_secodeNameList.size() * unUpdatedDataPercent) {
+    qDebug() << "sameTimeCount: " << sameTimeCount;
+    if (realTimeData.size() == m_secodeNameList.size() &&
+        sameTimeCount < m_secodeNameList.size() * unUpdatedDataPercent ) {
         return true;
     } else {
         return false;
@@ -132,7 +141,8 @@ ChartData MonitorRealTimeData::computeRealTimeData() {
 
     double strategyData = result[0];
     double votData = result[1];
-    double timeData = result[2];
+//    double timeData = result[2];
+    double timeData = QDateTime::currentMSecsSinceEpoch();
     MACD macdData;
 
     if (m_macdData.size() > 0) {

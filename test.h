@@ -57,4 +57,6 @@ void testGetDirName();
 
 void testDatabaseBasic();
 
+void testXlsx();
+
 #endif // TEST_H
