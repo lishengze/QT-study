@@ -4,7 +4,7 @@
 #include <QDate>
 #include <QThread>
 #include "toolfunc.h"
-#include "WAPIWrapperCpp.h"
+//#include "WAPIWrapperCpp.h"
 using namespace std;
 
 RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView, QObject* parent):

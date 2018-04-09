@@ -1,4 +1,4 @@
-#include "dataread.h"
+﻿#include "dataread.h"
 
 DataRead::DataRead(QString databaseConnID, QString dbhost,
                    QString dbName, QStringList tableNameList,
@@ -30,21 +30,33 @@ void DataRead::receiveStartReadData(QString dataType) {
 }
 
 QMap<QString, QList<QStringList>> DataRead::readHistoryData () {
-    qDebug() << "DataRead::readHistoryData: " << QThread::currentThreadId()
-             << ", tableList.size: " << m_tableNameList.size();
-    QMap<QString, QList<QStringList>> result;
-    for (int i = 0; i < m_tableNameList.size (); ++i) {
-        QString secode = m_tableNameList[i];
-        QString tableName = m_tableNameList[i];
-        result.insert (secode, m_database->getOriChartData(m_startDate, m_endDate, m_keyValueList, tableName, m_dbName));
+
+//    QMap<QString, QList<QStringList>> result;
+//    for (int i = 0; i < m_tableNameList.size (); ++i) {
+//        QString secode = m_tableNameList[i];
+//        QString tableName = m_tableNameList[i];
+//        result.insert (secode, m_database->getOriChartData(m_startDate, m_endDate, m_keyValueList, tableName, m_dbName));
+//    }
+
+    QMap<QString, QList<QStringList>> result = m_database->getLongTimeHistoryData(m_startDate, m_endDate,
+                                                                                  m_keyValueList, m_tableNameList, m_dbName);
+    for (QMap<QString, QList<QStringList>>::iterator it = result.begin();
+         it != result.end(); ++it) {
+        qDebug() << "secode: " << it.key() << ", datanumb: " << it.value().size();
     }
+
     return result;
 }
 
 QMap<QString, QList<QStringList>> DataRead::readRealTimeData () {
-    qDebug() << "DataRead::readRealTimeData: " << QThread::currentThreadId()
-             << ", tableList.size: " << m_tableNameList.size();
+//    qDebug() << "DataRead::readRealTimeData: " << QThread::currentThreadId()
+//             << ", tableList.size: " << m_tableNameList.size();
     QMap<QString, QList<QStringList>> result = m_database->getSnapShootHistoryData(m_tableNameList);
+
+    for (QMap<QString, QList<QStringList>>::iterator it = result.begin();
+         it != result.end(); ++it) {
+        qDebug() << "secode: " << it.key() << ", datanumb: " << it.value().size();
+    }
     return result;
 }
 

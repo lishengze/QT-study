@@ -9,8 +9,6 @@ void testGetExcelFileName();
 
 void testRemovePathName();
 
-void testReadStrategyDataFromExcel();
-
 void testExcel();
 
 void testSortPointList();
@@ -39,10 +37,26 @@ void testDatabase();
 
 void testDataRead();
 
-void testTransSecode();
+//void testTransSecode();
 
-void testWindWsq();
+//void testWindWsq();
 
 void testGetSnapShootData();
+
+void testTransDateTime();
+
+void testGetAnnounce();
+
+void testGetTableList();
+
+void testRealtimeDatabaseApi();
+
+void testOpenUrl();
+
+void testGetDirName();
+
+void testDatabaseBasic();
+
+void testXlsx();
 
 #endif // TEST_H

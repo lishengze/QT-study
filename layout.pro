@@ -16,8 +16,8 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         widget.cpp \
-    setdata.cpp \
-    callout.cpp \
+#    setdata.cpp \
+#    callout.cpp \
     toolfunc.cpp \
     test.cpp \
     strategy.cpp \
@@ -28,19 +28,23 @@ SOURCES += main.cpp\
     tabledata.cpp \
     macd.cpp \
     qmychartview.cpp \
-    processfunc.cpp \
+#    processfunc.cpp \
     dataread.cpp \
     dataprocess.cpp \
     dialog.cpp \
-    realtimedataprocess.cpp \
-    realtimedataread.cpp \
+#    realtimedataprocess.cpp \
+#    realtimedataread.cpp \
     monitorrealtimedata.cpp \
     chartdata.cpp \
-    historydata.cpp
+    historydata.cpp \
+    announcementform.cpp \
+    realtimedatabase.cpp \
+#    webviewform.cpp
+    generateportfolioform.cpp
 
 HEADERS  += widget.h \
-    setdata.h \
-    callout.h \
+#    setdata.h \
+#    callout.h \
     toolfunc.h \
     test.h \
     strategy.h \
@@ -51,21 +55,32 @@ HEADERS  += widget.h \
     tabledata.h \
     macd.h \
     qmychartview.h \
-    processfunc.h \
+#    processfunc.h \
     dataread.h \
     dataprocess.h \
     dialog.h \
-    realtimedataprocess.h \
-    WAPIWrapperCpp.h \
-    realtimedataread.h \
+#    realtimedataprocess.h \
+#    WAPIWrapperCpp.h \
+#    realtimedataread.h \
     monitorrealtimedata.h \
     chartdata.h \
-    historydata.h
+    historydata.h \
+    announcementform.h \
+    realtimedatabase.h \
+#    webviewform.h
+    generateportfolioform.h
 
 FORMS    += widget.ui \
     chartform.ui \
-    dialog.ui
+    dialog.ui \
+    announcementform.ui \
+#    webviewform.ui
+    generateportfolioform.ui
 
-#LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
-LIBS += -LD:/github/workprogram/client/client-database -lWAPIWrapperCpp
-#LIBS += -LE:/github/work-program/client/client-database -lWAPIWrapperCpp
+include(qtxlsx/src/xlsx/qtxlsx.pri)
+
+RC_ICONS = dev.ico
+
+#RC_ICONS = stable.ico
+
+#RC_ICONS = Wondo.ico

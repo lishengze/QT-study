@@ -1,4 +1,4 @@
-#include <QDebug>
+﻿#include <QDebug>
 #include <QMetaType>
 #include <QMutexLocker>
 #include <QMessageBox>
@@ -91,25 +91,25 @@ void Dialog::receiveProcessedData (QMap<QString, QList<QStringList>> subThreadDa
         releaseDataReaderSrc ();
         m_processedThreadCount = 0;
         qDebug() << "m_completeTableData.size: " <<  m_completeTableData.size ();
-        startProcessData();
+//        startProcessData();
         m_completeTableData.clear ();
     }
 }
 
-void Dialog::startProcessData () {
-    DataProcess* curDataProcess = new DataProcess(m_completeTableData, m_secodeBuyCount, m_macdTime);
-    QThread* curDataProcessThread = new QThread();
-    curDataProcess->moveToThread (curDataProcessThread);
+//void Dialog::startProcessData () {
+//    DataProcess* curDataProcess = new DataProcess(false, false, m_completeTableData, m_secodeBuyCount, m_macdTime);
+//    QThread* curDataProcessThread = new QThread();
+//    curDataProcess->moveToThread (curDataProcessThread);
 
-    connect (curDataProcessThread, SIGNAL(finished()), curDataProcess, SLOT(deleteLater()));
-    connect (this, SIGNAL(sendStartProcessData(QString)), curDataProcess, SLOT(receiveStartProcessData(QString)));
-    connect(curDataProcess, SIGNAL(sendAllData(QList<QList<double>>)), this, SLOT(receiveAllProcessedData (QList<QList<double>>)));
+//    connect (curDataProcessThread, SIGNAL(finished()), curDataProcess, SLOT(deleteLater()));
+//    connect (this, SIGNAL(sendStartProcessData(QString)), curDataProcess, SLOT(receiveStartProcessData(QString)));
+//    connect(curDataProcess, SIGNAL(sendAllData(QList<QList<double>>)), this, SLOT(receiveAllProcessedData (QList<QList<double>>)));
 
-    curDataProcessThread->start ();
-    m_dataProcessList.append (curDataProcess);
-    m_dataProcessThreadList.append (curDataProcessThread);
-    emit sendStartProcessData("all");
-}
+//    curDataProcessThread->start ();
+//    m_dataProcessList.append (curDataProcess);
+//    m_dataProcessThreadList.append (curDataProcessThread);
+//    emit sendStartProcessData("all");
+//}
 
 void Dialog::receiveAllProcessedData (QList<QList<double>> allData) {
     qDebug() << "Dialog::receiveAllProcessedData: " << QThread::currentThreadId();
@@ -158,21 +158,21 @@ void Dialog::setTestProcessData () {
     qDebug() << "m_testMacdTIme:  " << m_testMacdTime;
 }
 
-void Dialog::testProcessData () {
-    setTestProcessData();
-    DataProcess* curDataProcess = new DataProcess(m_tesTabletData, m_testBuyCount, m_testMacdTime);
-    QThread* curDataProcessThread = new QThread();
-    curDataProcess->moveToThread (curDataProcessThread);
+//void Dialog::testProcessData () {
+//    setTestProcessData();
+//    DataProcess* curDataProcess = new DataProcess(m_tesTabletData, m_testBuyCount, m_testMacdTime);
+//    QThread* curDataProcessThread = new QThread();
+//    curDataProcess->moveToThread (curDataProcessThread);
 
-    connect (curDataProcessThread, SIGNAL(finished()), curDataProcess, SLOT(deleteLater()));
-    connect (this, SIGNAL(sendStartProcessData(QString)), curDataProcess, SLOT(receiveStartProcessData(QString)));
-    connect(curDataProcess, SIGNAL(sendAllData(QList<QList<double>>)), this, SLOT(receiveAllProcessedData (QList<QList<double>>)));
+//    connect (curDataProcessThread, SIGNAL(finished()), curDataProcess, SLOT(deleteLater()));
+//    connect (this, SIGNAL(sendStartProcessData(QString)), curDataProcess, SLOT(receiveStartProcessData(QString)));
+//    connect(curDataProcess, SIGNAL(sendAllData(QList<QList<double>>)), this, SLOT(receiveAllProcessedData (QList<QList<double>>)));
 
-    curDataProcessThread->start ();
-    m_dataProcessList.append (curDataProcess);
-    m_dataProcessThreadList.append (curDataProcessThread);
-    emit sendStartProcessData("all");
-}
+//    curDataProcessThread->start ();
+//    m_dataProcessList.append (curDataProcess);
+//    m_dataProcessThreadList.append (curDataProcessThread);
+//    emit sendStartProcessData("all");
+//}
 
 void Dialog::releaseDataReaderSrc () {
     qDebug() << "m_dataReaderThreadList.size(): " <<  m_dataReaderThreadList.size();
@@ -223,5 +223,5 @@ Dialog::~Dialog () {
 void Dialog::on_startProcessData_clicked()
 {
 //    startReadData ();
-    testProcessData();
+//    testProcessData();
 }
