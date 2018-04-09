@@ -1,4 +1,4 @@
-#ifndef UPDATEREALTIMEDATAFORM_H
+﻿#ifndef UPDATEREALTIMEDATAFORM_H
 #define UPDATEREALTIMEDATAFORM_H
 
 #include <QWidget>
@@ -31,7 +31,6 @@ public:
     void connectSignal();
     void registeParams();
 
-    bool isDatabaseWorking();
     ~UpdateRealtimeDataForm();
 
 signals:
@@ -43,6 +42,11 @@ public slots:
 
     void startReadRealTimeData_slot();
     void stopReadRealTimeData_slot();
+
+    void startWriteMonitorTimer_slot();
+    void stopWriteMonitorTimer_slot();
+    void startReadMonitorTimer_slot();
+    void stopReadMonitorTimer_slot();
 
 private slots:
 //    void on_startGetRealtimeData_clicked();

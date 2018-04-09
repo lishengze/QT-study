@@ -177,17 +177,26 @@ int RealTimeDatabase::getDatabaseWorkingFlag(QString tableName) {
     int result = -1;
     if (m_db.open()) {
         QString complete_tablename = "[" + m_connDbName+ "].[dbo].[" + tableName + "]";
-        QString check_str = "select top 1 [Flag] from "  + complete_tablename;
-        QString sql_str = "select [Flag] from" + complete_tablename
+        QString sql_str = "select [Flag], [Time] from" + complete_tablename
                         +  "where Date = (select max(Date) from " + complete_tablename + ")";
+
+//        QString sql_str = "select [Flag] from" + complete_tablename;
+
         QSqlQuery queryObj(m_db);
         queryObj.exec(sql_str);
-//        qDebug() << "check_str: " << sql_str;
+        qDebug() << "sql_str: " << sql_str;
+        int time = -1;
         while(queryObj.next())  {
-            result = queryObj.value (0).toInt ();
-//            qDebug() << "result: " << result;
+
+            int tmpTime = queryObj.value (1).toInt ();
+            if (tmpTime > time) {
+                time = tmpTime;
+                result = queryObj.value (0).toInt ();
+//                qDebug() << "result: " << result << ", time: " << time;
+            }
+
         }
-        qDebug() <<"Working Flag: " << result;
+        qDebug() <<"Working Flag: " << result << ", time: " << time;
     } else {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }

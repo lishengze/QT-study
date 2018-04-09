@@ -1,13 +1,13 @@
-#include "updaterealtimedataform.h"
-#include "ui_updaterealtimedataform.h"
-#include "toolfunc.h"
-#include <QDebug>
+﻿#include <QDebug>
 #include <QMessageBox>
 #include <QStandardItemModel>
 #include <QStandardItem>
 #include <QPersistentModelIndex>
 #include <QAbstractItemModel>
 #include "test.h"
+#include "toolfunc.h"
+#include "updaterealtimedataform.h"
+#include "ui_updaterealtimedataform.h"
 
 UpdateRealtimeDataForm::UpdateRealtimeDataForm(QWidget *parent) :
     QWidget(parent),
@@ -15,20 +15,13 @@ UpdateRealtimeDataForm::UpdateRealtimeDataForm(QWidget *parent) :
 {
     initCommonData();
     initDatabase();
-    if (isDatabaseWorking()) {
-        m_workingState = false;
-        QMessageBox::warning(this, "Error", "已有客户端在下载");
-        this->close();
-    } else {
-        m_workingState = true;
-        ui->setupUi(this);
-        initWidget();
-        initTableView();
 
-        m_realtimeDatabase->setDatabaseWorkingState(m_programInfoTableName, 1);
-        registeParams();
-        connectSignal();
-    }
+    initWidget();
+    registeParams();
+    connectSignal();
+
+    emit loginWind_signal();
+    updateProgramInfo(ui->regularMsgTableView, QString::fromLocal8Bit("正在登陆万得"));
 }
 
 void UpdateRealtimeDataForm::initCommonData() {
@@ -39,24 +32,20 @@ void UpdateRealtimeDataForm::initCommonData() {
     m_realTimeDataReadThread = NULL;
 }
 
-void UpdateRealtimeDataForm::initWidget() {
-
-}
-
 void UpdateRealtimeDataForm::initDatabase() {
-    m_dbName ="MarketData_RealTime";
+//    m_dbName ="MarketData_RealTime";
+    m_dbName ="Test";
     m_dbHost = "192.168.211.165";
-    m_dbConnID = "0";
+    m_dbConnID = "1";
     m_realtimeDatabase = new RealTimeDatabase(m_dbConnID, m_dbName, m_dbHost);
     m_programInfoTableName = "ProgramInfo";
+
+    m_realtimeDatabase->setDatabaseWorkingState(m_programInfoTableName, 1);
 }
 
-bool UpdateRealtimeDataForm::isDatabaseWorking() {
-    if (1 == m_realtimeDatabase->getDatabaseWorkingFlag(m_programInfoTableName)) {
-        return true;
-    } else {
-        return false;
-    }
+void UpdateRealtimeDataForm::initWidget() {
+    ui->setupUi(this);
+    initTableView();
 }
 
 void UpdateRealtimeDataForm::registeParams() {
@@ -68,9 +57,9 @@ void UpdateRealtimeDataForm::registeParams() {
 
 void UpdateRealtimeDataForm::initTableView () {
     QStandardItemModel* initModel = new QStandardItemModel();
-    initModel -> setHorizontalHeaderItem (0, new QStandardItem(QObject::tr("时间")));
-    initModel -> setHorizontalHeaderItem (1, new QStandardItem(QObject::tr("消息")));
-    initModel -> setHorizontalHeaderItem (2, new QStandardItem(QObject::tr("备注")));
+    initModel -> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("时间")));
+    initModel -> setHorizontalHeaderItem (1, new QStandardItem(QString::fromLocal8Bit("消息")));
+    initModel -> setHorizontalHeaderItem (2, new QStandardItem(QString::fromLocal8Bit("备注")));
     ui->regularMsgTableView->setModel(initModel);
     ui->regularMsgTableView->setColumnWidth (0, 150);
     ui->regularMsgTableView->setColumnWidth (1, 450);
@@ -78,9 +67,9 @@ void UpdateRealtimeDataForm::initTableView () {
     ui->regularMsgTableView->setShowGrid (false);
 
     QStandardItemModel* errMsgModel = new QStandardItemModel();
-    errMsgModel -> setHorizontalHeaderItem (0, new QStandardItem(QObject::tr("时间")));
-    errMsgModel -> setHorizontalHeaderItem (1, new QStandardItem(QObject::tr("消息")));
-    errMsgModel -> setHorizontalHeaderItem (2, new QStandardItem(QObject::tr("备注")));
+    errMsgModel -> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("时间")));
+    errMsgModel -> setHorizontalHeaderItem (1, new QStandardItem(QString::fromLocal8Bit("消息")));
+    errMsgModel -> setHorizontalHeaderItem (2, new QStandardItem(QString::fromLocal8Bit("备注")));
     ui->errorMsgTableView->setModel (errMsgModel);
     ui->errorMsgTableView->setColumnWidth (0, 150);
     ui->errorMsgTableView->setColumnWidth (1, 400);
@@ -88,14 +77,37 @@ void UpdateRealtimeDataForm::initTableView () {
     ui->errorMsgTableView->setShowGrid (false);
 }
 
+void UpdateRealtimeDataForm::startWriteMonitorTimer_slot() {
+    m_realTimeDataWrite->startMonitorTimer();
+}
+
+void UpdateRealtimeDataForm::stopWriteMonitorTimer_slot() {
+    m_realTimeDataWrite->stopMonitorTimer();
+}
+
+void UpdateRealtimeDataForm::startReadMonitorTimer_slot() {
+    m_realTimeDataRead->startMonitorTimer();
+}
+
+void UpdateRealtimeDataForm::stopReadMonitorTimer_slot() {
+    m_realTimeDataRead->stopMonitorTimer();
+}
+
+
 void UpdateRealtimeDataForm::connectSignal() {
     m_realTimeDataRead = new RealTimeDataRead(ui->regularMsgTableView, ui->errorMsgTableView,
-                                              "1", m_dbHost);
+                                              "2", m_dbHost);
     m_realTimeDataReadThread= new QThread();
     m_realTimeDataRead->moveToThread(m_realTimeDataReadThread);
 
     connect(m_realTimeDataReadThread, SIGNAL(finished()),
             m_realTimeDataRead, SLOT(deleteLater()));
+
+    connect(m_realTimeDataRead, SIGNAL(startMonitorTimer_signal()),
+            this, SLOT(startReadMonitorTimer_slot()));
+
+    connect(m_realTimeDataRead, SIGNAL(stopMonitorTimer_signal()),
+            this, SLOT(stopReadMonitorTimer_slot()));
 
     connect(this, SIGNAL(loginWind_signal()),
             m_realTimeDataRead, SLOT(loginWind_slot()));
@@ -110,7 +122,7 @@ void UpdateRealtimeDataForm::connectSignal() {
             this, SLOT(stopReadRealTimeData_slot()));
 
     m_realTimeDataWrite = new RealTimeDataWrite(ui->regularMsgTableView, ui->errorMsgTableView,
-                                                "2", m_dbHost);
+                                                "3", m_dbHost);
 
     m_realTimeDataWriteThread = new QThread();
     m_realTimeDataWrite->moveToThread(m_realTimeDataWriteThread);
@@ -118,27 +130,32 @@ void UpdateRealtimeDataForm::connectSignal() {
     connect(m_realTimeDataWriteThread, SIGNAL(finished()),
             m_realTimeDataWrite, SLOT(deleteLater()));
 
+    connect(m_realTimeDataWrite, SIGNAL(startMonitorTimer_signal()),
+            this, SLOT(startWriteMonitorTimer_slot()));
+
+    connect(m_realTimeDataWrite, SIGNAL(stopMonitorTimer_signal()),
+            this, SLOT(stopWriteMonitorTimer_slot()));
+
     connect(m_realTimeDataRead, SIGNAL(setSecodeList_signal(QList<QString>)),
             m_realTimeDataWrite, SLOT(setSecodeList_slot(QList<QString>)));
+
+    connect(m_realTimeDataWrite, SIGNAL(setSecodeListComplete_signal()),
+            m_realTimeDataRead, SLOT(setSecodeListComplete_slot()));
 
     connect(m_realTimeDataRead, SIGNAL(writePreCloseData_signal(QMap<QString,QStringList>)),
             m_realTimeDataWrite, SLOT(writePreCloseData_slot(QMap<QString, QStringList>)));
 
+    connect(m_realTimeDataWrite, SIGNAL(setPrecloseDataComplete_signal()),
+            m_realTimeDataRead, SLOT(setPrecloseDataComplete_slot()));
+
     connect(m_realTimeDataRead, SIGNAL(writeRealTimeData_signal(QMap<QString,QStringList>)),
             m_realTimeDataWrite, SLOT(writeRealTimeData_slot(QMap<QString, QStringList>)));
 
-    connect(m_realTimeDataWrite, SIGNAL(setRealTimeData_signal()),
-            m_realTimeDataRead, SLOT(setRealTimeData_slot()));
-
-    connect(m_realTimeDataWrite, SIGNAL(writeComplete_signal()),
-            m_realTimeDataRead, SLOT(writeComplete_slot()));
+    connect(m_realTimeDataWrite, SIGNAL(writeComplete_signal(int)),
+            m_realTimeDataRead, SLOT(writeComplete_slot(int)));
 
     m_realTimeDataWriteThread->start();
     m_realTimeDataReadThread->start();
-
-    emit loginWind_signal();
-
-    updateProgramInfo(ui->regularMsgTableView, "正在登陆万得");
 }
 
 void UpdateRealtimeDataForm::loginWindFailed_slot() {
@@ -161,57 +178,45 @@ void UpdateRealtimeDataForm::startReadRealTimeData_slot() {
 
 UpdateRealtimeDataForm::~UpdateRealtimeDataForm()
 {
-    qDebug() << 0;
-    if (m_workingState) {
-        m_realTimeDataRead->stopTimer();
-    }
+    delete ui;
 
-    qDebug() << 1;
     if (NULL != m_realTimeDataReadThread && !m_realTimeDataReadThread->isFinished()) {
         m_realTimeDataReadThread->quit();
     }
 
-    qDebug() << 2;
     if (NULL != m_realTimeDataWriteThread && !m_realTimeDataWriteThread->isFinished()) {
         m_realTimeDataWriteThread->quit();
     }
 
-    qDebug() << 3;
     if (NULL != m_realTimeDataRead) {
+        m_realTimeDataRead->stopTimer();
         m_realTimeDataRead = NULL;
         delete m_realTimeDataRead;
     }
 
-    qDebug() << 4;
     if (NULL != m_realTimeDataWrite) {
         m_realTimeDataWrite = NULL;
         delete m_realTimeDataWrite;
     }
 
-    qDebug() << 5;
     if (NULL != m_realTimeDataReadThread) {
         m_realTimeDataReadThread = NULL;
         delete m_realTimeDataReadThread;
     }
 
-    qDebug() << 6;
     if (NULL != m_realTimeDataWriteThread) {
         m_realTimeDataWriteThread = NULL;
         delete m_realTimeDataWriteThread;
     }
 
-    qDebug() << 7;
-    delete ui;
-    if (true == m_workingState) {
+    if (NULL != m_realtimeDatabase) {
         m_realtimeDatabase->setDatabaseWorkingState(m_programInfoTableName, 0);
     }
 
-    qDebug() << 8;
     if (NULL != m_realtimeDatabase) {
         delete m_realtimeDatabase;
         m_realtimeDatabase = NULL;
     }
-    qDebug() << 9;
 }
 
 //void UpdateRealtimeDataForm::initDatabase() {

@@ -1,9 +1,11 @@
-#include <QDebug>
+﻿#include <QDebug>
 #include <iostream>
 #include <QDate>
 #include <QThread>
 #include <windows.h>
 #include <QTime>
+#include <algorithm>
+using namespace std;
 #include "toolfunc.h"
 #include "WAPIWrapperCpp.h"
 #include "realtimedataread.h"
@@ -16,18 +18,25 @@ RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView, QTableView*
     m_dbConnID(dbConnID), m_dbHost(dbHost),
     QObject(parent)
 {
+
     initCommonData();
     initDatabase();
     initTimer();
+    initMonitorTimer();
 }
 
 void RealTimeDataRead::initCommonData() {
+    m_currProccessState = false;
     m_isTooEarly = false;
     m_isRestTime = false;
     m_login = false;
     m_wsqSnapshootDataNumb = 500;
-    m_updateTime = 3000;
+
     m_secodeList_IndexCode = "000906";
+    m_usefulReadRate = 0.5;
+
+    m_minReadWaitTime = 3500;
+    m_signalWriteTime = 2.5;
 }
 
 void RealTimeDataRead::initDatabase() {
@@ -39,39 +48,84 @@ void RealTimeDataRead::initTimer() {
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(setRealTimeData_slot()));
 }
 
+void RealTimeDataRead::setUpdateTime() {
+    m_updateTime = max(m_minReadWaitTime, int(m_signalWriteTime * m_secodeList.size()));
+}
+
 void RealTimeDataRead::startTimer() {
-    qDebug() << "RealTimeDataRead::startTimer: " << m_updateTime;
     if (!m_timer.isActive()) {
+        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("开启读取定时器，读取时间频率为: %1 毫秒")
+                                                  .arg(m_updateTime));
         m_timer.start(m_updateTime);
     }
 }
 
 void RealTimeDataRead::stopTimer() {
     if (m_timer.isActive()) {
-        qDebug() << "RealTimeDataRead::stopTimer()";
         m_timer.stop();
+    }
+}
+
+void RealTimeDataRead::initMonitorTimer() {
+    m_monitorExceptionWaitTime = 10000;
+    connect(&m_monitorExceptionTimer, SIGNAL(timeout()),
+            this, SLOT(monitorException_slot()));
+
+    updateProgramInfo(m_programInfoTableView,
+                      QString::fromLocal8Bit("读取异常监听时间为: %1 毫秒")
+                      .arg(m_monitorExceptionWaitTime));
+}
+
+void RealTimeDataRead::startMonitorTimer() {
+    m_currProccessState = false;
+    m_monitorExceptionTimer.start(m_monitorExceptionWaitTime);
+    qDebug() << "\n";
+    qDebug() << QString::fromLocal8Bit("开启了读取监听器, 剩余时间: %1")
+                .arg(m_monitorExceptionTimer.remainingTime());
+}
+
+void RealTimeDataRead::stopMonitorTimer() {
+    m_currProccessState = true;
+    if (m_monitorExceptionTimer.isActive()) {
+        m_monitorExceptionTimer.stop();
+//        qDebug() <<"Stop Time: " << QTime::currentTime();
+    }
+//    updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("关闭了读取监听器"));
+
+    qDebug() << QString::fromLocal8Bit("关闭了读取监听器, 剩余时间: %1")
+                .arg(m_monitorExceptionTimer.remainingTime());
+}
+
+void RealTimeDataRead::monitorException_slot() {
+     qDebug() << "Read::monitorException_slot, Time: " << QTime::currentTime();
+    if (false == m_currProccessState) {
+        setRealTimeData_slot();
+        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("此次读取失败, 已经超时."));
+    } else {
+       updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("此次读取成功"));
     }
 }
 
 void RealTimeDataRead::loginWind_slot() {
     int errcode = CWAPIWrapperCpp::start();
     if (0 == errcode) {
+
         m_login = true;
-        updateProgramInfo(m_programInfoTableView, "登陆万得成功");
-//        QThread::sleep(10);
+        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("登陆万得成功"));
+        waitForNextTradingDay(m_programInfoTableView);
+
         setSecodeList();
-        setPreCloseData();
+        setUpdateTime();
 
         emit loginWindSucc_signal();
     }else {
-        updateProgramInfo(m_errorMsgTableView, QString("登录万得失败, 错误代码: %1").arg(errcode));
+        WCHAR buffer[128];
+        int bufferSize = 128;
+        CWAPIWrapperCpp::getErrorMsg(errcode, eCHN, buffer, bufferSize);
+        QString errorMsg = QString::fromWCharArray(buffer);
+        updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("登录万得失败, 错误信息为: %1").arg(errorMsg));
         emit loginWindFailed_signal();
-        //        WCHAR buffer[128];
-        //        int bufferSize = 128;
-        //        CWAPIWrapperCpp::getErrorMsg(errcode, eCHN, buffer, bufferSize);
-        //        cout << buffer << endl;
-        //        std::wcout.imbue(std::locale("chs"));
-        //        std::wcout << buffer << std::endl;
+
     }
 }
 
@@ -83,9 +137,12 @@ void RealTimeDataRead::setSecodeList() {
     }
     QList<QString> indexCodeList = getIndexCode("wind");
     m_secodeList += indexCodeList;
-//    qDebug() << "m_secodeList: " << m_secodeList;
     m_secodeList = getSubList(m_secodeList, 0, m_secodeList.size());
     emit setSecodeList_signal(m_secodeList);
+}
+
+void RealTimeDataRead::setSecodeListComplete_slot() {
+    setPreCloseData();
 }
 
 void RealTimeDataRead::setPreCloseData() {
@@ -93,117 +150,72 @@ void RealTimeDataRead::setPreCloseData() {
     emit writePreCloseData_signal(result);
 }
 
-void RealTimeDataRead::setRealTimeData_slot() {
-    if (isTradingOver(QTime::currentTime())) {
-        updateProgramInfo(m_programInfoTableView, QString("交易结束, 等待新的交易日\\n"));
-        QDateTime curDateTime = QDateTime::currentDateTime();
-        QDateTime newDayTime = curDateTime.addDays(1);
-        newDayTime.setTime(QTime(0,10,0));
-        int sleepMsecs = newDayTime.toMSecsSinceEpoch() - curDateTime.toMSecsSinceEpoch();
-        qDebug() << "curDateTime: " << curDateTime <<"\n"
-                 << "newDayTime: " << newDayTime << "\n"
-                 << "sleepMsecs: " << sleepMsecs;
-        QThread::msleep(sleepMsecs);
-        updateProgramInfo(m_programInfoTableView, QString("----- 新的一天 -----"));
+void RealTimeDataRead::setPrecloseDataComplete_slot() {
+    emit startMonitorTimer_signal();
 
-        QDateTime startTime = QDateTime(QDate::currentDate(), QTime(9,0,0));
-        sleepMsecs = startTime.toMSecsSinceEpoch() - newDayTime.toMSecsSinceEpoch();
-        QThread::msleep(sleepMsecs);
-
-        setSecodeList();
-        setPreCloseData();
-        m_isTooEarly = false;
-        m_isRestTime = false;
-        return;
-    }
-
-    if (isTradingTime(QTime::currentTime())) {
-        QMap<QString, QStringList> result = getSnapshootData();
-        if (result.size() != 0) {
-            emit writeRealTimeData_signal(result);
-            if (m_timer.isActive()) {
-                qDebug() << "emit stopReadRealTimeData_signal();";
-                emit stopReadRealTimeData_signal();
-            }
-        }
-    } else if (!isTradingStart()){
-        if (!m_isTooEarly) {
-            m_isTooEarly = true;
-            updateProgramInfo(m_programInfoTableView, QString("时间太早"));
-            if (!m_timer.isActive()) {
-                qDebug() << "emit startReadRealTimeData_signal();";
-                emit startReadRealTimeData_signal();
-            }
-        }
-    } else {
-        if (!m_isRestTime) {
-            updateProgramInfo(m_programInfoTableView, QString("午休时间"));
-            m_isRestTime = true;
-            if (!m_timer.isActive()) {
-                qDebug() << "emit startReadRealTimeData_signal();";
-                emit startReadRealTimeData_signal();
-            }
-        }
-    }
+    setRealTimeData_slot();
 }
 
-//bool testTimeStartTime(QTime time) {
-//    QTime pmStopTime = QTime(10, 25, 0);
-//    if (time <= pmStopTime){
-//        return true;
-//    } else {
-//        return false;
-//    }
-//}
+void RealTimeDataRead::resetReadSource() {
+    setSecodeList();
+    setPreCloseData();
+    m_isTooEarly = false;
+    m_isRestTime = false;
+}
 
-//void RealTimeDataRead::setRealTimeData_slot() {
-//    qDebug() << "RealTimeDataRead::setRealTimeData_slot ";
-//    if (testTimeStartTime(QTime::currentTime())) {
-//        QTime pmStopTime = QTime(10, 25, 0);
-//        QTime curTime = QTime::currentTime();
-//        int sleepTime = QDateTime(QDate::currentDate(), pmStopTime).toMSecsSinceEpoch() -
-//                        QDateTime::currentDateTime().toMSecsSinceEpoch();
-//        qDebug() << "sleep time: " << sleepTime;
-//        updateProgramInfo(m_programInfoTableView, QString("Sleep %1 ms").arg(sleepTime));
-//        QThread::msleep(sleepTime);
-//        setSecodeList();
-//        setPreCloseData();
-//        return;
-//    }
+void RealTimeDataRead::writeComplete_slot(int flag) {
+    qDebug() << "WriteComplete flag: " << flag;
+    emit startMonitorTimer_signal();
 
-//    if (isTradingTime(QTime::currentTime())) {
-//        QMap<QString, QStringList> result = getSnapshootData();
-//        if (result.size() != 0) {
-//            emit writeRealTimeData_signal(result);
-//            if (m_timer.isActive()) {
-//                qDebug() << "emit stopReadRealTimeData_signal();";
-//                emit stopReadRealTimeData_signal();
-//            }
-//        }
-//    } else if (!isTradingStart()){
-//        if (!m_isTooEarly) {
-//            m_isTooEarly = true;
-//            updateProgramInfo(m_programInfoTableView, QString("时间太早"));
-//            if (!m_timer.isActive()) {
-//                qDebug() << "emit startReadRealTimeData_signal();";
-//                emit startReadRealTimeData_signal();
-//            }
-//        }
-//    } else {
-//        if (!m_isRestTime) {
-//            updateProgramInfo(m_programInfoTableView, QString("午休时间"));
-//            m_isRestTime = true;
-//            if (!m_timer.isActive()) {
-//                qDebug() << "emit startReadRealTimeData_signal();";
-//                emit startReadRealTimeData_signal();
-//            }
-//        }
-//    }
-//}
-
-
-void RealTimeDataRead::writeComplete_slot() {
     setRealTimeData_slot();
+}
+
+void RealTimeDataRead::setRealTimeData_slot() {
+//    QMap<QString, QStringList> result = getSnapshootData();
+//    if (result.size() > m_secodeList.size() * m_usefulReadRate) {
+//        qDebug() << "Read Success";
+//        emit stopMonitorTimer_signal();
+
+//        emit writeRealTimeData_signal(result);
+//    } else {
+//        setRealTimeData_slot();
+//    }
+
+    if (isStockTrading()) {
+        QMap<QString, QStringList> result = getSnapshootData();
+        if (result.size() > m_secodeList.size() * m_usefulReadRate) {
+            emit writeRealTimeData_signal(result);
+
+            emit stopMonitorTimer_signal();
+        } else {
+            setRealTimeData_slot();
+        }
+
+//        emit stopReadRealTimeData_signal();
+
+    } else {
+        emit stopMonitorTimer_signal();
+    }
+
+    if (isStockTradingNotStart() && !m_isTooEarly){
+        m_isTooEarly = true;
+        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("时间太早"));
+
+        emit startReadRealTimeData_signal();
+    }
+
+    if (isStockNoonBreak() && !m_isRestTime) {
+        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("午休时间"));
+        m_isRestTime = true;
+
+        emit startReadRealTimeData_signal();
+    }
+
+    if (isStockTradingOver()) {
+        emit stopReadRealTimeData_signal();
+        waitForNextTradingDay(m_programInfoTableView);
+        resetReadSource();
+    }
 }
 
 QMap<QString, QStringList> RealTimeDataRead::getSnapshootData() {
@@ -260,11 +272,11 @@ QMap<QString, QStringList> RealTimeDataRead::wsqSnapshootData(QList<QString> sec
                 result.insert(codes, singleCodeData);
             }
         } else {
-             updateProgramInfo(m_errorMsgTableView, QString("获取实时数据失败, 错误代码: %1").arg(errcode));
+             updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("获取实时数据失败, 错误代码: %1").arg(errcode));
         }
         delete[] windcodes;
     } else {
-        updateProgramInfo(m_errorMsgTableView, QString("获取实时数据失败, 还没登录wind"));
+        updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("获取实时数据失败, 还没登录wind"));
     }
     return result;
 }
@@ -309,11 +321,11 @@ QMap<QString, QStringList> RealTimeDataRead::wsqPreCloseData() {
                 result.insert(codes, singleCodeData);
             }
         } else {
-            updateProgramInfo(m_errorMsgTableView, QString("获取前收数据失败, 错误代码为: %1").arg(errcode));
+            updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("获取前收数据失败, 错误代码为: %1").arg(errcode));
         }
         delete[] beginDate;
     } else {
-         updateProgramInfo(m_errorMsgTableView, QString("获取前收数据失败, 还没登录wind"));
+         updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("获取前收数据失败, 还没登录wind"));
     }
     return result;
 }
@@ -358,21 +370,77 @@ QList<QString> RealTimeDataRead::wsqRealTimeSecodeList() {
             cout << buffer << endl;
             std::wcout.imbue(std::locale("chs"));
             std::wcout << buffer << std::endl;
-            updateProgramInfo(m_errorMsgTableView, QString("获取股票代码列表失败, 错误代码: %1").arg(errcode));
+            updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("获取股票代码列表失败, 错误代码: %1").arg(errcode));
         }
         delete[] conditions;
     } else {
-         updateProgramInfo(m_errorMsgTableView, QString("获取前收数据失败, 还没登录wind"));
+         updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("获取股票代码列表失败, 还没登录wind"));
     }
     return result;
 }
 
 RealTimeDataRead::~RealTimeDataRead() {
+    emit stopMonitorTimer_signal();
+
     if (NULL != m_realtimeDatabase) {
         delete m_realtimeDatabase;
         m_realtimeDatabase = NULL;
     }
 }
+
+//bool testTimeStartTime(QTime time) {
+//    QTime pmStopTime = QTime(10, 25, 0);
+//    if (time <= pmStopTime){
+//        return true;
+//    } else {
+//        return false;
+//    }
+//}
+
+//void RealTimeDataRead::setRealTimeData_slot() {
+//    qDebug() << "RealTimeDataRead::setRealTimeData_slot ";
+//    if (testTimeStartTime(QTime::currentTime())) {
+//        QTime pmStopTime = QTime(10, 25, 0);
+//        QTime curTime = QTime::currentTime();
+//        int sleepTime = QDateTime(QDate::currentDate(), pmStopTime).toMSecsSinceEpoch() -
+//                        QDateTime::currentDateTime().toMSecsSinceEpoch();
+//        qDebug() << "sleep time: " << sleepTime;
+//        updateProgramInfo(m_programInfoTableView, QString("Sleep %1 ms").arg(sleepTime));
+//        QThread::msleep(sleepTime);
+//        setSecodeList();
+//        setPreCloseData();
+//        return;
+//    }
+
+//    if (isTradingTime(QTime::currentTime())) {
+//        QMap<QString, QStringList> result = getSnapshootData();
+//        if (result.size() != 0) {
+//            emit writeRealTimeData_signal(result);
+//            if (m_timer.isActive()) {
+//                qDebug() << "emit stopReadRealTimeData_signal();";
+//                emit stopReadRealTimeData_signal();
+//            }
+//        }
+//    } else if (!isTradingStart()){
+//        if (!m_isTooEarly) {
+//            m_isTooEarly = true;
+//            updateProgramInfo(m_programInfoTableView, QString("时间太早"));
+//            if (!m_timer.isActive()) {
+//                qDebug() << "emit startReadRealTimeData_signal();";
+//                emit startReadRealTimeData_signal();
+//            }
+//        }
+//    } else {
+//        if (!m_isRestTime) {
+//            updateProgramInfo(m_programInfoTableView, QString("午休时间"));
+//            m_isRestTime = true;
+//            if (!m_timer.isActive()) {
+//                qDebug() << "emit startReadRealTimeData_signal();";
+//                emit startReadRealTimeData_signal();
+//            }
+//        }
+//    }
+//}
 
 //void RealTimeDataRead::setSecodeList(QList<QString> secodeList) {
 //    m_secodeList = secodeList;
