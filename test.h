@@ -1,56 +1,13 @@
-#ifndef TEST_H
+﻿#ifndef TEST_H
 #define TEST_H
+#include "toolfunc.h"
 
-void testMain();
+class Test
+{
+public:
+    Test();
 
-void testReadExcelData();
-
-void testGetExcelFileName();
-
-void testRemovePathName();
-
-void testReadStrategyDataFromExcel();
-
-void testExcel();
-
-void testSortPointList();
-
-void testMergeSortedList();
-
-void testTableData();
-
-void testComputeMACD();
-
-void testComputeMACDDoubleData();
-
-void testTranstime();
-
-void testGetNumbList();
-
-void testConnectDatabase();
-
-void testDBClass();
-
-void testProcess();
-
-void testKillProcess();
-
-void testDatabase();
-
-void testDataRead();
-
-void testTransSecode();
-
-void testWindWsq();
-
-void testGetSnapShootData();
-
-void testTransDateTime();
-
-void testGetAnnounce();
-
-void testGetTableList();
-
-void testRealtimeDatabaseApi();
+     void IsTradingDay();
+};
 
 #endif // TEST_H

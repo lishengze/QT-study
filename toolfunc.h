@@ -1,4 +1,4 @@
-#ifndef TOOLFUNC_H
+﻿#ifndef TOOLFUNC_H
 #define TOOLFUNC_H
 #include <QString>
 #include <QList>
@@ -75,17 +75,31 @@ LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd);
 
 double getAveValue(QList<double>);
 
-bool isTradingTime(QTime time);
+QTime StockAmStartTime();
 
-bool isTradingStart();
+QTime StockAmStopTime();
 
-bool isTradingOver(QTime time);
+QTime StockPmStartTime();
+
+QTime StockPmStopTime();
+
+bool isStockTrading();
+
+bool isStockTradingNotStart();
+
+bool isStockNoonBreak();
+
+bool isStockTradingOver();
 
 QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList);
 
 QList<QString> getExcelFileName(QString dirName);
 
 QMap<QString, QStringList> EmptyQStringQStringListMap();
+
+bool isTradingDay(QDate day);
+
+bool waitForNextTradingDay(QTableView* programInfoTableView);
 
 template<class T>
 QList<T> getSubList(QList<T> oriData, int startIndex, int endIndex) {

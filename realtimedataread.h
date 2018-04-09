@@ -1,11 +1,11 @@
-#ifndef REALTIMEDATAREAD_H
+﻿#ifndef REALTIMEDATAREAD_H
 #define REALTIMEDATAREAD_H
 #include <QTableView>
 #include <QObject>
 #include <QTimer>
 #include "realtimedatabase.h"
-#include "strategymodel.h"
-#include "excel.h"
+//#include "strategymodel.h"
+//#include "excel.h"
 
 class RealTimeDataRead:public QObject
 {
@@ -19,9 +19,16 @@ public:
     void initCommonData();
     void initDatabase();
 
+    void initMonitorTimer();
+    void startMonitorTimer();
+    void stopMonitorTimer();
+
     void initTimer();
+    void setUpdateTime();
     void startTimer();
     void stopTimer();
+
+    void resetReadSource();
 
     void setSecodeList();
 
@@ -35,8 +42,13 @@ public:
 
 public slots:
     void loginWind_slot();
+
+    void setSecodeListComplete_slot();
+    void setPrecloseDataComplete_slot();
+
     void setRealTimeData_slot();
-    void writeComplete_slot();
+    void writeComplete_slot(int);
+    void monitorException_slot();
 
 signals:
     void loginWindFailed_signal();
@@ -50,12 +62,23 @@ signals:
     void stopReadRealTimeData_signal();
     void startReadRealTimeData_signal();
 
+    void startMonitorTimer_signal();
+    void stopMonitorTimer_signal();
+
 private:
     QTimer             m_timer;
+    int                m_minReadWaitTime;
+    int                m_signalWriteTime;
+    int                m_updateTime;
+
     QString            m_dbConnID;
     QString            m_dbHost;
     QString            m_dbName;
     RealTimeDatabase*  m_realtimeDatabase;
+
+    QTimer             m_monitorExceptionTimer;
+    int                m_monitorExceptionWaitTime;
+    bool               m_currProccessState;
 
     bool               m_isTimerStart;
     bool               m_login;
@@ -65,8 +88,9 @@ private:
     QList<QString>     m_secodeList;
     QTableView*        m_programInfoTableView;
     QTableView*        m_errorMsgTableView;
-    int                m_updateTime;
+
     int                m_wsqSnapshootDataNumb;
+    double             m_usefulReadRate;
 };
 
 #endif // REALTIMEDATAREAD_H

@@ -19,14 +19,15 @@ SOURCES += main.cpp\
     realtimedatabase.cpp \
     database.cpp \
 #    realtimedataread.cpp \
-    excel.cpp \
-    strategy.cpp \
-    strategymodel.cpp \
+#    excel.cpp \
+#    strategy.cpp \
+#    strategymodel.cpp \
     toolfunc.cpp \
 #    realtimedatawrite.cpp \
     subwriteclass.cpp \
     realtimedataread.cpp \
-    realtimedatawrite.cpp
+    realtimedatawrite.cpp \
+    test.cpp
 
 #    setdata.cpp \
 #        widget.cpp \
@@ -52,13 +53,14 @@ HEADERS  += updaterealtimedataform.h \
     realtimedatabase.h \
     realtimedataread.h \
     database.h \
-    excel.h \
-    strategy.h \
-    strategymodel.h \
+#    excel.h \
+#    strategy.h \
+#    strategymodel.h \
     toolfunc.h \
     WAPIWrapperCpp.h \
     realtimedatawrite.h \
-    subwriteclass.h
+    subwriteclass.h \
+    test.h
 
 #    setdata.h \
 #    widget.h \
@@ -84,7 +86,8 @@ FORMS    += updaterealtimedataform.ui \
 #    dialog.ui \
 
 #RC_ICONS = stable.ico
-RC_ICONS = lion.ico
+#RC_ICONS = lion.ico
+RC_ICONS = dev.ico
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
-LIBS += -LE:/github/work-program/client/client-work-changeRefresh -lWAPIWrapperCpp
+LIBS += -LE:/github/work-program/client/client-updatedata-master -lWAPIWrapperCpp

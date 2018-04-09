@@ -1,11 +1,10 @@
-#ifndef DATABASE_H
+﻿#ifndef DATABASE_H
 #define DATABASE_H
 #include <QString>
 #include <QList>
 #include <QPointF>
 #include <QSqlDatabase>
 #include <QWidget>
-//#include "tabledata.h"
 
 class Database
 {

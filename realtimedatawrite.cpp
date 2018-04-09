@@ -1,4 +1,4 @@
-#include <QDebug>
+﻿#include <QDebug>
 #include <QThread>
 #include "realtimedatawrite.h"
 #include "toolfunc.h"
@@ -10,6 +10,14 @@ RealTimeDataWrite::RealTimeDataWrite(QTableView* programInfoTableView, QTableVie
     m_dbConnID(dbConnID), m_dbHost(dbHost),
     QObject(parent)
 {
+    initCommonData();
+    initDatabase();
+    registerParams();
+    initMonitorTimer();
+}
+
+void RealTimeDataWrite::initCommonData() {
+    m_currProccessState = false;
     m_realtimeDataNumb = 0;
     m_writeMinimumTime = 2000;
     m_writeRealTimeDataCount = 0;
@@ -22,14 +30,64 @@ RealTimeDataWrite::RealTimeDataWrite(QTableView* programInfoTableView, QTableVie
     m_testWriteAveTime = 0;
     m_testWriteCount = 0;
 
-    initDatabase();
-    registerParams();
+    m_waitWriteTime = 10;
 }
+
 
 void RealTimeDataWrite::initDatabase() {
 //    m_dbName ="Test";
-    m_dbName ="MarketData_RealTime";
+    m_dbHost = "localhost";
+    m_dbName = "MarketData_RealTime";
     m_realtimeDatabase = new RealTimeDatabase(m_dbConnID, m_dbName, m_dbHost);
+    updateProgramInfo(m_programInfoTableView,
+                      QString::fromLocal8Bit("当前写入的数据库为: %1, %2")
+                      .arg(m_dbName).arg(m_dbHost));
+}
+
+void RealTimeDataWrite::initMonitorTimer() {
+    m_monitorExceptionWaitTime = 10000;
+    updateProgramInfo(m_programInfoTableView,
+                      QString::fromLocal8Bit("写入异常监听时间为: %1 毫秒")
+                      .arg(m_monitorExceptionWaitTime));
+    connect(&m_monitorExceptionTimer, SIGNAL(timeout()),
+             this, SLOT(monitorException_slot()));
+}
+
+void RealTimeDataWrite::startMonitorTimer() {
+    m_currProccessState = false;
+    m_monitorExceptionTimer.start(m_monitorExceptionWaitTime);
+//    updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("开启了写入监听器"));
+
+    qDebug() << QString::fromLocal8Bit("开启了写入监听器, 剩余时间: %1")
+                .arg(m_monitorExceptionTimer.remainingTime());
+}
+
+void RealTimeDataWrite::stopMonitorTimer() {
+    m_currProccessState = true;
+    if (m_monitorExceptionTimer.isActive()) {
+        m_monitorExceptionTimer.stop();
+//        qDebug() << "m_monitorExceptionTimer state: " << m_monitorExceptionTimer.isActive();
+    }
+//    updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("关闭了写入监听器"));
+
+    qDebug() << QString::fromLocal8Bit("关闭了写入监听器, 剩余时间: %1")
+                .arg(m_monitorExceptionTimer.remainingTime());
+}
+
+void RealTimeDataWrite::monitorException_slot() {
+    // 若是失败， 放弃此次写入，重置写入信息与监听器信息，并发送信号给读取线程;
+    qDebug() << "Write::monitorException_slot" << QTime::currentTime();
+    if (false == m_currProccessState) {
+        resetWriteSource();
+        emit stopMonitorTimer_signal();
+        updateProgramInfo(m_errorMsgTableView,
+                          QString::fromLocal8Bit("此时插入实时数据失败, 失败原因: 超时"));
+        emit writeComplete_signal(-1);
+    } else {
+        updateProgramInfo(m_errorMsgTableView,
+                          QString::fromLocal8Bit("此时插入实时数据成功, 耗时: %1 毫秒")
+                                                .arg(m_testCurrWriteTime));
+    }
 }
 
 void RealTimeDataWrite::registerParams() {
@@ -41,14 +99,12 @@ void RealTimeDataWrite::checkDatabase() {
     if (!m_realtimeDatabase->checkdataTime()) {
         clearDatabase();
     } else {
-        updateProgramInfo(m_programInfoTableView, QString("实时Datebase已经存在"));
+        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("实时Datebase已经存在"));
     }
 
     QString compTableMsg = m_realtimeDatabase->completeTable(m_secodeList);
     if (compTableMsg != "SUCCESS") {
-        updateProgramInfo(m_errorMsgTableView, QString("补完Database 失败, 错误消息为: %1").arg(compTableMsg));
-    } else {
-//        updateProgramInfo(m_programInfoTableView, QString("根据股票代码补全Database"));
+        updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("补完Database 失败, 错误消息为: %1").arg(compTableMsg));
     }
 }
 
@@ -69,17 +125,44 @@ void RealTimeDataWrite::clearDatabase() {
     }
 
     if (clearMsg != "SUCCESS") {
-        updateProgramInfo(m_errorMsgTableView, QString("清空Database 失败, 错误消息为: %1").arg(clearMsg));
+        updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("清空Database 失败, 错误消息为: %1").arg(clearMsg));
     } else {
-        updateProgramInfo(m_programInfoTableView, QString("完成Database清空工作"));
+        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("完成Database清空工作，准备好下载新的实时数据"));
     }
 }
 
 void RealTimeDataWrite::setSecodeList_slot(QList<QString> data) {
     m_secodeList = data;
+    m_realtimeDataNumb = 0;
     checkDatabase();
-    qDebug() << "emit setRealTimeData_signal() ";
-    emit setRealTimeData_signal();
+//    emit startReadData_signal();
+    emit setSecodeListComplete_signal();
+}
+
+void RealTimeDataWrite::writePreCloseData_slot(QMap<QString, QStringList> result) {
+    qDebug() << "RealTimeDataWrite::writePreCloseData";
+    QString tableName = "PreCloseData";
+    QList<QString> tableList = m_realtimeDatabase->getTableList(m_realtimeDatabase->getDatabaseName());
+    if (tableList.indexOf(tableName) < 0 ) {
+        m_realtimeDatabase->createPreCloseTable(tableName);
+        for (QMap<QString, QStringList>::iterator it = result.begin();
+             it != result.end(); ++it) {
+            m_realtimeDatabase->insertPreCloseData(tableName, it.value());
+        }
+        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("插入最新昨收数据"));
+    } else {
+        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("昨收数据已经存在"));
+    }
+    emit setPrecloseDataComplete_signal();
+}
+
+void RealTimeDataWrite::writeRealTimeData_slot(QMap<QString, QStringList> result) {
+// 设置标记位，并开始计时，规定时间后 标记位为false, 视为失败;
+    emit startMonitorTimer_signal();
+
+    QList<QMap<QString, QStringList>> data = allocateData(result);
+    createSubWriteThreads(data);
+    emit writeRealTimeData_signal();
 }
 
 QList<QMap<QString, QStringList>> RealTimeDataWrite::allocateData(QMap<QString, QStringList> oriData) {
@@ -129,83 +212,80 @@ void RealTimeDataWrite::createSubWriteThreads(QList<QMap<QString, QStringList>> 
     }
 }
 
+void RealTimeDataWrite::releaseSubClassThreads() {
+    qDebug() << "Releae SubWriteThread: " << m_subWriteThreadList.size();
+    for (int i = 0; i < m_subWriteThreadNumb ; ++i) {
+        int subThreadIndex = m_subWriteThreadList.size() - i - 1;
+        SubWriteClass* subWriteObj = m_subWriteObjList[subThreadIndex];
+
+        disconnect(this, SIGNAL(writeRealTimeData_signal()),
+                subWriteObj, SLOT(writeRealTimeData_slot()));
+
+        disconnect(subWriteObj, SIGNAL(writeRealTimeResult_signal(QList<QString>)),
+                this,SLOT(writeRealTimeResult_slot(QList<QString>)));
+
+        if (!m_subWriteThreadList[subThreadIndex]->isFinished()) {
+             m_subWriteThreadList[subThreadIndex]->quit();
+        }
+//        qDebug() << subThreadIndex;
+    }
+}
+
 void RealTimeDataWrite::writeRealTimeResult_slot(QList<QString> result) {
+    if (!m_monitorExceptionTimer.isActive()) {
+        qDebug() << QString::fromLocal8Bit("此次写入已经超时，停止接受数据，等待下次写入唤醒");
+        return;
+    }
+
     QMutexLocker locker(&m_mutex);
     m_currSuccessNumb += result[result.size()-1].toInt();
     result.removeLast();
-    m_currWriteReuslt += result;
+    m_currWriteErrorReuslt += result;
 //    qDebug() << "m_currCompleteThreadCount: " << m_currCompleteThreadCount;
     if (++m_currCompleteThreadCount == m_subWriteThreadNumb) {
-
         updateProgramInfo(m_programInfoTableView,
-                          QString("插入 %1 实时数据, 数据总数: %2").arg(m_currSuccessNumb).arg(++m_realtimeDataNumb));
+                          QString::fromLocal8Bit("插入 %1 实时数据, 数据总数: %2")
+                          .arg(m_currSuccessNumb).arg(++m_realtimeDataNumb));
 
-        for (QString msg : m_currWriteReuslt) {
-            updateProgramInfo(m_errorMsgTableView, QString("插入实时数据失败, 失败消息: %1").arg(msg));
+        if (m_currWriteErrorReuslt.size() > 0) {
+            updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("插入实时数据出现失败, 失败数目为: %1")
+                                                   .arg(m_currWriteErrorReuslt.size()));
         }
 
-        releaseSubClassThreads();
-
-        int costMSecs = QDateTime::currentDateTime().currentMSecsSinceEpoch() - m_testWriteStartTime;
-        m_testWriteSumTime += costMSecs;
+        m_testCurrWriteTime = QDateTime::currentDateTime().currentMSecsSinceEpoch() - m_testWriteStartTime;
+        m_testWriteSumTime += m_testCurrWriteTime;
         m_testWriteAveTime = m_testWriteSumTime/++m_testWriteCount;
 
         qDebug() << "m_currSuccessNumb: " << m_currSuccessNumb << ", "
-                 << "errorMsg_numb: " << m_currWriteReuslt.size() << ", "
-                 << "costMSecs: " << costMSecs <<", "
+                 << "errorMsg_numb: " << m_currWriteErrorReuslt.size() << ", "
+                 << "costMSecs: " << m_testCurrWriteTime <<", "
                  << "costAveMSecs: " << m_testWriteAveTime;
 
-        if (costMSecs < m_writeMinimumTime) {
-            QThread::msleep(m_writeMinimumTime - costMSecs);
+        if (m_testCurrWriteTime < m_writeMinimumTime) {
+            QThread::msleep(m_writeMinimumTime - m_testCurrWriteTime);
         }
 
-        m_currCompleteThreadCount = 0;
-        m_currSuccessNumb = 0;
-        m_currWriteReuslt.clear();
+        resetWriteSource();
 
-        emit writeComplete_signal();
+        emit stopMonitorTimer_signal();
+
+        emit writeComplete_signal(0);
     }
 }
 
-void RealTimeDataWrite::releaseSubClassThreads() {
-    for (int i = 0; i < m_subWriteThreadList.size(); ++i) {
-        if (!m_subWriteThreadList[i]->isFinished()) {
-             m_subWriteThreadList[i]->quit();
-//             qDebug() << "Release thread: "  << i;
-        }
-    }
-}
-
-void RealTimeDataWrite::writeRealTimeData_slot(QMap<QString, QStringList> result) {
-//    qDebug() << "RealTimeDataWrite::writeRealTimeData_slot, thread: " << QThread::currentThreadId();
-    QList<QMap<QString, QStringList>> data = allocateData(result);
-    createSubWriteThreads(data);
-    emit writeRealTimeData_signal();
-}
-
-void RealTimeDataWrite::writePreCloseData_slot(QMap<QString, QStringList> result) {
-//    qDebug() << "RealTimeDataWrite::writePreCloseData";
-    QString tableName = "PreCloseData";
-    QList<QString> tableList = m_realtimeDatabase->getTableList(m_realtimeDatabase->getDatabaseName());
-    if (tableList.indexOf(tableName) < 0 ) {
-        m_realtimeDatabase->createPreCloseTable(tableName);
-        for (QMap<QString, QStringList>::iterator it = result.begin();
-             it != result.end(); ++it) {
-            m_realtimeDatabase->insertPreCloseData(tableName, it.value());
-        }
-        updateProgramInfo(m_programInfoTableView, QString("插入昨收数据"));
-    } else {
-//        updateProgramInfo(m_programInfoTableView, QString("昨收数据已经存在"));
-    }
+void RealTimeDataWrite::resetWriteSource() {
+    releaseSubClassThreads();
+    m_currCompleteThreadCount = 0;
+    m_currSuccessNumb = 0;
+    m_currWriteErrorReuslt.clear();    
 }
 
 RealTimeDataWrite::~RealTimeDataWrite() {
+    emit stopMonitorTimer_signal();
     qDebug() << "m_subWriteThreadList.size: "  << m_subWriteThreadList.size();
     for (int i = 0; i < m_subWriteThreadList.size(); ++i) {
         if (!m_subWriteThreadList[i]->isFinished()) {
              m_subWriteThreadList[i]->quit();
-//            qDebug() << "Thread " << i << " is waiting";
-//            m_subWriteThreadList[i]->wait();
         }
     }
 
@@ -226,3 +306,5 @@ RealTimeDataWrite::~RealTimeDataWrite() {
         m_realtimeDatabase = NULL;
     }
 }
+
+
