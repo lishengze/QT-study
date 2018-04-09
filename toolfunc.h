@@ -1,12 +1,19 @@
-#ifndef TOOLFUNC_H
+﻿#ifndef TOOLFUNC_H
 #define TOOLFUNC_H
 #include <QString>
 #include <QList>
 #include <QPointF>
 #include <QWidget>
 #include <QTableView>
+#include <QTime>
+#include <QDir>
+#include <QStringList>
+#include <QFileInfo>
+#include <QStandardItemModel>
+#include <QStandardItem>
+#include <QModelIndexList>
 #include "macd.h"
-#include "WAPIWrapperCpp.h"
+//#include "WAPIWrapperCpp.h"
 
 QList<int> getDateList(int intDate);
 
@@ -55,26 +62,132 @@ void updateProgramInfo(QTableView* programInfoTableView, QString message, QStrin
 
 QString getWindSecode(QString secode);
 
-LPCWSTR transSecode(QStringList secodeList);
+QString getCompleteSecode(QString secode, QString style, QString letterCase = "capital");
 
-LPCWSTR transSecodeB(QStringList secodeList);
+QString getSimpleSecode(QString secode);
 
-LPCWSTR transSecode(QString qString);
+QString getCompleteIndexCode(QString secode, QString style);
 
-QString variantToQString(const LPVARIANT data);
+QMap<QString, int> transStrategyMap(QMap<QString, int> oriStrategyMap, QString codeStyle);
 
-LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd);
-
-void testSpread(QMap<QString, QStringList> data);
+//void testSpread(QMap<QString, QStringList> data);
 
 void writeWsqData(QString secode, QStringList data);
 
 double getAveValue(QList<double>);
 
-bool isTradingTime(QTime time);
+bool isTradingTime(QTime time = QTime::currentTime());
 
-bool isTradingOver(QTime time);
+bool isTradingOver(QTime time = QTime::currentTime());
 
-QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList);
+bool isTradingStart(QTime time = QTime::currentTime());
+
+QTime StockAmStartTime();
+
+QTime StockAmStopTime();
+
+QTime StockPmStartTime();
+
+QTime StockPmStopTime();
+
+bool isStockTrading();
+
+bool isStockTradingNotStart();
+
+bool isStockNoonBreak();
+
+bool isStockTradingOver();
+
+void testCLosePrice(QMap<QString, QList<QStringList>> oriData);
+
+qint64 transDateTime(double oridata);
+
+QList<QString> getExcelFileName(QString dirName);
+
+QList<QFileInfo> getExcelFileInfo(QString dirName);
+
+QList<QFileInfo> getDirName(QString dirName);
+
+QStandardItemModel* getStandardItemModel(QList<QString> valueList);
+
+QStandardItemModel* getStandardItemModel(QList<QFileInfo> valueList);
+
+QList<QPointF> getStrategyPointList(QMap<QString, QList<QStringList>> oriData,
+                                    QMap<QString, int> seocdebuyCountMap);
+
+QList<double> getHedgedData(QList<QPointF> pointDataList, QMap<QString, QStringList> indexHedgeData,
+                            int indexBuyCount, int indexBaseCount);
+
+QList<QPointF> getHedgedData(QList<QPointF> buyPointDataList, QList<QPointF> salePointDataList);
+
+QList<double> getHedgedData(QMap<QString, QStringList> oneTimeData, QMap<QString, int> seocdebuyCountMap,
+                            QString indexCode, int indexBuyCount, int indexBaseCount);
+
+QList<double> getHedgedData(QMap<QString, QStringList> oneTimeData,
+                            QMap<QString, int> buyStrategy, QMap<QString, int> saleStrategy);
+
+double getHedgedSpread(QMap<QString, QStringList> preCloseData, QMap<QString, int> seocdebuyCountMap,
+                                QString indexCode, int indexBuyCount, int indexBaseCount);
+
+double getHedgedSpread(QMap<QString, QStringList> preCloseData,
+                         QMap<QString, int> buyStrategy, QMap<QString, int> saleStrategy);
+
+
+QMap<QString, int> EmpytQStringIntMap();
+
+QStringList EmpytStringList();
+
+bool isSecodeValid(QString secode);
+
+void initExcelFile(QString fileName);
+
+int writePortfolio(QMap<QString, double> portfolio, QString fileName,
+                    QString accountName, QString type, QString sheetName="Sheet1");
+
+//void writePortfolio(QMap<QString, double> portfolio, QString fileName,
+//                    QString accountName, QString type, QString sheetName="1");
+
+int writeFileInfo(QString fileName, QString colName,
+                   QString value, QString sheetName = "Sheet1");
+
+QString readlFileData(QString fileName, int row, int col, QString sheetName = "Sheet1");
+
+QMap <int, int>  getSelectRows(QTableView* tableView);
+
+QList<QString> getSelectTableData(QTableView* tableView, QMap<int, int> selectInfo);
+
+QMap<QString, int> readExcelMapInt(QString fileName, QString sheetName="Sheet1");
+
+QMap<QString, double> readExcelMapDouble(QString fileName, QString sheetName="Sheet1");
+
+QList<QStringList> readExcelData(QString fileName, QString sheetName="Sheet1");
+
+double getPortfolioAmount(QMap<QString, double> priceMap, QMap<QString, double> porfolioMap);
+
+QList<int> DefaultExcelColIndex();
+
+QMap<QString, QString> getPortfolioAmountMap(QList<QFileInfo> fileInfoList);
+
+template<class keyType, class valueType>
+void printMap(QMap<keyType, valueType> data, QString message) {
+    qDebug() << "message: " << message;
+    for ( QMap<keyType, valueType>::iterator it = data.begin();
+          it != data.end(); ++it) {
+        qDebug() << it.key() << ": " << it.value();
+    }
+}
+
+
+//LPCWSTR transSecode(QStringList secodeList);
+
+//LPCWSTR transSecodeB(QStringList secodeList);
+
+//LPCWSTR transSecode(QString qString);
+
+//QString variantToQString(const LPVARIANT data);
+
+//LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd);
+
+//QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList);
 
 #endif // TOOLFUNC_H

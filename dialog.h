@@ -1,4 +1,4 @@
-#ifndef DIALOG_H
+﻿#ifndef DIALOG_H
 #define DIALOG_H
 
 #include <QDialog>
@@ -26,10 +26,11 @@ public:
 
     void setOriData();   
     void startReadData();
-    void startProcessData();
+
+//    void startProcessData();
 
     void setTestProcessData();
-    void testProcessData();
+//    void testProcessData();
 
     void releaseDataReaderSrc();
     void releaseDataProcessSrc();
@@ -47,26 +48,26 @@ private slots:
     void on_startProcessData_clicked();
 
 private:
-    Ui::Dialog *ui;
-    QList<DataProcess*> m_dataProcessList;
-    QList<QThread*> m_dataProcessThreadList;
+    Ui::Dialog *                        ui;
+    QList<DataProcess*>                 m_dataProcessList;
+    QList<QThread*>                     m_dataProcessThreadList;
 
-    QList<DataRead*> m_dataReaderList;
-    QList<QThread*> m_dataReaderThreadList;
+    QList<DataRead*>                    m_dataReaderList;
+    QList<QThread*>                     m_dataReaderThreadList;
 
-    QStringList m_oriData;
-    QMap<QString, int> m_secodeBuyCount;
-    QMap<QString, QList<QStringList>> m_completeTableData;
-    QList<int> m_macdTime;
+    QStringList                         m_oriData;
+    QMap<QString, int>                  m_secodeBuyCount;
+    QMap<QString, QList<QStringList>>   m_completeTableData;
+    QList<int>                          m_macdTime;
 
-    int m_dataNumb;
-    int m_threadNumb;
-    int m_processedThreadCount;
-    mutable QMutex m_mutex;
+    int                                 m_dataNumb;
+    int                                 m_threadNumb;
+    int                                 m_processedThreadCount;
+    mutable QMutex                     m_mutex;
 
-    QMap<QString, QList<QStringList>> m_tesTabletData;
-    QMap<QString, int> m_testBuyCount;
-    QList<int> m_testMacdTime;
+    QMap<QString, QList<QStringList>>   m_tesTabletData;
+    QMap<QString, int>                  m_testBuyCount;
+    QList<int>                          m_testMacdTime;
 };
 
 #endif // DIALOG_H
