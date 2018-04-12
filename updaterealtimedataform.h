@@ -40,8 +40,8 @@ signals:
 public slots:
     void loginWindFailed_slot();
 
-    void startReadRealTimeData_slot();
-    void stopReadRealTimeData_slot();
+    void startReadWaitTradeTimer_slot();
+    void stopReadWaitTradeTimer_slot();
 
     void startWriteMonitorTimer_slot();
     void stopWriteMonitorTimer_slot();
@@ -49,9 +49,7 @@ public slots:
     void stopReadMonitorTimer_slot();
 
 private slots:
-//    void on_startGetRealtimeData_clicked();
 
-//    void on_stopGetRealtimeData_clicked();
 
 private:
     Ui::UpdateRealtimeDataForm* ui;

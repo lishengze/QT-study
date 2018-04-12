@@ -1,4 +1,4 @@
-#ifndef REALTIMEDATABASE_H
+﻿#ifndef REALTIMEDATABASE_H
 #define REALTIMEDATABASE_H
 #include <QDate>
 #include "database.h"
@@ -16,9 +16,9 @@ public:
                      QString userName="sa", QString userPwd="sasa",                     
                      QString dataSourceName="SqlServer", QString databaseDriver="QODBC");
 
-    QDate getDatabaseDataDate();
+    QDate getDatabaseDataDate(QString tableName);
 
-    bool checkdataTime();
+    bool checkdataTime(QString tableName);
 
     bool checkData(QString colname, QString keyvalue, QString table_name);
 
@@ -27,19 +27,22 @@ public:
     bool setDatabaseWorkingState(QString tableName, int flag);
 
     virtual QString getCreateStr(QString tableName);
-//    virtual void createTable(QString tableName);
 
     virtual QString getInsertStr(QString tableName, QList<QString> data);
-//    virtual void insertData(QString tableName, QList<QString> data);
 
     virtual QString getUpdateStr(QString tableName, QList<QString> data);
-//    virtual void updateData(QString tableName, QList<QString> data);
 
-    void createPreCloseTable(QString tableName);
-    void insertPreCloseData(QString tableName, QList<QString> data);
+    bool createPreCloseTable(QString tableName);
+    bool insertPreCloseData(QString tableName, QList<QString> data);
     void updatePreCloseData(QString tableName, QList<QString> data);
 
+    QString completeFutureTable(QList<QString> tableList);
+    bool createFutureTable(QString tableName);
+    bool insertFutureData(QString tableName, QList<QString> data);
 
+    QString completeDataTimeTable(QString tableName);
+    bool createDataTimeTable(QString tableName);
+    bool insertDataTimeTable(QString tableName, QString data);
 
     QList<QString> getSecodeList(QString tableName);
 

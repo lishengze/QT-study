@@ -59,7 +59,7 @@ QList<QString> getIndexCode(QString style="wind");
 
 LPCWSTR transSecode(QStringList secodeList);
 
-LPCWSTR transSecodeB(QStringList secodeList);
+LPCWSTR transSecodeList(QStringList secodeList);
 
 LPCWSTR transSecode(QString qString);
 
@@ -100,6 +100,15 @@ QMap<QString, QStringList> EmptyQStringQStringListMap();
 bool isTradingDay(QDate day);
 
 bool waitForNextTradingDay(QTableView* programInfoTableView);
+
+template<class keyType, class valueType>
+void printMap(QMap<keyType, valueType> data, QString message) {
+    qDebug() << "message: " << message;
+    for ( QMap<keyType, valueType>::iterator it = data.begin();
+          it != data.end(); ++it) {
+        qDebug() << it.key() << ": " << it.value();
+    }
+}
 
 template<class T>
 QList<T> getSubList(QList<T> oriData, int startIndex, int endIndex) {

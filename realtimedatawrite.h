@@ -27,8 +27,8 @@ public:
     void stopMonitorTimer();
 
     void registerParams();
-    void checkDatabase();
-    void clearDatabase();
+    bool checkDatabase();
+    bool clearDatabase();
 
     QList<QMap<QString, QStringList>> allocateData(QMap<QString, QStringList> oriData);
     void createSubWriteThreads(QList<QMap<QString, QStringList>>);
@@ -37,12 +37,12 @@ public:
 
     void resetWriteSource();
 
-
+    void writeFutureData(QMap<QString, QStringList> futureResult);
 
 public slots:
-    void setSecodeList_slot(QList<QString> data);
+    void setTableList_slot(QList<QString> secodeList, QList<QString> futureList);
     void writePreCloseData_slot(QMap<QString, QStringList> data);
-    void writeRealTimeData_slot(QMap<QString, QStringList> data);
+    void writeRealTimeData_slot(QMap<QString, QStringList> secodeResult, QMap<QString, QStringList> futureResult);
     void writeRealTimeResult_slot(QList<QString> result);
 
     void monitorException_slot();
@@ -52,7 +52,7 @@ signals:
 
     void stopMonitorTimer_signal();
 
-    void setSecodeListComplete_signal();
+    void setTableListComplete_signal();
 
     void setPrecloseDataComplete_signal();
 
@@ -65,7 +65,10 @@ private:
     int                     m_monitorExceptionWaitTime;
     bool                    m_currProccessState;
 
+    QString                 m_dataTimeTable;
     QList<QString>          m_secodeList;
+    QList<QString>          m_futureList;
+
     RealTimeDatabase*       m_realtimeDatabase;
     QTableView*             m_programInfoTableView;
     QTableView*             m_errorMsgTableView;
@@ -84,6 +87,7 @@ private:
 
     int                     m_currCompleteThreadCount;
     int                     m_currSuccessNumb;
+    int                     m_currFailedNumb;
     QList<QString>          m_currWriteErrorReuslt;
 
     int                     m_writeRealTimeDataCount;                   

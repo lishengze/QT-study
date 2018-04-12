@@ -33,9 +33,10 @@ void UpdateRealtimeDataForm::initCommonData() {
 }
 
 void UpdateRealtimeDataForm::initDatabase() {
-//    m_dbName ="MarketData_RealTime";
-    m_dbName ="Test";
+    m_dbName ="MarketData_RealTime";
+//    m_dbName ="Test";
     m_dbHost = "192.168.211.165";
+//    m_dbHost = "192.168.211.162";
     m_dbConnID = "1";
     m_realtimeDatabase = new RealTimeDatabase(m_dbConnID, m_dbName, m_dbHost);
     m_programInfoTableName = "ProgramInfo";
@@ -52,6 +53,7 @@ void UpdateRealtimeDataForm::registeParams() {
     qRegisterMetaType<QAbstractItemModel::LayoutChangeHint>("QAbstractItemModel::LayoutChangeHint");
     qRegisterMetaType<QList<QPersistentModelIndex>>("QList<QPersistentModelIndex>");
     qRegisterMetaType<QVector<int>>("QVector<int>>");
+    qRegisterMetaType<QMap<QString, QStringList>>("QMap<QString, QStringList>");
     qRegisterMetaType<QMap<QString, QStringList>>("QMap<QString, QStringList>");
 }
 
@@ -93,7 +95,6 @@ void UpdateRealtimeDataForm::stopReadMonitorTimer_slot() {
     m_realTimeDataRead->stopMonitorTimer();
 }
 
-
 void UpdateRealtimeDataForm::connectSignal() {
     m_realTimeDataRead = new RealTimeDataRead(ui->regularMsgTableView, ui->errorMsgTableView,
                                               "2", m_dbHost);
@@ -115,11 +116,11 @@ void UpdateRealtimeDataForm::connectSignal() {
     connect(m_realTimeDataRead, SIGNAL(loginWindFailed_signal()),
             this, SLOT(loginWindFailed_slot()));
 
-    connect(m_realTimeDataRead, SIGNAL(startReadRealTimeData_signal()),
-            this, SLOT(startReadRealTimeData_slot()));
+    connect(m_realTimeDataRead, SIGNAL(startWaitTradeTimer_signal()),
+            this, SLOT(startReadWaitTradeTimer_slot()));
 
-    connect(m_realTimeDataRead, SIGNAL(stopReadRealTimeData_signal()),
-            this, SLOT(stopReadRealTimeData_slot()));
+    connect(m_realTimeDataRead, SIGNAL(stopWaitTradeTimer_signal()),
+            this, SLOT(stopReadWaitTradeTimer_slot()));
 
     m_realTimeDataWrite = new RealTimeDataWrite(ui->regularMsgTableView, ui->errorMsgTableView,
                                                 "3", m_dbHost);
@@ -136,11 +137,11 @@ void UpdateRealtimeDataForm::connectSignal() {
     connect(m_realTimeDataWrite, SIGNAL(stopMonitorTimer_signal()),
             this, SLOT(stopWriteMonitorTimer_slot()));
 
-    connect(m_realTimeDataRead, SIGNAL(setSecodeList_signal(QList<QString>)),
-            m_realTimeDataWrite, SLOT(setSecodeList_slot(QList<QString>)));
+    connect(m_realTimeDataRead, SIGNAL(setTableList_signal(QList<QString>, QList<QString>)),
+            m_realTimeDataWrite, SLOT(setTableList_slot(QList<QString>,QList<QString>)));
 
-    connect(m_realTimeDataWrite, SIGNAL(setSecodeListComplete_signal()),
-            m_realTimeDataRead, SLOT(setSecodeListComplete_slot()));
+    connect(m_realTimeDataWrite, SIGNAL(setTableListComplete_signal()),
+            m_realTimeDataRead, SLOT(setTableListComplete_slot()));
 
     connect(m_realTimeDataRead, SIGNAL(writePreCloseData_signal(QMap<QString,QStringList>)),
             m_realTimeDataWrite, SLOT(writePreCloseData_slot(QMap<QString, QStringList>)));
@@ -148,8 +149,8 @@ void UpdateRealtimeDataForm::connectSignal() {
     connect(m_realTimeDataWrite, SIGNAL(setPrecloseDataComplete_signal()),
             m_realTimeDataRead, SLOT(setPrecloseDataComplete_slot()));
 
-    connect(m_realTimeDataRead, SIGNAL(writeRealTimeData_signal(QMap<QString,QStringList>)),
-            m_realTimeDataWrite, SLOT(writeRealTimeData_slot(QMap<QString, QStringList>)));
+    connect(m_realTimeDataRead, SIGNAL(writeRealTimeData_signal(QMap<QString,QStringList>, QMap<QString,QStringList>)),
+            m_realTimeDataWrite, SLOT(writeRealTimeData_slot(QMap<QString,QStringList>, QMap<QString,QStringList>)));
 
     connect(m_realTimeDataWrite, SIGNAL(writeComplete_signal(int)),
             m_realTimeDataRead, SLOT(writeComplete_slot(int)));
@@ -166,12 +167,12 @@ void UpdateRealtimeDataForm::loginWindFailed_slot() {
     }
 }
 
-void UpdateRealtimeDataForm::stopReadRealTimeData_slot() {
+void UpdateRealtimeDataForm::stopReadWaitTradeTimer_slot() {
     qDebug() << "UpdateRealtimeDataForm::stopTimer()";
     m_realTimeDataRead->stopTimer();
 }
 
-void UpdateRealtimeDataForm::startReadRealTimeData_slot() {
+void UpdateRealtimeDataForm::startReadWaitTradeTimer_slot() {
     qDebug() << "UpdateRealtimeDataForm::startTimer()";
     m_realTimeDataRead->startTimer();
 }
@@ -179,6 +180,10 @@ void UpdateRealtimeDataForm::startReadRealTimeData_slot() {
 UpdateRealtimeDataForm::~UpdateRealtimeDataForm()
 {
     delete ui;
+
+    if (NULL != m_realtimeDatabase) {
+        m_realtimeDatabase->setDatabaseWorkingState(m_programInfoTableName, 0);
+    }
 
     if (NULL != m_realTimeDataReadThread && !m_realTimeDataReadThread->isFinished()) {
         m_realTimeDataReadThread->quit();
@@ -207,10 +212,6 @@ UpdateRealtimeDataForm::~UpdateRealtimeDataForm()
     if (NULL != m_realTimeDataWriteThread) {
         m_realTimeDataWriteThread = NULL;
         delete m_realTimeDataWriteThread;
-    }
-
-    if (NULL != m_realtimeDatabase) {
-        m_realtimeDatabase->setDatabaseWorkingState(m_programInfoTableName, 0);
     }
 
     if (NULL != m_realtimeDatabase) {

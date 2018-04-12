@@ -30,10 +30,12 @@ public:
 
     void resetReadSource();
 
-    void setSecodeList();
+    QList<QString> getSecodeList();
+    QList<QString> getFutureList();
 
     QMap<QString, QStringList> getSnapshootData();
     QMap<QString, QStringList> wsqSnapshootData(QList<QString> secodeList);
+    QMap<QString, QStringList> wsqFutureData(QList<QString> futureList);
 
     void setPreCloseData();
     QMap<QString, QStringList> wsqPreCloseData();
@@ -43,7 +45,7 @@ public:
 public slots:
     void loginWind_slot();
 
-    void setSecodeListComplete_slot();
+    void setTableListComplete_slot();
     void setPrecloseDataComplete_slot();
 
     void setRealTimeData_slot();
@@ -54,16 +56,16 @@ signals:
     void loginWindFailed_signal();
     void loginWindSucc_signal();
 
-    void setSecodeList_signal(QList<QString> data);
+    void setTableList_signal(QList<QString> secodeList, QList<QString> futureList);
 
     void writePreCloseData_signal(QMap<QString,QStringList>);
-    void writeRealTimeData_signal(QMap<QString,QStringList>);
-
-    void stopReadRealTimeData_signal();
-    void startReadRealTimeData_signal();
+    void writeRealTimeData_signal(QMap<QString,QStringList>, QMap<QString,QStringList>);
 
     void startMonitorTimer_signal();
     void stopMonitorTimer_signal();
+
+    void stopWaitTradeTimer_signal();
+    void startWaitTradeTimer_signal();
 
 private:
     QTimer             m_timer;
@@ -86,6 +88,7 @@ private:
     bool               m_isRestTime;  
     QString            m_secodeList_IndexCode;
     QList<QString>     m_secodeList;
+    QList<QString>     m_futureList;
     QTableView*        m_programInfoTableView;
     QTableView*        m_errorMsgTableView;
 
