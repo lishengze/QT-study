@@ -7,6 +7,8 @@
 #include <QMessageBox>
 #include "toolfunc.h"
 
+extern const int g_maxFutureSpread;
+
 Database::Database(QWidget* window, QString connName, QString host,
                    QString userName, QString userPwd,
                    QString connDbName, QString port,
@@ -64,7 +66,7 @@ void Database::initDatabase() {
     } else {
         QString succStr = "Open database: " + m_connDbName  + ", "+ m_hostName
                         + ", " + m_connName +" successfully!";
-//        qDebug() << succStr;
+        qDebug() << succStr;
 //        QMessageBox::information (m_window, "Succeed", succStr);
         m_bdatabaseOpen = true;
     }
@@ -322,8 +324,60 @@ double Database::getClosePrice(QString secode, QString date) {
     } else {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }
-
     return result;
+}
+
+QList<double> Database::getFutureSpread(QString futureName, QString databaseName) {
+    QList<double> result;
+    double spread = g_maxFutureSpread;
+    double datetime = -1;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString tableName = futureName;
+        QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
+        QString sqlstr = QString::fromLocal8Bit("select [基差],[请求时间] from %1  where 请求时间 = (select max(请求时间) from %2)")
+                                                .arg(completeTableName).arg(completeTableName);
+        if (queryObj.exec(sqlstr)) {
+            while(queryObj.next ()) {
+                spread = queryObj.value (0).toDouble();
+                datetime = queryObj.value (1).toString().toDouble();
+            }
+        }
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    result.append(spread);
+    result.append(datetime);
+    return result;
+}
+
+QList<double> Database::getHistFutureSpread(QString futureName, QString databaseName) {
+    QList<double> result;
+    double spread = g_maxFutureSpread;
+    double datetime = -1;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString tableName = futureName;
+        QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
+        QString sqlstr = QString::fromLocal8Bit("select [基差], [请求时间] from %1")
+                                               .arg(completeTableName);
+//        qDebug() << "sqlstr: " << sqlstr;
+        if (queryObj.exec(sqlstr)) {
+            while(queryObj.next ()) {
+                spread = queryObj.value (0).toDouble();
+                datetime = queryObj.value (1).toString().toDouble();
+                result.append(spread);
+                result.append(datetime);
+            }
+        } else {
+            result.append(spread);
+            result.append(datetime);
+        }
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+
 }
 
 QList<QString> Database::getTableList(QString databaseName) {
@@ -414,35 +468,6 @@ QList<QPointF> Database::getOriChartData(QString startDate, QString endDate, QSt
     return pointList;
 }
 
-QList<TableData> Database::getOriData(QString startDate, QString endDate, QString keyValue,
-                                         QString tableName, QString databaseName){
-
-    QList<TableData> tableDataList;
-    if(m_db.open ()) {
-    QSqlQuery queryObj(m_db);
-    QString sqlstr = QString("select [TDATE], [TIME], [") + keyValue + QString("] ") \
-                   + QString("from [") + databaseName + "].[dbo].[" + tableName + "] " \
-                   + "where TDATE <= " + endDate + " and TDATE >= " + startDate;
-    qDebug() <<sqlstr;
-    queryObj.exec(sqlstr);
-
-     while(queryObj.next ()) {
-        tableDataList.append (TableData(queryObj.value (0).toInt (), queryObj.value (1).toInt (), queryObj.value (2).toFloat ()));
-//        QList<int> tmpDate = getDateList(queryObj.value (0).toInt ());
-//        QList<int> tmpTime = getTimeList (queryObj.value (1).toInt ());
-//        QDateTime xValue;
-//        xValue.setDate (QDate(tmpDate[0], tmpDate[1], tmpDate[2]));
-//        xValue.setTime (QTime(tmpTime[0], tmpTime[1], tmpTime[2]));
-//        float yValue = queryObj.value (2).toFloat ();
-//        pointList.append (QPointF(xValue.toMSecsSinceEpoch (), yValue));
-     }
-    }else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-    return tableDataList;
-}
-
-
 QString Database::getCreateStr(QString tableName) {
     return "";
 }
@@ -504,3 +529,30 @@ void Database::checkData(QString tableName, QString colName, QString value) {
 
 }
 
+//QList<TableData> Database::getOriData(QString startDate, QString endDate, QString keyValue,
+//                                         QString tableName, QString databaseName){
+
+//    QList<TableData> tableDataList;
+//    if(m_db.open ()) {
+//    QSqlQuery queryObj(m_db);
+//    QString sqlstr = QString("select [TDATE], [TIME], [") + keyValue + QString("] ") \
+//                   + QString("from [") + databaseName + "].[dbo].[" + tableName + "] " \
+//                   + "where TDATE <= " + endDate + " and TDATE >= " + startDate;
+//    qDebug() <<sqlstr;
+//    queryObj.exec(sqlstr);
+
+//     while(queryObj.next ()) {
+//        tableDataList.append (TableData(queryObj.value (0).toInt (), queryObj.value (1).toInt (), queryObj.value (2).toFloat ()));
+////        QList<int> tmpDate = getDateList(queryObj.value (0).toInt ());
+////        QList<int> tmpTime = getTimeList (queryObj.value (1).toInt ());
+////        QDateTime xValue;
+////        xValue.setDate (QDate(tmpDate[0], tmpDate[1], tmpDate[2]));
+////        xValue.setTime (QTime(tmpTime[0], tmpTime[1], tmpTime[2]));
+////        float yValue = queryObj.value (2).toFloat ();
+////        pointList.append (QPointF(xValue.toMSecsSinceEpoch (), yValue));
+//     }
+//    }else {
+//        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+//    }
+//    return tableDataList;
+//}

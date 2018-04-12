@@ -51,7 +51,8 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
 
 void ChartForm::initCommonData() {
     m_startTime = QTime::currentTime();
-    m_dbhost = "192.168.211.165";
+//    m_dbhost = "192.168.211.165"; // win10
+    m_dbhost = "192.168.211.162"; // win7
 
     m_oldPointDistance = -1;
     m_setMouseTimeIndex = false;
@@ -433,7 +434,7 @@ void ChartForm::updateMousePos() {
 void ChartForm::setLayout () {
     ui->setupUi(this);
     this->setWindowTitle(m_strategyName);
-    m_title = QString(QString::fromLocal8Bit("策略: %1 , MACD: %2, %3, %4 "))
+    m_title = QString::fromLocal8Bit("策略: %1 , MACD: %2, %3, %4 ")
               .arg(m_strategyName).arg(m_macdTime[0]).arg(m_macdTime[1]).arg (m_macdTime[2]);
 
     ui->Title_Label->setText(m_title);
@@ -458,8 +459,8 @@ void ChartForm::setLayout () {
 
     m_endTime = QTime::currentTime();
     int costSecs = m_endTime.msecsSinceStartOfDay() - m_startTime.msecsSinceStartOfDay();
-    updateProgramInfo (m_programInfoTableView, QString(QString::fromLocal8Bit("读取计算数据,绘制图像耗费: %1s, 线程: %2"))
-                       .arg(costSecs/1000).arg(m_threadNumb));
+    updateProgramInfo (m_programInfoTableView, QString::fromLocal8Bit("读取计算数据,绘制图像耗费: %1s, 线程: %2")
+                                               .arg(costSecs/1000).arg(m_threadNumb));
 }
 
 QCategoryAxis* ChartForm::getAxisX () {

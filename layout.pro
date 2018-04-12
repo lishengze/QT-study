@@ -14,68 +14,74 @@ TARGET = layout
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-        widget.cpp \
+SOURCES  += main.cpp\
+            widget.cpp \
+            toolfunc.cpp \
+            test.cpp \
+            database.cpp \
+            chartform.cpp \
+            macd.cpp \
+            qmychartview.cpp \
+            dataread.cpp \
+            dataprocess.cpp \
+            dialog.cpp \
+            monitorrealtimedata.cpp \
+            chartdata.cpp \
+            historydata.cpp \
+            announcementform.cpp \
+            realtimedatabase.cpp \
+            generateportfolioform.cpp \
+    futurechart.cpp
+
+#    tabledata.cpp \
 #    setdata.cpp \
 #    callout.cpp \
-    toolfunc.cpp \
-    test.cpp \
-    strategy.cpp \
-    strategymodel.cpp \
-    database.cpp \
-    chartform.cpp \
-    excel.cpp \
-    tabledata.cpp \
-    macd.cpp \
-    qmychartview.cpp \
+#    strategy.cpp \
+#    strategymodel.cpp \
+#    excel.cpp \
 #    processfunc.cpp \
-    dataread.cpp \
-    dataprocess.cpp \
-    dialog.cpp \
 #    realtimedataprocess.cpp \
 #    realtimedataread.cpp \
-    monitorrealtimedata.cpp \
-    chartdata.cpp \
-    historydata.cpp \
-    announcementform.cpp \
-    realtimedatabase.cpp \
 #    webviewform.cpp
-    generateportfolioform.cpp
+
 
 HEADERS  += widget.h \
+            toolfunc.h \
+            test.h \
+            database.h \
+            chartform.h \
+            macd.h \
+            qmychartview.h \
+            dataread.h \
+            dataprocess.h \
+            dialog.h \
+            monitorrealtimedata.h \
+            chartdata.h \
+            historydata.h \
+            announcementform.h \
+            realtimedatabase.h \
+            generateportfolioform.h \
+    futurechart.h
+
+#    tabledata.h \
+#    strategy.h \
+#    strategymodel.h \
+#    excel.h \
 #    setdata.h \
 #    callout.h \
-    toolfunc.h \
-    test.h \
-    strategy.h \
-    strategymodel.h \
-    database.h \
-    chartform.h \
-    excel.h \
-    tabledata.h \
-    macd.h \
-    qmychartview.h \
 #    processfunc.h \
-    dataread.h \
-    dataprocess.h \
-    dialog.h \
 #    realtimedataprocess.h \
 #    WAPIWrapperCpp.h \
 #    realtimedataread.h \
-    monitorrealtimedata.h \
-    chartdata.h \
-    historydata.h \
-    announcementform.h \
-    realtimedatabase.h \
 #    webviewform.h
-    generateportfolioform.h
 
 FORMS    += widget.ui \
     chartform.ui \
     dialog.ui \
     announcementform.ui \
 #    webviewform.ui
-    generateportfolioform.ui
+    generateportfolioform.ui \
+    futurechart.ui
 
 include(qtxlsx/src/xlsx/qtxlsx.pri)
 

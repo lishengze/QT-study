@@ -6,39 +6,59 @@
 #include "toolfunc.h"
 using namespace  std;
 
+const int g_maxFutureSpread = 1000000;
+
 MonitorRealTimeData::MonitorRealTimeData(QString dbConnId, bool isBuySalePortfolio,
                                         QString dbhost, int monitorTime,  QList<int> macdTime,
                                         QString hedgeIndexCode, int hedgeIndexCount,
                                         QMap<QString, int> seocdebuyCountMap, QStringList secodeNameList,
                                         QMap<QString, int> buyStrategyMap, QMap<QString, int> saleStrategyMap,
-                                        QObject* parent):
+                                        bool isFuture, QObject* parent):
     m_dbConnId(dbConnId), m_isBuySalePortfolio(isBuySalePortfolio), m_dbhost(dbhost),
     m_monitorTime(monitorTime), m_macdTime(macdTime),
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
     m_seocdebuyCountMap(seocdebuyCountMap), m_secodeNameList(secodeNameList),
     m_buyStrategyMap(buyStrategyMap), m_saleStrategyMap(saleStrategyMap),
-    QObject(parent)
+    m_isFuture(isFuture), QObject(parent)
 {
     initCommonData();
+}
+
+MonitorRealTimeData::MonitorRealTimeData(QString dbConnId, QString dbhost, QString futureName,
+                                         int monitorTime, bool isFuture, QObject* parent):
+    m_dbConnId(dbConnId), m_dbhost(dbhost), m_futureName(futureName),
+    m_monitorTime(monitorTime), m_isFuture(isFuture), QObject(parent)
+{
+    initTimer();
+    initDatabase();
 }
 
 void MonitorRealTimeData::initCommonData() {
     initIndexHedgeMetaInfo();
     m_singleSecodeReadTime = 30;
-    m_minWaitTime = 3000;
-//    m_monitorTime = max(m_minWaitTime - m_singleSecodeReadTime * m_secodeNameList.size(), 0);
-    m_monitorTime = max(m_singleSecodeReadTime * m_secodeNameList.size(), m_minWaitTime);
-    qDebug() << "m_monitorTime: " << m_monitorTime;
-
-    connect(&m_timer, SIGNAL(timeout()), this, SLOT(getRealTimeData()));
-
     for (int i = 0; i < m_secodeNameList.size(); ++i) {
         QList<double> tmpVot;
         QList<QString> tmpTime;
         m_vot.insert(m_secodeNameList[i], tmpVot);
         m_time.insert(m_secodeNameList[i], tmpTime);
     }
+    initTimer();
+    initDatabase();
+}
+
+void MonitorRealTimeData::initDatabase() {
     m_database = new Database(m_dbConnId, m_dbhost);
+}
+
+void MonitorRealTimeData::initTimer() {
+    m_minWaitTime = 3000;
+    if (m_isFuture) {
+        m_monitorTime = m_minWaitTime;
+        connect(&m_timer, SIGNAL(timeout()), this, SLOT(setFutureData()));
+    } else {
+        m_monitorTime = max(m_singleSecodeReadTime * m_secodeNameList.size(), m_minWaitTime);
+        connect(&m_timer, SIGNAL(timeout()), this, SLOT(setRealTimeData()));
+    }
 }
 
 void MonitorRealTimeData::initIndexHedgeMetaInfo() {
@@ -56,13 +76,14 @@ void MonitorRealTimeData::setInitMacd(MACD initMacdData) {
 }
 
 void MonitorRealTimeData::startTimer() {
-     m_timer.start(m_monitorTime);
-
+    if (!m_timer.isActive()) {
+        m_timer.start(m_monitorTime);
+    }
 }
 
 void MonitorRealTimeData::stopTimer() {
     if (m_timer.isActive()) {
-        qDebug() << "Stop Timer";
+        qDebug() << "MonitorRealTimeData::stopTimer";
         m_timer.stop();
     }
 }
@@ -84,7 +105,7 @@ void MonitorRealTimeData::getPreCloseSpread() {
     emit sendPreCloseData(preCloseSpread);
 }
 
-void MonitorRealTimeData::getRealTimeData() {
+void MonitorRealTimeData::setRealTimeData() {
     if (isStockTradingOver()) {
        emit sendTradeOver();
     }
@@ -95,6 +116,39 @@ void MonitorRealTimeData::getRealTimeData() {
         if (isDataUseful) {
             emit sendRealTimeData(computeRealTimeData());
         }
+    }
+}
+
+void MonitorRealTimeData::setFutureData() {
+    QList<double> result = m_database->getFutureSpread(m_futureName);
+    double datetime = result[1];
+    if (datetime > 0) {
+        emit sendFutureData_signal(result);
+    } else {
+        qDebug() << QString::fromLocal8Bit("获取实时期货基差失败");
+    }
+
+//    if (isStockTradingOver()) {
+//       emit sendTradeOver();
+//    }
+//    if (isStockTrading()) {
+//        QList<double> result = m_database->getFutureSpread(m_futureName);
+//        double datetime = result[1];
+//        if (datetime > 0) {
+//            emit sendFutureData_signal(result);
+//        } else {
+//            qDebug() << QString::fromLocal8Bit("获取实时期货基差失败");
+//        }
+//    }
+}
+
+void MonitorRealTimeData::getHistFutureData_slot() {
+    QList<double> result = m_database->getHistFutureSpread(m_futureName);
+    double datetime = result[1];
+    if (datetime > 0) {
+        emit sendHistFutureData_signal(result);
+    } else {
+        qDebug() << QString::fromLocal8Bit("获取历史期货基差失败");
     }
 }
 
@@ -132,6 +186,18 @@ bool MonitorRealTimeData::preProcessRealTimeData(QMap<QString, QStringList> real
         sameTimeCount < m_secodeNameList.size() * unUpdatedDataPercent ) {
         return true;
     } else {
+        if (sameTimeCount >= m_secodeNameList.size() * unUpdatedDataPercent) {
+            for (QMap<QString, QStringList>::iterator it = realTimeData.begin();
+                 it != realTimeData.end(); ++it) {
+                QString secode = it.key();
+                if (!m_vot[secode].isEmpty()) {
+                    m_vot[secode].pop_back();
+                }
+                if (!m_vot[secode].isEmpty()) {
+                    m_time[secode].pop_back();
+                }
+            }
+        }
         return false;
     }
 }

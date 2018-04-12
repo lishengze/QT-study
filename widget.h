@@ -16,11 +16,13 @@
 #include <QTimer>
 #include <QFileInfo>
 
-#include "strategymodel.h"
+
 #include "announcementform.h"
 #include "database.h"
-#include "excel.h"
 #include "generateportfolioform.h"
+
+//#include "excel.h"
+//#include "strategymodel.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -38,13 +40,14 @@ public:
     void initCommonData();
     void initFileDir();
 
-    void initWidegt();
+    void initWidegt();    
     void initCalendar();
     void initHedgeComboBox();
     void initDataFrequency();
     void initMacdTime();
-    void initTableContextMenu();
+    void initFutureCombox();
 
+    void initTableContextMenu();
     void initProgramWorkInfoTableView();
 
     void setStrategyTable();
@@ -97,6 +100,8 @@ private slots:
 
     void on_buySalePortfolio_table_doubleClicked(const QModelIndex &index);
 
+    void on_showFutureSpread_Button_clicked();
+
 private:
     Ui::Widget *             ui;
 
@@ -108,7 +113,7 @@ private:
 
     QString                  m_buySalePortfolioFileDir;
     QString                  m_currBuySalePortfolioName;
-
+    QList<QString>           m_futureList;
     bool                     m_isBuySalePortfolio;
 
     QMap<QString, int>       m_strategyMap;

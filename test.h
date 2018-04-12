@@ -1,4 +1,4 @@
-#ifndef TEST_H
+﻿#ifndef TEST_H
 #define TEST_H
 
 void testMain();
@@ -9,13 +9,9 @@ void testGetExcelFileName();
 
 void testRemovePathName();
 
-void testExcel();
-
 void testSortPointList();
 
 void testMergeSortedList();
-
-void testTableData();
 
 void testComputeMACD();
 
@@ -37,10 +33,6 @@ void testDatabase();
 
 void testDataRead();
 
-//void testTransSecode();
-
-//void testWindWsq();
-
 void testGetSnapShootData();
 
 void testTransDateTime();
@@ -59,4 +51,15 @@ void testDatabaseBasic();
 
 void testXlsx();
 
+void testGetFutureSpread();
+
+void testTransIntDateTime();
+
+//void testTableData();
+
+//void testExcel();
+
+//void testTransSecode();
+
+//void testWindWsq();
 #endif // TEST_H

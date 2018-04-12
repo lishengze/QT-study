@@ -5,7 +5,7 @@
 #include <QPointF>
 #include <QSqlDatabase>
 #include <QWidget>
-#include "tabledata.h"
+//#include "tabledata.h"
 
 class Database
 {
@@ -32,27 +32,33 @@ public:
     QList<QStringList> getOriChartData(QString startDate, QString endDate, QStringList keyValue,
                                        QString tableName, QString databaseName="MarketData");
 
-    QList<TableData> getOriData(QString startDate, QString endDate, QString keyValue,
-                                             QString tableName, QString databaseName="MarketData");
+    QMap<QString, QStringList> getSnapShootData(QString tableName="AllData",
+                                                QString databaseName="MarketData_RealTime");
 
-    QMap<QString, QStringList> getSnapShootData(QString tableName="AllData", QString databaseName="MarketData_RealTime");
+    QMap<QString, QStringList> getSnapShootData(QList<QString> tableNameArray,
+                                                QString databaseName="MarketData_RealTime");
 
-    QMap<QString, QStringList> getSnapShootData(QList<QString> tableNameArray, QString databaseName="MarketData_RealTime");
-
-    QMap<QString, QList<QStringList>> getSnapShootHistoryData(QList<QString> tableNameArray, QString databaseName="MarketData_RealTime");
+    QMap<QString, QList<QStringList>> getSnapShootHistoryData(QList<QString> tableNameArray,
+                                                              QString databaseName="MarketData_RealTime");
 
     QMap<QString, QList<QStringList>> getLongTimeHistoryData(QString startDate, QString endDate, QStringList keyValueList,
                                                              QStringList tableNameList, QString databaseName="MarketData");
 
-    QMap<QString, QStringList> getPreCloseData(QString tableName = "PreCloseData", QString databaseName="MarketData_RealTime");
+    QMap<QString, QStringList> getPreCloseData(QString tableName="PreCloseData",
+                                               QString databaseName="MarketData_RealTime");
+
+    QList<double> getFutureSpread(QString future,
+                           QString databaseName="MarketData_RealTime");
+
+    QList<double> getHistFutureSpread(QString future,
+                           QString databaseName="MarketData_RealTime");
 
     double getClosePrice(QString secode, QString date);
 
-    QList<QPointF> transData(QList<TableData> oriData, int minuteInterval, QString dataType);
-
     QList<QString> getTableList(QString databaseName);
 
-    QMap<QString, QList<QStringList>> getAnnouncement(QList<QString> tableNameArray, QString startDate, QString endDate,
+    QMap<QString, QList<QStringList>> getAnnouncement(QList<QString> tableNameArray,
+                                                      QString startDate, QString endDate,
                                                       QString databaseName="Announcement");
 
     void completeTable(QList<QString> tableList);
@@ -84,5 +90,10 @@ public:
     QSqlDatabase m_db;
     bool m_bdatabaseOpen;
 };
+
+//    QList<QPointF> transData(QList<TableData> oriData, int minuteInterval, QString dataType);
+
+//    QList<TableData> getOriData(QString startDate, QString endDate, QString keyValue,
+//                                             QString tableName, QString databaseName="MarketData");
 
 #endif // DATABASE_H

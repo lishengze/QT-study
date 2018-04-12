@@ -1,13 +1,14 @@
-﻿#include "widget.h"
-#include <QApplication>
-#include "test.h"
-#include "testform.h"
+﻿#include <QApplication>
 #include <QTextCodec>
 #include <QProcess>
+
+#include "widget.h"
+#include "test.h"
+#include "testform.h"
 #include "processfunc.h"
 #include "dialog.h"
 #include "generateportfolioform.h"
-#pragma execution_character_set("utf-8");
+#pragma execution_character_set("utf-8")
 
 void setLibPath() {
     QApplication::addLibraryPath(".");
@@ -28,6 +29,7 @@ int main(int argc, char *argv[])
 //    genePorfolioWindow.show();
 
 //    testMain();
+
     return a.exec();
 }
 

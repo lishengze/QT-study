@@ -22,11 +22,15 @@
 #include "widget.h"
 #include "ui_widget.h"
 #include "QChartView"
-#include "setdata.h"
-#include "strategymodel.h"
+
 #include "chartform.h"
 #include "announcementform.h"
 #include "generateportfolioform.h"
+#include "xlsxdocument.h"
+#include "futurechart.h"
+
+//#include "setdata.h"
+//#include "strategymodel.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -42,6 +46,8 @@ Widget::Widget(QWidget *parent) :
 void Widget::initCommonData() {
     m_announcementView = NULL;
     m_isBuySalePortfolio = false;
+    m_futureList << "IF1804.CFE" << "IF1805.CFE"
+                 << "IF1806.CFE" << "IF1809.CFE";
     initFileDir();
 }
 
@@ -85,6 +91,7 @@ void Widget::initWidegt() {
     initHedgeComboBox();
     initDataFrequency();
     initMacdTime();
+    initFutureCombox();
 
     setStrategyTable();
     setBuySalePortfolioTable();
@@ -129,6 +136,11 @@ void Widget::initDataFrequency () {
     timeFre << "1m" << "5m" << "10m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
     ui->dataFrequency->addItems (timeFre);
     ui->dataFrequency->setCurrentText ("day");
+}
+
+void Widget::initFutureCombox() {
+    ui->futureList_ComboBox->addItems(m_futureList);
+    ui->futureList_ComboBox->setCurrentIndex(0);
 }
 
 void Widget::initProgramWorkInfoTableView () {
@@ -527,6 +539,22 @@ void Widget::on_realTimeBuySaleChart_clicked()
     }
 }
 
+void Widget::on_showFutureSpread_Button_clicked()
+{
+    int maxSpreadValue = ui->maxSpread_SpinBox->value();
+    int minSpreadValue = ui->minSpread_SpinBox->value();
+    QString curFuture = ui->futureList_ComboBox->currentText();
+
+    QWidget* futureChartView = new FutureChart(m_chartViews.count(), ui->programInfo_tableView,
+                                                curFuture, maxSpreadValue, minSpreadValue);
+
+    futureChartView->show();
+    m_chartViews.append(futureChartView);
+
+    updateProgramInfo (ui->programInfo_tableView, QString::fromLocal8Bit("期货: %1, 最大基差: %2, 最小基差: %3")
+                                                  .arg(curFuture).arg(maxSpreadValue).arg(minSpreadValue));
+}
+
 void Widget::on_Annoucnement_Button_clicked()
 {
     QString startDate = ui->AnnouncementStartDate->date ().toString ("yyyyMMdd");
@@ -584,17 +612,6 @@ void Widget::closeEvent(QCloseEvent *event) {
 Widget::~Widget()
 {
     delete ui;
-
-//    if (NULL != m_strategyModel) {
-//        delete m_strategyModel;
-//        m_strategyModel = NULL;
-//    }
-
-//    if (NULL != m_excel) {
-//        delete m_excel;
-//        m_excel = NULL;
-//    }
-
     for (int i = 0; i < m_chartViews.size (); ++i) {
         if (NULL != m_chartViews[i]) {
             delete m_chartViews[i];
@@ -608,4 +625,6 @@ Widget::~Widget()
     }
 
 }
+
+
 

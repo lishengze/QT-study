@@ -27,15 +27,16 @@
 #include <QCategoryAxis>
 #include "dataread.h"
 #include "dataprocess.h"
-#include  "historydata.h"
+#include "historydata.h"
 
-#include "strategy.h"
 #include "database.h"
 #include "macd.h"
 #include "qmychartview.h"
 #include "monitorrealtimedata.h"
-#include "chartdata.h"
 #include "toolfunc.h"
+
+//#include "chartdata.h"
+//#include "strategy.h"
 
 QT_BEGIN_NAMESPACE
 class QGraphicsSceneMouseEvent;

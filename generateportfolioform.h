@@ -7,7 +7,7 @@
 #include <QMenu>
 #include <QFileDialog>
 #include "database.h"
-#include "excel.h"
+//#include "excel.h"
 
 namespace Ui {
 class GeneratePortfolioForm;

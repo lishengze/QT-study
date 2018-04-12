@@ -19,6 +19,8 @@ QList<int> getDateList(int intDate);
 
 QList<int> getTimeList(int intDate);
 
+QDateTime transIntDateTime(long long data);
+
 QString removePathName(QString fullFileName);
 
 QList<QPointF> sortPointFList(QList<QPointF> oridata);
@@ -90,13 +92,15 @@ QTime StockPmStartTime();
 
 QTime StockPmStopTime();
 
-bool isStockTrading();
+bool isStockTrading(QTime currTime = QTime::currentTime());
 
-bool isStockTradingNotStart();
+bool isStockTradingStart(QTime currTime = QTime::currentTime());
 
-bool isStockNoonBreak();
+bool isStockTradingNotStart(QTime currTime = QTime::currentTime());
 
-bool isStockTradingOver();
+bool isStockNoonBreak(QTime currTime = QTime::currentTime());
+
+bool isStockTradingOver(QTime currTime = QTime::currentTime());
 
 void testCLosePrice(QMap<QString, QList<QStringList>> oriData);
 

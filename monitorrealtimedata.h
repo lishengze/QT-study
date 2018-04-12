@@ -9,6 +9,8 @@
 #include "chartdata.h"
 #include "database.h"
 
+extern const int g_maxFutureSpread;
+
 class MonitorRealTimeData: public QObject
 {
     Q_OBJECT
@@ -20,11 +22,16 @@ public:
                         QStringList secodeNameList=EmpytStringList(),
                         QMap<QString, int> buyStrategyMap = EmpytQStringIntMap(),
                         QMap<QString, int> saleStrategyMap = EmpytQStringIntMap(),
-                        QObject* parent = 0);
+                        bool isFuture = false, QObject* parent = 0);
+
+    MonitorRealTimeData(QString dbConnId, QString dbhost, QString futureName,
+                        int monitorTime, bool isFuture = true, QObject* parent = 0);
 
     ~MonitorRealTimeData();
 
     void initCommonData();
+    void initDatabase();
+    void initTimer();
     void startTimer();
     void stopTimer();
     void initIndexHedgeMetaInfo();
@@ -32,21 +39,30 @@ public:
 
     bool preProcessRealTimeData(QMap<QString,QStringList> realTimeData);
     ChartData computeRealTimeData();
-
 signals:
     void sendRealTimeData(ChartData data);
     void sendPreCloseData(double);
+
+    void sendHistFutureData_signal(QList<double>);
+    void sendFutureData_signal(QList<double>);
+
     void sendTradeOver();
+    void startMonitorTimer_signal();
+    void stopMonitorTimer_signal();
 
 public slots:
-    void getRealTimeData();
+    void setRealTimeData();
     void getPreCloseSpread();
+    void setFutureData();
+    void getHistFutureData_slot();
 
 private:
     QString                         m_dbConnId;
     QString                         m_dbhost;
     Database*                       m_database;
     bool                            m_isBuySalePortfolio;
+    bool                            m_isFuture;
+    QString                         m_futureName;
 
     QMap<QString, QStringList>      m_realTimeData;
     int                             m_monitorTime;
@@ -67,17 +83,5 @@ private:
     QMap<QString, int>              m_saleStrategyMap;
 
     QList<MACD>                     m_macdData;
-
-
 };
-
-//    void computePreCloseData(QMap<QString, QStringList> allPreCLoseData);
-//    void computeChartData();
-
-//    MonitorRealTimeData(int monitorTime,  QList<int> macdTime,
-//                        QMap<QString, int> seocdebuyCountMap, QStringList secodeNameList,
-//                        QString hedgeIndexCode, int hedgeIndexCount,
-//                        QString dbConnId, QString dbhost,
-//                        QObject* parent = 0);
-
 #endif // MONITORREALTIMEDATA_H
