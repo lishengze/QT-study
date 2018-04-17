@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 //    }
 
     UpdateRealtimeDataForm UpDataWindow;
-    UpDataWindow.setWindowTitle("UpData");
+    UpDataWindow.setWindowTitle("更新实时数据");
     UpDataWindow.show();
     return a.exec();
 }

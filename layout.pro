@@ -90,4 +90,4 @@ FORMS    += updaterealtimedataform.ui \
 RC_ICONS = dev.ico
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
-LIBS += -LE:/github/work-program/client/client-updatedata-dev -lWAPIWrapperCpp
+LIBS += -LD:/client/upData-dev -lWAPIWrapperCpp

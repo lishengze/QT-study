@@ -14,14 +14,9 @@ UpdateRealtimeDataForm::UpdateRealtimeDataForm(QWidget *parent) :
     ui(new Ui::UpdateRealtimeDataForm)
 {
     initCommonData();
-    initDatabase();
 
     initWidget();
     registeParams();
-    connectSignal();
-
-    emit loginWind_signal();
-    updateProgramInfo(ui->regularMsgTableView, QString::fromLocal8Bit("正在登陆万得"));
 }
 
 void UpdateRealtimeDataForm::initCommonData() {
@@ -34,68 +29,13 @@ void UpdateRealtimeDataForm::initCommonData() {
 
 void UpdateRealtimeDataForm::initDatabase() {
     m_dbName ="MarketData_RealTime";
-//    m_dbName ="Test";
-    m_dbHost = "192.168.211.165";
-//    m_dbHost = "192.168.211.162";
     m_dbConnID = "1";
     m_realtimeDatabase = new RealTimeDatabase(m_dbConnID, m_dbName, m_dbHost);
     m_programInfoTableName = "ProgramInfo";
-
     m_realtimeDatabase->setDatabaseWorkingState(m_programInfoTableName, 1);
 }
 
-void UpdateRealtimeDataForm::initWidget() {
-    ui->setupUi(this);
-    initTableView();
-}
-
-void UpdateRealtimeDataForm::registeParams() {
-    qRegisterMetaType<QAbstractItemModel::LayoutChangeHint>("QAbstractItemModel::LayoutChangeHint");
-    qRegisterMetaType<QList<QPersistentModelIndex>>("QList<QPersistentModelIndex>");
-    qRegisterMetaType<QVector<int>>("QVector<int>>");
-    qRegisterMetaType<QMap<QString, QStringList>>("QMap<QString, QStringList>");
-    qRegisterMetaType<QMap<QString, QStringList>>("QMap<QString, QStringList>");
-}
-
-void UpdateRealtimeDataForm::initTableView () {
-    QStandardItemModel* initModel = new QStandardItemModel();
-    initModel -> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("时间")));
-    initModel -> setHorizontalHeaderItem (1, new QStandardItem(QString::fromLocal8Bit("消息")));
-    initModel -> setHorizontalHeaderItem (2, new QStandardItem(QString::fromLocal8Bit("备注")));
-    ui->regularMsgTableView->setModel(initModel);
-    ui->regularMsgTableView->setColumnWidth (0, 150);
-    ui->regularMsgTableView->setColumnWidth (1, 450);
-    ui->regularMsgTableView->setColumnWidth (2, 150);
-    ui->regularMsgTableView->setShowGrid (false);
-
-    QStandardItemModel* errMsgModel = new QStandardItemModel();
-    errMsgModel -> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("时间")));
-    errMsgModel -> setHorizontalHeaderItem (1, new QStandardItem(QString::fromLocal8Bit("消息")));
-    errMsgModel -> setHorizontalHeaderItem (2, new QStandardItem(QString::fromLocal8Bit("备注")));
-    ui->errorMsgTableView->setModel (errMsgModel);
-    ui->errorMsgTableView->setColumnWidth (0, 150);
-    ui->errorMsgTableView->setColumnWidth (1, 400);
-    ui->errorMsgTableView->setColumnWidth (2, 150);
-    ui->errorMsgTableView->setShowGrid (false);
-}
-
-void UpdateRealtimeDataForm::startWriteMonitorTimer_slot() {
-    m_realTimeDataWrite->startMonitorTimer();
-}
-
-void UpdateRealtimeDataForm::stopWriteMonitorTimer_slot() {
-    m_realTimeDataWrite->stopMonitorTimer();
-}
-
-void UpdateRealtimeDataForm::startReadMonitorTimer_slot() {
-    m_realTimeDataRead->startMonitorTimer();
-}
-
-void UpdateRealtimeDataForm::stopReadMonitorTimer_slot() {
-    m_realTimeDataRead->stopMonitorTimer();
-}
-
-void UpdateRealtimeDataForm::connectSignal() {
+void UpdateRealtimeDataForm::initReadWriteObj() {
     m_realTimeDataRead = new RealTimeDataRead(ui->regularMsgTableView, ui->errorMsgTableView,
                                               "2", m_dbHost);
     m_realTimeDataReadThread= new QThread();
@@ -157,6 +97,76 @@ void UpdateRealtimeDataForm::connectSignal() {
 
     m_realTimeDataWriteThread->start();
     m_realTimeDataReadThread->start();
+}
+
+void UpdateRealtimeDataForm::registeParams() {
+    qRegisterMetaType<QAbstractItemModel::LayoutChangeHint>("QAbstractItemModel::LayoutChangeHint");
+    qRegisterMetaType<QList<QPersistentModelIndex>>("QList<QPersistentModelIndex>");
+    qRegisterMetaType<QVector<int>>("QVector<int>>");
+    qRegisterMetaType<QMap<QString, QStringList>>("QMap<QString, QStringList>");
+    qRegisterMetaType<QMap<QString, QStringList>>("QMap<QString, QStringList>");
+}
+
+void UpdateRealtimeDataForm::initWidget() {
+    ui->setupUi(this);
+    initTableView();
+    initDatasourceCombox();
+}
+
+void UpdateRealtimeDataForm::initDatasourceCombox() {
+    m_dbhostList << "192.168.211.162"
+                 << "192.168.211.165";
+
+    ui->dataSource_ComboBox->addItems(m_dbhostList);
+    ui->dataSource_ComboBox->setCurrentIndex(0);
+}
+
+void UpdateRealtimeDataForm::initTableView () {
+    QStandardItemModel* initModel = new QStandardItemModel();
+    initModel -> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("时间")));
+    initModel -> setHorizontalHeaderItem (1, new QStandardItem(QString::fromLocal8Bit("消息")));
+    initModel -> setHorizontalHeaderItem (2, new QStandardItem(QString::fromLocal8Bit("备注")));
+    ui->regularMsgTableView->setModel(initModel);
+    ui->regularMsgTableView->setColumnWidth (0, 150);
+    ui->regularMsgTableView->setColumnWidth (1, 450);
+    ui->regularMsgTableView->setColumnWidth (2, 150);
+    ui->regularMsgTableView->setShowGrid (false);
+
+    QStandardItemModel* errMsgModel = new QStandardItemModel();
+    errMsgModel -> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("时间")));
+    errMsgModel -> setHorizontalHeaderItem (1, new QStandardItem(QString::fromLocal8Bit("消息")));
+    errMsgModel -> setHorizontalHeaderItem (2, new QStandardItem(QString::fromLocal8Bit("备注")));
+    ui->errorMsgTableView->setModel (errMsgModel);
+    ui->errorMsgTableView->setColumnWidth (0, 150);
+    ui->errorMsgTableView->setColumnWidth (1, 400);
+    ui->errorMsgTableView->setColumnWidth (2, 150);
+    ui->errorMsgTableView->setShowGrid (false);
+}
+
+void UpdateRealtimeDataForm::startWriteMonitorTimer_slot() {
+    m_realTimeDataWrite->startMonitorTimer();
+}
+
+void UpdateRealtimeDataForm::stopWriteMonitorTimer_slot() {
+    m_realTimeDataWrite->stopMonitorTimer();
+}
+
+void UpdateRealtimeDataForm::startReadMonitorTimer_slot() {
+    m_realTimeDataRead->startMonitorTimer();
+}
+
+void UpdateRealtimeDataForm::stopReadMonitorTimer_slot() {
+    m_realTimeDataRead->stopMonitorTimer();
+}
+
+void UpdateRealtimeDataForm::on_startDownloadData_Button_clicked()
+{
+    m_dbHost = ui->dataSource_ComboBox->currentText();
+    updateProgramInfo(ui->regularMsgTableView, QString::fromLocal8Bit("当前选定更新的数据库为: %1").arg(m_dbHost));
+    initDatabase();
+    initReadWriteObj();
+    emit loginWind_signal();
+    updateProgramInfo(ui->regularMsgTableView, QString::fromLocal8Bit("正在登陆万得"));
 }
 
 void UpdateRealtimeDataForm::loginWindFailed_slot() {
@@ -311,3 +321,5 @@ UpdateRealtimeDataForm::~UpdateRealtimeDataForm()
 //        m_realTimeDataRead->setSecodeList(m_secodeList);
 //    }
 //}
+
+

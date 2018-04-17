@@ -25,10 +25,12 @@ public:
 
     void initCommonData();
     void initTableView();
+    void initDatasourceCombox();
     void initWidget();
     void initDatabase();
 
-    void connectSignal();
+
+    void initReadWriteObj();
     void registeParams();
 
     ~UpdateRealtimeDataForm();
@@ -49,11 +51,12 @@ public slots:
     void stopReadMonitorTimer_slot();
 
 private slots:
-
+    void on_startDownloadData_Button_clicked();
 
 private:
     Ui::UpdateRealtimeDataForm* ui;
 
+    QList<QString>              m_dbhostList;
     QString                     m_dbHost;
     QString                     m_dbName;
     QString                     m_dbConnID;

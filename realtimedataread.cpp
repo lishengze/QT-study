@@ -88,12 +88,9 @@ void RealTimeDataRead::stopMonitorTimer() {
     m_currProccessState = true;
     if (m_monitorExceptionTimer.isActive()) {
         m_monitorExceptionTimer.stop();
-//        qDebug() <<"Stop Time: " << QTime::currentTime();
+        qDebug() << QString::fromLocal8Bit("关闭了读取监听器, 剩余时间: %1")
+                    .arg(m_monitorExceptionTimer.remainingTime());
     }
-//    updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("关闭了读取监听器"));
-
-    qDebug() << QString::fromLocal8Bit("关闭了读取监听器, 剩余时间: %1")
-                .arg(m_monitorExceptionTimer.remainingTime());
 }
 
 void RealTimeDataRead::monitorException_slot() {
