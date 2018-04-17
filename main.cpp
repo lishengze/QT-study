@@ -20,13 +20,13 @@ int main(int argc, char *argv[])
     setLibPath();
     QApplication a(argc, argv);
 
-    Widget spreadWindow;
-    spreadWindow.setWindowTitle("Client");
-    spreadWindow.show();
+//    Widget spreadWindow;
+//    spreadWindow.setWindowTitle("Client");
+//    spreadWindow.show();
 
-//    GeneratePortfolioForm genePorfolioWindow;
-//    genePorfolioWindow.setWindowTitle("生成组合");
-//    genePorfolioWindow.show();
+    GeneratePortfolioForm genePorfolioWindow;
+    genePorfolioWindow.setWindowTitle("生成组合客户端");
+    genePorfolioWindow.show();
 
 //    testMain();
 

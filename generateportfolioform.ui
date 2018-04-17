@@ -56,6 +56,16 @@
        </property>
       </widget>
      </item>
+     <item row="2" column="1">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>选择数据源:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QComboBox" name="datasource_comboBox"/>
+     </item>
     </layout>
    </item>
    <item row="0" column="1">

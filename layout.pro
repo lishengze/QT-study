@@ -85,9 +85,9 @@ FORMS    += widget.ui \
 
 include(qtxlsx/src/xlsx/qtxlsx.pri)
 
-RC_ICONS = dev.ico
+#RC_ICONS = dev.ico
 
 #RC_ICONS = stable.ico
 
-#RC_ICONS = Wondo.ico
+RC_ICONS = Wondo.ico
 

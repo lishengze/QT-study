@@ -46,6 +46,8 @@ public:
     void initDataFrequency();
     void initMacdTime();
     void initFutureCombox();
+    void initDatasourceCombox();
+    void initSpreadSpinbox();
 
     void initTableContextMenu();
     void initProgramWorkInfoTableView();
@@ -106,7 +108,7 @@ private:
     Ui::Widget *             ui;
 
     QList<QWidget*>          m_chartViews;
-
+    QList<QString>           m_dbhostList;
     QString                  m_nativeFileName;
     QString                  m_strategyFileDir;
     QString                  m_currStrategyName;

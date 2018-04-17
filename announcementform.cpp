@@ -12,7 +12,10 @@ AnnouncementForm::AnnouncementForm(QWidget *parent) :
     ui->setupUi(this);
 }
 
-AnnouncementForm::AnnouncementForm(QString startDate, QString endDate, QWidget *parent):
+AnnouncementForm::AnnouncementForm(QString dbConnID, QString dbhost,
+                                   QString startDate, QString endDate,
+                                   QWidget *parent):
+    m_dbConnID(dbConnID), m_dbhost(dbhost),
     m_startDate(startDate), m_endDate(endDate),
     QWidget(parent),
     ui(new Ui::AnnouncementForm)
@@ -20,8 +23,8 @@ AnnouncementForm::AnnouncementForm(QString startDate, QString endDate, QWidget *
     ui->setupUi(this);
     initTableView();
 
-    QString host = "192.168.211.165";
-    m_database = new Database("1", host);
+    m_database = new Database(m_dbConnID, m_dbhost);
+
     setTableView();
 }
 

@@ -111,7 +111,7 @@ void MonitorRealTimeData::setRealTimeData() {
     }
     if (isStockTrading()) {
         QMap<QString, QStringList> oriRealTimeData = m_database->getSnapShootData(m_secodeNameList);
-        qDebug() << "oriRealTimeData.size: " << oriRealTimeData.size();
+//        qDebug() << "oriRealTimeData.size: " << oriRealTimeData.size();
         bool isDataUseful = preProcessRealTimeData(oriRealTimeData);
         if (isDataUseful) {
             emit sendRealTimeData(computeRealTimeData());
@@ -120,26 +120,26 @@ void MonitorRealTimeData::setRealTimeData() {
 }
 
 void MonitorRealTimeData::setFutureData() {
-    QList<double> result = m_database->getFutureSpread(m_futureName);
-    double datetime = result[1];
-    if (datetime > 0) {
-        emit sendFutureData_signal(result);
-    } else {
-        qDebug() << QString::fromLocal8Bit("获取实时期货基差失败");
-    }
+//    QList<double> result = m_database->getFutureSpread(m_futureName);
+//    double datetime = result[1];
+//    if (datetime > 0) {
+//        emit sendFutureData_signal(result);
+//    } else {
+//        qDebug() << QString::fromLocal8Bit("获取实时期货基差失败");
+//    }
 
-//    if (isStockTradingOver()) {
-//       emit sendTradeOver();
-//    }
-//    if (isStockTrading()) {
-//        QList<double> result = m_database->getFutureSpread(m_futureName);
-//        double datetime = result[1];
-//        if (datetime > 0) {
-//            emit sendFutureData_signal(result);
-//        } else {
-//            qDebug() << QString::fromLocal8Bit("获取实时期货基差失败");
-//        }
-//    }
+    if (isStockTradingOver()) {
+       emit sendTradeOver();
+    }
+    if (isStockTrading()) {
+        QList<double> result = m_database->getFutureSpread(m_futureName);
+        double datetime = result[1];
+        if (datetime > 0) {
+            emit sendFutureData_signal(result);
+        } else {
+            qDebug() << QString::fromLocal8Bit("获取实时期货基差失败");
+        }
+    }
 }
 
 void MonitorRealTimeData::getHistFutureData_slot() {
@@ -181,7 +181,7 @@ bool MonitorRealTimeData::preProcessRealTimeData(QMap<QString, QStringList> real
         }
     }
 
-    qDebug() << "sameTimeCount: " << sameTimeCount;
+//    qDebug() << "sameTimeCount: " << sameTimeCount;
     if (realTimeData.size() == m_secodeNameList.size() &&
         sameTimeCount < m_secodeNameList.size() * unUpdatedDataPercent ) {
         return true;

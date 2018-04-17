@@ -13,7 +13,9 @@ class AnnouncementForm : public QWidget
 
 public:
     explicit AnnouncementForm(QWidget *parent = 0);
-    AnnouncementForm(QString startDate, QString endDate, QWidget *parent = 0);
+    AnnouncementForm(QString dbConnID, QString host,
+                     QString startDate, QString endDate,
+                     QWidget *parent = 0);
 
     void setTableView();
     void initTableView();
@@ -27,6 +29,9 @@ private slots:
 
 private:
     Ui::AnnouncementForm *ui;
+    QString m_dbhost;
+    QString m_dbConnID;
+
     QString m_startDate;
     QString m_endDate;
     Database* m_database;

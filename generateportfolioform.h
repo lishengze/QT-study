@@ -20,10 +20,14 @@ class GeneratePortfolioForm : public QWidget
 public:
     explicit GeneratePortfolioForm(QWidget *parent = 0);
     void initCommnData();
+
     void initFileDir();
     void initExcelFileInfo();
 
+    void setDatabase();
+
     void initWidget();
+    void initDatasourceCombox();
     void initChoosePriceDate();
 
     void initProgramInfoTable();
@@ -107,6 +111,9 @@ private slots:
 
 private:
     Ui::GeneratePortfolioForm *            ui;
+    QList<QString>                         m_dbhostList;
+    QString                                m_dbhost;
+    QString                                m_dbConnID;
     Database*                              m_database;
     QString                                m_indexCode;
 

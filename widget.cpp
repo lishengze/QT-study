@@ -45,6 +45,8 @@ Widget::Widget(QWidget *parent) :
 
 void Widget::initCommonData() {
     m_announcementView = NULL;
+    m_dbhostList << "192.168.211.162"
+                 << "192.168.211.165";
     m_isBuySalePortfolio = false;
     m_futureList << "IF1804.CFE" << "IF1805.CFE"
                  << "IF1806.CFE" << "IF1809.CFE";
@@ -92,6 +94,8 @@ void Widget::initWidegt() {
     initDataFrequency();
     initMacdTime();
     initFutureCombox();
+    initDatasourceCombox();
+    initSpreadSpinbox();
 
     setStrategyTable();
     setBuySalePortfolioTable();
@@ -141,6 +145,19 @@ void Widget::initDataFrequency () {
 void Widget::initFutureCombox() {
     ui->futureList_ComboBox->addItems(m_futureList);
     ui->futureList_ComboBox->setCurrentIndex(0);
+}
+
+void Widget::initDatasourceCombox() {
+    ui->dataSource_ComboBox->addItems(m_dbhostList);
+    ui->dataSource_ComboBox->setCurrentIndex(0);
+}
+
+void Widget::initSpreadSpinbox() {
+    ui->maxSpread_SpinBox->setSingleStep(0.01);
+    ui->minSpread_SpinBox->setSingleStep(0.01);
+
+    ui->maxSpread_SpinBox->setRange(-100000, 100000);
+    ui->minSpread_SpinBox->setRange(-100000, 100000);
 }
 
 void Widget::initProgramWorkInfoTableView () {
@@ -392,6 +409,7 @@ void Widget::on_historyHedgeIndexChart_clicked()
         int EVA1Time = ui->EMA1TimeSpinBox->value ();
         int EVA2Time = ui->EMA2TimeSpinBox->value ();
         int DIFFTime = ui->DIFFTimeSpinBox->value ();
+        QString dbhost = ui->dataSource_ComboBox->currentText();
         QList<int> macdTime;
         macdTime << EVA1Time << EVA2Time << DIFFTime;
 
@@ -403,7 +421,7 @@ void Widget::on_historyHedgeIndexChart_clicked()
             return;
         } else {
             QWidget* charView = new ChartForm(0, ui->programInfo_tableView,
-                                              m_chartViews.count(), m_isBuySalePortfolio,
+                                              m_chartViews.count(), dbhost, m_isBuySalePortfolio,
                                               hedgeIndexCode, hedgeIndexCount, macdTime,
                                               m_strategyMap, m_currStrategyName,
                                               EmpytQStringIntMap(), EmpytQStringIntMap(),
@@ -412,6 +430,8 @@ void Widget::on_historyHedgeIndexChart_clicked()
             m_chartViews.append (charView);
             updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("策略名称: %1, 策略中股票数目为: %2"))
                                                           .arg(m_currStrategyName).arg(m_strategyMap.size ()));
+
+            updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("当前数据源为: %1").arg(dbhost));
 
             updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("起始时间: %1, 终止时间: %2, 时间频率: %3, T1: %4, T2: %5, T3: %6"))
                                                           .arg(startDate).arg(endDate).arg(timeType).arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
@@ -437,6 +457,7 @@ void Widget::on_realTimeHedgeIndexChart_clicked()
         int EVA1Time = ui->EMA1TimeSpinBox->value ();
         int EVA2Time = ui->EMA2TimeSpinBox->value ();
         int DIFFTime = ui->DIFFTimeSpinBox->value ();
+        QString dbhost = ui->dataSource_ComboBox->currentText();
         QList<int> macdTime;
         macdTime << EVA1Time << EVA2Time << DIFFTime;
 
@@ -444,7 +465,7 @@ void Widget::on_realTimeHedgeIndexChart_clicked()
         int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
 
         QWidget* charView = new ChartForm(0, ui->programInfo_tableView,
-                                          m_chartViews.count(), m_isBuySalePortfolio,
+                                          m_chartViews.count(), dbhost, m_isBuySalePortfolio,
                                           hedgeIndexCode, hedgeIndexCount, macdTime,
                                           m_strategyMap, m_currStrategyName);
         charView->show ();
@@ -452,6 +473,8 @@ void Widget::on_realTimeHedgeIndexChart_clicked()
 
         updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("策略名称: %1, 策略中股票数目为: %2"))
                                                       .arg(m_currStrategyName).arg(m_strategyMap.size ()));
+
+        updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("当前数据源为: %1").arg(dbhost));
 
         updateProgramInfo (ui->programInfo_tableView, QString("T1: %1, T2: %2, T3: %3")
                                                       .arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
@@ -480,12 +503,13 @@ void Widget::on_historyBuySaleChart_clicked()
         int EVA1Time = ui->EMA1TimeSpinBox->value ();
         int EVA2Time = ui->EMA2TimeSpinBox->value ();
         int DIFFTime = ui->DIFFTimeSpinBox->value ();
+        QString dbhost = ui->dataSource_ComboBox->currentText();
         QList<int> macdTime;
         macdTime << EVA1Time << EVA2Time << DIFFTime;
         qDebug() << "m_currBuySalePortfolioName: " << m_currBuySalePortfolioName;
 
         QWidget* chartView = new ChartForm(0, ui->programInfo_tableView,
-                                           m_chartViews.count(), m_isBuySalePortfolio,
+                                           m_chartViews.count(), dbhost, m_isBuySalePortfolio,
                                            "", -1, macdTime,
                                            EmpytQStringIntMap(), m_currBuySalePortfolioName,
                                            m_buyStrategyMap, m_saleStrategyMap,
@@ -495,6 +519,8 @@ void Widget::on_historyBuySaleChart_clicked()
 
         updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("策略名称: %1"))
                                                       .arg(m_currBuySalePortfolioName));
+
+        updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("当前数据源为: %1").arg(dbhost));
 
         updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("起始时间: %1, 终止时间: %2, 时间频率: %3, T1: %4, T2: %5, T3: %6"))
                                                       .arg(startDate).arg(endDate).arg(timeType).arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
@@ -517,12 +543,13 @@ void Widget::on_realTimeBuySaleChart_clicked()
         int EVA1Time = ui->EMA1TimeSpinBox->value ();
         int EVA2Time = ui->EMA2TimeSpinBox->value ();
         int DIFFTime = ui->DIFFTimeSpinBox->value ();
+        QString dbhost = ui->dataSource_ComboBox->currentText();
         QList<int> macdTime;
         macdTime << EVA1Time << EVA2Time << DIFFTime;
         qDebug() << "m_currBuySalePortfolioName: " << m_currBuySalePortfolioName;
 
         QWidget* chartView = new ChartForm(0, ui->programInfo_tableView,
-                                           m_chartViews.count(), m_isBuySalePortfolio,
+                                           m_chartViews.count(), dbhost, m_isBuySalePortfolio,
                                            "", -1, macdTime,
                                            EmpytQStringIntMap(), m_currBuySalePortfolioName,
                                            m_buyStrategyMap, m_saleStrategyMap, true);
@@ -531,6 +558,8 @@ void Widget::on_realTimeBuySaleChart_clicked()
 
         updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("策略名称: %1."))
                                                       .arg(m_currBuySalePortfolioName));
+
+        updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("当前数据源为: %1").arg(dbhost));
 
         updateProgramInfo (ui->programInfo_tableView, QString("T1: %1, T2: %2, T3: %3")
                                                       .arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
@@ -544,8 +573,8 @@ void Widget::on_showFutureSpread_Button_clicked()
     int maxSpreadValue = ui->maxSpread_SpinBox->value();
     int minSpreadValue = ui->minSpread_SpinBox->value();
     QString curFuture = ui->futureList_ComboBox->currentText();
-
-    QWidget* futureChartView = new FutureChart(m_chartViews.count(), ui->programInfo_tableView,
+    QString dbhost = ui->dataSource_ComboBox->currentText();
+    QWidget* futureChartView = new FutureChart(m_chartViews.count(), dbhost, ui->programInfo_tableView,
                                                 curFuture, maxSpreadValue, minSpreadValue);
 
     futureChartView->show();
@@ -553,14 +582,19 @@ void Widget::on_showFutureSpread_Button_clicked()
 
     updateProgramInfo (ui->programInfo_tableView, QString::fromLocal8Bit("期货: %1, 最大基差: %2, 最小基差: %3")
                                                   .arg(curFuture).arg(maxSpreadValue).arg(minSpreadValue));
+
+    updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("当前数据源为: %1").arg(dbhost));
 }
 
 void Widget::on_Annoucnement_Button_clicked()
 {
     QString startDate = ui->AnnouncementStartDate->date ().toString ("yyyyMMdd");
     QString endDate = ui->AnnouncementEndDate->date ().toString ("yyyyMMdd");
-    m_announcementView = new AnnouncementForm(startDate, endDate);
+    QString dbhost = ui->dataSource_ComboBox->currentText();
+    m_announcementView = new AnnouncementForm(QString("%1").arg(m_chartViews.count()), dbhost,
+                                              startDate, endDate);
     m_announcementView->show();
+    m_chartViews.append(m_announcementView);
 }
 
 void Widget::on_chooseStrategyDir_Button_clicked()
@@ -604,9 +638,6 @@ void Widget::closeEvent(QCloseEvent *event) {
             m_chartViews[i] -> close();
         }
     }
-    if (NULL != m_announcementView) {
-        m_announcementView->close();
-    }
 }
 
 Widget::~Widget()
@@ -618,12 +649,6 @@ Widget::~Widget()
             m_chartViews[i] = NULL;
         }
     }
-
-    if (NULL != m_announcementView) {
-        delete m_announcementView;
-        m_announcementView = NULL;
-    }
-
 }
 
 

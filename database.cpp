@@ -359,7 +359,7 @@ QList<double> Database::getHistFutureSpread(QString futureName, QString database
         QSqlQuery queryObj(m_db);
         QString tableName = futureName;
         QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
-        QString sqlstr = QString::fromLocal8Bit("select [基差], [请求时间] from %1")
+        QString sqlstr = QString::fromLocal8Bit("select [基差], [请求时间] from %1 order by [请求时间]")
                                                .arg(completeTableName);
 //        qDebug() << "sqlstr: " << sqlstr;
         if (queryObj.exec(sqlstr)) {

@@ -58,7 +58,7 @@ class ChartForm : public QWidget
 
 public:
     ChartForm(QWidget *parent, QTableView* programInfoTableView,
-              int chartViewID, bool isBuySalePortfolio,
+              int chartViewID, QString dbhost, bool isBuySalePortfolio,
               QString hedgeIndexCode, int hedgeIndexCount, QList<int> macdTime,
               QMap<QString, int> strategyMap = EmpytQStringIntMap(), QString strategyName="",
               QMap<QString, int> buyStrategyList = EmpytQStringIntMap(),
@@ -98,6 +98,7 @@ public:
     void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
     void KeyReleaseFunc(QEvent *event);
     double getPointXDistance();
+    void moveMouse(int step);
 
 public slots:
     void receivePreCloseData(double preSpread);
@@ -173,12 +174,13 @@ private:
     int                  m_chartXaxisTickCount;
 
     QPoint               m_mouseInitPos;
-    QString              m_mouseChartName;
     double               m_oldPointDistance;
-    bool                 m_setMouseTimeIndex;
-    bool                 m_setKeyMove;
     int                  m_currTimeIndex;
     int                  m_keyMoveCount;
+    bool                 m_isKeyMove;
+
+    QString              m_mouseChartName;
+    bool                 m_setMouseTimeIndex;
 
     QLineSeries*         m_strategySeries;
     QMyChartView*        m_strategyChartView;

@@ -8,7 +8,7 @@
 #include <QChart>
 #include <QLineSeries>
 #include <QCategoryAxis>
-
+#include <QMessageBox>
 #include <QTableView>
 
 #include "toolfunc.h"
@@ -35,7 +35,7 @@ class FutureChart : public QWidget
     Q_OBJECT
 
 public:
-    explicit FutureChart(int chartViewID, QTableView* programInfoTableView,
+    explicit FutureChart(int chartViewID, QString dbhost, QTableView* programInfoTableView,
                          QString futureName, double maxSpreadValue, double minSpreadValue,
                          QWidget *parent = 0);
     ~FutureChart();
@@ -53,17 +53,26 @@ public:
     void updateAxis();
     void updateSeries();
     void updateMousePos();
+    void setRealTimeLabel(int index);
+
+    void monitorSpread(double spread, QDateTime time);
 
     QList<QDateTime> getExtendedFutureTime(QList<QDateTime> oriTime,
                                            int chartXaxisTickCount, int updateTime);
 
     QCategoryAxis* getAxisX(QList<QDateTime> m_valueList, int tickCount);
 
+
+    void mouseMoveEvenFunc(QObject *watched, QEvent *event);
+    void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
+    void KeyReleaseFunc(QEvent *event);
+    void moveMouse(int step);
+    double getPointXDistance();
+
 public slots:
     void tradeOver_slot();
     void sendHistFutureData_slot(QList<double>);
     void sendFutureData_slot(QList<double>);
-
 
 protected:
     bool eventFilter (QObject *watched, QEvent *event);
@@ -73,7 +82,7 @@ signals:
     void getHistFutureData_signal();
 
 private:
-    Ui::FutureChart *ui;
+    Ui::FutureChart*        ui;
 
     int                     m_chartViewID;
     QTableView*             m_programInfoTableView;
@@ -88,6 +97,9 @@ private:
     QList<QDateTime>        m_extendedFutureTime;
     MonitorRealTimeData*    m_monitorWorker;
     QThread                 m_MonitorThread;
+    QList<QMessageBox*>     m_monitorBoxList;
+    int                     m_visibleBoxNumb;
+    int                     m_allBoxNumb;
 
     QLineSeries*            m_spreadLineSeries;
     QMyChartView*           m_spreadChartView;
@@ -95,6 +107,13 @@ private:
 
     int                     m_updateTime;
     int                     m_chartXaxisTickCount;
+
+    QPoint                  m_mouseInitPos;
+    double                  m_oldPointDistance;
+    int                     m_keyMoveCount;
+    int                     m_currTimeIndex;
+    bool                    m_isKeyMove;
+
 };
 
 #endif // FUTURECHART_H

@@ -38,13 +38,27 @@ GeneratePortfolioForm::~GeneratePortfolioForm()
 }
 
 void GeneratePortfolioForm::initCommnData() {
-    m_database = new Database("3", "192.168.211.165");
+    m_database = NULL;
+    m_dbConnID = "1";
     m_priceTime = "realtime";
     m_indexCode = "000300";
     m_hasChooseAccount = false;
 
+    m_dbhostList << "192.168.211.162"
+                 << "192.168.211.165";
+
     initFileDir();
     initExcelFileInfo();
+}
+
+void GeneratePortfolioForm::setDatabase() {
+    if (NULL != m_database) {
+        delete m_database;
+        m_database = NULL;
+    }
+    m_dbhost = ui->datasource_comboBox->currentText();
+    m_database = new Database(m_dbConnID, m_dbhost);
+    updateProgramInfo(ui->programInfo_Table, QString::fromLocal8Bit("当前链接的数据源是: %1").arg(m_dbhost));
 }
 
 void GeneratePortfolioForm::initFileDir() {
@@ -104,12 +118,18 @@ void GeneratePortfolioForm::initWidget() {
 
     initChoosePriceDate();
     initProgramInfoTable();
+    initDatasourceCombox();
 
     setAccountTable();
     setStrategyTable();
     setBuySalePortfolioTable();
 
     initTableContextMenu();
+}
+
+void GeneratePortfolioForm::initDatasourceCombox() {
+    ui->datasource_comboBox->addItems(m_dbhostList);
+    ui->datasource_comboBox->setCurrentIndex(0);
 }
 
 void GeneratePortfolioForm::initChoosePriceDate() {
@@ -457,6 +477,7 @@ void GeneratePortfolioForm::on_geneBuySalePortfolio_clicked()
 
         if (QMessageBox::Yes == QMessageBox::information(NULL, QString::fromLocal8Bit("确认信息"), info, QMessageBox::Yes | QMessageBox::No)) {
             updateProgramInfo(ui->programInfo_Table, QString::fromLocal8Bit("----- 生成买卖组合信息 -----"));
+            setDatabase();
 
             m_allStrategy = getCurrStrategy(m_strategyWeight);
             if (m_allStrategy.find("Error") != m_allStrategy.end()) {

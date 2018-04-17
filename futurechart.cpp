@@ -2,15 +2,18 @@
 #include <QBarSeries>
 #include <QValueAxis>
 #include <QDebug>
+#include <QtMath>
+#include <QMessageBox>
+#include <QFont>
 
 #include "futurechart.h"
 #include "ui_futurechart.h"
 #include "toolfunc.h"
 
-FutureChart::FutureChart(int chartViewID, QTableView* programInfoTableView,
+FutureChart::FutureChart(int chartViewID, QString dbhost, QTableView* programInfoTableView,
                          QString futureName, double maxSpreadValue, double minSpreadValue,
                          QWidget *parent) :
-    m_chartViewID(chartViewID), m_programInfoTableView(programInfoTableView),
+    m_chartViewID(chartViewID), m_dbhost(dbhost), m_programInfoTableView(programInfoTableView),
     m_futureName(futureName), m_maxSpreadValue(maxSpreadValue), m_minSpreadValue(minSpreadValue),
     QWidget(parent),
     ui(new Ui::FutureChart)
@@ -21,9 +24,18 @@ FutureChart::FutureChart(int chartViewID, QTableView* programInfoTableView,
 }
 
 void FutureChart::initCommonData() {
-    m_dbhost = "192.168.211.165";
     m_chartXaxisTickCount = 5;
     m_updateTime = 3000;
+
+    m_visibleBoxNumb = 3;
+    m_allBoxNumb = 0;
+
+    m_keyMoveCount = 0;
+    m_currTimeIndex = 0;
+    m_isKeyMove = false;
+    m_mouseInitPos = QPoint(-1, -1);
+    m_oldPointDistance = -1;
+
     initMonitorWorker();
     registSignalParamsType();
 
@@ -66,7 +78,7 @@ void FutureChart::registSignalParamsType() {
 void FutureChart::initLayout() {
     this->setWindowTitle(m_futureName);
     ui->title_label->setText(QString::fromLocal8Bit("期货 %1, %2 日基差实时图")
-                             .arg(m_futureName).arg(QDate::currentDate().toString("yyyy:MM:dd")));
+                             .arg(m_futureName).arg(QDate::currentDate().toString("yyyy-MM-dd")));
     initSpreadChartView();
 
     if (m_spreadChartView != NULL) {
@@ -87,6 +99,36 @@ void FutureChart::initTheme() {
     ui->title_label->setStyleSheet(QStringLiteral("color: rgb(250, 250, 250);font: 75 14pt \"微软雅黑\";"));
 }
 
+void FutureChart::monitorSpread(double spread, QDateTime time) {
+    if (spread > m_maxSpreadValue || spread < m_minSpreadValue) {
+        QString msg = QString::fromLocal8Bit("%1 基差: %2, 时间: %3")
+                                            .arg(m_futureName).arg(spread)
+                                            .arg(time.toString("hh:mm:ss"));
+        updateProgramInfo(m_programInfoTableView, msg);
+        QMessageBox* box = new QMessageBox();
+        box->setText(msg);
+        box->setStyleSheet("color:red");
+        QFont font;
+        font.setPixelSize(48);
+        box->setFont(font);
+        box->setFixedSize(400, 400);
+        box->setWindowTitle(QString::fromLocal8Bit("%1 基差提醒!").arg(m_futureName));
+        box->setWindowFlags(Qt::WindowStaysOnTopHint);
+        box->show();
+
+        m_monitorBoxList.append(box);
+        while (m_monitorBoxList.size() > m_visibleBoxNumb) {
+            QMessageBox* tmpBox = m_monitorBoxList.first();
+            if (NULL != tmpBox) {
+                tmpBox -> close();
+                delete tmpBox;
+            }
+            m_monitorBoxList.pop_front();
+        }
+        qDebug() << "m_allBoxNumb: " << ++m_allBoxNumb;
+    }
+}
+
 void FutureChart::transOriFutureData(QList<double> histFutureData) {
     for (int i = 0; i < histFutureData.size(); i+=2) {
         m_futureSpread.append(histFutureData[i]);
@@ -102,12 +144,18 @@ void FutureChart::sendHistFutureData_slot(QList<double> histFutureData) {
 }
 
 void FutureChart::sendFutureData_slot (QList<double> realtimeFutureData) {
-    qDebug() << realtimeFutureData;
+//    qDebug() << realtimeFutureData;
+    monitorSpread(realtimeFutureData[0], transIntDateTime(realtimeFutureData[1]));
     m_futureSpread.append(realtimeFutureData[0]);
     m_futureTime.append(transIntDateTime(realtimeFutureData[1]));
 
+    if (!m_isKeyMove) {
+        setRealTimeLabel(m_futureSpread.size()-1);
+    }
+
     updateAxis();
     updateSeries();
+    updateMousePos();
 }
 
 void FutureChart::tradeOver_slot() {
@@ -124,12 +172,12 @@ QList<QDateTime> FutureChart::getExtendedFutureTime(QList<QDateTime> oriTime,
         QDateTime latestDateTime = oriTime.back();
         for (int i = 0; i < addedNumb; ++i) {
             latestDateTime = latestDateTime.addMSecs(updateTime);
-//            if (isStockTrading(latestDateTime.time())) {
-//                result.append(latestDateTime);
-//            } else {
-//                break;
-//            }
-            result.append(latestDateTime);
+            if (isStockTrading(latestDateTime.time())) {
+                result.append(latestDateTime);
+            } else {
+                break;
+            }
+//            result.append(latestDateTime);
         }
     }
     return result;
@@ -139,21 +187,17 @@ QCategoryAxis* FutureChart::getAxisX (QList<QDateTime> m_valueList, int tickCoun
     QCategoryAxis* axisX = new QCategoryAxis;
     axisX->setStartValue(0);
     QList<int> axisXPosList = getNumbList(m_valueList.size (), tickCount);
-    qDebug() << "axisXPosList: " << axisXPosList;
+//    qDebug() << "axisXPosList: " << axisXPosList;
     for (int i = 0; i < axisXPosList.size(); ++i) {
         int xpos = axisXPosList[i];
         axisX->append (m_valueList[xpos].toString("hh:mm:ss"), xpos);
     }
-    axisX->setMax(m_valueList.size());
+    axisX->setMax(m_valueList.size()-1);
     return axisX;
 }
 
 void FutureChart::initSpreadChartView() {
-//    m_extendedFutureTime = getExtendedFutureTime(m_futureTime, m_chartXaxisTickCount, m_updateTime);
-//    qDebug() << "m_extendedFutureTime.size(): " << m_extendedFutureTime.size()
-//             << ", m_futureTime.size(): " << m_futureTime.size();
     m_extendedFutureTime = m_futureTime;
-
     QCategoryAxis* axisX = getAxisX(m_extendedFutureTime, m_chartXaxisTickCount);
     QValueAxis* axisY = new QValueAxis;
     m_spreadLineSeries = new QLineSeries;
@@ -167,7 +211,7 @@ void FutureChart::initSpreadChartView() {
 
     QList<double> axisYRange = getChartYvalueRange(m_futureSpread);
     axisY -> setRange (axisYRange[0], axisYRange[1]);
-    axisY -> setLabelFormat ("%1.1e");
+//    axisY -> setLabelFormat ("%1.1e");
 
     m_spreadChart = new QChart();
     m_spreadChart->addSeries(m_spreadLineSeries);
@@ -204,18 +248,117 @@ void FutureChart::updateSeries() {
 }
 
 void FutureChart::updateMousePos() {
+    moveMouse(0);
+}
 
+void FutureChart::setRealTimeLabel(int index) {
+    if (index >=0 && index < m_futureSpread.size()) {
+//        qDebug() << "index: " << index << ", isKeyMove: " << m_isKeyMove;
+        ui->time_label->setText(QString::fromLocal8Bit("时间: %1")
+                                .arg(m_futureTime[index].toString("hh:mm:ss")));
+
+        ui->spread_label->setText(QString::fromLocal8Bit("基差: %1")
+                                  .arg(m_futureSpread[index]));
+    }
+}
+
+void FutureChart::mouseMoveEvenFunc(QObject *watched, QEvent *event) {
+    if (m_isKeyMove)  {
+        m_isKeyMove = false;
+    } else {
+        QMouseEvent *mouseEvent = (QMouseEvent *)event;
+        QPoint curPoint = mouseEvent->pos ();
+        int currIndex = -1;
+        if (watched == m_spreadChartView) {
+            QPointF currChartPoint = m_spreadChart->mapToValue (curPoint);
+            currIndex = qFloor(currChartPoint.x());
+        }
+
+        if (currIndex>=0 && currIndex < m_futureSpread.size()) {
+            setRealTimeLabel(currIndex);
+        }
+    }
+}
+
+void FutureChart::mouseButtonReleaseFunc(QObject *watched, QEvent *event) {
+    QMouseEvent *mouseEvent = (QMouseEvent *)event;
+    QPoint curPoint = mouseEvent->pos ();
+    QPointF transPoint;
+    m_currTimeIndex = -1;
+    m_mouseInitPos = QCursor::pos();
+    m_keyMoveCount = 0;
+    double deltaInGlobalPointAndChartPoint = 0;
+
+    if (watched == m_spreadChartView) {
+        QPointF currChartPoint = m_spreadChart->mapToValue (curPoint);
+        m_currTimeIndex = qFloor(currChartPoint.x());
+        transPoint = m_spreadChart->mapToPosition( (QPointF(m_currTimeIndex, m_futureSpread[m_currTimeIndex])));
+        deltaInGlobalPointAndChartPoint = transPoint.x() - curPoint.x();
+    }
+
+    if (m_currTimeIndex >= 0 && m_currTimeIndex < m_futureSpread.size()) {
+        m_isKeyMove = true;
+        setRealTimeLabel(m_currTimeIndex);
+        m_mouseInitPos.setX(m_mouseInitPos.x() + deltaInGlobalPointAndChartPoint);
+        QCursor::setPos(m_mouseInitPos);
+    }
+}
+
+void FutureChart::KeyReleaseFunc(QEvent *event) {
+    QKeyEvent* keyEvent = (QKeyEvent*)event;
+    int step = 0;
+    if (keyEvent->key() == Qt::Key_Left) {
+        step = -1;
+    }
+    if (keyEvent->key() == Qt::Key_Right) {
+        step = 1;
+    }
+    moveMouse(step);
+}
+
+void FutureChart::moveMouse(int step) {
+    double pointXDistance = getPointXDistance();
+    if (m_oldPointDistance != pointXDistance) {
+        if (m_oldPointDistance != -1) {
+            double deltaDistance = pointXDistance - m_oldPointDistance;
+            m_mouseInitPos.setX(m_mouseInitPos.x() + deltaDistance);
+        }
+        m_oldPointDistance = pointXDistance;
+    }
+
+    if (step != 0) {
+        m_keyMoveCount += step;
+        m_currTimeIndex += step;
+        float move_distance = pointXDistance * m_keyMoveCount;
+
+        if (m_currTimeIndex >= 0 && m_currTimeIndex < m_futureSpread.size()) {
+            m_isKeyMove = true;
+            setRealTimeLabel(m_currTimeIndex);
+        }
+
+        if (move_distance >= 1 || move_distance <=-1 || move_distance == 0) {
+            QCursor::setPos(m_mouseInitPos.x() + move_distance, m_mouseInitPos.y());
+        }
+    }
+}
+
+double FutureChart::getPointXDistance() {
+    int testIndex = 0;
+    QPointF pointa = m_spreadChart->mapToPosition(QPointF(testIndex, m_futureSpread[testIndex]));
+    QPointF pointb = m_spreadChart->mapToPosition(QPointF(testIndex+1, m_futureSpread[testIndex+1]));
+    double distance = pointb.x() - pointa.x();
+    return distance;
 }
 
 bool FutureChart::eventFilter (QObject *watched, QEvent *event) {
     if (event->type () == QEvent::MouseMove) {
-//        mouseMoveEvenFunc(watched, event);
+        mouseMoveEvenFunc(watched, event);
     }
     if (event->type() == QEvent::KeyRelease) {
-//        KeyReleaseFunc(event);
+        KeyReleaseFunc(event);
     }
     if (event->type() == QEvent::MouseButtonRelease) {
-//        mouseButtonReleaseFunc(watched, event);
+        mouseButtonReleaseFunc(watched, event);
     }
     return QWidget::eventFilter (watched, event);
 }
@@ -236,5 +379,12 @@ FutureChart::~FutureChart()
     if (NULL != m_monitorWorker) {
         m_monitorWorker->stopTimer();
         m_monitorWorker = NULL;
+    }
+
+    for (int i = 0; i < m_monitorBoxList.size(); ++i) {
+        if (NULL != m_monitorBoxList[i]) {
+            delete m_monitorBoxList[i];
+            m_monitorBoxList[i] = NULL;
+        }
     }
 }
