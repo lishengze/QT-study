@@ -5,11 +5,15 @@
 #include <windows.h>
 #include <QTime>
 #include <algorithm>
+#include <QFileInfo>
+#include <database.h>
+
 using namespace std;
 #include "toolfunc.h"
 #include "WAPIWrapperCpp.h"
 #include "realtimedataread.h"
-using namespace std;
+#include "excel_func.h"
+#include "time_func.h"
 
 RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView, QTableView* errorMsgTableView,
                                    QString dbConnID,QString dbHost,
@@ -23,15 +27,18 @@ RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView, QTableView*
     initDatabase();
     initTimer();
     initMonitorTimer();
-}
 
+//    testSecodeList();
+}
 void RealTimeDataRead::initCommonData() {
     m_currProccessState = false;
     m_isTooEarly = false;
     m_isRestTime = false;
     m_login = false;
+    m_strategyFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/strategy/");
     m_wsqSnapshootDataNumb = 500;
 
+    m_futureIndexCode = "000300";
     m_secodeList_IndexCode = "000906";
     m_usefulReadRate = 0.5;
 
@@ -42,10 +49,21 @@ void RealTimeDataRead::initCommonData() {
 void RealTimeDataRead::initDatabase() {
     m_dbName = "Market_Info";
     m_realtimeDatabase = new RealTimeDatabase(m_dbConnID, m_dbName, m_dbHost);
+
+//    qDebug() <<"full size: " <<getSecodeList().size();
 }
 
 void RealTimeDataRead::initTimer() {
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(setRealTimeData_slot()));
+}
+
+void RealTimeDataRead::testSecodeList() {
+    m_secodeList = getSecodeList();
+    m_futureList = getFutureList();
+    qDebug() << "m_secodeList: " << m_secodeList;
+    qDebug() << "m_futureList: " << m_futureList;
+    updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("m_secodeList.size: %1, m_futureList.size: %2")
+                                                .arg(m_secodeList.size()).arg(m_futureList.size()));
 }
 
 void RealTimeDataRead::setUpdateTime() {
@@ -109,10 +127,12 @@ void RealTimeDataRead::loginWind_slot() {
 
         m_login = true;
         updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("登陆万得成功"));
-        waitForNextTradingDay(m_programInfoTableView);
+//        waitForNextTradingDay(m_programInfoTableView);
 
         m_secodeList = getSecodeList();
         m_futureList = getFutureList();
+        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("股票代码数: %1, 期货合约数: %2")
+                                                    .arg(m_secodeList.size()).arg(m_futureList.size()));
         setUpdateTime();
         emit setTableList_signal(m_secodeList, m_futureList);
 
@@ -127,6 +147,20 @@ void RealTimeDataRead::loginWind_slot() {
     }
 }
 
+QList<QString> RealTimeDataRead::getExcelSecodeList() {
+    QList<QFileInfo> strategyFileInfoList = getExcelFileInfo(m_strategyFileDir);
+    QList<QString> result;
+    for (QFileInfo currFileInfo : strategyFileInfoList) {
+        QList<QString> secodeList = readExcelSecodeList(m_strategyFileDir + currFileInfo.fileName());
+        for (QString secode : secodeList) {
+            if (result.indexOf(completeSecode(secode, "wind")) < 0) {
+                result.append(completeSecode(secode, "wind"));
+            }
+        }
+    }
+    return result;
+}
+
 QList<QString> RealTimeDataRead::getSecodeList() {
     QString tableName = m_secodeList_IndexCode + "_SecodeList";
     QList<QString> result;
@@ -134,6 +168,18 @@ QList<QString> RealTimeDataRead::getSecodeList() {
     for (int i = 0; i < result.size(); ++i) {
         result[i] = completeSecode(result[i], "wind");
     }
+
+    updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("%1股票代码数: %2").arg(m_secodeList_IndexCode).arg(result.size()));
+
+    QList<QString> excelList = getExcelSecodeList();
+    for (QString secode : excelList) {
+        if (result.indexOf(secode) < 0) {
+            result.append(secode);
+            qDebug() << secode;
+        }
+    }
+    updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("所有组合股票代码数: %1").arg(excelList.size()));
+
     QList<QString> indexCodeList = getIndexCode("wind");
     result += indexCodeList;
     result = getSubList(result, 0, result.size());
@@ -141,10 +187,8 @@ QList<QString> RealTimeDataRead::getSecodeList() {
 }
 
 QList<QString> RealTimeDataRead::getFutureList() {
-    QList<QString> result;
-    result.clear();
-    result << "IF1804.CFE" << "IF1805.CFE"
-           << "IF1806.CFE" << "IF1809.CFE";
+    Database database_obj("2", m_dbHost);
+    QList<QString> result = database_obj.getAllData(m_futureIndexCode, "Future_Info");
     return result;
 }
 
@@ -166,6 +210,8 @@ void RealTimeDataRead::setPrecloseDataComplete_slot() {
 void RealTimeDataRead::resetReadSource() {
     m_secodeList = getSecodeList();
     m_futureList = getFutureList();
+    updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("股票代码数: %1, 期货合约数: %2")
+                                                .arg(m_secodeList.size()).arg(m_futureList.size()));
     emit setTableList_signal(m_secodeList, m_futureList);
     m_isTooEarly = false;
     m_isRestTime = false;
@@ -183,7 +229,6 @@ void RealTimeDataRead::setRealTimeData_slot() {
 //    QMap<QString, QStringList> futureResult = wsqFutureData(m_futureList);
 //    if (secodeResult.size() > m_secodeList.size() * m_usefulReadRate) {
 //            emit writeRealTimeData_signal(secodeResult, futureResult);
-////            printMap(futureResult, "futureResult");
 //            emit stopMonitorTimer_signal();
 //    } else {
 //        setRealTimeData_slot();
@@ -194,7 +239,6 @@ void RealTimeDataRead::setRealTimeData_slot() {
         QMap<QString, QStringList> futureResult = wsqFutureData(m_futureList);
         if (secodeResult.size() > m_secodeList.size() * m_usefulReadRate) {
             emit writeRealTimeData_signal(secodeResult, futureResult);
-            printMap(futureResult, "futureResult");
             emit stopMonitorTimer_signal();
         } else {
             setRealTimeData_slot();

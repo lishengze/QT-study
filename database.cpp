@@ -1,10 +1,11 @@
-#include "database.h"
+﻿#include "database.h"
 #include <QDebug>
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDateTime>
 #include <QTime>
 #include <QMessageBox>
+#include "time_func.h"
 #include "toolfunc.h"
 
 Database::Database(QWidget* window, QString connName, QString host,
@@ -78,6 +79,100 @@ QSqlDatabase Database::getDatabase () {
     return m_db;
 }
 
+QList<QString> Database::getAllData(QString tableName, QString databaseName) {
+    QList<QString> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
+        QString sqlstr = QString("select * from %1").arg(completeTableName);
+        queryObj.exec(sqlstr);
+         while(queryObj.next ()) {
+            QString contract_code = queryObj.value (0).toString();
+            result.append(contract_code);
+         }
+    } else {
+        QMessageBox::information (m_window, "Error", m_db.lastError().text());
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+QList<QStringList> Database::getDataByDate(QString startDate, QString endDate, QStringList keyValue,
+                                       QString tableName, QString databaseName) {
+    QList<QStringList> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
+        QString keyValueStr = keyValue.join(",");
+        QString sqlstr = QString("select %1 from %2 where TDATE >= %3 and TDATE <= %4 order by TDATE, TIME")
+                        .arg(keyValueStr).arg(completeTableName).arg(startDate).arg(endDate);
+//        qDebug() << "sqlstr: " << sqlstr;
+        queryObj.exec(sqlstr);
+         while(queryObj.next ()) {
+             QStringList tmpResult;
+             for (int i = 0; i < keyValue.size(); ++i) {
+                 tmpResult.append(queryObj.value (i).toString());
+             }
+            result.append(tmpResult);
+         }
+    } else {
+        QMessageBox::information (m_window, "Error", m_db.lastError().text());
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+QList<QStringList> Database::getWeightData(QString date, QString tableName) {
+    QList<QStringList> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString databaseName = "WeightData";
+        QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
+        QString keyValueStr = "*";
+        int     keyNumb = 9;
+        QString sqlstr = QString::fromLocal8Bit("select %1 from %2 where 指数截止日 = '%3' order by 排名")
+                        .arg(keyValueStr).arg(completeTableName).arg(date);
+//        qDebug() << "sqlstr: " << sqlstr;
+        queryObj.exec(sqlstr);
+         while(queryObj.next ()) {
+             QStringList tmpResult;
+             for (int i = 0; i < keyNumb; ++i) {
+                 tmpResult.append(queryObj.value (i).toString());
+             }
+            result.append(tmpResult);
+         }
+    } else {
+        QMessageBox::information (m_window, "Error", m_db.lastError().text());
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
+QList<QStringList> Database::getIndustryData(QStringList keyValueList, QString tableName) {
+    QList<QStringList> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString databaseName = "IndustryData";
+        QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
+        QString keyValueStr = keyValueList.join(",");
+        QString sqlstr = QString::fromLocal8Bit("select %1 from %2")
+                        .arg(keyValueStr).arg(completeTableName);
+//        qDebug() << "sqlstr: " << sqlstr;
+        queryObj.exec(sqlstr);
+         while(queryObj.next ()) {
+             QStringList tmpResult;
+             for (int i = 0; i < keyValueList.size(); ++i) {
+                 tmpResult.append(queryObj.value (i).toString());
+             }
+            result.append(tmpResult);
+         }
+    } else {
+        QMessageBox::information (m_window, "Error", m_db.lastError().text());
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+
 QList<QPointF> Database::getOriChartData(QString startDate, QString endDate, QString keyValue,
                                          QString tableName, QString databaseName){
 
@@ -140,7 +235,6 @@ QList<QStringList> Database::getOriChartData(QString startDate, QString endDate,
     }
     return resultList;
 }
-
 
 //QList<TableData> Database::getOriData(QString startDate, QString endDate, QString keyValue,
 //                                         QString tableName, QString databaseName){
@@ -268,7 +362,6 @@ QMap<QString, QList<QStringList>> Database::getSnapShootHistoryData(QList<QStrin
     }
     return result;
 }
-
 
 QString Database::getCreateStr(QString tableName) {
     return "";

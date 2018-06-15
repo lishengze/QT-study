@@ -27,7 +27,17 @@ SOURCES += main.cpp\
     subwriteclass.cpp \
     realtimedataread.cpp \
     realtimedatawrite.cpp \
-    test.cpp
+    test.cpp \
+    excel_func.cpp \
+    time_func.cpp \
+    extractmarketdata.cpp \
+    readdatabasedata.cpp \
+    extractdataform.cpp \
+    workprogressdialog.cpp \
+    widget_func.cpp \
+    extractweightdata.cpp \
+    extractindustrydata.cpp \
+    choosesecodewindow.cpp
 
 #    setdata.cpp \
 #        widget.cpp \
@@ -60,7 +70,17 @@ HEADERS  += updaterealtimedataform.h \
     WAPIWrapperCpp.h \
     realtimedatawrite.h \
     subwriteclass.h \
-    test.h
+    test.h \
+    excel_func.h \
+    time_func.h \
+    extractmarketdata.h \
+    readdatabasedata.h \
+    extractdataform.h \
+    workprogressdialog.h \
+    widget_func.h \
+    extractweightdata.h \
+    extractindustrydata.h \
+    choosesecodewindow.h
 
 #    setdata.h \
 #    widget.h \
@@ -80,14 +100,20 @@ HEADERS  += updaterealtimedataform.h \
 #    preclosedatabase.h \
 
 
+
 FORMS    += updaterealtimedataform.ui \
+    extractdataform.ui \
+    workprogressdialog.ui \
+    choosesecodewindow.ui
 #    widget.ui \
 #    chartform.ui \
 #    dialog.ui \
 
+include(qtxlsx/src/xlsx/qtxlsx.pri)
+
 #RC_ICONS = stable.ico
-#RC_ICONS = lion.ico
-RC_ICONS = dev.ico
+#RC_ICONS = lion.ico     # 更新实时数据;
+RC_ICONS = jewel.ico     # 提取数据;
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
 LIBS += -LD:/client/upData-dev -lWAPIWrapperCpp

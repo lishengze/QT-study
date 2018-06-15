@@ -95,10 +95,30 @@ void RealTimeDataWrite::registerParams() {
     qRegisterMetaType<QList<QString>>("QList<QString>");
 }
 
+bool RealTimeDataWrite::isSecodeListChange() {
+    QList<QString> databaseTableList = m_realtimeDatabase->getTableList(m_dbName);
+    bool result = false;
+    for (QString secode:m_secodeList) {
+        if (databaseTableList.indexOf(secode) < 0) {
+            result = true;
+        }
+    }
+
+    for (QString futureCode:m_futureList) {
+        if (databaseTableList.indexOf(futureCode) < 0) {
+            result = true;
+        }
+    }
+    return result;
+}
+
 bool RealTimeDataWrite::checkDatabase() {
     bool result = true;
-    if (m_realtimeDatabase->checkdataTime(m_dataTimeTable)) {
+    if (m_realtimeDatabase->checkdataTime(m_dataTimeTable) && !isSecodeListChange()) {
         updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("实时数据表已经创建好"));
+        QString compTableMsg = m_realtimeDatabase->completeTable(m_secodeList);
+        QString compFutureMsg = m_realtimeDatabase->completeFutureTable(m_futureList);
+        QString compDatatimeMsg = m_realtimeDatabase->completeDataTimeTable(m_dataTimeTable);
     } else {
         if (clearDatabase()) {
             QString compTableMsg = m_realtimeDatabase->completeTable(m_secodeList);

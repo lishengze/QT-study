@@ -29,6 +29,7 @@ public:
     void registerParams();
     bool checkDatabase();
     bool clearDatabase();
+    bool isSecodeListChange();
 
     QList<QMap<QString, QStringList>> allocateData(QMap<QString, QStringList> oriData);
     void createSubWriteThreads(QList<QMap<QString, QStringList>>);

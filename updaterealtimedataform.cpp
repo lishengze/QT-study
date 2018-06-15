@@ -167,6 +167,7 @@ void UpdateRealtimeDataForm::on_startDownloadData_Button_clicked()
     initReadWriteObj();
     emit loginWind_signal();
     updateProgramInfo(ui->regularMsgTableView, QString::fromLocal8Bit("正在登陆万得"));
+    ui->startDownloadData_Button->setText(QString::fromLocal8Bit("重新开始更新数据"));
 }
 
 void UpdateRealtimeDataForm::loginWindFailed_slot() {

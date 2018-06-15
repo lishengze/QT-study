@@ -2,6 +2,7 @@
 #include <QSqlError>
 #include <QDebug>
 #include "realtimedatabase.h"
+#include "time_func.h"
 #include "toolfunc.h"
 
 RealTimeDatabase::RealTimeDatabase(QWidget* window, QString connName, QString connDbName,

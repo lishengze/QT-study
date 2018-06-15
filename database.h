@@ -25,14 +25,20 @@ public:
     QSqlDatabase getDatabase();
     bool isDatabaseOpen();
 
+    QList<QString> getAllData(QString tableName, QString databaseName);
+
+    QList<QStringList> getDataByDate(QString startDate, QString endDate, QStringList keyValue,
+                                 QString tableName, QString databasename);
+
+    QList<QStringList> getWeightData(QString date, QString tableName);
+
+    QList<QStringList> getIndustryData(QStringList keyValueList, QString tableName);
+
     QList<QPointF> getOriChartData(QString startDate, QString endDate, QString keyValue,
                                    QString tableName, QString databasename="MarketData");
 
     QList<QStringList> getOriChartData(QString startDate, QString endDate, QStringList keyValue,
                                        QString tableName, QString databaseName="MarketData");
-
-//    QList<TableData> getOriData(QString startDate, QString endDate, QString keyValue,
-//                                             QString tableName, QString databaseName="MarketData");
 
     QMap<QString, QStringList> getSnapShootData(QString tableName="AllData", QString databaseName="MarketData_RealTime");
 
@@ -42,12 +48,11 @@ public:
 
     QMap<QString, QStringList> getPreCloseData(QString tableName = "PreCloseData", QString databaseName="MarketData_RealTime");
 
-//    QList<QPointF> transData(QList<TableData> oriData, int minuteInterval, QString dataType);
-
     QList<QString> getTableList(QString databaseName);
 
     QMap<QString, QList<QStringList>> getAnnouncement(QList<QString> tableNameArray, QString startDate, QString endDate,
                                                       QString databaseName="Announcement");
+
 
 
 

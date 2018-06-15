@@ -5,12 +5,9 @@
 #include <QPointF>
 #include <QWidget>
 #include <QTableView>
+#include <QFileInfo>
 #include "macd.h"
 #include "WAPIWrapperCpp.h"
-
-QList<int> getDateList(int intDate);
-
-QList<int> getTimeList(int intDate);
 
 QString removePathName(QString fullFileName);
 
@@ -75,31 +72,18 @@ LONG WINAPI wsqCallBack( ULONGLONG reqid, const WindData &wd);
 
 double getAveValue(QList<double>);
 
-QTime StockAmStartTime();
-
-QTime StockAmStopTime();
-
-QTime StockPmStartTime();
-
-QTime StockPmStopTime();
-
-bool isStockTrading();
-
-bool isStockTradingNotStart();
-
-bool isStockNoonBreak();
-
-bool isStockTradingOver();
-
 QMap<QString, QStringList> wsqSnaphootData(QStringList secodeList);
-
-QList<QString> getExcelFileName(QString dirName);
 
 QMap<QString, QStringList> EmptyQStringQStringListMap();
 
-bool isTradingDay(QDate day);
-
-bool waitForNextTradingDay(QTableView* programInfoTableView);
+template<class Type>
+void printList(QList<Type> oridata, QString msg) {
+    qDebug() << msg ;
+    qDebug() << "oridata.size: " << oridata.size();
+    for (int i = 0; i < oridata.size(); ++i) {
+        qDebug() << oridata[i];
+    }
+}
 
 template<class keyType, class valueType>
 void printMap(QMap<keyType, valueType> data, QString message) {

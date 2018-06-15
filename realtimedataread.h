@@ -23,6 +23,8 @@ public:
     void startMonitorTimer();
     void stopMonitorTimer();
 
+    void testSecodeList();
+
     void initTimer();
     void setUpdateTime();
     void startTimer();
@@ -30,6 +32,7 @@ public:
 
     void resetReadSource();
 
+    QList<QString> getExcelSecodeList();
     QList<QString> getSecodeList();
     QList<QString> getFutureList();
 
@@ -77,6 +80,8 @@ private:
     QString            m_dbHost;
     QString            m_dbName;
     RealTimeDatabase*  m_realtimeDatabase;
+    QString            m_strategyFileDir;
+    QString            m_futureIndexCode;
 
     QTimer             m_monitorExceptionTimer;
     int                m_monitorExceptionWaitTime;
