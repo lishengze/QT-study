@@ -5,10 +5,12 @@
 #include <QMutexLocker>
 #include <QMutex>
 
+#include "database.h"
 #include "dataread.h"
 #include "dataprocess.h"
 #include "dataread.h"
 #include "toolfunc.h"
+#include "process_data_func.h"
 
 class HistoryData : public QObject
 {
@@ -24,10 +26,19 @@ public:
                 QMap<QString, int> saleStrategyMap = EmpytQStringIntMap(),
                 QObject *parent = 0);
 
+    HistoryData(int chartViewID, QString dbhost, QString databaseName,
+                QString selectIndex, QString hedgedIndex,
+                QString startDate, QString endDate,
+                int aveNumb, double css12Rate,
+                double cssRate1, double cssRate2,
+                double m_maxCSS, double m_minCSS,
+                QObject *parent = 0);
+
     ~HistoryData();
 
     void initCommonData();
     void initSignalType();
+    void initDatabase(int chartViewID);
 
     void initThreadSecodeList();
     void initReadDataSignal();
@@ -43,11 +54,14 @@ signals:
     void startReadDataSignal(QString dataType);
     void startProcessDataSignal(QString dataType);
     void tableViewInfoSignal(QString msg);
+    void sendHistIndexData_signal(QList<QStringList>);
+    void sendHistIndexError_signal(QString);
 
 public slots:
     void getHistData();
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
     void receiveProcessedData(QList<QList<double>> allData);
+    void getIndexHistData_slot();
 
 private:
     bool                               m_isRealTime;
@@ -61,10 +75,11 @@ private:
 
     QString                            m_dbhost;
     QString                            m_databaseName;
-    QString                            m_hedgeIndexCode;
-    QList<int>                         m_macdTime;
     QString                            m_startDate;
     QString                            m_endDate;
+
+    QString                            m_hedgeIndexCode;
+    QList<int>                         m_macdTime;
     QStringList                        m_keyValueList;
 
     QMap<QString, int>                 m_buyStrategyMap;
@@ -80,6 +95,17 @@ private:
     QList<QThread*>                    m_dataReaderThreadList;
     int                                m_readDataThreadCount;
     QMap<QString, QList<QStringList>>  m_completeTableData;
+
+    // 指数对冲信息;
+    Database*                          m_database;
+    QString                            m_selectIndex;
+    QString                            m_hedgedIndex;
+    int                                m_aveNumb;
+    double                             m_css12Rate;
+    double                             m_cssRate1;
+    double                             m_cssRate2;
+    double                             m_maxCSS;
+    double                             m_minCSS;
 };
 
 #endif // HISTORYDATA_H

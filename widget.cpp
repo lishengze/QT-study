@@ -18,6 +18,9 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 
+#include "excel_func.h"
+#include "widget_func.h"
+#include "io_func.h"
 #include "toolfunc.h"
 #include "widget.h"
 #include "ui_widget.h"
@@ -28,9 +31,7 @@
 #include "generateportfolioform.h"
 #include "xlsxdocument.h"
 #include "futurechart.h"
-
-//#include "setdata.h"
-//#include "strategymodel.h"
+#include "database.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -47,9 +48,11 @@ void Widget::initCommonData() {
     m_announcementView = NULL;
     m_dbhostList << "192.168.211.162"
                  << "192.168.211.165";
+    m_currDBHost = m_dbhostList[0];
+    m_futureIndexCode = "000300";
+    setFutureContractList();
     m_isBuySalePortfolio = false;
-    m_futureList << "IF1804.CFE" << "IF1805.CFE"
-                 << "IF1806.CFE" << "IF1809.CFE";
+
     initFileDir();
 }
 
@@ -93,10 +96,11 @@ void Widget::initWidegt() {
     initHedgeComboBox();
     initDataFrequency();
     initMacdTime();
-    initFutureCombox();
+    setFutureContractCombox();
     initDatasourceCombox();
     initSpreadSpinbox();
 
+    setFutureContractList();
     setStrategyTable();
     setBuySalePortfolioTable();
 
@@ -137,14 +141,21 @@ void Widget::initMacdTime () {
 
 void Widget::initDataFrequency () {
     QStringList timeFre;
-    timeFre << "1m" << "5m" << "10m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
+    timeFre << "1m" << "5m" << "10m" << "15m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
     ui->dataFrequency->addItems (timeFre);
     ui->dataFrequency->setCurrentText ("day");
 }
 
-void Widget::initFutureCombox() {
+void Widget::setFutureContractCombox() {
+    ui->futureList_ComboBox->clear();
     ui->futureList_ComboBox->addItems(m_futureList);
     ui->futureList_ComboBox->setCurrentIndex(0);
+}
+
+void Widget::setFutureContractList() {
+    Database database_obj(this, "0", m_currDBHost);
+    m_futureList = database_obj.getAllData(m_futureIndexCode, "Future_Info");
+    qDebug() << m_futureList;
 }
 
 void Widget::initDatasourceCombox() {
@@ -651,5 +662,10 @@ Widget::~Widget()
     }
 }
 
-
-
+void Widget::on_dataSource_ComboBox_currentIndexChanged(const QString &arg1)
+{
+    qDebug() << "arg1: " << arg1;
+    m_currDBHost = arg1;
+    setFutureContractList();
+    setFutureContractCombox();
+}

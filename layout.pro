@@ -13,14 +13,18 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = layout
 TEMPLATE = app
 
+#INCLUDEPATH +=D:\client\public-function
+#INCLUDEPATH +=D:\client\public-class
+
+
+INCLUDEPATH +=../public-function
+INCLUDEPATH +=../public-class
 
 SOURCES  += main.cpp\
             widget.cpp \
             toolfunc.cpp \
             test.cpp \
-            database.cpp \
             chartform.cpp \
-            macd.cpp \
             qmychartview.cpp \
             dataread.cpp \
             dataprocess.cpp \
@@ -29,28 +33,25 @@ SOURCES  += main.cpp\
             chartdata.cpp \
             historydata.cpp \
             announcementform.cpp \
-            realtimedatabase.cpp \
             generateportfolioform.cpp \
-    futurechart.cpp
-
-#    tabledata.cpp \
-#    setdata.cpp \
-#    callout.cpp \
-#    strategy.cpp \
-#    strategymodel.cpp \
-#    excel.cpp \
-#    processfunc.cpp \
-#    realtimedataprocess.cpp \
-#    realtimedataread.cpp \
-#    webviewform.cpp
-
+    futurechart.cpp \
+    ../public-function/excel_func.cpp \
+    ../public-function/time_func.cpp \
+    ../public-function/widget_func.cpp \
+    ../public-function/secode_func.cpp \
+    ../public-class/database.cpp \
+    ../public-class/realtimedatabase.cpp \
+    ../public-function/compute_func.cpp \
+    indexchart.cpp \
+    ../public-function/process_data_func.cpp \
+    ../public-function/io_func.cpp \
+    ../public-function/terminal_func.cpp \
+    ../public-class/macd.cpp
 
 HEADERS  += widget.h \
             toolfunc.h \
             test.h \
-            database.h \
             chartform.h \
-            macd.h \
             qmychartview.h \
             dataread.h \
             dataprocess.h \
@@ -59,21 +60,20 @@ HEADERS  += widget.h \
             chartdata.h \
             historydata.h \
             announcementform.h \
-            realtimedatabase.h \
             generateportfolioform.h \
-    futurechart.h
-
-#    tabledata.h \
-#    strategy.h \
-#    strategymodel.h \
-#    excel.h \
-#    setdata.h \
-#    callout.h \
-#    processfunc.h \
-#    realtimedataprocess.h \
-#    WAPIWrapperCpp.h \
-#    realtimedataread.h \
-#    webviewform.h
+    futurechart.h \
+    ../public-function/excel_func.h \
+    ../public-function/time_func.h \
+    ../public-function/widget_func.h \
+    ../public-function/secode_func.h \
+    ../public-class/database.h \
+    ../public-class/realtimedatabase.h \
+    ../public-function/compute_func.h \
+    indexchart.h \
+    ../public-function/process_data_func.h \
+    ../public-function/io_func.h \
+    ../public-function/terminal_func.h \
+    ../public-class/macd.h
 
 FORMS    += widget.ui \
     chartform.ui \
@@ -81,13 +81,14 @@ FORMS    += widget.ui \
     announcementform.ui \
 #    webviewform.ui
     generateportfolioform.ui \
-    futurechart.ui
+    futurechart.ui \
+    indexchart.ui
 
 include(qtxlsx/src/xlsx/qtxlsx.pri)
 
-#RC_ICONS = dev.ico
+RC_ICONS = dev.ico
 
 #RC_ICONS = stable.ico
 
-RC_ICONS = Wondo.ico
+#RC_ICONS = Wondo.ico
 

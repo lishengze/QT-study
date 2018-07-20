@@ -33,7 +33,7 @@
 #include "macd.h"
 #include "qmychartview.h"
 #include "monitorrealtimedata.h"
-#include "toolfunc.h"
+//#include "toolfunc.h"
 
 //#include "chartdata.h"
 //#include "strategy.h"
@@ -76,6 +76,8 @@ public:
 
     void initHistdataThread();
     void initMonitorThread();
+
+    void writeExcelData();
 
     void updateData();
     void updateChart();

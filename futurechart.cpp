@@ -8,7 +8,9 @@
 
 #include "futurechart.h"
 #include "ui_futurechart.h"
+#include "time_func.h"
 #include "toolfunc.h"
+#include "widget_func.h"
 
 FutureChart::FutureChart(int chartViewID, QString dbhost, QTableView* programInfoTableView,
                          QString futureName, double maxSpreadValue, double minSpreadValue,

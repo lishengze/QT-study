@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QTime>
 #include <QMessageBox>
+#include "time_func.h"
 #include "toolfunc.h"
 
 extern const int g_maxFutureSpread;
@@ -78,6 +79,24 @@ bool Database::isDatabaseOpen () {
 
 QSqlDatabase Database::getDatabase () {
     return m_db;
+}
+
+QList<QString> Database::getAllData(QString tableName, QString databaseName) {
+    QList<QString> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
+        QString sqlstr = QString("select * from %1").arg(completeTableName);
+        queryObj.exec(sqlstr);
+         while(queryObj.next ()) {
+            QString contract_code = queryObj.value (0).toString();
+            result.append(contract_code);
+         }
+    } else {
+        QMessageBox::information (m_window, "Error", m_db.lastError().text());
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
 }
 
 QList<QStringList> Database::getOriChartData(QString startDate, QString endDate, QStringList keyValueList,
@@ -410,6 +429,7 @@ QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> table
             QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
             QString sqlstr = "select * from" + completeTableName  + " where Date <= " + endDate + " and Date >= " + startDate;
             QList<QStringList> oneSecodeData;
+             qDebug() << "secode: " <<  secode << " start!";
             if (queryObj.exec(sqlstr) ) {
                 int valueNumb = 4;
 
@@ -429,6 +449,7 @@ QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> table
             } else {
                 result.insert("Error", oneSecodeData);
             }
+            qDebug() << "secode: " <<  secode << ", data.size: " << oneSecodeData.size();
         }
     } else {
         QList<QStringList> oneSecodeData;

@@ -16,6 +16,10 @@
 #include "ui_generateportfolioform.h"
 #include "toolfunc.h"
 #include "xlsxdocument.h"
+#include "excel_func.h"
+#include "widget_func.h"
+#include "secode_func.h"
+#include "io_func.h"
 
 GeneratePortfolioForm::GeneratePortfolioForm(QWidget *parent) :
     QWidget(parent),

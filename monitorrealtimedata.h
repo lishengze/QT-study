@@ -8,8 +8,7 @@
 #include "macd.h"
 #include "chartdata.h"
 #include "database.h"
-
-extern const int g_maxFutureSpread;
+#include "process_data_func.h"
 
 class MonitorRealTimeData: public QObject
 {

@@ -44,8 +44,9 @@ void AnnouncementForm::setTableView() {
 //    QString databaseName = "AnnouncementNew";
     QString databaseName = "Announcement";
     QList<QString> oriSecodeList = m_database->getTableList(databaseName);
+//    qDebug() << "oriSecodeList: " << oriSecodeList;
     QMap<QString, QList<QStringList>> result = m_database->getAnnouncement(oriSecodeList, m_startDate, m_endDate, databaseName);
-//    qDebug() << "result: " << result;
+    qDebug() << "result: " << result;
 
     QStandardItemModel* tableItemMode = dynamic_cast<QStandardItemModel*>(ui->AnnouncementTableView->model ());
 

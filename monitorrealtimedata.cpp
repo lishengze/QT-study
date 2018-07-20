@@ -4,9 +4,10 @@
 #include <QThread>
 #include <algorithm>
 #include "toolfunc.h"
-using namespace  std;
+#include "time_func.h"
+#include "compute_func.h"
 
-const int g_maxFutureSpread = 1000000;
+using namespace  std;
 
 MonitorRealTimeData::MonitorRealTimeData(QString dbConnId, bool isBuySalePortfolio,
                                         QString dbhost, int monitorTime,  QList<int> macdTime,
@@ -33,6 +34,13 @@ MonitorRealTimeData::MonitorRealTimeData(QString dbConnId, QString dbhost, QStri
     initDatabase();
 }
 
+MonitorRealTimeData::~MonitorRealTimeData() {
+    if (NULL != m_database) {
+        delete m_database;
+        m_database = NULL;
+    }
+}
+
 void MonitorRealTimeData::initCommonData() {
     initIndexHedgeMetaInfo();
     m_singleSecodeReadTime = 30;
@@ -47,6 +55,7 @@ void MonitorRealTimeData::initCommonData() {
 }
 
 void MonitorRealTimeData::initDatabase() {
+    qDebug() << "m_dbConnId: " << m_dbConnId << ", m_dbhost: " << m_dbhost;
     m_database = new Database(m_dbConnId, m_dbhost);
 }
 
@@ -76,6 +85,7 @@ void MonitorRealTimeData::setInitMacd(MACD initMacdData) {
 }
 
 void MonitorRealTimeData::startTimer() {
+    qDebug() << "MonitorRealTimeData::startTimer";
     if (!m_timer.isActive()) {
         m_timer.start(m_monitorTime);
     }
@@ -111,10 +121,13 @@ void MonitorRealTimeData::setRealTimeData() {
     }
     if (isStockTrading()) {
         QMap<QString, QStringList> oriRealTimeData = m_database->getSnapShootData(m_secodeNameList);
-//        qDebug() << "oriRealTimeData.size: " << oriRealTimeData.size();
+        // qDebug() << "oriRealTimeData.size: " << oriRealTimeData.size();
+        // printMap(oriRealTimeData, "oriRealTimeData");
         bool isDataUseful = preProcessRealTimeData(oriRealTimeData);
+        // qDebug() << 0 << endl;
         if (isDataUseful) {
             emit sendRealTimeData(computeRealTimeData());
+        //    qDebug() << 1 << endl;
         }
     }
 }
@@ -230,13 +243,7 @@ ChartData MonitorRealTimeData::computeRealTimeData() {
     return curChartData;
 }
 
-MonitorRealTimeData::~MonitorRealTimeData() {
-    if (NULL != m_database) {
-        delete m_database;
-        m_database = NULL;
-    }
-}
-
+/*
 //void MonitorRealTimeData::computeChartData() {
 //    double strategyData = 0;
 //    double votData = 0;
@@ -329,3 +336,4 @@ MonitorRealTimeData::~MonitorRealTimeData() {
 //        computeChartData();
 //    }
 //}
+*/

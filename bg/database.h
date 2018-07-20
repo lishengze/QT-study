@@ -26,6 +26,8 @@ public:
     QSqlDatabase getDatabase();
     bool isDatabaseOpen();
 
+    QList<QString> getAllData(QString tableName, QString databaseName);
+
     QList<QPointF> getOriChartData(QString startDate, QString endDate, QString keyValue,
                                    QString tableName, QString databasename="MarketData");
 

@@ -55,11 +55,14 @@ void testGetFutureSpread();
 
 void testTransIntDateTime();
 
-//void testTableData();
+void testRealTimeData();
 
-//void testExcel();
+void testGetOneDayTimeList();
 
-//void testTransSecode();
+void testTransRealTimeDataToMinuteData();
 
-//void testWindWsq();
+void testGetRelativeProfit();
+
+void testIndexChart();
+
 #endif // TEST_H

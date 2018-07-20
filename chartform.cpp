@@ -26,6 +26,11 @@
 #include "toolfunc.h"
 #include "macd.h"
 #include "callout.h"
+#include "time_func.h"
+#include "secode_func.h"
+#include "widget_func.h"
+#include "io_func.h"
+#include "excel_func.h"
 
 ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
                      int chartViewID, QString dbhost, bool isBuySalePortfolio,
@@ -181,7 +186,8 @@ void ChartForm::initHistdataThread() {
 }
 
 void ChartForm::initMonitorThread() {
-    m_monitorWorker = new MonitorRealTimeData(QString("%1").arg(m_chartViewID), m_isBuySalePortfolio,
+    m_monitorWorker = new MonitorRealTimeData(QString("%1").arg(m_chartViewID+1),
+                                              m_isBuySalePortfolio,
                                               m_dbhost, m_updateTime, m_macdTime,
                                               m_hedgeIndexCode, m_hedgeIndexCount,
                                               m_secodebuyCountMap, m_secodeNameList,
@@ -207,6 +213,24 @@ void ChartForm::initMonitorThread() {
     m_MonitorThread.start();
 }
 
+void ChartForm::writeExcelData() {
+    QStringList timeStringList;
+    QStringList strategyValueList;
+    QList<QStringList> excelData;
+    for (int i = 0; i < m_timeData.size(); ++i) {
+        QDateTime tmpDatetime = QDateTime::fromMSecsSinceEpoch (m_timeData[i]);
+        timeStringList.append(tmpDatetime.toString (m_timeTypeFormat));
+        strategyValueList.append(QString("%1").arg(m_strategyData[i]));
+    }
+//    printList(timeStringList, "timeStringList");
+//    printList(strategyValueList, "strategyValueList");
+    QString fileName = "D:/excel/cplus/hedged.xlsx";
+    excelData.append(timeStringList);
+    excelData.append(strategyValueList);
+    int result = writeMatrixData(fileName, excelData, "Sheet1", true);
+    qDebug() << "writeExcelData: " << result;
+}
+
 void ChartForm::receivePreCloseData(double preSpread) {
     m_preSpread = preSpread;
     if (m_isLayoutSetted) {
@@ -218,7 +242,7 @@ void ChartForm::receivePreCloseData(double preSpread) {
 }
 
 void ChartForm::receiveRealTimeData(ChartData curChartData) {
-//    qDebug() << "ChartForm::receiveRealTimeData(): " << QThread::currentThread();
+    qDebug() << "ChartForm::receiveRealTimeData(): " << QThread::currentThread();
     m_strategyData.append(curChartData.strategyData);
     m_votData.append(curChartData.votData);
     m_timeData.append(curChartData.timeData);
@@ -254,6 +278,8 @@ void ChartForm::receiveHistData(QList<QList<double> > allData) {
     qDebug() << "votData.size:      " << m_votData.size ();
     qDebug() << "macdData.size:     " << m_macdData.size ();
     setLayout ();
+
+    writeExcelData();
 
     if (m_isRealTime) {
         if (m_macdData.size() > 0) {
@@ -626,7 +652,7 @@ void ChartForm::setTheme() {
 
 void ChartForm::setMouseMoveValue(int currIndex) {
     if (currIndex >= 0 && currIndex < m_strategyData.size()) {
-        qDebug() << "currIndex: " << currIndex << ", isKeyMove: " << m_isKeyMove;
+//        qDebug() << "currIndex: " << currIndex << ", isKeyMove: " << m_isKeyMove;
         QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(qint64(m_timeData.at(currIndex)));
         QString dateTimeString = curDatetime.toString (m_timeTypeFormat);
         qreal strategyValue = m_strategyData.at(currIndex);

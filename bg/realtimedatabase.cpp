@@ -1,25 +1,33 @@
-#include <QSqlQuery>
+﻿#include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
 #include "realtimedatabase.h"
 
-RealTimeDatabase::RealTimeDatabase(QWidget* window, QString connName, QString host,
-                                   QString userName, QString userPwd,
-                                   QString connDbName, QString port,
-                                   QString dataSourceName, QString databaseDriver):
-    Database(window, connName, host, userName, userPwd,
-             connDbName, port, dataSourceName, databaseDriver)
-{
-
+RealTimeDatabase::RealTimeDatabase(int test):Database() {
+    test;
 }
 
-RealTimeDatabase::RealTimeDatabase(QString connName, QString host,
-                                   QString userName, QString userPwd,
-                                   QString connDbName, QString port,
-                                   QString dataSourceName, QString databaseDriver):
-    Database(connName, host, userName, userPwd,
-             connDbName, port, dataSourceName, databaseDriver)
-{
+//RealTimeDatabase::RealTimeDatabase(QWidget* window, QString connName, QString host,
+//                                   QString userName, QString userPwd,
+//                                   QString connDbName, QString port,
+//                                   QString dataSourceName, QString databaseDriver):
+//    Database(window, connName, host, userName, userPwd,
+//             connDbName, port, dataSourceName, databaseDriver)
+//{
+
+//}
+
+//RealTimeDatabase::RealTimeDatabase(QString connName, QString host,
+//                                   QString userName, QString userPwd,
+//                                   QString connDbName, QString port,
+//                                   QString dataSourceName, QString databaseDriver):
+//    Database(connName, host, userName, userPwd,
+//             connDbName, port, dataSourceName, databaseDriver)
+//{
+//}
+
+RealTimeDatabase::~RealTimeDatabase() {
+
 }
 
 QString RealTimeDatabase::getCreateStr(QString tableName) {
@@ -30,7 +38,6 @@ QString RealTimeDatabase::getCreateStr(QString tableName) {
     QString create_str = "create table " + complete_tablename + value_str;
     return create_str;
 }
-
 
 QString RealTimeDatabase::getInsertStr(QString tableName, QList<QString> oridata) {
     QString col_str = " (股票, 日期, 时间, 最新成交价, 前收, 成交额, 请求时间)";
@@ -50,26 +57,28 @@ QString RealTimeDatabase::getInsertStr(QString tableName, QList<QString> oridata
     return insertStr;
 }
 
-void RealTimeDatabase::insertData(QString tableName, QList<QString> data) {
-    if (m_db.open()) {
-        QString insert_str = getInsertStr(tableName, data);
-        qDebug() << "insert str: " << insert_str;
-        QSqlQuery queryObj(m_db);
-        bool result = queryObj.exec(insert_str);
-        qDebug() << "insert rst: " << result;
-    } else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
-    }
-}
-
 QString RealTimeDatabase::getUpdateStr(QString tableName, QList<QString> data) {
     QString updateStr = "";
     return updateStr;
 }
 
-void RealTimeDatabase::updateData(QString tableName, QList<QString> data) {
+/*
+基类已经实现的虚函数;
+//void RealTimeDatabase::insertData(QString tableName, QList<QString> data) {
+//    if (m_db.open()) {
+//        QString insert_str = getInsertStr(tableName, data);
+//        qDebug() << "insert str: " << insert_str;
+//        QSqlQuery queryObj(m_db);
+//        bool result = queryObj.exec(insert_str);
+//        qDebug() << "insert rst: " << result;
+//    } else {
+//        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+//    }
+//}
 
-}
+//void RealTimeDatabase::updateData(QString tableName, QList<QString> data) {
+
+//}
 
 //void RealTimeDatabase::createTable(QString tableName) {
 //    if (m_db.open()) {
@@ -82,8 +91,4 @@ void RealTimeDatabase::updateData(QString tableName, QList<QString> data) {
 //        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
 //    }
 //}
-
-
-RealTimeDatabase::~RealTimeDatabase() {
-
-}
+*/

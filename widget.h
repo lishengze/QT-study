@@ -45,13 +45,14 @@ public:
     void initHedgeComboBox();
     void initDataFrequency();
     void initMacdTime();
-    void initFutureCombox();
+    void setFutureContractCombox();
     void initDatasourceCombox();
     void initSpreadSpinbox();
 
     void initTableContextMenu();
     void initProgramWorkInfoTableView();
 
+    void setFutureContractList();
     void setStrategyTable();
     void setBuySalePortfolioTable();
 
@@ -104,17 +105,22 @@ private slots:
 
     void on_showFutureSpread_Button_clicked();
 
+
+    void on_dataSource_ComboBox_currentIndexChanged(const QString &arg1);
+
 private:
     Ui::Widget *             ui;
 
     QList<QWidget*>          m_chartViews;
     QList<QString>           m_dbhostList;
+    QString                  m_currDBHost;
     QString                  m_nativeFileName;
     QString                  m_strategyFileDir;
     QString                  m_currStrategyName;
 
     QString                  m_buySalePortfolioFileDir;
     QString                  m_currBuySalePortfolioName;
+    QString                  m_futureIndexCode;
     QList<QString>           m_futureList;
     bool                     m_isBuySalePortfolio;
 

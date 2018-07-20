@@ -1,5 +1,11 @@
 ﻿#include "historydata.h"
 #include "toolfunc.h"
+#include "secode_func.h"
+#include "process_data_func.h"
+#include "time_func.h"
+#include "compute_func.h"
+#include "io_func.h"
+#pragma execution_character_set("utf-8")
 
 HistoryData::HistoryData(int chartViewID, bool isBuySalePortfolio,
                          QString dbhost, QString databaseName,
@@ -14,7 +20,8 @@ HistoryData::HistoryData(int chartViewID, bool isBuySalePortfolio,
     m_isRealTime(isRealTime), m_threadNumb(threadNumb), m_secodeNameList(secodeNameList),
     m_macdTime(macdTime), m_hedgeIndexCode(hedgeIndexCode),
     m_startDate(startDate), m_endDate(endDate), m_keyValueList(keyValueList),
-    m_seocdebuyCountMap(seocdebuyCountMap), m_buyStrategyMap(buyStrategyMap), m_saleStrategyMap(saleStrategyMap),
+    m_seocdebuyCountMap(seocdebuyCountMap), m_buyStrategyMap(buyStrategyMap),
+    m_saleStrategyMap(saleStrategyMap),
     QObject(parent)
 {
     initCommonData();
@@ -23,7 +30,44 @@ HistoryData::HistoryData(int chartViewID, bool isBuySalePortfolio,
     initReadDataSignal();
 }
 
+HistoryData::HistoryData(int chartViewID, QString dbhost, QString databaseName,
+            QString selectIndex, QString hedgedIndex,
+            QString startDate, QString endDate,
+            int aveNumb, double css12Rate,
+            double cssRate1, double cssRate2,
+            double maxCSS, double minCSS,
+            QObject *parent):
+    m_chartViewID(chartViewID), m_dbhost(dbhost), m_databaseName(databaseName),
+    m_selectIndex(selectIndex), m_hedgedIndex(hedgedIndex),
+    m_startDate(startDate), m_endDate(endDate),
+    m_aveNumb(aveNumb), m_css12Rate(css12Rate),
+    m_cssRate1(cssRate1), m_cssRate2(cssRate2),
+    m_maxCSS(maxCSS), m_minCSS(minCSS),
+    QObject(parent)
+{
+    initCommonData();
+    initDatabase(chartViewID);
+}
+
+HistoryData::~HistoryData() {
+    for (int i = 0; i < m_dataProcessThreadList.size(); ++i) {
+         delete m_dataProcessThreadList[i];
+         m_dataProcessThreadList[i] = NULL;
+    }
+
+    for (int i = 0; i < m_dataReaderThreadList.size(); ++i) {
+         delete m_dataReaderThreadList[i];
+         m_dataReaderThreadList[i] = NULL;
+    }
+
+    if (NULL != m_database) {
+        delete m_database;
+        m_database = NULL;
+    }
+}
+
 void HistoryData::initCommonData() {
+    m_database = NULL;
     m_readDataThreadCount = 0;
 }
 
@@ -33,6 +77,11 @@ void HistoryData::initSignalType() {
     } else {
         m_signalType = "HistoryData";
     }
+}
+
+void HistoryData::initDatabase(int chartViewID) {
+    QString databaseID = QString("%1").arg(chartViewID + 10);
+    m_database = new Database(databaseID, m_dbhost);
 }
 
 void HistoryData::initThreadSecodeList() {
@@ -171,13 +220,39 @@ void HistoryData::releaseDataProcessSrc () {
     }
 }
 
-HistoryData::~HistoryData() {
-    for (int i = 0; i < m_dataProcessThreadList.size(); ++i) {
-         delete m_dataProcessThreadList[i];
-         m_dataProcessThreadList[i] = NULL;
+void HistoryData::getIndexHistData_slot() {
+    QStringList histKeyValueList;
+    histKeyValueList << "TDATE" << "TIME" << "TCLOSE";
+    QList<QStringList> selectIndexHistData = m_database->getDataByDate(m_startDate, m_endDate, histKeyValueList,
+                                                                      getCompleteIndexCode(m_selectIndex), m_databaseName);
+    QList<QStringList> hedgedIndexHistData = m_database->getDataByDate(m_startDate, m_endDate, histKeyValueList,
+                                                                      getCompleteIndexCode(m_hedgedIndex), m_databaseName);
+    if (selectIndexHistData.size() != hedgedIndexHistData.size()) {
+        QString message = "选中的指数与对冲指数历史数据不完整";
+        qDebug() << message;
+        emit sendHistIndexError_signal(message);
+    } else {
+//        if (!isTradingOver()) {
+//            QStringList todayKeyValueList;
+//            todayKeyValueList << "日期" << "时间" << "最新成交价";
+//            QList<QStringList> selectIndexTodayData = m_database->getAllRealtimeData(getCompleteIndexCode(m_selectIndex, "wind"),
+//                                                                                     todayKeyValueList);
+//            QList<QStringList> hedgedIndexTodayData = m_database->getAllRealtimeData(getCompleteIndexCode(m_hedgedIndex, "wind"),
+//                                                                                     todayKeyValueList);
+//            QList<int> standardTimeList = m_database->getOneDayTimeList(getCompleteIndexCode(m_hedgedIndex), m_databaseName);
+//            QList<QStringList> selectIndexTransData = transRealTimeDataToMinuteData(selectIndexTodayData, standardTimeList);
+//            QList<QStringList> hedgedIndexTransData = transRealTimeDataToMinuteData(hedgedIndexTodayData, standardTimeList);
+//            resizeMinuteData(selectIndexTransData, hedgedIndexTransData);
+//            selectIndexHistData += selectIndexTransData;
+//            hedgedIndexHistData += hedgedIndexTransData;
+//        }
+        QList<QStringList> profiltList = getRelativeProfitList(selectIndexHistData, hedgedIndexHistData);
+        QList<QStringList> cssList = getCSSList(profiltList, m_aveNumb, m_css12Rate,
+                                                m_cssRate1, m_cssRate2, m_maxCSS, m_minCSS);
+        printList(cssList, "cssList");
+        emit sendHistIndexData_signal(cssList);
     }
-    for (int i = 0; i < m_dataReaderThreadList.size(); ++i) {
-         delete m_dataReaderThreadList[i];
-         m_dataReaderThreadList[i] = NULL;
-    }
+
 }
+
+

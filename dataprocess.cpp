@@ -3,6 +3,8 @@
 #include <QPointF>
 #include <QDateTime>
 #include <QString>
+#include "compute_func.h"
+#include "process_data_func.h"
 
 DataProcess::DataProcess(bool isRealTime, bool isBuySalePortfolio,
                          QMap<QString, QList<QStringList>> oridata,
