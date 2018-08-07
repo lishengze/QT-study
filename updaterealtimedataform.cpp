@@ -8,6 +8,7 @@
 #include "toolfunc.h"
 #include "updaterealtimedataform.h"
 #include "ui_updaterealtimedataform.h"
+#include "widget_func.h"
 
 UpdateRealtimeDataForm::UpdateRealtimeDataForm(QWidget *parent) :
     QWidget(parent),

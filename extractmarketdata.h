@@ -22,7 +22,7 @@ public:
     void initKeyValueMap();
     void initWorkProgressDialog();
     void initDatabase();
-    void initSecodeList();
+    void initSecodeMap();
     void initReadThreadCount();
     void initIndexTimeList();
     void allocateThreadData();
@@ -72,6 +72,7 @@ private:
     int                         m_readThreadCount;
     QList<QStringList>          m_readThreadData;
     QList<QString>              m_secodeList;
+    QMap<QString, int>          m_secodeMap;
     QList<QList<QStringList>>   m_sumResult;
     QList<QThread*>             m_ReadThreadList;
     QList<ReadDatabaseData*>    m_ReadDataObjList;

@@ -3,7 +3,10 @@
 #include "readdatabasedata.h"
 #include "toolfunc.h"
 #include "xlsxdocument.h"
+#include "io_func.h"
+#include "secode_func.h"
 #include <QDebug>
+#pragma execution_character_set("utf-8")
 
 ExtractMarketData::ExtractMarketData(QString dbhost, int dbConnectID, QString dataType,
                                      QString startDate, QString endDate,
@@ -22,7 +25,11 @@ ExtractMarketData::ExtractMarketData(QString dbhost, int dbConnectID, QString da
 
     initDatabase();
 
+    initIndexTimeList();
+
     initReadThreadCount();
+
+    initSecodeMap();
 
     registerMetatype();
 
@@ -58,26 +65,26 @@ ExtractMarketData::~ExtractMarketData() {
 
 void ExtractMarketData::initCommonData() {
     m_startTime = QDateTime::currentDateTime();
-    printList(m_secodeList, "m_secodeList");
+//    printList(m_secodeList, "m_secodeList");
 //    m_secodeList = getSubList(m_secodeList, 0, 8);
     m_currCompleteCount = 0;
     initKeyValueMap();
 }
 
 void ExtractMarketData::initKeyValueMap() {
-    m_keyValueMap.insert("TOPEN", QString::fromLocal8Bit("开盘价"));
-    m_keyValueMap.insert("TCLOSE", QString::fromLocal8Bit("收盘价"));
-    m_keyValueMap.insert("HIGH", QString::fromLocal8Bit("最高价"));
-    m_keyValueMap.insert("LOW", QString::fromLocal8Bit("最低价"));
-    m_keyValueMap.insert("VATRUNOVER", QString::fromLocal8Bit("成交量"));
-    m_keyValueMap.insert("VOTRUNOVER", QString::fromLocal8Bit("成交额"));
-    m_keyValueMap.insert("YCLOSE", QString::fromLocal8Bit("昨收"));
-    m_keyValueMap.insert("TURNOVER", QString::fromLocal8Bit("换手率"));
+    m_keyValueMap.insert("TOPEN", QString("开盘价"));
+    m_keyValueMap.insert("TCLOSE", QString("收盘价"));
+    m_keyValueMap.insert("HIGH", QString("最高价"));
+    m_keyValueMap.insert("LOW", QString("最低价"));
+    m_keyValueMap.insert("VATRUNOVER", QString("成交量"));
+    m_keyValueMap.insert("VOTRUNOVER", QString("成交额"));
+    m_keyValueMap.insert("YCLOSE", QString("昨收"));
+    m_keyValueMap.insert("TURNOVER", QString("换手率"));
 }
 
 void ExtractMarketData::initWorkProgressDialog() {
     m_workProgressDialog = new WorkProgressDialog();
-    m_workProgressDialog->setWindowTitle(QString::fromLocal8Bit("进度条"));
+    m_workProgressDialog->setWindowTitle(QString("进度条"));
 
     connect(m_workProgressDialog, SIGNAL(stopWork_signal()),
             this, SLOT(stopWork_slot()) );
@@ -85,6 +92,14 @@ void ExtractMarketData::initWorkProgressDialog() {
 
 void ExtractMarketData::initDatabase() {
     m_database = new Database(QString("%1").arg(m_dbConnectID), m_dbhost);
+}
+
+void ExtractMarketData::initSecodeMap() {
+    m_secodeMap.insert(m_indexTimeStrList[0], 0);
+    for (int i = 0; i < m_secodeList.size(); ++i) {
+        m_secodeMap.insert(m_secodeList[i], i+1);
+    }
+//    printMap(m_secodeMap, "m_secodeMap");
 }
 
 void ExtractMarketData::initIndexTimeList() {
@@ -156,12 +171,11 @@ void ExtractMarketData::createReadThreads() {
 }
 
 void ExtractMarketData::startReadData() {
-    m_workProgressDialog->setWorkInfo(QString::fromLocal8Bit("开始读取数据"));
+    m_workProgressDialog->setWorkInfo(QString("开始读取数据"));
     m_workProgressDialog->setRange(m_secodeList.size(), 0);
     m_workProgressDialog->updateWorkState(0);
     m_workProgressDialog->show();
 
-    initIndexTimeList();
     createReadThreads();
     emit startReadMarketData_signal();
 }
@@ -173,8 +187,8 @@ void ExtractMarketData::testSignal_slot() {
 void ExtractMarketData::readOneMarketDataComplete_slot() {
     QMutexLocker locker(&m_readOneDataCompleteMutex);
     m_currCompleteCount += 1;
-    qDebug() << QString("Complete: %1, %2 left.")
-                .arg(m_currCompleteCount).arg( m_secodeList.size() - m_currCompleteCount);
+    //    qDebug() << QString("Complete: %1, %2 left.")
+    //                .arg(m_currCompleteCount).arg( m_secodeList.size() - m_currCompleteCount);
     m_workProgressDialog->updateWorkState(m_currCompleteCount);
 }
 
@@ -186,13 +200,13 @@ void ExtractMarketData::readMarketDataComplete_slot(QList<QList<QStringList>> th
     threadResult.clear();
     if (m_sumResult.size() == m_secodeList.size()) {
         m_workProgressDialog->disableStopButton();
+
         storeData();
 
         m_endTime = QDateTime::currentDateTime();
         float costSeconds = (m_endTime.toMSecsSinceEpoch() - m_startTime.toMSecsSinceEpoch())/1000;
         qDebug() << "costSeconds: " << costSeconds;
-        m_workProgressDialog->setWorkInfo(QString::fromLocal8Bit("所有数据文件已写入完成, 共耗时: %1 秒")
-                                          .arg(costSeconds));
+        m_workProgressDialog->setWorkInfo(QString("所有数据文件已写入完成, 共耗时: %1 秒").arg(costSeconds));
         emit extractMarketDataComplete_signal(m_desFileNameList);
     }
 }
@@ -218,10 +232,14 @@ void ExtractMarketData::storeData() {
     for (QString keyValue:m_keyValueList) {
         QList<QStringList> emptyData;
         emptyData.append(m_indexTimeStrList);
+        for(int i = 0; i < m_secodeList.size()+1; ++i) {
+            QStringList emptyStringList;
+            emptyData.append(emptyStringList);
+        }
         excelData.insert(keyValue, emptyData);
     }
 
-    m_workProgressDialog->setWorkInfo(QString::fromLocal8Bit("开始处理数据"));
+    m_workProgressDialog->setWorkInfo(QString("开始处理数据"));
     for (int i = 0; i < m_sumResult.size(); ++i) {
         QList<QStringList> currSecodeData = m_sumResult[i];
         QString currSecode = currSecodeData[0][0];
@@ -230,17 +248,19 @@ void ExtractMarketData::storeData() {
         for (int j = 0; j < m_keyValueList.size(); ++j) {
             QList<QString> singleResult = getSingleColData(currSecodeData, j);
             singleResult.insert(0, currSecode);
-            excelData[m_keyValueList[j]].append(singleResult);
+    //            excelData[m_keyValueList[j]].append(singleResult);
+            excelData[m_keyValueList[j]][m_secodeMap[currSecode]] = singleResult;
         }
     }
     m_sumResult.clear();
 
-    m_workProgressDialog->setWorkInfo(QString::fromLocal8Bit("准备写入数据"));
+    m_workProgressDialog->setWorkInfo(QString("准备写入数据"));
     for (QString keyValue:m_keyValueList) {
         QString currDesFileName = m_desDirName +  QString("%1_%2_%3_%4_%5.xlsx")
                 .arg(m_dataType).arg(m_startDate).arg(m_endDate)
                 .arg(m_keyValueMap[keyValue]).arg(m_secodeList.size());
         m_desFileNameList.append(currDesFileName);
+
         writeMatrixExcelData(currDesFileName, excelData[keyValue], keyValue, true);
         excelData[keyValue].clear();
     }
@@ -262,7 +282,7 @@ int ExtractMarketData::writeMatrixExcelData(QString fileName, QList<QStringList>
         return -2;
     }
 
-    m_workProgressDialog->setWorkInfo(QString::fromLocal8Bit("开始写入数据文件: %1").arg(fileName));
+    m_workProgressDialog->setWorkInfo(QString("开始写入数据文件: %1").arg(fileName));
     m_workProgressDialog->setRange(oriData.length(), 0);
     for (int rowIndex = 0; rowIndex < oriData.length(); ++rowIndex) {
         for (int colIndex = 0; colIndex < oriData[rowIndex].length(); ++colIndex) {

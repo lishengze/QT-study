@@ -12,92 +12,68 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = layout
 TEMPLATE = app
-
+INCLUDEPATH +=../public-function
+INCLUDEPATH +=../public-class
 
 SOURCES += main.cpp\
     updaterealtimedataform.cpp \
-    realtimedatabase.cpp \
-    database.cpp \
-#    realtimedataread.cpp \
-#    excel.cpp \
-#    strategy.cpp \
-#    strategymodel.cpp \
     toolfunc.cpp \
-#    realtimedatawrite.cpp \
     subwriteclass.cpp \
     realtimedataread.cpp \
     realtimedatawrite.cpp \
     test.cpp \
-    excel_func.cpp \
-    time_func.cpp \
     extractmarketdata.cpp \
     readdatabasedata.cpp \
     extractdataform.cpp \
     workprogressdialog.cpp \
-    widget_func.cpp \
     extractweightdata.cpp \
     extractindustrydata.cpp \
-    choosesecodewindow.cpp
-
-#    setdata.cpp \
-#        widget.cpp \
-
-#    callout.cpp \
-#    test.cpp \
-#    chartform.cpp \
-
-#    tabledata.cpp \
-#    macd.cpp \
-#    qmychartview.cpp \
-#    processfunc.cpp \
-#    dataread.cpp \
-#    dataprocess.cpp \
-#    dialog.cpp \
-#    realtimedataprocess.cpp \
-#    monitorrealtimedata.cpp \
-#    chartdata.cpp \
-#    preclosedatabase.cpp \
-
+    choosesecodewindow.cpp \
+    ../public-function/excel_func.cpp \
+    ../public-function/time_func.cpp \
+    ../public-function/widget_func.cpp \
+    ../public-class/database.cpp \
+    ../public-class/realtimedatabase.cpp \
+    ../public-function/secode_func.cpp \
+    wind_func.cpp \
+    ../public-function/compute_func.cpp \
+    ../public-function/io_func.cpp \
+    ../public-function/process_data_func.cpp \
+    ../public-function/terminal_func.cpp \
+    ../public-class/macd.cpp \
+    ../public-function/id_func.cpp \
+    treeitem.cpp \
+    treemodel.cpp
 
 HEADERS  += updaterealtimedataform.h \
-    realtimedatabase.h \
     realtimedataread.h \
-    database.h \
-#    excel.h \
-#    strategy.h \
-#    strategymodel.h \
     toolfunc.h \
     WAPIWrapperCpp.h \
     realtimedatawrite.h \
     subwriteclass.h \
     test.h \
-    excel_func.h \
-    time_func.h \
     extractmarketdata.h \
     readdatabasedata.h \
     extractdataform.h \
     workprogressdialog.h \
-    widget_func.h \
     extractweightdata.h \
     extractindustrydata.h \
-    choosesecodewindow.h
-
-#    setdata.h \
-#    widget.h \
-#    callout.h \
-#    test.h \
-#    chartform.h \
-#    tabledata.h \
-#    macd.h \
-#    qmychartview.h \
-#    processfunc.h \
-#    dataread.h \
-#    dataprocess.h \
-#    dialog.h \
-#    realtimedataprocess.h \
-#    monitorrealtimedata.h \
-#    chartdata.h \
-#    preclosedatabase.h \
+    choosesecodewindow.h \
+    ../public-function/excel_func.h \
+    ../public-function/time_func.h \
+    ../public-function/widget_func.h \
+    ../public-class/database.h \
+    ../public-class/realtimedatabase.h \
+    ../public-function/secode_func.h \
+    wind_func.h \
+    ../public-function/compute_func.h \
+    ../public-function/io_func.h \
+    ../public-function/process_data_func.h \
+    ../public-function/terminal_func.h \
+    ../public-class/macd.h \
+    ../public-function/id_func.h \
+    treeitem.h \
+    treemodel.h
 
 
 
@@ -105,9 +81,6 @@ FORMS    += updaterealtimedataform.ui \
     extractdataform.ui \
     workprogressdialog.ui \
     choosesecodewindow.ui
-#    widget.ui \
-#    chartform.ui \
-#    dialog.ui \
 
 include(qtxlsx/src/xlsx/qtxlsx.pri)
 

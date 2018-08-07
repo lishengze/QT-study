@@ -23,6 +23,7 @@ public:
     void startMonitorTimer();
     void stopMonitorTimer();
 
+    void resetDatabase();
     void testSecodeList();
 
     void initTimer();

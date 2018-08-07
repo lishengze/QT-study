@@ -2,6 +2,8 @@
 #include <QThread>
 #include "realtimedatawrite.h"
 #include "toolfunc.h"
+#include "widget_func.h"
+#include "process_data_func.h"
 
 RealTimeDataWrite::RealTimeDataWrite(QTableView* programInfoTableView, QTableView* errorMsgTableView,
                                      QString dbConnID, QString dbHost,

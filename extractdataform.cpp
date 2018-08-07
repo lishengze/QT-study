@@ -10,11 +10,12 @@
 #include "extractdataform.h"
 #include "ui_extractdataform.h"
 #include "xlsxdocument.h"
+#include "io_func.h"
 #include "excel_func.h"
 #include "widget_func.h"
-#include "toolfunc.h"
+#include "secode_func.h"
 #include "choosesecodewindow.h"
-//#pragma execution_character_set("utf-8")
+#pragma execution_character_set("utf-8")
 
 ExtractDataForm::ExtractDataForm(QWidget *parent) :
     QMainWindow(parent),
@@ -77,7 +78,7 @@ void ExtractDataForm::initFileDir() {
     if (!tmpFile.exists()) {
         qDebug() << QString("%1 does not exit!").arg(m_nativeFileName);
         QXlsx::Document xlsx;
-        m_oriFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/提取数据/");
+        m_oriFileDir = QString("//192.168.211.182/it程序设计/提取数据/");
         m_desFileDir = m_oriFileDir;
         xlsx.write("A1", m_oriFileDir);
         xlsx.write("A2", m_desFileDir);
@@ -87,7 +88,7 @@ void ExtractDataForm::initFileDir() {
         xlsx.selectSheet("1");
         QXlsx::CellRange range = xlsx.dimension();
         if (range.rowCount() == 0) {
-            m_oriFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/提取数据/");
+            m_oriFileDir = QString("//192.168.211.182/it程序设计/提取数据/");
             m_desFileDir = m_oriFileDir;
             xlsx.write("A1", m_oriFileDir);
             xlsx.write("A2", m_desFileDir);
@@ -102,43 +103,48 @@ void ExtractDataForm::initFileDir() {
 }
 
 void ExtractDataForm::initDataTypeMap() {
-    m_dataTypeMap.insert(QString::fromLocal8Bit("天"), "MarketData_day");
-    m_dataTypeMap.insert(QString::fromLocal8Bit("10分"), "MarketData_10m");
+    m_dataTypeMap.insert(QString("天"), "MarketData_day");
+//    m_dataTypeMap.insert(QString("1分"), "MarketData_1m");
+//    m_dataTypeMap.insert(QString("5分"), "MarketData_5m");
+    m_dataTypeMap.insert(QString("10分"), "MarketData_10m");
+    m_dataTypeMap.insert(QString("15分"), "MarketData_15m");
+    m_dataTypeMap.insert(QString("30分"), "MarketData_30m");
+    m_dataTypeMap.insert(QString("60分"), "MarketData_60m");
 }
 
 void ExtractDataForm::initKeyValueMap() {
-    m_keyValueMap.insert(QString::fromLocal8Bit("开盘价"), "TOPEN");
-    m_keyValueMap.insert(QString::fromLocal8Bit("收盘价"), "TCLOSE");
-    m_keyValueMap.insert(QString::fromLocal8Bit("最高价"), "HIGH");
-    m_keyValueMap.insert(QString::fromLocal8Bit("最低价"), "LOW");
-    m_keyValueMap.insert(QString::fromLocal8Bit("成交量"), "VATRUNOVER");
-    m_keyValueMap.insert(QString::fromLocal8Bit("成交额"), "VOTRUNOVER");
-    m_keyValueMap.insert(QString::fromLocal8Bit("昨收"), "YCLOSE");
-    m_keyValueMap.insert(QString::fromLocal8Bit("换手率"), "TURNOVER");
+    m_keyValueMap.insert(QString("开盘价"), "TOPEN");
+    m_keyValueMap.insert(QString("收盘价"), "TCLOSE");
+    m_keyValueMap.insert(QString("最高价"), "HIGH");
+    m_keyValueMap.insert(QString("最低价"), "LOW");
+    m_keyValueMap.insert(QString("成交量"), "VATRUNOVER");
+    m_keyValueMap.insert(QString("成交额"), "VOTRUNOVER");
+    m_keyValueMap.insert(QString("昨收"), "YCLOSE");
+    m_keyValueMap.insert(QString("换手率"), "TURNOVER");
 }
 
 void ExtractDataForm::initIndexCodeMap() {
-    m_indexCodeMap.insert(QString::fromLocal8Bit("上证50"), "SH000016");
-    m_indexCodeMap.insert(QString::fromLocal8Bit("沪深300"), "SH000300");
-    m_indexCodeMap.insert(QString::fromLocal8Bit("中证1000"), "SH000852");
-    m_indexCodeMap.insert(QString::fromLocal8Bit("中证200"), "SH000904");
-    m_indexCodeMap.insert(QString::fromLocal8Bit("中证500"), "SH000905");
-    m_indexCodeMap.insert(QString::fromLocal8Bit("中证800"), "SH000906");
-    m_indexCodeMap.insert(QString::fromLocal8Bit("中证100"), "SZ399903");
+    m_indexCodeMap.insert(QString("上证50"), "SH000016");
+    m_indexCodeMap.insert(QString("沪深300"), "SH000300");
+    m_indexCodeMap.insert(QString("中证1000"), "SH000852");
+    m_indexCodeMap.insert(QString("中证200"), "SH000904");
+    m_indexCodeMap.insert(QString("中证500"), "SH000905");
+    m_indexCodeMap.insert(QString("中证800"), "SH000906");
+    m_indexCodeMap.insert(QString("中证100"), "SZ399903");
 }
 
 void ExtractDataForm::initIndustryList() {
-    m_industryList.append(QString::fromLocal8Bit("中证一级行业"));
-    m_industryList.append(QString::fromLocal8Bit("中证二级行业"));
-    m_industryList.append(QString::fromLocal8Bit("中证三级行业"));
-    m_industryList.append(QString::fromLocal8Bit("申万一级行业"));
-    m_industryList.append(QString::fromLocal8Bit("申万二级行业"));
-    m_industryList.append(QString::fromLocal8Bit("申万三级行业"));
-    m_industryList.append(QString::fromLocal8Bit("万得一级行业"));
-    m_industryList.append(QString::fromLocal8Bit("万得二级行业"));
-    m_industryList.append(QString::fromLocal8Bit("万得三级行业"));
-    m_industryList.append(QString::fromLocal8Bit("万得四级行业"));
-    m_industryList.append(QString::fromLocal8Bit("全选"));
+    m_industryList.append(QString("中证一级行业"));
+    m_industryList.append(QString("中证二级行业"));
+    m_industryList.append(QString("中证三级行业"));
+    m_industryList.append(QString("申万一级行业"));
+    m_industryList.append(QString("申万二级行业"));
+    m_industryList.append(QString("申万三级行业"));
+    m_industryList.append(QString("万得一级行业"));
+    m_industryList.append(QString("万得二级行业"));
+    m_industryList.append(QString("万得三级行业"));
+    m_industryList.append(QString("万得四级行业"));
+    m_industryList.append(QString("全选"));
 }
 
 void ExtractDataForm::initWidget() {
@@ -184,7 +190,7 @@ void ExtractDataForm::initMarketKeyComboBox() {
     for (QMap<QString, QString>::iterator it = m_keyValueMap.begin();
          it != m_keyValueMap.end(); ++it) {
         QListWidgetItem *pItem = new QListWidgetItem(m_marketKeyListWidget);
-        m_marketKeyListWidget->addItem(pItem);
+//        m_marketKeyListWidget->addItem(pItem);
         pItem->setData(Qt::UserRole, it.key());
         QCheckBox *pCheckBox = new QCheckBox(this);
         pCheckBox->setText(it.key());
@@ -260,9 +266,9 @@ void ExtractDataForm::initProgramTable() {
         standardItemModel->clear();
     }
 
-    standardItemModel-> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("时间")));
-    standardItemModel-> setHorizontalHeaderItem (1, new QStandardItem(QString::fromLocal8Bit("信息")));
-    standardItemModel-> setHorizontalHeaderItem (2, new QStandardItem(QString::fromLocal8Bit("备注")));
+    standardItemModel-> setHorizontalHeaderItem (0, new QStandardItem(QString("时间")));
+    standardItemModel-> setHorizontalHeaderItem (1, new QStandardItem(QString("信息")));
+    standardItemModel-> setHorizontalHeaderItem (2, new QStandardItem(QString("备注")));
     ui->programInfo_Table->setModel(standardItemModel);
     ui->programInfo_Table->setColumnWidth (0, 150);
     ui->programInfo_Table->setColumnWidth (1, 650);
@@ -284,7 +290,7 @@ void ExtractDataForm::setOriFileTable() {
         standardItemModel->setItem(i, 0, new QStandardItem(m_oriFileList[i].fileName()));
     }
 
-    standardItemModel-> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("源信息文件")));
+    standardItemModel-> setHorizontalHeaderItem (0, new QStandardItem(QString("源信息文件")));
     ui->oriFile_tableView->setModel(standardItemModel);
     ui->oriFile_tableView->setColumnWidth (0, 500);
     ui->oriFile_tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -304,7 +310,7 @@ void ExtractDataForm::setDesFileTable() {
         standardItemModel->setItem(i, 0, new QStandardItem(m_desFileList[i].fileName()));
     }
 
-    standardItemModel-> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("生成文件")));
+    standardItemModel-> setHorizontalHeaderItem (0, new QStandardItem(QString("生成文件")));
     ui->desFile_tableView->setModel(standardItemModel);
     ui->desFile_tableView->setColumnWidth (0, 500);
     ui->desFile_tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -324,8 +330,8 @@ void ExtractDataForm::initTableContextMenu() {
 
 void ExtractDataForm::show_oriFileTable_contextMenu(QPoint pos) {
     QMenu *menu = new QMenu(ui->oriFile_tableView);
-    QAction *refreshTable = new QAction(QString::fromLocal8Bit("刷新"),ui->oriFile_tableView);
-    QAction *deleteFile = new QAction(QString::fromLocal8Bit("删除"),ui->oriFile_tableView);
+    QAction *refreshTable = new QAction(QString("刷新"),ui->oriFile_tableView);
+    QAction *deleteFile = new QAction(QString("删除"),ui->oriFile_tableView);
     QAction *openDir = new QAction(QString("打开所在文件夹"),ui->oriFile_tableView);
 
     connect (refreshTable,SIGNAL(triggered()),this,SLOT(refresh_oriFileTable()));
@@ -342,9 +348,9 @@ void ExtractDataForm::show_oriFileTable_contextMenu(QPoint pos) {
 
 void ExtractDataForm::show_desFileTable_contextMenu(QPoint pos) {
     QMenu *menu = new QMenu(ui->desFile_tableView);
-    QAction *refreshTable = new QAction(QString::fromLocal8Bit("刷新"),ui->desFile_tableView);
-    QAction *deleteFile = new QAction(QString::fromLocal8Bit("删除"),ui->desFile_tableView);
-    QAction *openDir = new QAction(QString::fromLocal8Bit("打开所在文件夹"),ui->desFile_tableView);
+    QAction *refreshTable = new QAction(QString("刷新"),ui->desFile_tableView);
+    QAction *deleteFile = new QAction(QString("删除"),ui->desFile_tableView);
+    QAction *openDir = new QAction(QString("打开所在文件夹"),ui->desFile_tableView);
 
     connect (refreshTable,SIGNAL(triggered()),this,SLOT(refresh_desFileTable()));
     connect (deleteFile, SIGNAL(triggered()),this,SLOT(delete_desFile()));
@@ -376,9 +382,9 @@ void ExtractDataForm::delete_oriFile() {
         QFile tmpFile(fileName);
         if (tmpFile.exists()) {
             if (tmpFile.remove() ) {
-                updateProgramInfo(ui->programInfo_Table, QString::fromLocal8Bit("成功删除 %1").arg(stringData));
+                updateProgramInfo(ui->programInfo_Table, QString("成功删除 %1").arg(stringData));
             } else {
-                updateProgramInfo(ui->programInfo_Table, QString::fromLocal8Bit("删除 %1 失败").arg(stringData));
+                updateProgramInfo(ui->programInfo_Table, QString("删除 %1 失败").arg(stringData));
             }
         }
     }
@@ -394,9 +400,9 @@ void ExtractDataForm::delete_desFile() {
         QFile tmpFile(fileName);
         if (tmpFile.exists()) {
             if (tmpFile.remove() ) {
-                updateProgramInfo(ui->programInfo_Table, QString::fromLocal8Bit("成功删除 %1").arg(stringData));
+                updateProgramInfo(ui->programInfo_Table, QString("成功删除 %1").arg(stringData));
             } else {
-                updateProgramInfo(ui->programInfo_Table, QString::fromLocal8Bit("删除 %1 失败").arg(stringData));
+                updateProgramInfo(ui->programInfo_Table, QString("删除 %1 失败").arg(stringData));
             }
         }
     }
@@ -405,9 +411,9 @@ void ExtractDataForm::delete_desFile() {
 
 void ExtractDataForm::open_oriDir() {
     qDebug() <<"m_oriFileDir: " << m_oriFileDir ;
-    QString dir = QString::fromLocal8Bit(m_oriFileDir.toStdString().c_str());
+    QString dir = QString(m_oriFileDir.toStdString().c_str());
     if (m_oriFileDir.startsWith("//")) {
-        dir = QString::fromLocal8Bit("file:%1").arg(QString::fromLocal8Bit(m_oriFileDir.toStdString().c_str()));
+        dir = QString("file:%1").arg(QString(m_oriFileDir.toStdString().c_str()));
     }
     dir = QString("D:/课程/");
     qDebug() << "dir: " << dir;
@@ -416,9 +422,9 @@ void ExtractDataForm::open_oriDir() {
 
 void ExtractDataForm::open_desDir() {
     qDebug() <<"m_desFileDir: " << m_desFileDir ;
-    QString dir = QString::fromLocal8Bit(m_desFileDir.toStdString().c_str());
+    QString dir = QString(m_desFileDir.toStdString().c_str());
     if (m_desFileDir.startsWith("//")) {
-        dir = QString::fromLocal8Bit("file:%1").arg(QString::fromLocal8Bit(m_desFileDir.toStdString().c_str()));
+        dir = QString("file:%1").arg(QString(m_desFileDir.toStdString().c_str()));
     }
     qDebug() << "dir: " << dir;
     QDesktopServices::openUrl(QUrl(m_desFileDir, QUrl::TolerantMode));
@@ -435,8 +441,8 @@ void ExtractDataForm::basicTest() {
         int dbConnectID = m_extractTimes;
         QStringList keyValueList;
         keyValueList << "TCLOSE";
-        QString secodeFileName = QString::fromLocal8Bit("D:/excel/沪深300成分股 20170130~20180417 10min收盘价.xlsx");
-        QString desDirName = QString::fromLocal8Bit("D:/excel/cplus/");
+        QString secodeFileName = QString("D:/excel/沪深300成分股 20170130~20180417 10min收盘价.xlsx");
+        QString desDirName = QString("D:/excel/cplus/");
 
 //        ExtractMarketData* currExtractMarketDataObj = new ExtractMarketData(dbhost, dbConnectID, databaseName,
 //                                                                            startDate, endDate,
@@ -469,24 +475,25 @@ QStringList ExtractDataForm::getCurrKeyValueList() {
     return result;
 }
 
-QStringList ExtractDataForm::getSecodeList(QString excelFileName, QString dbhost, QString dbName) {
-    QStringList result = readExcelSecodeList(excelFileName, "Sheet1", 1, "tinysoft");
+QStringList ExtractDataForm::checkMarketSecodeList(QStringList oriSecodeList, QString dbhost, QString dbName) {
+    QStringList result;
     Database databaseObj("0", dbhost);
     QList<QString> tableList = databaseObj.getTableList(dbName);
     QStringList errorCodeList;
     for (QString secode:result) {
-        if (tableList.indexOf(secode) < 0) {
+        if (tableList.indexOf(completeSecode(secode)) < 0) {
             errorCodeList.append(secode);
             result.removeAll(secode);
         }
     }
+
+    printList(errorCodeList, "errorCodeList");
+
     if (errorCodeList.size() > 0) {
-        QString info = QString::fromLocal8Bit("存在错误股票代码: \n%1,\n是否放弃当前源股票代码信息文件, 否则忽略错误股票代码")
+        QString info = QString("存在错误股票代码: \n%1,\n是否放弃当前源股票代码信息文件, 否则忽略错误股票代码")
                 .arg(errorCodeList.join("\n"));
-        if (QMessageBox::Yes == QMessageBox::information(NULL, QString::fromLocal8Bit("确认信息"),
-                                                         info, QMessageBox::Yes | QMessageBox::No)) {
-            result.insert(0, "Error");
-        }
+        result.append("Error");
+        result.append(info);
     }
     return result;
 }
@@ -500,27 +507,31 @@ void ExtractDataForm::on_extractMarketData_pushButton_clicked()
     QString endDate = ui->endDate_dateEdit->date().toString("yyyyMMdd");
     int dbConnectId = m_extractTimes * m_extractThreadCount;
     QStringList keyValueList = getCurrKeyValueList();
-    QStringList secodeList = getSecodeList(m_currOriFile, dbhost, databaseName);
 
-    if (secodeList.size() > 0 &&  secodeList[0] == "Error") return;
+
+    QStringList checkRst = checkMarketSecodeList(m_marketSecodeList, dbhost, databaseName);
+    if (checkRst.size() > 0 &&  checkRst[0] == "Error")  {
+        if (QMessageBox::No == QMessageBox::information(NULL, QString("确认信息"),
+                                                        checkRst[1], QMessageBox::Yes | QMessageBox::No)) {
+            return;
+        }
+    }
 
     qDebug() << databaseName << dbhost << startDate << endDate << keyValueList;
 
-    if (m_currOriFile.size() == 0) {
-        QMessageBox::critical(NULL, "Error", QString(QString::fromLocal8Bit("还未选择源文件")));
-    } else if (keyValueList.size() == 0) {
-        QMessageBox::critical(NULL, "Error", QString(QString::fromLocal8Bit("还未选择指标")));
+    if (keyValueList.size() == 0) {
+        QMessageBox::critical(NULL, "Error", QString(QString("还未选择指标")));
     } else {
-        QString info = QString::fromLocal8Bit("开始提取行情数据: \n数据类型: %1,\n提取的指标: %2,\n时间区间: [%3, %4], \n")
-                                            .arg(ui->dataType_comboBox->currentText()).arg(m_keyValueList.join(","))
-                                            .arg(startDate).arg(endDate);
+        QString info = QString("开始提取行情数据: \n数据类型: %1,\n提取的指标: %2,\n时间区间: [%3, %4], \n")
+                                .arg(ui->dataType_comboBox->currentText()).arg(m_keyValueList.join(","))
+                                .arg(startDate).arg(endDate);
 
-        if (QMessageBox::Yes == QMessageBox::information(NULL, QString::fromLocal8Bit("确认信息"),
+        if (QMessageBox::Yes == QMessageBox::information(NULL, QString("确认信息"),
                                                          info, QMessageBox::Yes | QMessageBox::No)) {
             updateProgramInfo(ui->programInfo_Table, info);
             ExtractMarketData* currExtractMarketDataObj = new ExtractMarketData(dbhost, dbConnectId, databaseName,
                                                                                 startDate, endDate,
-                                                                                secodeList, m_desFileDir,
+                                                                                m_marketSecodeList, m_desFileDir,
                                                                                 keyValueList, m_extractThreadCount);
 
             connect(currExtractMarketDataObj, SIGNAL(extractMarketDataComplete_signal(QStringList)),
@@ -563,11 +574,11 @@ void ExtractDataForm::on_extractWeightData_pushButton_clicked()
     qDebug() << dbConnectId << dbhost << startDate << endDate << currIndexCodeList;
 
     if (currIndexCodeList.size() == 0) {
-        QMessageBox::critical(NULL, "Error", QString(QString::fromLocal8Bit("还未选择指数")));
+        QMessageBox::critical(NULL, "Error", QString(QString("还未选择指数")));
     } else {
-        QString info = QString::fromLocal8Bit("开始提取权重信息: \n选择的指数为: %1;\n指数截止日起始时间: [%2, %3];")
+        QString info = QString("开始提取权重信息: \n选择的指数为: %1;\n指数截止日起始时间: [%2, %3];")
                 .arg(m_indexCodeList.join(",")).arg(startDate).arg(endDate);
-        if (QMessageBox::Yes == QMessageBox::information(NULL, QString::fromLocal8Bit("确认信息"),
+        if (QMessageBox::Yes == QMessageBox::information(NULL, QString("确认信息"),
                                                          info, QMessageBox::Yes | QMessageBox::No)) {
             updateProgramInfo(ui->programInfo_Table, info);
 
@@ -593,7 +604,7 @@ QStringList ExtractDataForm::getCurrIndustryList() {
         if (pCheckBox->isChecked())
         {
             QString strText = pCheckBox->text();
-            if (strText == QString::fromLocal8Bit("全选")) {
+            if (strText == QString("全选")) {
                 result = m_industryList;
                 qDebug() << "Choose All";
                 break;
@@ -602,7 +613,7 @@ QStringList ExtractDataForm::getCurrIndustryList() {
             }
         }
     }
-    result.removeAll(QString::fromLocal8Bit("全选"));
+    result.removeAll(QString("全选"));
     qDebug() << "result: " << result;
     return result;
 }
@@ -618,11 +629,11 @@ void ExtractDataForm::on_extractIndustryData_pushButton_clicked()
     qDebug() << dbConnectId << dbhost << startDate << endDate << currIndustryList;
 
     if (currIndustryList.size() == 0) {
-        QMessageBox::critical(NULL, QString::fromLocal8Bit("错误信息"), QString::fromLocal8Bit("还未选择行业分类指标"));
+        QMessageBox::critical(NULL, QString("错误信息"), QString("还未选择行业分类指标"));
     } else {
-        QString info = QString::fromLocal8Bit("开始提取行业分类数据: \n选择的行业分类指标为: \n%1\n时间区间为: [%2, %3]")
+        QString info = QString("开始提取行业分类数据: \n选择的行业分类指标为: \n%1\n时间区间为: [%2, %3]")
                                                 .arg(currIndustryList.join(",\n")).arg(startDate).arg(endDate);
-        if (QMessageBox::Yes == QMessageBox::information(NULL, QString::fromLocal8Bit("确认信息"),
+        if (QMessageBox::Yes == QMessageBox::information(NULL, QString("确认信息"),
                                                         info, QMessageBox::Yes | QMessageBox::No)) {
             updateProgramInfo(ui->programInfo_Table, info);
 
@@ -640,7 +651,7 @@ void ExtractDataForm::on_extractIndustryData_pushButton_clicked()
 }
 
 void ExtractDataForm::extractDataComplete_slot(QStringList desFileNameList) {
-    updateProgramInfo(ui->programInfo_Table, QString::fromLocal8Bit("提取数据完毕, 提取后的数据存储文件为: \n %1")
+    updateProgramInfo(ui->programInfo_Table, QString("提取数据完毕, 提取后的数据存储文件为: \n %1")
                                              .arg(desFileNameList.join("\n")) );
     setDesFileTable();
 }
@@ -672,8 +683,9 @@ void ExtractDataForm::on_oriFile_tableView_clicked(const QModelIndex &index)
     if (tmpFile.exists()) {
         m_currOriFile = cmpFileName;
         qDebug() << "m_currOriFile: " << m_currOriFile;
+        m_marketSecodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
     } else {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("当前文件不存在,请刷新当前表格"));
+        QMessageBox::critical(NULL, "Error", QString("当前文件不存在,请刷新当前表格"));
     }
 }
 
@@ -686,7 +698,7 @@ void ExtractDataForm::on_oriFile_tableView_doubleClicked(const QModelIndex &inde
     if (tmpFile.exists()) {
         QDesktopServices::openUrl(QUrl::fromLocalFile(cmpFileName));
     } else {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("当前文件不存在,请刷新当前表格"));
+        QMessageBox::critical(NULL, "Error", QString("当前文件不存在,请刷新当前表格"));
     }
 }
 
@@ -699,7 +711,7 @@ void ExtractDataForm::on_desFile_tableView_doubleClicked(const QModelIndex &inde
     if (tmpFile.exists()) {
         QDesktopServices::openUrl(QUrl::fromLocalFile(cmpFileName));
     } else {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("当前文件不存在,请刷新当前表格"));
+        QMessageBox::critical(NULL, "Error", QString("当前文件不存在,请刷新当前表格"));
     }
 }
 
@@ -742,7 +754,7 @@ void ExtractDataForm::industryComboxStateChange(int state) {
         if (pCheckBox->isChecked())
         {
 
-            if (pCheckBox->text() == QString::fromLocal8Bit("全选")) {
+            if (pCheckBox->text() == QString("全选")) {
                 checkAllIndustry();
             }
         }
@@ -752,17 +764,26 @@ void ExtractDataForm::industryComboxStateChange(int state) {
 
 void ExtractDataForm::on_chooseSecodeListFromExcel_pushButton_clicked()
 {
-    QString file_name = QFileDialog::getOpenFileName(NULL, QString::fromLocal8Bit("选择导入的EXCEL, 文档第一列为股票代码"),
+    QString file_name = QFileDialog::getOpenFileName(NULL, QString("选择导入的EXCEL, 文档第一列为股票代码"),
                                                           ".", QString("Excel Files(*.xlsx)"));
     qDebug() << "file_name: " <<file_name;
     if (file_name != "") {
         m_currOriFile = file_name;
-        updateProgramInfo(ui->programInfo_Table, QString::fromLocal8Bit("选择了股票代码列表文件: %1").arg(m_currOriFile));
+        updateProgramInfo(ui->programInfo_Table, QString("选择了股票代码列表文件: %1").arg(m_currOriFile));
+        m_marketSecodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
     }
 }
 
 void ExtractDataForm::on_chooseSecodeListFromTable_pushButton_clicked()
 {
-    m_chooseSecodeWindow = new ChooseSecodeWindow();
+//    m_chooseSecodeWindow = new ChooseSecodeWindow();
+    QString dbhost = ui->chooseDataSource_comboBox->currentText();
+    m_chooseSecodeWindow = new ChooseSecodeWindow(dbhost);
+    connect(m_chooseSecodeWindow, SIGNAL(get_secodeList_signal(QStringList)),
+            this, SLOT(get_secodeList_slot(QStringList)));
     m_chooseSecodeWindow->show();
+}
+
+void ExtractDataForm::get_secodeList_slot(QStringList marketSecodeList) {
+    m_marketSecodeList = marketSecodeList;
 }

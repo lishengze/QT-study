@@ -48,14 +48,15 @@ public:
     void initTableContextMenu();
 
     void basicTest();
-    QStringList getCurrKeyValueList();
-    QStringList getSecodeList(QString excelFileName, QString dbhost, QString dbName);
+    QStringList checkMarketSecodeList(QStringList oriSecodeList, QString dbhost, QString dbName);
+    QStringList getCurrKeyValueList();    
     QStringList getCurrIndexCodeList();
     QStringList getCurrIndustryList();
     ~ExtractDataForm();
 
 public slots:
     void extractDataComplete_slot(QStringList);
+    void get_secodeList_slot(QStringList);
 
 private slots:
 
@@ -104,6 +105,7 @@ private:
 
     int                         m_extractThreadCount;
     QList<QString>              m_dbhostList;
+    QStringList                 m_marketSecodeList;
     QStringList                 m_keyValueList;
     QStringList                 m_indexCodeList;
     QStringList                 m_industryList;

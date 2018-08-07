@@ -6,6 +6,7 @@
 #include "test.h"
 #include "updaterealtimedataform.h"
 #include "extractdataform.h"
+
 #pragma execution_character_set("utf-8")
 
 void setLibPath() {

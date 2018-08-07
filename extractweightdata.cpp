@@ -5,6 +5,7 @@
 #include "toolfunc.h"
 #include "xlsxdocument.h"
 #include "time_func.h"
+#include "io_func.h"
 
 ExtractWeightData::ExtractWeightData(QString dbhost, int dbConnectID,
                                      QString startDate, QString endDate,

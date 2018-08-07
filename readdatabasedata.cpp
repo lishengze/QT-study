@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QDebug>
 #include "excel_func.h"
+#include "secode_func.h"
 
 ReadDatabaseData::ReadDatabaseData():QObject(0)
 {
@@ -61,8 +62,13 @@ void ReadDatabaseData::startReadMarketData_slot() {
     QList<QList<QStringList>> sumResult;
     for (QString secode : m_secodeList) {
         QList<QStringList> ori_result = m_database->getDataByDate(m_startDate, m_endDate, m_keyValueList,
-                                                                  secode, m_dataType);
-        completeExcelData(ori_result, m_indexTimeList);
+                                                                  completeSecode(secode), m_dataType);
+        if (ori_result.size() > 0) {
+            completeExcelData(ori_result, m_indexTimeList);
+        } else {
+            qDebug() << QString("%1 datanumb is 0").arg(secode);
+        }
+
         QStringList title;
         title << secode;
         ori_result.insert(0, title);
