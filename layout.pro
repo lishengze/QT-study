@@ -42,11 +42,14 @@ SOURCES  += main.cpp\
     ../public-class/database.cpp \
     ../public-class/realtimedatabase.cpp \
     ../public-function/compute_func.cpp \
-    indexchart.cpp \
     ../public-function/process_data_func.cpp \
     ../public-function/io_func.cpp \
     ../public-function/terminal_func.cpp \
-    ../public-class/macd.cpp
+    ../public-class/macd.cpp \
+    ../public-function/id_func.cpp \
+    extractdatawindow.cpp \
+    ../public-class/basechart.cpp \
+    indexchart.cpp
 
 HEADERS  += widget.h \
             toolfunc.h \
@@ -69,11 +72,14 @@ HEADERS  += widget.h \
     ../public-class/database.h \
     ../public-class/realtimedatabase.h \
     ../public-function/compute_func.h \
-    indexchart.h \
     ../public-function/process_data_func.h \
     ../public-function/io_func.h \
     ../public-function/terminal_func.h \
-    ../public-class/macd.h
+    ../public-class/macd.h \
+    ../public-function/id_func.h \
+    extractdatawindow.h \
+    ../public-class/basechart.h \
+    indexchart.h
 
 FORMS    += widget.ui \
     chartform.ui \
@@ -82,6 +88,7 @@ FORMS    += widget.ui \
 #    webviewform.ui
     generateportfolioform.ui \
     futurechart.ui \
+    extractdatawindow.ui \
     indexchart.ui
 
 include(qtxlsx/src/xlsx/qtxlsx.pri)

@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QTableView>
 
+#include "basechart.h"
 #include "toolfunc.h"
 #include "qmychartview.h"
 #include "monitorrealtimedata.h"
@@ -30,7 +31,7 @@ namespace Ui {
 class FutureChart;
 }
 
-class FutureChart : public QWidget
+class FutureChart : public BaseChart
 {
     Q_OBJECT
 
@@ -44,16 +45,20 @@ public:
     void initMonitorWorker();
     void registSignalParamsType();
 
-    void initLayout();
-    void initTheme();
-    void initSpreadChartView();
+    virtual void initLayout();
+    virtual void initTheme();
+    virtual void initChartView();
 
     void transOriFutureData(QList<double> histFutureData);
 
-    void updateAxis();
-    void updateSeries();
-    void updateMousePos();
-    void setRealTimeLabel(int index);
+    virtual void initExtractKeyValueList();
+    virtual QList<QMyChartView*> getChartViewList();
+    virtual QString getExcelFileName(QStringList keyValueList, QString fileDir);
+    virtual QList<QStringList> getExcelData(QStringList keyValueList);
+
+    virtual void updateAxis();
+    virtual void updateSeries();
+    virtual void updateMousePos();
 
     void monitorSpread(double spread, QDateTime time);
 
@@ -63,11 +68,12 @@ public:
     QCategoryAxis* getAxisX(QList<QDateTime> m_valueList, int tickCount);
 
 
-    void mouseMoveEvenFunc(QObject *watched, QEvent *event);
-    void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
-    void KeyReleaseFunc(QEvent *event);
-    void moveMouse(int step);
-    double getPointXDistance();
+    virtual void setPropertyValue(int index);
+    virtual void mouseMoveEvenFunc(QObject *watched, QEvent *event);
+    virtual void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
+    virtual void KeyReleaseFunc(QEvent *event);
+    virtual void moveMouse(int step);
+    virtual double getPointXDistance();
 
 public slots:
     void tradeOver_slot();
@@ -75,8 +81,7 @@ public slots:
     void sendFutureData_slot(QList<double>);
 
 protected:
-    bool eventFilter (QObject *watched, QEvent *event);
-    void closeEvent(QCloseEvent *event);
+    virtual void closeEvent(QCloseEvent *event);
 
 signals:
     void getHistFutureData_signal();

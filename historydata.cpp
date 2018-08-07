@@ -32,14 +32,14 @@ HistoryData::HistoryData(int chartViewID, bool isBuySalePortfolio,
 
 HistoryData::HistoryData(int chartViewID, QString dbhost, QString databaseName,
             QString selectIndex, QString hedgedIndex,
-            QString startDate, QString endDate,
+            QString startDate, QString endDate, bool isRealTime,
             int aveNumb, double css12Rate,
             double cssRate1, double cssRate2,
             double maxCSS, double minCSS,
             QObject *parent):
     m_chartViewID(chartViewID), m_dbhost(dbhost), m_databaseName(databaseName),
     m_selectIndex(selectIndex), m_hedgedIndex(hedgedIndex),
-    m_startDate(startDate), m_endDate(endDate),
+    m_startDate(startDate), m_endDate(endDate), m_isRealTime(isRealTime),
     m_aveNumb(aveNumb), m_css12Rate(css12Rate),
     m_cssRate1(cssRate1), m_cssRate2(cssRate2),
     m_maxCSS(maxCSS), m_minCSS(minCSS),
@@ -143,7 +143,7 @@ void HistoryData::receiveOriginalData (QMap<QString, QList<QStringList>> subThre
 //             << ", dataNumb: " << subThreadData.size ()
 //             << ", m_readDataThreadCount: " << m_readDataThreadCount << "\n";
 
-    emit tableViewInfoSignal(QString(QString::fromLocal8Bit("完成股票指数读取数目: %1"))
+    emit tableViewInfoSignal(QString(QString("完成股票指数读取数目: %1"))
                              .arg(m_completeTableData.size ()));
 
     if (m_readDataThreadCount == m_threadNumb) {
@@ -151,7 +151,7 @@ void HistoryData::receiveOriginalData (QMap<QString, QList<QStringList>> subThre
         releaseDataReaderSrc ();
         m_readDataThreadCount = 0;
         if (m_completeTableData.find("Error")!= m_completeTableData.end()) {
-            emit tableViewInfoSignal(QString::fromLocal8Bit("Error: 读取数据出错"));
+            emit tableViewInfoSignal(QString("Error: 读取数据出错"));
         } else {
             startProcessData();
         }
@@ -164,7 +164,7 @@ void HistoryData::initProcessDataSignal() {
     for (int i = 0; i < m_secodeNameList.size (); ++i) {
         oridataCount += m_completeTableData[m_secodeNameList[i]].size ();
     }
-    emit tableViewInfoSignal(QString(QString::fromLocal8Bit("原始数据获取完成, 原始数据总数: %1"))
+    emit tableViewInfoSignal(QString(QString("原始数据获取完成, 原始数据总数: %1"))
                              .arg(oridataCount));
 
     DataProcess* curDataProcess;
@@ -185,8 +185,8 @@ void HistoryData::initProcessDataSignal() {
     connect (this, SIGNAL(startProcessDataSignal(QString)),
              curDataProcess, SLOT(receiveOrigianlHistoryData(QString)));
 
-    connect(curDataProcess, SIGNAL(sendAllData(QList<QList<double>>)),
-            this, SLOT(receiveProcessedData (QList<QList<double>>)));
+    connect(curDataProcess, SIGNAL(getProcessedData_signal(QList<QList<double>>)),
+            this, SLOT(getProcessedData_slot (QList<QList<double>>)));
 
     curDataProcessThread->start ();
     m_dataProcessList.append (curDataProcess);
@@ -197,27 +197,41 @@ void HistoryData::startProcessData () {
     initProcessDataSignal();
     emit startProcessDataSignal("all");
 //    qDebug() << "Start Process History Data!!";
-    emit tableViewInfoSignal(QString::fromLocal8Bit("开始计算历史数据"));
+    emit tableViewInfoSignal(QString("开始计算历史数据"));
 }
 
-void HistoryData::receiveProcessedData (QList<QList<double>> allData) {
+void HistoryData::getProcessedData_slot (QList<QList<double>> allData) {
 //    qDebug() << "HistoryData::receiveProcessedHistoryData: " << QThread::currentThreadId();
-    emit receiveHistDataSignal(allData);
+    emit receiveMarketHistData_Signal(allData);
     releaseDataProcessSrc();
 }
 
 void HistoryData::releaseDataReaderSrc () {
-    qDebug() << "ReleaseDataReaderThread:  " <<  m_dataReaderThreadList.size();
+//    qDebug() << "ReleaseDataReaderThread:  " <<  m_dataReaderThreadList.size();
     for (int i = 0; i < m_dataReaderThreadList.size(); ++i) {
          m_dataReaderThreadList[i]->quit ();
     }
 }
 
 void HistoryData::releaseDataProcessSrc () {
-    qDebug() << "ReleaseDataProcessThread: " <<  m_dataProcessThreadList.size();
+//    qDebug() << "ReleaseDataProcessThread: " <<  m_dataProcessThreadList.size();
     for (int i = 0; i < m_dataProcessThreadList.size (); ++i) {
         m_dataProcessThreadList[i]->quit ();
     }
+}
+
+void HistoryData::setLatestIndexData(QList<QStringList> selectIndexHistData,
+                                     QList<QStringList> hedgedIndexHistData) {
+    int datanumb = selectIndexHistData.size();
+    QString latestTime = QString("%1 %2").arg(selectIndexHistData[datanumb-1][0])
+                                          .arg(selectIndexHistData[datanumb-1][1]);
+    double  latestSelectIndexPrice = selectIndexHistData[datanumb-1][2].toDouble();
+    double  latestHedgedIndexPrice = hedgedIndexHistData[datanumb-1][2].toDouble();
+    QList<int> standardTimeList = m_database->getOneDayTimeList(getCompleteIndexCode(m_hedgedIndex), m_databaseName);
+    emit sendLatestHistIndexData_signal(latestTime,
+                                        latestSelectIndexPrice,
+                                        latestHedgedIndexPrice,
+                                        standardTimeList);
 }
 
 void HistoryData::getIndexHistData_slot() {
@@ -227,30 +241,48 @@ void HistoryData::getIndexHistData_slot() {
                                                                       getCompleteIndexCode(m_selectIndex), m_databaseName);
     QList<QStringList> hedgedIndexHistData = m_database->getDataByDate(m_startDate, m_endDate, histKeyValueList,
                                                                       getCompleteIndexCode(m_hedgedIndex), m_databaseName);
+
     if (selectIndexHistData.size() != hedgedIndexHistData.size()) {
         QString message = "选中的指数与对冲指数历史数据不完整";
         qDebug() << message;
         emit sendHistIndexError_signal(message);
     } else {
-//        if (!isTradingOver()) {
-//            QStringList todayKeyValueList;
-//            todayKeyValueList << "日期" << "时间" << "最新成交价";
-//            QList<QStringList> selectIndexTodayData = m_database->getAllRealtimeData(getCompleteIndexCode(m_selectIndex, "wind"),
-//                                                                                     todayKeyValueList);
-//            QList<QStringList> hedgedIndexTodayData = m_database->getAllRealtimeData(getCompleteIndexCode(m_hedgedIndex, "wind"),
-//                                                                                     todayKeyValueList);
-//            QList<int> standardTimeList = m_database->getOneDayTimeList(getCompleteIndexCode(m_hedgedIndex), m_databaseName);
-//            QList<QStringList> selectIndexTransData = transRealTimeDataToMinuteData(selectIndexTodayData, standardTimeList);
-//            QList<QStringList> hedgedIndexTransData = transRealTimeDataToMinuteData(hedgedIndexTodayData, standardTimeList);
-//            resizeMinuteData(selectIndexTransData, hedgedIndexTransData);
-//            selectIndexHistData += selectIndexTransData;
-//            hedgedIndexHistData += hedgedIndexTransData;
-//        }
+        QString latestDate = hedgedIndexHistData.last()[0];
+        qDebug() << "latestDate: " << latestDate;
+        if (m_isRealTime && latestDate != QDate::currentDate().toString("yyyyMMdd")) {
+            QStringList todayKeyValueList;
+            todayKeyValueList << "日期" << "时间" << "最新成交价";
+            QList<QStringList> selectIndexTodayData = m_database->getAllRealtimeData(getCompleteIndexCode(m_selectIndex, "wind"),
+                                                                                     todayKeyValueList);
+            QList<QStringList> hedgedIndexTodayData = m_database->getAllRealtimeData(getCompleteIndexCode(m_hedgedIndex, "wind"),
+                                                                                     todayKeyValueList);
+            QList<int> standardTimeList = m_database->getOneDayTimeList(getCompleteIndexCode(m_hedgedIndex), m_databaseName);
+            QList<QStringList> selectIndexTransData = transRealTimeDataToMinuteData(selectIndexTodayData, standardTimeList);
+            QList<QStringList> hedgedIndexTransData = transRealTimeDataToMinuteData(hedgedIndexTodayData, standardTimeList);
+            resizeMinuteData(selectIndexTransData, hedgedIndexTransData);
+            selectIndexHistData += selectIndexTransData;
+            hedgedIndexHistData += hedgedIndexTransData;
+        }
+        setLatestIndexData(selectIndexHistData, hedgedIndexHistData);
         QList<QStringList> profiltList = getRelativeProfitList(selectIndexHistData, hedgedIndexHistData);
         QList<QStringList> cssList = getCSSList(profiltList, m_aveNumb, m_css12Rate,
                                                 m_cssRate1, m_cssRate2, m_maxCSS, m_minCSS);
-        printList(cssList, "cssList");
-        emit sendHistIndexData_signal(cssList);
+        QList<QString> timeList;
+        QList<double> earningList;
+        QList<double> typeList;
+        QList<double> preCSSList;
+        QList<double> CSSTList;
+        QList<double> CSSList;
+        for (int i = 0; i < cssList.size(); ++i) {
+            timeList.append(QString("%1 %2").arg(cssList[i][0]).arg(cssList[i][1]));
+            earningList.append(cssList[i][2].toDouble());
+            typeList.append(cssList[i][3].toDouble());
+            CSSTList.append(cssList[i][4].toDouble());
+            preCSSList.append(cssList[i][5].toDouble());
+            CSSList.append(cssList[i][6].toDouble());
+        }
+//        printList(cssList, "cssList");
+        emit sendHistIndexData_signal(timeList, earningList, typeList, CSSTList, preCSSList, CSSList);
     }
 
 }

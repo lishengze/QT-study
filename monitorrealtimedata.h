@@ -26,11 +26,16 @@ public:
     MonitorRealTimeData(QString dbConnId, QString dbhost, QString futureName,
                         int monitorTime, bool isFuture = true, QObject* parent = 0);
 
+    MonitorRealTimeData(QString dbConnId, QString dbhost,
+                        QString selectIndex, QString hedgedIndex,
+                        int monitorTime, QObject* parent = 0);
+
     ~MonitorRealTimeData();
 
     void initCommonData();
     void initDatabase();
     void initTimer();
+    void initIndexHedgeTimer();
     void startTimer();
     void stopTimer();
     void initIndexHedgeMetaInfo();
@@ -45,6 +50,9 @@ signals:
     void sendHistFutureData_signal(QList<double>);
     void sendFutureData_signal(QList<double>);
 
+    void sendRealTimeIndexData_signal(QStringList, QStringList);
+    void sendRealTimeIndexDataError_signal(QString);
+
     void sendTradeOver();
     void startMonitorTimer_signal();
     void stopMonitorTimer_signal();
@@ -53,7 +61,9 @@ public slots:
     void setRealTimeData();
     void getPreCloseSpread();
     void setFutureData();
+    void setIndexData();
     void getHistFutureData_slot();
+    void getIndexRealtimeData_slot();
 
 private:
     QString                         m_dbConnId;
@@ -82,5 +92,7 @@ private:
     QMap<QString, int>              m_saleStrategyMap;
 
     QList<MACD>                     m_macdData;
+    QString                         m_selectIndex;
+    QString                         m_hedgedIndex;
 };
 #endif // MONITORREALTIMEDATA_H

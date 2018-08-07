@@ -8,9 +8,10 @@
 #include "processfunc.h"
 #include "dialog.h"
 #include "generateportfolioform.h"
-#pragma execution_character_set("utf-8")
 
+#include "extractdatawindow.h"
 #include "indexchart.h"
+#pragma execution_character_set("utf-8")
 
 void setLibPath() {
     QApplication::addLibraryPath(".");
@@ -38,8 +39,8 @@ int main(int argc, char *argv[])
 //    QString databaseName = "MarketData_15m";
 //    QString hedgedSecode = "000300";
 //    QString selectSecode = "000913";
-//    QString startDate = "20180507";
-//    QString endDate = "20180713";
+//    QString startDate = "20180716";
+//    QString endDate = "20180723";
 //    int     aveNumb = 32;
 //    double  css12Rate = 0.014;
 //    double  cssRate1 = 1.0/3.0;
@@ -52,6 +53,18 @@ int main(int argc, char *argv[])
 //                                maxCSS, minCSS);
 //    indexChartWindow.setWindowTitle("测试指数对冲图");
 //    indexChartWindow.show();
+
+//    QStringList m_extractKeyValueList;
+//    m_extractKeyValueList.append(QString("沪深300指数"));
+//    m_extractKeyValueList.append(QString("对冲点差值"));
+//    m_extractKeyValueList.append(QString("成交量额"));
+//    m_extractKeyValueList.append(QString("DIFF"));
+//    m_extractKeyValueList.append(QString("DEA"));
+//    m_extractKeyValueList.append(QString("MACD"));
+
+//    ExtractDataWindow extractWindow(m_extractKeyValueList);
+//    extractWindow.setWindowTitle("提取数据");
+//    extractWindow.show();
 
     return a.exec();
 }

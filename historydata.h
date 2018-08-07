@@ -28,7 +28,7 @@ public:
 
     HistoryData(int chartViewID, QString dbhost, QString databaseName,
                 QString selectIndex, QString hedgedIndex,
-                QString startDate, QString endDate,
+                QString startDate, QString endDate, bool isRealTime,
                 int aveNumb, double css12Rate,
                 double cssRate1, double cssRate2,
                 double m_maxCSS, double m_minCSS,
@@ -46,21 +46,27 @@ public:
 
     void startProcessData ();
 
+    void setLatestIndexData(QList<QStringList> selectIndexHistData,
+                            QList<QStringList> hedgedIndexHistData);
+
     void releaseDataReaderSrc ();
     void releaseDataProcessSrc ();
 
 signals:
-    void receiveHistDataSignal(QList<QList<double>> allData);
+    void receiveMarketHistData_Signal(QList<QList<double>> allData);
     void startReadDataSignal(QString dataType);
     void startProcessDataSignal(QString dataType);
     void tableViewInfoSignal(QString msg);
-    void sendHistIndexData_signal(QList<QStringList>);
+
+    void sendLatestHistIndexData_signal(QString, double, double, QList<int>);
+    void sendHistIndexData_signal(QList<QString>, QList<double>, QList<double>,
+                                  QList<double>, QList<double>, QList<double>);
     void sendHistIndexError_signal(QString);
 
 public slots:
     void getHistData();
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
-    void receiveProcessedData(QList<QList<double>> allData);
+    void getProcessedData_slot(QList<QList<double>> allData);
     void getIndexHistData_slot();
 
 private:

@@ -1,5 +1,5 @@
-﻿#include "ui_indexchart.h"
-#include "indexchart.h"
+﻿#include "indexchart.h"
+#include "ui_indexchart.h"
 #include "process_data_func.h"
 #include "io_func.h"
 #include "compute_func.h"
@@ -154,8 +154,8 @@ QList<QMyChartView*> IndexChart::getChartViewList() {
 
 QString IndexChart::getExcelFileName(QStringList keyValueList, QString fileDir) {
     QString fileName = fileDir;
-    fileName += QString("%1_%2_%3_%4_%5_%6.xlsx").arg(m_selectIndex).arg(m_hedgedIndex).arg(m_timeType)
-                                                 .arg(m_startDate).arg(m_endDate).arg(keyValueList.join("_"));
+    fileName += QString("%1_%2_%3_%4_%5.xlsx").arg(m_selectIndex).arg(m_hedgedIndex)
+                        .arg(m_startDate).arg(m_endDate).arg(keyValueList.join("_"));
     return fileName;
 }
 
@@ -471,10 +471,6 @@ void IndexChart::updateSeries() {
     setPropertyValue(m_earningList.size()-1);
 }
 
-void IndexChart::updateMousePos() {
-    moveMouse(0);
-}
-
 void IndexChart::setPropertyValue(int index) {
     if (index >=0 && index < m_timeList.size()) {
         ui->time_label->setText(QString("时间: %1")
@@ -572,6 +568,19 @@ double IndexChart::getPointXDistance() {
     QPointF pointb = m_Chart->mapToPosition(QPointF(testIndex+1, m_earningList[testIndex+1]));
     double distance = pointb.x() - pointa.x();
     return distance;
+}
+
+bool IndexChart::eventFilter (QObject *watched, QEvent *event) {
+    if (event->type () == QEvent::MouseMove) {
+        mouseMoveEvenFunc(watched, event);
+    }
+    if (event->type() == QEvent::KeyRelease) {
+        KeyReleaseFunc(event);
+    }
+    if (event->type() == QEvent::MouseButtonRelease) {
+        mouseButtonReleaseFunc(watched, event);
+    }
+    return QWidget::eventFilter (watched, event);
 }
 
 void IndexChart::closeEvent(QCloseEvent *event) {

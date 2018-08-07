@@ -39,7 +39,7 @@ public slots:
     void receiveOrigianlHistoryData(QString dataType);
 
 signals:
-    void sendAllData(QList<QList<double>> allData);
+    void getProcessedData_signal(QList<QList<double>> allData);
     void sendStrategyData(QList<QList<double>> strategyData);
     void sendVotData(QList<QList<double>> votData);
     void sendMACDData(QList<QList<double>> macdData);
@@ -65,6 +65,7 @@ private:
     QList<double>                        m_macdData;
     QList<MACD>                          m_MACDData;
     QList<double>                        m_timeData;
+    QList<double>                        m_indexCodeData;
 };
 
 //    DataProcess(QMap<QString, QList<QStringList>> oridata,

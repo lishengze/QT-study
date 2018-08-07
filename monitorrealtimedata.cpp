@@ -3,9 +3,10 @@
 #include <QDebug>
 #include <QThread>
 #include <algorithm>
-#include "toolfunc.h"
+#include "secode_func.h"
 #include "time_func.h"
 #include "compute_func.h"
+#pragma execution_character_set("utf-8")
 
 using namespace  std;
 
@@ -34,6 +35,17 @@ MonitorRealTimeData::MonitorRealTimeData(QString dbConnId, QString dbhost, QStri
     initDatabase();
 }
 
+MonitorRealTimeData::MonitorRealTimeData(QString dbConnId, QString dbhost,
+                                        QString selectIndex, QString hedgedIndex,
+                                        int monitorTime, QObject* parent):
+  m_dbConnId(dbConnId), m_dbhost(dbhost), m_monitorTime(monitorTime),
+  m_selectIndex(selectIndex), m_hedgedIndex(hedgedIndex),
+  QObject(parent)
+{
+    initDatabase();
+    initIndexHedgeTimer();
+}
+
 MonitorRealTimeData::~MonitorRealTimeData() {
     if (NULL != m_database) {
         delete m_database;
@@ -55,7 +67,7 @@ void MonitorRealTimeData::initCommonData() {
 }
 
 void MonitorRealTimeData::initDatabase() {
-    qDebug() << "m_dbConnId: " << m_dbConnId << ", m_dbhost: " << m_dbhost;
+//    qDebug() << "MonitorRealTimeData, m_dbConnId: " << m_dbConnId << ", m_dbhost: " << m_dbhost;
     m_database = new Database(m_dbConnId, m_dbhost);
 }
 
@@ -68,6 +80,11 @@ void MonitorRealTimeData::initTimer() {
         m_monitorTime = max(m_singleSecodeReadTime * m_secodeNameList.size(), m_minWaitTime);
         connect(&m_timer, SIGNAL(timeout()), this, SLOT(setRealTimeData()));
     }
+}
+
+void MonitorRealTimeData::initIndexHedgeTimer() {
+//    qDebug() << "MonitorRealTimeData::initIndexHedgeTimer";
+    connect(&m_timer, SIGNAL(timeout()), this, SLOT(setIndexData()));
 }
 
 void MonitorRealTimeData::initIndexHedgeMetaInfo() {
@@ -85,8 +102,8 @@ void MonitorRealTimeData::setInitMacd(MACD initMacdData) {
 }
 
 void MonitorRealTimeData::startTimer() {
-    qDebug() << "MonitorRealTimeData::startTimer";
     if (!m_timer.isActive()) {
+        qDebug() << "MonitorRealTimeData::startTimer, m_monitorTime: " << m_monitorTime;
         m_timer.start(m_monitorTime);
     }
 }
@@ -138,7 +155,7 @@ void MonitorRealTimeData::setFutureData() {
 //    if (datetime > 0) {
 //        emit sendFutureData_signal(result);
 //    } else {
-//        qDebug() << QString::fromLocal8Bit("获取实时期货基差失败");
+//        qDebug() << QString("获取实时期货基差失败");
 //    }
 
     if (isStockTradingOver()) {
@@ -150,9 +167,17 @@ void MonitorRealTimeData::setFutureData() {
         if (datetime > 0) {
             emit sendFutureData_signal(result);
         } else {
-            qDebug() << QString::fromLocal8Bit("获取实时期货基差失败");
+            qDebug() << QString("获取实时期货基差失败");
         }
     }
+}
+
+void MonitorRealTimeData::setIndexData() {
+    QStringList todayKeyValueList;
+    todayKeyValueList << "日期" << "时间" << "最新成交价";
+    QStringList selectData = m_database->getSnapShootData(getCompleteIndexCode(m_selectIndex, "wind"), todayKeyValueList);
+    QStringList hedgedData = m_database->getSnapShootData(getCompleteIndexCode(m_hedgedIndex, "wind"), todayKeyValueList);
+    emit sendRealTimeIndexData_signal(selectData, hedgedData);
 }
 
 void MonitorRealTimeData::getHistFutureData_slot() {
@@ -161,7 +186,7 @@ void MonitorRealTimeData::getHistFutureData_slot() {
     if (datetime > 0) {
         emit sendHistFutureData_signal(result);
     } else {
-        qDebug() << QString::fromLocal8Bit("获取历史期货基差失败");
+        qDebug() << QString("获取历史期货基差失败");
     }
 }
 
@@ -241,6 +266,10 @@ ChartData MonitorRealTimeData::computeRealTimeData() {
 
     ChartData curChartData(strategyData, votData, timeData, macdData);
     return curChartData;
+}
+
+void MonitorRealTimeData::getIndexRealtimeData_slot() {
+
 }
 
 /*

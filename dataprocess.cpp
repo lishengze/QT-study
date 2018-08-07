@@ -64,9 +64,9 @@ void DataProcess::filterHedgeIndexData() {
 void DataProcess::receiveOrigianlHistoryData (QString dataType) {
     if (dataType == "all") {
         if (m_isRealTime) {
-            emit sendAllData(computeSnapshootData());
+            emit getProcessedData_signal(computeSnapshootData());
         } else {
-            emit sendAllData(computeAllData());
+            emit getProcessedData_signal(computeAllData());
         }
     } else {
         if (dataType == "strategy") {
@@ -90,6 +90,7 @@ QList<QList<double>> DataProcess::computeAllData() {
     allData.append (m_strategyData);
     allData.append (m_votData);
     allData.append (m_macdData);
+    allData.append(m_indexCodeData);
     return allData;
 }
 
@@ -112,15 +113,19 @@ QList<QList<double>> DataProcess::computeStrategyData () {
         QMap<QString, int> seocdebuyCountMap = m_seocdebuyCountMap;
         seocdebuyCountMap.remove(m_hedgeIndexCode);
         pointDataList = getStrategyPointList(m_oriData, m_seocdebuyCountMap);
-        m_strategyData = getHedgedData(pointDataList, m_indexHedgeData,
-                                       m_seocdebuyCountMap[m_hedgeIndexCode],  m_indexHedgeMetaInfo[m_hedgeIndexCode]);
+        QList<QList<double>>  result = getHedgedData(pointDataList, m_indexHedgeData,
+                                                     m_seocdebuyCountMap[m_hedgeIndexCode],
+                                                     m_indexHedgeMetaInfo[m_hedgeIndexCode]);
+        m_timeData = result[0];
+        m_strategyData = result[1];
+        m_indexCodeData = result[2];
     }
 
-    if (m_timeData.size() == 0) {
-        for (int i = 0; i < pointDataList.size(); ++i) {
-            m_timeData.append(pointDataList[i].x());
-        }
-    }
+//    if (m_timeData.size() == 0) {
+//        for (int i = 0; i < pointDataList.size(); ++i) {
+//            m_timeData.append(pointDataList[i].x());
+//        }
+//    }
     result.append(m_timeData);
     result.append(m_strategyData);
     return result;
@@ -211,6 +216,7 @@ QList<QList<double>> DataProcess::computeSnapshootData() {
             m_strategyData.prepend(tmpResult[0]);
             m_votData.prepend(tmpResult[1]);
             m_timeData.prepend(tmpResult[2]);
+            m_indexCodeData.append(tmpResult[3]);
         }
     }
 
@@ -220,7 +226,14 @@ QList<QList<double>> DataProcess::computeSnapshootData() {
     allData.append (m_votData);
 
     m_macdData = computeMACDDoubleData(m_strategyData, m_macdTime[0], m_macdTime[1], m_macdTime[2]);
-    allData.append (m_macdData);
+    allData.append(m_macdData);
+    allData.append(m_indexCodeData);
+
+    qDebug() <<"m_timeData.size: " << m_timeData.size()
+             <<"m_strategyData.size: " << m_strategyData.size()
+             <<"m_votData.size: " << m_votData.size()
+             <<"m_macdData.size: " << m_macdData.size()
+             <<"m_indexCodeData.size: " << m_indexCodeData.size();
 
     qDebug()<< "DataProcess::computeSnapshootDataReverse end!";
     return allData;

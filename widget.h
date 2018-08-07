@@ -44,6 +44,12 @@ public:
     void initCalendar();
     void initHedgeComboBox();
     void initDataFrequency();
+    void initIndexDate();
+    void initHedgeIndexDataFrequency();
+    void initSelectIndexComboBox();
+    void initHedgedIndexComboBox();
+    void initIndexAveNumb();
+
     void initMacdTime();
     void setFutureContractCombox();
     void initDatasourceCombox();
@@ -108,6 +114,8 @@ private slots:
 
     void on_dataSource_ComboBox_currentIndexChanged(const QString &arg1);
 
+    void on_showIndexHedgedPic_pushButton_clicked();
+
 private:
     Ui::Widget *             ui;
 
@@ -139,6 +147,8 @@ private:
 
     AnnouncementForm*        m_announcementView;
     GeneratePortfolioForm*   m_genePortfolioWindow;
+
+
 };
 
 #endif // WIDGET_H

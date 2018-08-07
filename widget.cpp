@@ -25,6 +25,7 @@
 #include "widget.h"
 #include "ui_widget.h"
 #include "QChartView"
+#include "indexchart.h"
 
 #include "chartform.h"
 #include "announcementform.h"
@@ -34,6 +35,7 @@
 #include "database.h"
 
 QT_CHARTS_USE_NAMESPACE
+#pragma execution_character_set("utf-8")
 
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
@@ -42,6 +44,17 @@ Widget::Widget(QWidget *parent) :
     ui->setupUi(this);
     initCommonData();
     initWidegt();
+}
+
+Widget::~Widget()
+{
+    delete ui;
+    for (int i = 0; i < m_chartViews.size (); ++i) {
+        if (NULL != m_chartViews[i]) {
+            delete m_chartViews[i];
+            m_chartViews[i] = NULL;
+        }
+    }
 }
 
 void Widget::initCommonData() {
@@ -60,10 +73,10 @@ void Widget::initFileDir() {
     m_nativeFileName = "./spreadDirInfo.xlsx";
     QFile tmpFile(m_nativeFileName);
     if (!tmpFile.exists()) {
-        qDebug() << QString("%1 does not exit!").arg(m_nativeFileName);
+//        qDebug() << QString("%1 does not exit!").arg(m_nativeFileName);
         QXlsx::Document xlsx;
-        m_strategyFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/strategy/");
-        m_buySalePortfolioFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/买入卖出组合/");
+        m_strategyFileDir = QString("//192.168.211.182/it程序设计/strategy/");
+        m_buySalePortfolioFileDir = QString("//192.168.211.182/it程序设计/买入卖出组合/");
         xlsx.write("A1", m_strategyFileDir);
         xlsx.write("A2",m_buySalePortfolioFileDir);
         xlsx.saveAs(m_nativeFileName);
@@ -76,17 +89,17 @@ void Widget::initFileDir() {
 //                 << range.rowCount() << ", colCount" << range.columnCount();
 
         if (range.rowCount() == 0) {
-            m_strategyFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/strategy/");
-            m_buySalePortfolioFileDir = QString::fromLocal8Bit("//192.168.211.182/it程序设计/买入卖出组合/");
+            m_strategyFileDir = QString("//192.168.211.182/it程序设计/strategy/");
+            m_buySalePortfolioFileDir = QString("//192.168.211.182/it程序设计/买入卖出组合/");
             xlsx.write("A1", m_strategyFileDir);
             xlsx.write("A2",m_buySalePortfolioFileDir);
             xlsx.save();
         } else {
-            qDebug() << QString("%1 exits!").arg(m_nativeFileName);
+//            qDebug() << QString("%1 exits!").arg(m_nativeFileName);
             m_strategyFileDir = xlsx.cellAt(1, 1)->value().toString();
             m_buySalePortfolioFileDir = xlsx.cellAt(2, 1)->value().toString();
-            qDebug() << "m_strategyFileDir: " << m_strategyFileDir;
-            qDebug() << "m_buySalePortfolioFileDir: " << m_buySalePortfolioFileDir;
+//            qDebug() << "m_strategyFileDir: " << m_strategyFileDir;
+//            qDebug() << "m_buySalePortfolioFileDir: " << m_buySalePortfolioFileDir;
         }
     }
 }
@@ -99,6 +112,12 @@ void Widget::initWidegt() {
     setFutureContractCombox();
     initDatasourceCombox();
     initSpreadSpinbox();
+
+    initHedgeIndexDataFrequency();
+    initSelectIndexComboBox();
+    initHedgedIndexComboBox();
+    initIndexDate();
+    initIndexAveNumb();
 
     setFutureContractList();
     setStrategyTable();
@@ -122,15 +141,52 @@ void Widget::initCalendar () {
 }
 
 void Widget::initHedgeComboBox() {
-    ui->hedgeTarget_comboBox->setCurrentText (QString::fromLocal8Bit("沪深300"));
-    ui->hedgeTarget_comboBox->addItem (QString::fromLocal8Bit("沪深300"),  "000300");
-    ui->hedgeTarget_comboBox->addItem (QString::fromLocal8Bit("上证50"),   "000016");
-    ui->hedgeTarget_comboBox->addItem (QString::fromLocal8Bit("中证100"),  "399903");
-    ui->hedgeTarget_comboBox->addItem (QString::fromLocal8Bit("中证200"),  "000904");
-    ui->hedgeTarget_comboBox->addItem (QString::fromLocal8Bit("中证500"),  "000905");
-    ui->hedgeTarget_comboBox->addItem (QString::fromLocal8Bit("中证800"),  "000906");
-    ui->hedgeTarget_comboBox->addItem (QString::fromLocal8Bit("中证1000"), "000852");
+    ui->hedgeTarget_comboBox->setCurrentText (QString("沪深300"));
+    ui->hedgeTarget_comboBox->addItem (QString("沪深300"),  "000300");
+    ui->hedgeTarget_comboBox->addItem (QString("上证50"),   "000016");
+    ui->hedgeTarget_comboBox->addItem (QString("中证100"),  "399903");
+    ui->hedgeTarget_comboBox->addItem (QString("中证200"),  "000904");
+    ui->hedgeTarget_comboBox->addItem (QString("中证500"),  "000905");
+    ui->hedgeTarget_comboBox->addItem (QString("中证800"),  "000906");
+    ui->hedgeTarget_comboBox->addItem (QString("中证1000"), "000852");
     ui->hedgeCount_spinBox->setValue (2);
+}
+
+void Widget::initIndexDate() {
+    ui->chooseIndexStartDate->setCalendarPopup (true);
+    ui->chooseIndexEndDate->setCalendarPopup (true);
+
+    ui->chooseIndexStartDate->setDate (QDate::currentDate().addDays(-30));
+    ui->chooseIndexEndDate->setDate (QDate::currentDate());
+}
+
+void Widget::initHedgeIndexDataFrequency() {
+    QStringList timeFre;
+    timeFre << "5m" << "10m" << "15m" << "30m" << "60m"<< "day";
+    ui->index_dataFrequency->addItems (timeFre);
+    ui->index_dataFrequency->setCurrentText ("15m");
+}
+
+void Widget::initSelectIndexComboBox() {
+    QStringList indexList;
+    indexList << "000849" << "000908" << "000909" << "000910" << "000911" << "000912"
+              << "000913" << "000915" << "000917" << "000951" << "000952" ;
+    ui->targetIndex_QComboBox->addItems (indexList);
+    ui->targetIndex_QComboBox->setCurrentText ("000913");
+}
+
+void Widget::initHedgedIndexComboBox() {
+    QStringList indexList;
+    indexList << "000300" << "000849" << "000908" << "000909" << "000910" << "000911"
+              << "000912" << "000913" << "000915" << "000917" << "000951" << "000952";
+    ui->hedgeIndex_comboBox->addItems (indexList);
+    ui->hedgeIndex_comboBox->setCurrentText ("000300");
+}
+
+void Widget::initIndexAveNumb() {
+    ui->indexAveNunb_spinBox->setMaximum(100000);
+    ui->indexAveNunb_spinBox->setMinimum(-100000);
+    ui->indexAveNunb_spinBox->setValue(32);
 }
 
 void Widget::initMacdTime () {
@@ -141,7 +197,7 @@ void Widget::initMacdTime () {
 
 void Widget::initDataFrequency () {
     QStringList timeFre;
-    timeFre << "1m" << "5m" << "10m" << "15m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
+    timeFre << "5m" << "10m" << "15m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
     ui->dataFrequency->addItems (timeFre);
     ui->dataFrequency->setCurrentText ("day");
 }
@@ -155,7 +211,7 @@ void Widget::setFutureContractCombox() {
 void Widget::setFutureContractList() {
     Database database_obj(this, "0", m_currDBHost);
     m_futureList = database_obj.getAllData(m_futureIndexCode, "Future_Info");
-    qDebug() << m_futureList;
+//    qDebug() << m_futureList;
 }
 
 void Widget::initDatasourceCombox() {
@@ -169,13 +225,16 @@ void Widget::initSpreadSpinbox() {
 
     ui->maxSpread_SpinBox->setRange(-100000, 100000);
     ui->minSpread_SpinBox->setRange(-100000, 100000);
+
+    ui->maxSpread_SpinBox->setValue(100);
+    ui->minSpread_SpinBox->setValue(-100);
 }
 
 void Widget::initProgramWorkInfoTableView () {
     QStandardItemModel* initModel = new QStandardItemModel();
-    initModel -> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("时间")));
-    initModel -> setHorizontalHeaderItem (1, new QStandardItem(QString::fromLocal8Bit("消息")));
-    initModel -> setHorizontalHeaderItem (2, new QStandardItem(QString::fromLocal8Bit("备注")));
+    initModel -> setHorizontalHeaderItem (0, new QStandardItem(QString("时间")));
+    initModel -> setHorizontalHeaderItem (1, new QStandardItem(QString("消息")));
+    initModel -> setHorizontalHeaderItem (2, new QStandardItem(QString("备注")));
     ui->programInfo_tableView->setModel (initModel);
     ui->programInfo_tableView->setColumnWidth (0, 250);
     ui->programInfo_tableView->setColumnWidth (1, 600);
@@ -197,7 +256,7 @@ void Widget::setStrategyTable() {
         standardItemModel->setItem(i, 0, new QStandardItem(m_strategyFileInfoList[i].fileName()));
     }
 
-    standardItemModel-> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("策略组合")));
+    standardItemModel-> setHorizontalHeaderItem (0, new QStandardItem(QString("策略组合")));
     ui->strategy_table->setModel (standardItemModel);
     ui->strategy_table->setColumnWidth (0, 300);
     ui->strategy_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -223,8 +282,8 @@ void Widget::setBuySalePortfolioTable() {
         standardItemModel->setItem(index++, 1, new QStandardItem(it.value()));
     }
 
-    standardItemModel-> setHorizontalHeaderItem (0, new QStandardItem(QString::fromLocal8Bit("买卖组合")));
-    standardItemModel-> setHorizontalHeaderItem (1, new QStandardItem(QString::fromLocal8Bit("金额")));
+    standardItemModel-> setHorizontalHeaderItem (0, new QStandardItem(QString("买卖组合")));
+    standardItemModel-> setHorizontalHeaderItem (1, new QStandardItem(QString("金额")));
     ui->buySalePortfolio_table->setModel (standardItemModel);
     ui->buySalePortfolio_table->setColumnWidth (0, 400);
     ui->buySalePortfolio_table->setColumnWidth (1, 100);
@@ -245,8 +304,8 @@ void Widget::initTableContextMenu() {
 
 void Widget::show_strategyTable_contextMenu(QPoint pos) {
     QMenu *menu = new QMenu(ui->strategy_table);
-    QAction *refreshTable = new QAction(QString::fromLocal8Bit("刷新"),ui->strategy_table);
-    QAction *deleteFile = new QAction(QString::fromLocal8Bit("删除"),ui->strategy_table);
+    QAction *refreshTable = new QAction(QString("刷新"),ui->strategy_table);
+    QAction *deleteFile = new QAction(QString("删除"),ui->strategy_table);
 
     connect (refreshTable,SIGNAL(triggered()),this,SLOT(refresh_strategy_table()));
     connect (deleteFile, SIGNAL(triggered()),this,SLOT(delete_strategy_file()));
@@ -260,8 +319,8 @@ void Widget::show_strategyTable_contextMenu(QPoint pos) {
 
 void Widget::show_portfolioTable_contextMenu(QPoint pos) {
     QMenu *menu = new QMenu(ui->buySalePortfolio_table);
-    QAction *refreshTable = new QAction(QString::fromLocal8Bit("刷新"),ui->buySalePortfolio_table);
-    QAction *deleteFile = new QAction(QString::fromLocal8Bit("删除"),ui->buySalePortfolio_table);
+    QAction *refreshTable = new QAction(QString("刷新"),ui->buySalePortfolio_table);
+    QAction *deleteFile = new QAction(QString("删除"),ui->buySalePortfolio_table);
 
     connect (refreshTable,SIGNAL(triggered()),this,SLOT(refresh_portfolio_table()));
     connect (deleteFile, SIGNAL(triggered()),this,SLOT(delete_portfolio_file()));
@@ -292,9 +351,9 @@ void Widget::delete_strategy_file() {
         QFile tmpFile(fileName);
         if (tmpFile.exists()) {
             if (tmpFile.remove() ) {
-                updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("成功删除 %1").arg(stringData));
+                updateProgramInfo(ui->programInfo_tableView, QString("成功删除 %1").arg(stringData));
             } else {
-                updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("删除 %1 失败").arg(stringData));
+                updateProgramInfo(ui->programInfo_tableView, QString("删除 %1 失败").arg(stringData));
             }
         }
     }
@@ -312,9 +371,9 @@ void Widget::delete_portfolio_file() {
         QFile tmpFile(fileName);
         if (tmpFile.exists()) {
             if (tmpFile.remove() ) {
-                updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("成功删除 %1").arg(stringData));
+                updateProgramInfo(ui->programInfo_tableView, QString("成功删除 %1").arg(stringData));
             } else {
-                updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("删除 %1 失败").arg(stringData));
+                updateProgramInfo(ui->programInfo_tableView, QString("删除 %1 失败").arg(stringData));
             }
         }
     }
@@ -325,7 +384,7 @@ void Widget::on_chooseStartDate_editingFinished()
 {
     QDate startDate = ui->chooseStartDate->date ();
     QString strDate = startDate.toString ("yyyyMMdd");
-    qDebug() << "strDate: " << strDate;
+//    qDebug() << "strDate: " << strDate;
 }
 
 void Widget::on_strategy_table_clicked(const QModelIndex &index)
@@ -342,9 +401,9 @@ void Widget::on_strategy_table_clicked(const QModelIndex &index)
 //    qDebug() << "m_strategyMap: " << m_strategyMap;
 
     if (m_strategyMap.find("Error") != m_strategyMap.end()) {
-        updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("读取策略: %1, 出错")).arg(fileName));
+        updateProgramInfo (ui->programInfo_tableView, QString(QString("读取策略: %1, 出错")).arg(fileName));
     } else {
-        updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("策略中股票数目为: %1"))
+        updateProgramInfo (ui->programInfo_tableView, QString(QString("策略中股票数目为: %1"))
                                                       .arg(m_strategyMap.size ()));
     }
 }
@@ -356,9 +415,9 @@ void Widget::on_buySalePortfolio_table_clicked(const QModelIndex &index)
     QString cmpFileName = m_buySalePortfolioFileDir + fileName;
 
     m_currBuySalePortfolioName = (fileName.split("."))[0];
-    qDebug() << "m_currBuySalePortfolioName: " << m_currBuySalePortfolioName;
+//    qDebug() << "m_currBuySalePortfolioName: " << m_currBuySalePortfolioName;
 
-    updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("读取买卖策略: %1"))
+    updateProgramInfo (ui->programInfo_tableView, QString(QString("读取买卖策略: %1"))
                                                   .arg(m_currBuySalePortfolioName));
 
     m_buyStrategyMap = readExcelMapInt(cmpFileName, "buy");
@@ -367,12 +426,12 @@ void Widget::on_buySalePortfolio_table_clicked(const QModelIndex &index)
     printMap(m_saleStrategyMap, "m_saleStrategyMap: ");
 
     if (m_buyStrategyMap.find("Error") != m_buyStrategyMap.end()) {
-        updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("%1 没有正确的买入组合信息").arg(fileName));
+        updateProgramInfo(ui->programInfo_tableView, QString("%1 没有正确的买入组合信息").arg(fileName));
     }else if (m_saleStrategyMap.find("Error") != m_saleStrategyMap.end()) {
-        updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("%1 没有正确的卖出组合信息").arg(fileName));
+        updateProgramInfo(ui->programInfo_tableView, QString("%1 没有正确的卖出组合信息").arg(fileName));
     }
 
-    updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("策略中股票数目为: %1"))
+    updateProgramInfo (ui->programInfo_tableView, QString(QString("策略中股票数目为: %1"))
                                                   .arg(m_buyStrategyMap.size () + m_saleStrategyMap.size()));
 
 }
@@ -386,7 +445,7 @@ void Widget::on_strategy_table_doubleClicked(const QModelIndex &index)
     if (tmpFile.exists()) {
         QDesktopServices::openUrl(QUrl::fromLocalFile(cmpFileName));
     } else {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("当前文件已经被删除,请刷新当前表格"));
+        QMessageBox::critical(NULL, "Error", QString("当前文件已经被删除,请刷新当前表格"));
     }
 }
 
@@ -400,17 +459,17 @@ void Widget::on_buySalePortfolio_table_doubleClicked(const QModelIndex &index)
     if (tmpFile.exists()) {
         QDesktopServices::openUrl(QUrl::fromLocalFile(cmpFileName));
     } else {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("当前文件已经被删除,请刷新当前表格"));
+        QMessageBox::critical(NULL, "Error", QString("当前文件已经被删除,请刷新当前表格"));
     }
 }
 
 void Widget::on_historyHedgeIndexChart_clicked()
 {
     if (m_strategyMap.size () == 0) {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("还未选择策略"));
+        QMessageBox::critical(NULL, "Error", QString("还未选择策略"));
         return;
     } else if (m_strategyMap.find("Error") != m_strategyMap.end()) {
-        QMessageBox::critical(NULL, "Error", QString(QString::fromLocal8Bit("读取策略: %1, 出错")).arg(m_currStrategyName));
+        QMessageBox::critical(NULL, "Error", QString(QString("读取策略: %1, 出错")).arg(m_currStrategyName));
         m_strategyMap.clear();
     }else {
         m_isBuySalePortfolio = false;
@@ -428,7 +487,7 @@ void Widget::on_historyHedgeIndexChart_clicked()
         int hedgeIndexCount = ui->hedgeCount_spinBox->value ();
 
         if (startDate.toInt () >= endDate.toInt ()) {
-            QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("起始时间晚于截止时间"));
+            QMessageBox::critical(NULL, "Error", QString("起始时间晚于截止时间"));
             return;
         } else {
             QWidget* charView = new ChartForm(0, ui->programInfo_tableView,
@@ -439,18 +498,18 @@ void Widget::on_historyHedgeIndexChart_clicked()
                                               false, startDate, endDate, timeType);
             charView->show ();
             m_chartViews.append (charView);
-            updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("策略名称: %1, 策略中股票数目为: %2"))
+            updateProgramInfo (ui->programInfo_tableView, QString(QString("策略名称: %1, 策略中股票数目为: %2"))
                                                           .arg(m_currStrategyName).arg(m_strategyMap.size ()));
 
-            updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("当前数据源为: %1").arg(dbhost));
+            updateProgramInfo(ui->programInfo_tableView, QString("当前数据源为: %1").arg(dbhost));
 
-            updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("起始时间: %1, 终止时间: %2, 时间频率: %3, T1: %4, T2: %5, T3: %6"))
+            updateProgramInfo (ui->programInfo_tableView, QString(QString("起始时间: %1, 终止时间: %2, 时间频率: %3, T1: %4, T2: %5, T3: %6"))
                                                           .arg(startDate).arg(endDate).arg(timeType).arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
 
-            updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("对冲目标: %1, 对冲笔数: %2"))
+            updateProgramInfo (ui->programInfo_tableView, QString(QString("对冲目标: %1, 对冲笔数: %2"))
                                                           .arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
 
-            updateProgramInfo (ui->programInfo_tableView, QString::fromLocal8Bit("开始读取数据"));
+            updateProgramInfo (ui->programInfo_tableView, QString("开始读取数据"));
         }
     }
 }
@@ -458,10 +517,10 @@ void Widget::on_historyHedgeIndexChart_clicked()
 void Widget::on_realTimeHedgeIndexChart_clicked()
 {
     if (m_strategyMap.size () == 0) {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("还未选择策略"));
+        QMessageBox::critical(NULL, "Error", QString("还未选择策略"));
         return;
     } else if (m_strategyMap.find("Error") != m_strategyMap.end()) {
-        QMessageBox::critical(NULL, "Error", QString(QString::fromLocal8Bit("读取策略: %1, 出错")).arg(m_currStrategyName));
+        QMessageBox::critical(NULL, "Error", QString(QString("读取策略: %1, 出错")).arg(m_currStrategyName));
         m_strategyMap.clear();
     } else {
         m_isBuySalePortfolio = false;
@@ -482,28 +541,28 @@ void Widget::on_realTimeHedgeIndexChart_clicked()
         charView->show ();
         m_chartViews.append (charView);
 
-        updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("策略名称: %1, 策略中股票数目为: %2"))
+        updateProgramInfo (ui->programInfo_tableView, QString(QString("策略名称: %1, 策略中股票数目为: %2"))
                                                       .arg(m_currStrategyName).arg(m_strategyMap.size ()));
 
-        updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("当前数据源为: %1").arg(dbhost));
+        updateProgramInfo(ui->programInfo_tableView, QString("当前数据源为: %1").arg(dbhost));
 
         updateProgramInfo (ui->programInfo_tableView, QString("T1: %1, T2: %2, T3: %3")
                                                       .arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
 
-        updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("对冲目标: %1, 对冲笔数: %2"))
+        updateProgramInfo (ui->programInfo_tableView, QString(QString("对冲目标: %1, 对冲笔数: %2"))
                                                       .arg(ui->hedgeTarget_comboBox->currentText ()).arg(hedgeIndexCount));
 
-        updateProgramInfo (ui->programInfo_tableView, QString::fromLocal8Bit("开始读取数据"));
+        updateProgramInfo (ui->programInfo_tableView, QString("开始读取数据"));
     }
 }
 
 void Widget::on_historyBuySaleChart_clicked()
 {
     if(m_buyStrategyMap.size() == 0 && m_saleStrategyMap.size() == 0) {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("还未选择买卖组合策略"));
+        QMessageBox::critical(NULL, "Error", QString("还未选择买卖组合策略"));
     } else if (m_buyStrategyMap.find("Error") != m_buyStrategyMap.end() ||
                m_saleStrategyMap.find("Error")!= m_saleStrategyMap.end()) {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("%1 中没有正确的买卖组合信息")
+        QMessageBox::critical(NULL, "Error", QString("%1 中没有正确的买卖组合信息")
                                              .arg(m_currBuySalePortfolioName));
     }else {
         m_isBuySalePortfolio = true;
@@ -517,26 +576,26 @@ void Widget::on_historyBuySaleChart_clicked()
         QString dbhost = ui->dataSource_ComboBox->currentText();
         QList<int> macdTime;
         macdTime << EVA1Time << EVA2Time << DIFFTime;
-        qDebug() << "m_currBuySalePortfolioName: " << m_currBuySalePortfolioName;
+//        qDebug() << "m_currBuySalePortfolioName: " << m_currBuySalePortfolioName;
 
         QWidget* chartView = new ChartForm(0, ui->programInfo_tableView,
                                            m_chartViews.count(), dbhost, m_isBuySalePortfolio,
-                                           "", -1, macdTime,
+                                           m_currBuySalePortfolioName, -1, macdTime,
                                            EmpytQStringIntMap(), m_currBuySalePortfolioName,
                                            m_buyStrategyMap, m_saleStrategyMap,
                                            false, startDate, endDate, timeType);
         chartView->show();
         m_chartViews.append(chartView);
 
-        updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("策略名称: %1"))
+        updateProgramInfo (ui->programInfo_tableView, QString(QString("策略名称: %1"))
                                                       .arg(m_currBuySalePortfolioName));
 
-        updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("当前数据源为: %1").arg(dbhost));
+        updateProgramInfo(ui->programInfo_tableView, QString("当前数据源为: %1").arg(dbhost));
 
-        updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("起始时间: %1, 终止时间: %2, 时间频率: %3, T1: %4, T2: %5, T3: %6"))
+        updateProgramInfo (ui->programInfo_tableView, QString(QString("起始时间: %1, 终止时间: %2, 时间频率: %3, T1: %4, T2: %5, T3: %6"))
                                                       .arg(startDate).arg(endDate).arg(timeType).arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
 
-        updateProgramInfo (ui->programInfo_tableView, QString::fromLocal8Bit("开始读取数据"));
+        updateProgramInfo (ui->programInfo_tableView, QString("开始读取数据"));
     }
 
 }
@@ -544,10 +603,10 @@ void Widget::on_historyBuySaleChart_clicked()
 void Widget::on_realTimeBuySaleChart_clicked()
 {
     if(m_buyStrategyMap.size() == 0 && m_saleStrategyMap.size() == 0) {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("还未选择买卖组合策略"));
+        QMessageBox::critical(NULL, "Error", QString("还未选择买卖组合策略"));
     } else if (m_buyStrategyMap.find("Error") != m_buyStrategyMap.end() ||
                m_saleStrategyMap.find("Error")!= m_saleStrategyMap.end()) {
-        QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("%1 中没有正确的买卖组合信息")
+        QMessageBox::critical(NULL, "Error", QString("%1 中没有正确的买卖组合信息")
                                              .arg(m_currBuySalePortfolioName));
     } else {
         m_isBuySalePortfolio = true;
@@ -557,25 +616,25 @@ void Widget::on_realTimeBuySaleChart_clicked()
         QString dbhost = ui->dataSource_ComboBox->currentText();
         QList<int> macdTime;
         macdTime << EVA1Time << EVA2Time << DIFFTime;
-        qDebug() << "m_currBuySalePortfolioName: " << m_currBuySalePortfolioName;
+//        qDebug() << "m_currBuySalePortfolioName: " << m_currBuySalePortfolioName;
 
         QWidget* chartView = new ChartForm(0, ui->programInfo_tableView,
                                            m_chartViews.count(), dbhost, m_isBuySalePortfolio,
-                                           "", -1, macdTime,
+                                           m_currBuySalePortfolioName, -1, macdTime,
                                            EmpytQStringIntMap(), m_currBuySalePortfolioName,
                                            m_buyStrategyMap, m_saleStrategyMap, true);
         chartView->show();
         m_chartViews.append(chartView);
 
-        updateProgramInfo (ui->programInfo_tableView, QString(QString::fromLocal8Bit("策略名称: %1."))
+        updateProgramInfo (ui->programInfo_tableView, QString(QString("策略名称: %1."))
                                                       .arg(m_currBuySalePortfolioName));
 
-        updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("当前数据源为: %1").arg(dbhost));
+        updateProgramInfo(ui->programInfo_tableView, QString("当前数据源为: %1").arg(dbhost));
 
         updateProgramInfo (ui->programInfo_tableView, QString("T1: %1, T2: %2, T3: %3")
                                                       .arg(EVA1Time).arg(EVA2Time).arg(DIFFTime));
 
-        updateProgramInfo (ui->programInfo_tableView, QString::fromLocal8Bit("开始读取数据"));
+        updateProgramInfo (ui->programInfo_tableView, QString("开始读取数据"));
     }
 }
 
@@ -591,10 +650,10 @@ void Widget::on_showFutureSpread_Button_clicked()
     futureChartView->show();
     m_chartViews.append(futureChartView);
 
-    updateProgramInfo (ui->programInfo_tableView, QString::fromLocal8Bit("期货: %1, 最大基差: %2, 最小基差: %3")
+    updateProgramInfo (ui->programInfo_tableView, QString("期货: %1, 最大基差: %2, 最小基差: %3")
                                                   .arg(curFuture).arg(maxSpreadValue).arg(minSpreadValue));
 
-    updateProgramInfo(ui->programInfo_tableView, QString::fromLocal8Bit("当前数据源为: %1").arg(dbhost));
+    updateProgramInfo(ui->programInfo_tableView, QString("当前数据源为: %1").arg(dbhost));
 }
 
 void Widget::on_Annoucnement_Button_clicked()
@@ -615,10 +674,10 @@ void Widget::on_chooseStrategyDir_Button_clicked()
         m_strategyFileDir = dirName + "/";
         if (writeFileInfo(m_nativeFileName, "A1", m_strategyFileDir) == 1) {
             setStrategyTable();
-            updateProgramInfo(ui->programInfo_tableView, QString(QString::fromLocal8Bit("设置新的策略文件夹为: %1"))
+            updateProgramInfo(ui->programInfo_tableView, QString(QString("设置新的策略文件夹为: %1"))
                                                          .arg(m_strategyFileDir));
         } else {
-            QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("设置新的策略文件夹出错"));
+            QMessageBox::critical(NULL, "Error", QString("设置新的策略文件夹出错"));
         }
     }
 }
@@ -630,16 +689,17 @@ void Widget::on_choosePortfolioDir_Button_clicked()
         m_buySalePortfolioFileDir = dirName + "/";
         if (writeFileInfo(m_nativeFileName, "A2", m_buySalePortfolioFileDir) == 1) {
             setBuySalePortfolioTable();
-            updateProgramInfo(ui->programInfo_tableView, QString(QString::fromLocal8Bit("设置新的买卖组合文件夹为: %1"))
+            updateProgramInfo(ui->programInfo_tableView, QString(QString("设置新的买卖组合文件夹为: %1"))
                                                          .arg(m_buySalePortfolioFileDir));
         } else {
-            QMessageBox::critical(NULL, "Error", QString::fromLocal8Bit("设置新的买卖文件夹出错"));
+            QMessageBox::critical(NULL, "Error", QString("设置新的买卖文件夹出错"));
         }
     }
 }
 
 void Widget::receiveChartCLoseSignal(int chartViewID) {
-    qDebug() << "Widget::receiveChartCLoseSignal chartViewID: " << chartViewID;
+    chartViewID;
+//    qDebug() << "Widget::receiveChartCLoseSignal chartViewID: " << chartViewID;
 }
 
 void Widget::closeEvent(QCloseEvent *event) {
@@ -651,21 +711,44 @@ void Widget::closeEvent(QCloseEvent *event) {
     }
 }
 
-Widget::~Widget()
-{
-    delete ui;
-    for (int i = 0; i < m_chartViews.size (); ++i) {
-        if (NULL != m_chartViews[i]) {
-            delete m_chartViews[i];
-            m_chartViews[i] = NULL;
-        }
-    }
-}
-
 void Widget::on_dataSource_ComboBox_currentIndexChanged(const QString &arg1)
 {
-    qDebug() << "arg1: " << arg1;
+//    qDebug() << "arg1: " << arg1;
     m_currDBHost = arg1;
     setFutureContractList();
     setFutureContractCombox();
+}
+
+void Widget::on_showIndexHedgedPic_pushButton_clicked()
+{
+    QString startDate = ui->chooseIndexStartDate->date().toString("yyyyMMdd");
+    QString endDate = ui->chooseIndexEndDate->date().toString("yyyyMMdd");
+    QString dbhost = ui->dataSource_ComboBox->currentText();
+    QString timeType = ui->index_dataFrequency->currentText();
+    QString databaseName = QString("MarketData_%1").arg(timeType);
+    QString selectIndex = ui->targetIndex_QComboBox->currentText();
+    QString hedgedIndex = ui->hedgeIndex_comboBox->currentText();
+    int aveNumb = ui->indexAveNunb_spinBox->value();
+
+    if (startDate.toInt () >= endDate.toInt ()) {
+        QMessageBox::critical(NULL, "Error", QString("起始时间晚于截止时间"));
+        return;
+    }
+
+    if (selectIndex == hedgedIndex) {
+        QMessageBox::critical(NULL, "Error", QString("目标指数与对冲指数相同都为: %1").arg(selectIndex));
+        return;
+    }
+    QWidget* charView = new IndexChart(m_chartViews.count(), dbhost, databaseName,
+                                selectIndex, hedgedIndex, startDate, endDate,
+                                aveNumb);
+    m_chartViews.append (charView);
+    charView->setWindowTitle("指数对冲图");
+    charView->show();
+
+    QString info = QString("开始显示指数对冲图: \n目标指数为: %1, 对冲指数为: %2\n起始时间: %3, 终止时间: %4\n数据频率: %5, 平均值: %6")
+                           .arg(selectIndex).arg(hedgedIndex)
+                           .arg(startDate).arg(endDate)
+                           .arg(timeType).arg(aveNumb);
+    updateProgramInfo (ui->programInfo_tableView, info);
 }

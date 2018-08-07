@@ -25,6 +25,7 @@
 
 #include <QTableView>
 #include <QCategoryAxis>
+#include "basechart.h"
 #include "dataread.h"
 #include "dataprocess.h"
 #include "historydata.h"
@@ -33,10 +34,7 @@
 #include "macd.h"
 #include "qmychartview.h"
 #include "monitorrealtimedata.h"
-//#include "toolfunc.h"
-
-//#include "chartdata.h"
-//#include "strategy.h"
+#include "extractdatawindow.h"
 
 QT_BEGIN_NAMESPACE
 class QGraphicsSceneMouseEvent;
@@ -52,7 +50,7 @@ namespace Ui {
 class ChartForm;
 }
 
-class ChartForm : public QWidget
+class ChartForm : public BaseChart
 {
     Q_OBJECT
 
@@ -77,16 +75,22 @@ public:
     void initHistdataThread();
     void initMonitorThread();
 
+    virtual void initExtractKeyValueList();
+    virtual QList<QMyChartView*> getChartViewList();
+    virtual QString getExcelFileName(QStringList keyValueList, QString fileDir);
+    virtual QList<QStringList> getExcelData(QStringList keyValueList);
     void writeExcelData();
 
     void updateData();
     void updateChart();
-    void updateAxis();
-    void updateSeries();
-    void updateMousePos();
+    virtual void updateAxis();
+    virtual void updateSeries();
+    virtual void updateMousePos();
 
-    void setLayout ();
-    void setTheme();
+    virtual void initLayout();
+    virtual void initTheme();
+    virtual void initChartView();
+
     void setVotRunoverChartView();
     void setStrategyChartView();
     void setMACDChartView();
@@ -95,19 +99,19 @@ public:
     QCategoryAxis* getTimeAxis();
     void setTimeAxisUpdateData();
 
-    void setMouseMoveValue(int currIndex);
-    void mouseMoveEvenFunc(QObject *watched, QEvent *event);
-    void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
-    void KeyReleaseFunc(QEvent *event);
-    double getPointXDistance();
-    void moveMouse(int step);
+    virtual void setPropertyValue(int index);
+    virtual void mouseMoveEvenFunc(QObject *watched, QEvent *event);
+    virtual void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
+    virtual void KeyReleaseFunc(QEvent *event);
+    virtual void moveMouse(int step);
+    virtual double getPointXDistance();
 
 public slots:
     void receivePreCloseData(double preSpread);
     void receiveRealTimeData(ChartData curChartData);
 
     void receiveTableViewInfo(QString msg);
-    void receiveHistData(QList<QList<double>> allData);
+    void receiveMarketHistData_slot(QList<QList<double>> allData);
 
     void receiveTradeOver();
 
@@ -121,8 +125,7 @@ signals:
     void startMonitorRealTimeData();
 
 protected:
-    bool eventFilter (QObject *watched, QEvent *event);
-    void closeEvent(QCloseEvent *event);
+    virtual void closeEvent(QCloseEvent *event);
 
 private:
     Ui::ChartForm *ui;
@@ -164,42 +167,45 @@ private:
     QList<double>        m_strategyData;
     QList<double>        m_votData;
     QList<MACD>          m_macdData;
+    QList<double>        m_indexCodeData;
 
     QTime                m_startTime;
     QTime                m_endTime;
 
 private:
-    QString              m_title;
-    bool                 m_isLayoutSetted;
-    double               m_timeAxisUpdatePercent;
-    QList<double>        m_timeAxisUpdateData;
-    int                  m_chartXaxisTickCount;
+    QString                     m_title;
+    bool                        m_isLayoutSetted;
+    double                      m_timeAxisUpdatePercent;
+    QList<double>               m_timeAxisUpdateData;
+    int                         m_chartXaxisTickCount;
 
-    QPoint               m_mouseInitPos;
-    double               m_oldPointDistance;
-    int                  m_currTimeIndex;
-    int                  m_keyMoveCount;
-    bool                 m_isKeyMove;
+    QPoint                      m_mouseInitPos;
+    double                      m_oldPointDistance;
+    int                         m_currTimeIndex;
+    int                         m_keyMoveCount;
+    bool                        m_isKeyMove;
 
-    QString              m_mouseChartName;
-    bool                 m_setMouseTimeIndex;
+    QString                     m_mouseChartName;
+    bool                        m_setMouseTimeIndex;
 
-    QLineSeries*         m_strategySeries;
-    QMyChartView*        m_strategyChartView;
-    QChart*              m_strategyChart;
-    QLineSeries*         m_preSpreadSeries;
+    QLineSeries*                m_strategySeries;
+    QMyChartView*               m_strategyChartView;
+    QChart*                     m_strategyChart;
+    QLineSeries*                m_preSpreadSeries;
 
-    QStackedBarSeries*   m_votBarSeries;
-    QMyChartView*        m_votrunoverChartView;
-    QChart*              m_votrunoverChart;
+    QStackedBarSeries*          m_votBarSeries;
+    QMyChartView*               m_votrunoverChartView;
+    QChart*                     m_votrunoverChart;
 
-    QLineSeries*         m_diffSeries;
-    QLineSeries*         m_deaSeries;
-    QStackedBarSeries*   m_macdSeries;
-    QMyChartView*        m_macdChartView;
-    QChart*              m_macdChart;
+    QLineSeries*                m_diffSeries;
+    QLineSeries*                m_deaSeries;
+    QStackedBarSeries*          m_macdSeries;
+    QMyChartView*               m_macdChartView;
+    QChart*                     m_macdChart;
 
-    bool                 m_isclosed;
+//    QStringList                 m_extractKeyValueList;
+//    QList<ExtractDataWindow*>   m_extractWindowList;
+    bool                        m_isclosed;
 };
 
 #endif // CHARTFORM_H

@@ -20,6 +20,7 @@
 #include <QTimer>
 #include <QMetaType>
 #include <QMutexLocker>
+#include <QMenu>
 
 #include "chartform.h"
 #include "ui_chartform.h"
@@ -31,6 +32,8 @@
 #include "widget_func.h"
 #include "io_func.h"
 #include "excel_func.h"
+#include "process_data_func.h"
+#pragma execution_character_set("utf-8")
 
 ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
                      int chartViewID, QString dbhost, bool isBuySalePortfolio,
@@ -38,7 +41,7 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
                      QMap<QString, int> strategyMap, QString strategyName,
                      QMap<QString, int> buyStrategyMap, QMap<QString, int> saleStrategyMap,
                      bool isRealTime, QString startDate, QString endDate, QString timeType):
-    QWidget(parent), m_programInfoTableView(programInfoTableView),
+    BaseChart(parent), m_programInfoTableView(programInfoTableView),
     m_chartViewID(chartViewID), m_dbhost(dbhost), m_isBuySalePortfolio(isBuySalePortfolio),
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount), m_macdTime(macdTime),
     m_secodebuyCountMap(strategyMap), m_strategyName(strategyName),
@@ -54,11 +57,34 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
     }
 }
 
+ChartForm::~ChartForm()
+{
+    delete ui;
+    m_MonitorThread.quit();
+    m_MonitorThread.wait();
+
+    m_histdataThread.quit();
+    m_histdataThread.wait();
+
+    if (NULL != m_monitorWorker) {
+        m_monitorWorker = NULL;
+    }
+
+    if (NULL != m_histdataWorker) {
+        m_histdataWorker = NULL;
+    }
+
+//    for (int i = 0; i < m_extractWindowList.size(); ++i) {
+//        if (m_extractWindowList[i] != NULL) {
+//            delete m_m_extractWindowList[i];
+//            m_extractWindowList[i] = NULL;
+//        }
+//    }
+}
+
 void ChartForm::initCommonData() {
     m_startTime = QTime::currentTime();   
-    updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("链接的数据库: %1")
-                                              .arg(m_dbhost));
-
+    updateProgramInfo(m_programInfoTableView, QString("链接的数据库: %1").arg(m_dbhost));
 
     m_keyMoveCount = 0;
     m_currTimeIndex = 0;
@@ -78,6 +104,7 @@ void ChartForm::initCommonData() {
     initSecodeStyle();
     initSecodeList();
     registSignalParamsType();
+    initExtractKeyValueList();
 }
 
 void ChartForm::initSecodeList() {
@@ -122,6 +149,27 @@ void ChartForm::registSignalParamsType () {
     qRegisterMetaType<QAbstractItemModel::LayoutChangeHint>("QAbstractItemModel::LayoutChangeHint");
 }
 
+
+
+void ChartForm::initExtractKeyValueList() {
+    m_extractKeyValueList.append(QString("对冲点差值"));
+    m_extractKeyValueList.append(QString("DIFF"));
+    m_extractKeyValueList.append(QString("DEA"));
+    m_extractKeyValueList.append(QString("MACD"));
+    if (m_isBuySalePortfolio==false) {
+        m_extractKeyValueList.append(QString("沪深300指数"));
+        m_extractKeyValueList.append(QString("成交额"));
+    }
+}
+
+QList<QMyChartView*> ChartForm::getChartViewList() {
+    QList<QMyChartView*>  result;
+    result.append(m_strategyChartView);
+    result.append(m_votrunoverChartView);
+    result.append(m_macdChartView);
+    return result;
+}
+
 void ChartForm::initHistoryData () {
     m_databaseName = "MarketData_" + m_timeType;
     m_keyValueList << "TCLOSE" << "VOTRUNOVER";
@@ -155,7 +203,7 @@ void ChartForm::initRealTimeData() {
         initHistdataThread();
         emit getHistDataSignal();
     } else {
-        setLayout();
+        initLayout();
         m_monitorWorker->startTimer();
     }
 }
@@ -174,8 +222,8 @@ void ChartForm::initHistdataThread() {
     connect(this, SIGNAL(getHistDataSignal()),
             m_histdataWorker, SLOT(getHistData()));
 
-    connect(m_histdataWorker, SIGNAL(receiveHistDataSignal(QList<QList<double>>)),
-            this, SLOT(receiveHistData(QList<QList<double>>)));
+    connect(m_histdataWorker, SIGNAL(receiveMarketHistData_Signal(QList<QList<double>>)),
+            this, SLOT(receiveMarketHistData_slot(QList<QList<double>>)));
 
     connect(m_histdataWorker, SIGNAL(tableViewInfoSignal(QString)),
             this, SLOT(receiveTableViewInfo(QString)));
@@ -231,10 +279,88 @@ void ChartForm::writeExcelData() {
     qDebug() << "writeExcelData: " << result;
 }
 
+//void ChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fileDir) {
+////    qDebug() << "choosenKeyValueList: " << choosenKeyValueList;
+////    qDebug() << "fileDir: " << fileDir;
+//    QList<QStringList> excelData = getExcelData(choosenKeyValueList);
+//    QString fileName = getExcelFileName(choosenKeyValueList, fileDir);
+//    qDebug() << "fileName: " << fileName;
+//    int result = writeMatrixData(fileName, excelData, "Sheet1", true);
+//    qDebug() << "writeExcelData: " << result;
+//    if (result == 1) {
+//        QMessageBox::information(NULL, "信息", QString("文件 %1 写入成功").arg(fileName));
+//    } else {
+//        QMessageBox::critical(NULL, "错误", QString("文件 %1 写入失败").arg(fileName));
+//    }
+//}
+
+QList<QStringList> ChartForm::getExcelData(QStringList choosenKeyValueList) {
+    QList<QStringList> excelData;
+    QStringList timeData;
+    timeData.append("时间");
+    for (int i = 0; i < m_timeData.size(); ++i) {
+        timeData.append(QDateTime::fromMSecsSinceEpoch (m_timeData[i]).toString(m_timeTypeFormat));
+    }
+    excelData.append(timeData);
+
+    if (choosenKeyValueList.indexOf("对冲点差值") >=0 ) {
+        excelData.append(transNumbData("对冲点差值", m_strategyData));
+    }
+
+    if (choosenKeyValueList.indexOf("沪深300指数") >=0 ) {
+        excelData.append(transNumbData("沪深300指数", m_indexCodeData));
+    }
+
+    if (choosenKeyValueList.indexOf("成交额") >=0 ) {
+        excelData.append(transNumbData("成交额", m_votData));
+    }
+
+    if (choosenKeyValueList.indexOf("DIFF") >=0 ) {
+        QStringList tmpData;
+        tmpData.append("DIFF");
+        for (int i = 0; i < m_macdData.size(); ++i) {
+            tmpData.append(QString("%1").arg(m_macdData[i].m_diff));
+        }
+        excelData.append(tmpData);
+    }
+
+    if (choosenKeyValueList.indexOf("DEA") >=0 ) {
+        QStringList tmpData;
+        tmpData.append("DEA");
+        for (int i = 0; i < m_macdData.size(); ++i) {
+            tmpData.append(QString("%1").arg(m_macdData[i].m_dea));
+        }
+        excelData.append(tmpData);
+    }
+
+    if (choosenKeyValueList.indexOf("MACD") >=0 ) {
+        QStringList tmpData;
+        tmpData.append("MACD");
+        for (int i = 0; i < m_macdData.size(); ++i) {
+            tmpData.append(QString("%1").arg(m_macdData[i].m_macd));
+        }
+        excelData.append(tmpData);
+    }
+    return excelData;
+}
+
+QString ChartForm::getExcelFileName(QStringList keyValueList, QString fileDir) {
+    QString fileName = fileDir;
+    fileName += QString("%1_%2").arg(m_strategyName).arg(m_timeType);
+    if (m_isRealTime) {
+        fileName += QString("_%1_实时数据").arg(QDate::currentDate().toString("yyyyMMdd"));
+    } else {
+        fileName += QString("_%1_%2").arg(m_startDate).arg(m_endDate);
+    }
+    fileName += QString("_%1.xlsx").arg(keyValueList.join("_"));
+    return fileName;
+}
+
+
 void ChartForm::receivePreCloseData(double preSpread) {
     m_preSpread = preSpread;
     if (m_isLayoutSetted) {
-        ui->preCLoseSpreadValue_Label->setText(QString(QString::fromLocal8Bit("昨日点差: %1")).arg(m_preSpread));
+        ui->preCLoseSpreadValue_Label->setText(QString(QString("昨日点差: %1")).arg(m_preSpread));
     }
     qDebug() << "m_PreSpread: " << m_preSpread;
     disconnect(m_monitorWorker, SIGNAL(sendPreCloseData(double)),
@@ -259,27 +385,32 @@ void ChartForm::receiveTradeOver() {
     m_monitorWorker->stopTimer();
 }
 
-void ChartForm::receiveHistData(QList<QList<double> > allData) {
+void ChartForm::receiveMarketHistData_slot(QList<QList<double> > allData) {
     qDebug() << "ChartForm::receiveProcessedHistoryData: " << QThread::currentThreadId();
 
     m_timeData = allData[0];
     m_strategyData = allData[1];
     m_votData = allData[2];
     QList<double> macdData = allData[3];
+    if (false == m_isBuySalePortfolio) {
+        m_indexCodeData = allData[4];
+    }
     for (int i = 0; i < macdData.size (); i += 5){
         m_macdData.append (MACD(macdData[i], macdData[i+1],
                                 macdData[i+2], macdData[i+3], macdData[i+4]));
     }
-    updateProgramInfo (m_programInfoTableView, QString(QString::fromLocal8Bit("完成数据计算, 计算后数据总数: %1"))
+    updateProgramInfo (m_programInfoTableView, QString(QString("完成数据计算, 计算后数据总数: %1"))
                                                .arg(m_timeData.size () * 6));
-    updateProgramInfo (m_programInfoTableView, QString::fromLocal8Bit("显示图像"));
+    updateProgramInfo (m_programInfoTableView, QString("显示图像"));
     qDebug() << "timeData.size:     " << m_timeData.size ();
     qDebug() << "strategyData.size: " << m_strategyData.size ();
     qDebug() << "votData.size:      " << m_votData.size ();
     qDebug() << "macdData.size:     " << m_macdData.size ();
-    setLayout ();
+    qDebug() << "indexCodeData.size:      " << m_indexCodeData.size ();
 
-    writeExcelData();
+    initLayout ();
+
+//    writeExcelData();
 
     if (m_isRealTime) {
         if (m_macdData.size() > 0) {
@@ -445,7 +576,7 @@ void ChartForm::updateSeries() {
     m_macdChartView->setMaximumHeight(macdHeight);
 
     if (!m_isKeyMove) {
-       setMouseMoveValue(m_timeData.size()-1);
+       setPropertyValue(m_timeData.size()-1);
     }
 }
 
@@ -453,18 +584,16 @@ void ChartForm::updateMousePos() {
     moveMouse(0);
 }
 
-void ChartForm::setLayout () {
+void ChartForm::initLayout () {
     ui->setupUi(this);
     this->setWindowTitle(m_strategyName);
-    m_title = QString::fromLocal8Bit("策略: %1 , MACD: %2, %3, %4 ")
+    m_title = QString("策略: %1 , MACD: %2, %3, %4 ")
               .arg(m_strategyName).arg(m_macdTime[0]).arg(m_macdTime[1]).arg (m_macdTime[2]);
 
     ui->Title_Label->setText(m_title);
 
-    setStrategyChartView();
-    setVotRunoverChartView ();
-    setMACDChartView();
-    setTheme();
+    initChartView();
+    initTheme();
 
     if (NULL != m_strategyChartView) {
         ui->gridLayout->addWidget (m_strategyChartView, 1, 0);
@@ -481,8 +610,10 @@ void ChartForm::setLayout () {
 
     m_endTime = QTime::currentTime();
     int costSecs = m_endTime.msecsSinceStartOfDay() - m_startTime.msecsSinceStartOfDay();
-    updateProgramInfo (m_programInfoTableView, QString::fromLocal8Bit("读取计算数据,绘制图像耗费: %1s, 线程: %2")
+    updateProgramInfo (m_programInfoTableView, QString("读取计算数据,绘制图像耗费: %1s, 线程: %2")
                                                .arg(costSecs/1000).arg(m_threadNumb));
+
+    initTableContextMenu();
 }
 
 QCategoryAxis* ChartForm::getAxisX () {
@@ -497,6 +628,12 @@ QCategoryAxis* ChartForm::getAxisX () {
     return axisX;
 }
 
+void ChartForm::initChartView() {
+    setStrategyChartView();
+    setVotRunoverChartView ();
+    setMACDChartView();
+}
+
 void ChartForm::setStrategyChartView () {
     QCategoryAxis* axisX = getAxisX();
     QValueAxis *axisY = new QValueAxis;
@@ -507,7 +644,7 @@ void ChartForm::setStrategyChartView () {
         m_strategySeries->append (i, m_strategyData.at (i));
     }
     if (m_isRealTime) {
-        ui->preCLoseSpreadValue_Label->setText(QString(QString::fromLocal8Bit("昨日点差: %1"))
+        ui->preCLoseSpreadValue_Label->setText(QString(QString("昨日点差: %1"))
                                                .arg(m_preSpread));
         for (int i = 0; i < m_strategyData.size (); ++i) {
             m_preSpreadSeries->append(i, m_preSpread);
@@ -517,9 +654,9 @@ void ChartForm::setStrategyChartView () {
     QPen red(Qt::red);
     red.setWidth(3);
     m_strategySeries->setPen(red);
-    m_strategySeries->setName(QString::fromLocal8Bit("点差"));
+    m_strategySeries->setName(QString("点差"));
     m_strategySeries->setUseOpenGL (true);
-    m_preSpreadSeries->setName(QString::fromLocal8Bit("昨日点差"));
+    m_preSpreadSeries->setName(QString("昨日点差"));
     m_preSpreadSeries->setUseOpenGL(true);
 
     QList<double>  axisYRange;
@@ -557,7 +694,7 @@ void ChartForm::setStrategyChartView () {
 void ChartForm::setVotRunoverChartView () {
     QCategoryAxis* axisX = getAxisX();
     m_votBarSeries = new QStackedBarSeries();
-    QBarSet *set = new QBarSet(QString::fromLocal8Bit("成交额:"));
+    QBarSet *set = new QBarSet(QString("成交额:"));
     for (int i = 0; i < m_votData.size (); ++i) {
         set->append(m_votData.at (i));
     }
@@ -638,7 +775,7 @@ void ChartForm::setMACDChartView () {
 //    qDebug() << "m_macdChartView.size: "<< m_macdChartView->size();
 }
 
-void ChartForm::setTheme() {
+void ChartForm::initTheme() {
     m_strategyChart->setTheme(QChart::ChartThemeDark);
     m_votrunoverChart->setTheme(QChart::ChartThemeDark);
     m_macdChart->setTheme(QChart::ChartThemeDark);
@@ -650,7 +787,7 @@ void ChartForm::setTheme() {
     ui->Title_Label->setStyleSheet(QStringLiteral("color: rgb(250, 250, 250);font: 75 14pt \"微软雅黑\";"));
 }
 
-void ChartForm::setMouseMoveValue(int currIndex) {
+void ChartForm::setPropertyValue(int currIndex) {
     if (currIndex >= 0 && currIndex < m_strategyData.size()) {
 //        qDebug() << "currIndex: " << currIndex << ", isKeyMove: " << m_isKeyMove;
         QDateTime curDatetime = QDateTime::fromMSecsSinceEpoch(qint64(m_timeData.at(currIndex)));
@@ -661,27 +798,14 @@ void ChartForm::setMouseMoveValue(int currIndex) {
         qreal DEA = m_macdData.at(currIndex).m_dea;
         qreal Macd = m_macdData.at(currIndex).m_macd;
 
-        ui->TimeLabel->setText(QString("%1 %2").arg(QString::fromLocal8Bit("时间: ")).arg(dateTimeString));
-        ui->StrategyValue_Label->setText(QString("%1 %2").arg(QString::fromLocal8Bit("点差: ")).arg(strategyValue));
-        ui->VotRunover_Label->setText(QString("%1 %2").arg(QString::fromLocal8Bit("成交额: ")).arg(votrunoverValue));
+        ui->TimeLabel->setText(QString("%1 %2").arg(QString("时间: ")).arg(dateTimeString));
+        ui->StrategyValue_Label->setText(QString("%1 %2").arg(QString("点差: ")).arg(strategyValue));
+        ui->VotRunover_Label->setText(QString("%1 %2").arg(QString("成交额: ")).arg(votrunoverValue));
 
         ui->DIFF_Label->setText(QString("DIFF: %1").arg(DIFF));
         ui->DEA_Label->setText(QString("DEA: %1").arg(DEA));
         ui->MACD_Label->setText(QString("MACD: %1").arg(Macd));
     }
-}
-
-bool ChartForm::eventFilter (QObject *watched, QEvent *event) {
-    if (event->type () == QEvent::MouseMove) {
-        mouseMoveEvenFunc(watched, event);
-    }
-    if (event->type() == QEvent::KeyRelease) {
-        KeyReleaseFunc(event);
-    }
-    if (event->type() == QEvent::MouseButtonRelease) {
-        mouseButtonReleaseFunc(watched, event);
-    }
-    return QWidget::eventFilter (watched, event);
 }
 
 void ChartForm::mouseMoveEvenFunc(QObject *watched, QEvent *event) {
@@ -704,7 +828,7 @@ void ChartForm::mouseMoveEvenFunc(QObject *watched, QEvent *event) {
             currIndex = qFloor(curMacdChartChartPoint.x());
         }
 
-        setMouseMoveValue(currIndex);
+        setPropertyValue(currIndex);
     }
 }
 
@@ -747,7 +871,7 @@ void ChartForm::moveMouse(int step) {
 
         if (m_currTimeIndex >= 0 && m_currTimeIndex < m_timeData.size()) {
             m_isKeyMove = true;
-            setMouseMoveValue(m_currTimeIndex);
+            setPropertyValue(m_currTimeIndex);
         }
 
         if (move_distance >= 1 || move_distance <=-1 || move_distance == 0) {
@@ -785,7 +909,7 @@ void ChartForm::mouseButtonReleaseFunc(QObject *watched, QEvent *event) {
 
     if (m_currTimeIndex >= 0 && m_currTimeIndex < m_timeData.size()) {
         m_isKeyMove = true;
-        setMouseMoveValue(m_currTimeIndex);
+        setPropertyValue(m_currTimeIndex);
         m_mouseInitPos.setX(m_mouseInitPos.x() + deltaInGlobalPointAndChartPoint);
         QCursor::setPos(m_mouseInitPos);
     }
@@ -804,22 +928,49 @@ void ChartForm::closeEvent(QCloseEvent *event) {
     }
 }
 
-ChartForm::~ChartForm()
-{
-//    qDebug() << "~ChartForm " << 0;
-    delete ui;
-    m_MonitorThread.quit();
-    m_MonitorThread.wait();
 
-    m_histdataThread.quit();
-    m_histdataThread.wait();
+/*
+ *
+//    void initTableContextMenu();
+//    void showContentMenu_slot(QPoint);
+//    void showExtractDialog_slot();
+//    void getChoosenInfo_slot(QStringList, QString);
 
-    if (NULL != m_monitorWorker) {
-        m_monitorWorker = NULL;
-    }
+//void ChartForm::initTableContextMenu() {
+//    m_strategyChartView->setContextMenuPolicy(Qt::CustomContextMenu);
+//    m_votrunoverChartView->setContextMenuPolicy(Qt::CustomContextMenu);
+//    m_macdChartView->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    if (NULL != m_histdataWorker) {
-        m_histdataWorker = NULL;
-    }
-}
+//    connect(m_strategyChartView, SIGNAL(customContextMenuRequested(QPoint)),
+//            this, SLOT(showContentMenu_slot(QPoint)));
 
+//    connect(m_votrunoverChartView,SIGNAL(customContextMenuRequested(QPoint)),
+//            this, SLOT(showContentMenu_slot(QPoint)));
+
+//    connect(m_macdChartView,SIGNAL(customContextMenuRequested(QPoint)),
+//            this, SLOT(showContentMenu_slot(QPoint)));
+//}
+
+//void ChartForm::showContentMenu_slot(QPoint pos) {
+//    QMenu *menu = new QMenu();
+//    QAction *extractData = new QAction(QString("提取数据"));
+
+//    connect (extractData,SIGNAL(triggered()),this,SLOT(showExtractDialog_slot()));
+
+//    menu->addAction(extractData);
+//    menu->move (cursor().pos ());
+//    menu->show ();
+//    pos;
+//}
+
+//void ChartForm::showExtractDialog_slot() {
+//    qDebug() << "showExtractDialog_slot";
+//    ExtractDataWindow* currExtractWindow = new ExtractDataWindow(m_extractKeyValueList,this);
+
+//    connect(currExtractWindow, SIGNAL(getChoosenInfo_signal(QStringList, QString)),
+//            this, SLOT(getChoosenInfo_slot(QStringList, QString)));
+
+//    m_extractWindowList.append(currExtractWindow);
+//    currExtractWindow->show();
+//}
+*/

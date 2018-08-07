@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1111</width>
-    <height>816</height>
+    <width>1399</width>
+    <height>862</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -25,14 +25,11 @@
   <layout class="QFormLayout" name="formLayout">
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
-     <property name="rightMargin">
-      <number>9</number>
-     </property>
      <item>
       <widget class="QGroupBox" name="CalendarBox">
        <property name="minimumSize">
         <size>
-         <width>200</width>
+         <width>350</width>
          <height>1</height>
         </size>
        </property>
@@ -66,14 +63,14 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>350</width>
-         <height>300</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
          <width>350</width>
-         <height>800</height>
+         <height>16777215</height>
         </size>
        </property>
        <property name="title">
@@ -228,104 +225,276 @@
             </item>
            </layout>
           </item>
-          <item>
-           <layout class="QGridLayout" name="gridLayout_3">
-            <property name="topMargin">
-             <number>10</number>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="chooseAnnouncement">
+       <property name="maximumSize">
+        <size>
+         <width>350</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="title">
+        <string>选择公告信息</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_8">
+        <item row="0" column="0">
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="0">
+           <widget class="QLabel" name="startTimeLabel_2">
+            <property name="text">
+             <string>公告起始时间:</string>
             </property>
-            <item row="3" column="1">
-             <widget class="QDoubleSpinBox" name="maxSpread_SpinBox"/>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>基差最大值:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="endTimeLabel_2">
-              <property name="text">
-               <string>公告终止时间:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="startTimeLabel_2">
-              <property name="text">
-               <string>公告起始时间:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label">
-              <property name="text">
-               <string>期货品种:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QDateEdit" name="AnnouncementStartDate"/>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_3">
-              <property name="text">
-               <string>基差最小值:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QPushButton" name="Annoucnement_Button">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>22</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>公告信息</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QComboBox" name="futureList_ComboBox"/>
-            </item>
-            <item row="4" column="1">
-             <widget class="QDoubleSpinBox" name="minSpread_SpinBox"/>
-            </item>
-            <item row="1" column="1">
-             <widget class="QDateEdit" name="AnnouncementEndDate"/>
-            </item>
-            <item row="4" column="2">
-             <widget class="QPushButton" name="showFutureSpread_Button">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>22</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>显示基差图像</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="1">
-             <widget class="QComboBox" name="dataSource_ComboBox"/>
-            </item>
-            <item row="5" column="0">
-             <widget class="QLabel" name="label_4">
-              <property name="text">
-               <string>选择数据源:</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDateEdit" name="AnnouncementStartDate"/>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="Annoucnement_Button">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>公告信息</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="endTimeLabel_2">
+            <property name="text">
+             <string>公告终止时间:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDateEdit" name="AnnouncementEndDate"/>
+          </item>
+         </layout>
+        </item>
+       </layout>
+       <zorder>startTimeLabel_2</zorder>
+       <zorder>endTimeLabel_2</zorder>
+       <zorder>startTimeLabel_2</zorder>
+       <zorder>AnnouncementEndDate</zorder>
+       <zorder>AnnouncementStartDate</zorder>
+       <zorder>Annoucnement_Button</zorder>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="choooseFuture">
+       <property name="maximumSize">
+        <size>
+         <width>350</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="title">
+        <string>选择期货基差</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_7">
+        <item row="0" column="0">
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>期货品种:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="futureList_ComboBox"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>基差最大值:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="maxSpread_SpinBox"/>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>基差最小值:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="minSpread_SpinBox"/>
+          </item>
+          <item row="2" column="2">
+           <widget class="QPushButton" name="showFutureSpread_Button">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>显示基差图像</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+       <zorder></zorder>
+       <zorder>showFutureSpread_Button</zorder>
+       <zorder>futureList_ComboBox</zorder>
+       <zorder>maxSpread_SpinBox</zorder>
+       <zorder>label_2</zorder>
+       <zorder>label_3</zorder>
+       <zorder>label</zorder>
+       <zorder>minSpread_SpinBox</zorder>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="chooseIndexBox">
+       <property name="maximumSize">
+        <size>
+         <width>350</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="title">
+        <string>选择对冲指数</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0">
+         <widget class="QLabel" name="timeFre_label_2">
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="sizeIncrement">
+           <size>
+            <width>40</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>时间频率:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="index_dataFrequency">
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>目标指数: </string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QLabel" name="hedgeTarget_Label_2">
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>对冲指数:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="QLabel" name="startTimeLabel_3">
+          <property name="text">
+           <string>起始时间:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2" colspan="3">
+         <widget class="QDateEdit" name="chooseIndexStartDate"/>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <widget class="QLabel" name="endTimeLabel_3">
+          <property name="text">
+           <string>终止时间:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
+         <widget class="QComboBox" name="hedgeIndex_comboBox">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="targetIndex_QComboBox"/>
+        </item>
+        <item row="3" column="2" colspan="3">
+         <widget class="QDateEdit" name="chooseIndexEndDate"/>
+        </item>
+        <item row="0" column="3">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>平均数:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="4">
+         <widget class="QPushButton" name="showIndexHedgedPic_pushButton">
+          <property name="text">
+           <string>显示对冲图像</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QSpinBox" name="indexAveNunb_spinBox"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="chooseDataSource">
+       <property name="title">
+        <string>选择数据源</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_12">
+        <item row="0" column="0">
+         <layout class="QGridLayout" name="gridLayout_11">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>选择数据源:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="dataSource_ComboBox"/>
           </item>
          </layout>
         </item>
@@ -335,163 +504,174 @@
     </layout>
    </item>
    <item row="0" column="1">
-    <layout class="QVBoxLayout" name="verticalLayout_2">
+    <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <layout class="QVBoxLayout" name="programInfo_verticalLayout">
+       <property name="topMargin">
+        <number>20</number>
+       </property>
        <item>
-        <widget class="QLabel" name="strategy_label">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QLabel" name="strategy_label">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>策略组合信息：</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="chooseStrategyDir_Button">
+             <property name="text">
+              <string>选择策略组合文件夹</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="strategy_label_2">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>买卖组合信息：</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="choosePortfolioDir_Button">
+             <property name="text">
+              <string>选择买卖组合文件夹</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QTableView" name="strategy_table"/>
+           </item>
+           <item>
+            <widget class="QTableView" name="buySalePortfolio_table"/>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QPushButton" name="historyHedgeIndexChart">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>130</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>历史指数点差图</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="realTimeHedgeIndexChart">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>4</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>130</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="layoutDirection">
+              <enum>Qt::RightToLeft</enum>
+             </property>
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>实时指数点差图</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="historyBuySaleChart">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>130</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>历史买卖点差图</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="realTimeBuySaleChart">
+             <property name="maximumSize">
+              <size>
+               <width>130</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>实时买卖点差图</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="programInfo_Label">
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>16</height>
+           <height>25</height>
           </size>
          </property>
          <property name="text">
-          <string>策略组合信息：</string>
+          <string>------------ 程序运行信息 ------------</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="chooseStrategyDir_Button">
-         <property name="text">
-          <string>选择策略组合文件夹</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="strategy_label_2">
-         <property name="minimumSize">
+        <widget class="QTableView" name="programInfo_tableView">
+         <property name="maximumSize">
           <size>
-           <width>0</width>
-           <height>16</height>
+           <width>16777215</width>
+           <height>200</height>
           </size>
-         </property>
-         <property name="text">
-          <string>买卖组合信息：</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="choosePortfolioDir_Button">
-         <property name="text">
-          <string>选择买卖组合文件夹</string>
          </property>
         </widget>
        </item>
       </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QTableView" name="strategy_table"/>
-       </item>
-       <item>
-        <widget class="QTableView" name="buySalePortfolio_table"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <item>
-        <widget class="QPushButton" name="historyHedgeIndexChart">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>130</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>历史指数点差图</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="realTimeHedgeIndexChart">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>4</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>130</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="layoutDirection">
-          <enum>Qt::RightToLeft</enum>
-         </property>
-         <property name="autoFillBackground">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>实时指数点差图</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="historyBuySaleChart">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>130</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>历史买卖点差图</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="realTimeBuySaleChart">
-         <property name="maximumSize">
-          <size>
-           <width>130</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>实时买卖点差图</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </item>
-   <item row="1" column="0" colspan="2">
-    <layout class="QVBoxLayout" name="programInfo_verticalLayout">
-     <property name="topMargin">
-      <number>20</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="programInfo_Label">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>25</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>------------ 程序运行信息 ------------</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QTableView" name="programInfo_tableView"/>
      </item>
     </layout>
    </item>

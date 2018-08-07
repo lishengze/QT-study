@@ -1,7 +1,7 @@
 ﻿#ifndef INDEXCHART_H
 #define INDEXCHART_H
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QLineSeries>
 #include <QChart>
 #include <QCategoryAxis>
@@ -42,9 +42,9 @@ public:
     ~IndexChart();
     void initCommonData();
 
-    virtual void initLayout();
-    virtual void initTheme();
-    virtual void initChartView();
+    void initLayout();
+    void initTheme();
+    void initChartView();
 
     void setRealtimeFlag();
     void setDataFrequency();
@@ -63,19 +63,18 @@ public:
     void computeNewValue(QStringList selectData, QStringList hedgedData);
 
     QCategoryAxis* getTimeAxisX (QList<QString> timeList, int tickCount);
-
+    void updateAxis();
+    void updateSeries();
     QList<QString> getExtendedFutureTime(QList<QString> oriTime,
                                          int chartXaxisTickCount,
                                          int updateTime);
-    virtual void updateAxis();
-    virtual void updateSeries();
-    virtual void updateMousePos();
-    virtual void setPropertyValue(int index);
-    virtual void mouseMoveEvenFunc(QObject *watched, QEvent *event);
-    virtual void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
-    virtual void KeyReleaseFunc(QEvent *event);
-    virtual void moveMouse(int step);
-    virtual double getPointXDistance();
+
+    void setPropertyValue(int index);
+    void mouseMoveEvenFunc(QObject *watched, QEvent *event);
+    void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
+    void KeyReleaseFunc(QEvent *event);
+    void moveMouse(int step);
+    double getPointXDistance();
 
 public slots:
     void sendLatestHistIndexData_slot(QString, double, double, QList<int>);
@@ -88,7 +87,8 @@ public slots:
     void tradeOver_slot();
 
 protected:
-    virtual void closeEvent(QCloseEvent *event);
+    bool eventFilter (QObject *watched, QEvent *event);
+    void closeEvent(QCloseEvent *event);
 
 signals:
      void getIndexHistData_signal();
