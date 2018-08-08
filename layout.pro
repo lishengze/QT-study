@@ -29,21 +29,34 @@ SOURCES += main.cpp\
     extractweightdata.cpp \
     extractindustrydata.cpp \
     choosesecodewindow.cpp \
-    ../public-function/excel_func.cpp \
-    ../public-function/time_func.cpp \
-    ../public-function/widget_func.cpp \
-    ../public-class/database.cpp \
-    ../public-class/realtimedatabase.cpp \
-    ../public-function/secode_func.cpp \
-    wind_func.cpp \
-    ../public-function/compute_func.cpp \
-    ../public-function/io_func.cpp \
-    ../public-function/process_data_func.cpp \
-    ../public-function/terminal_func.cpp \
-    ../public-class/macd.cpp \
-    ../public-function/id_func.cpp \
     treeitem.cpp \
-    treemodel.cpp
+    treemodel.cpp\
+    wind_func.cpp \
+    ../public-files/public-class/database.cpp \
+    ../public-files/public-class/macd.cpp \
+    ../public-files/public-class/realtimedatabase.cpp \
+    ../public-files/public-function/compute_func.cpp \
+    ../public-files/public-function/excel_func.cpp \
+    ../public-files/public-function/id_func.cpp \
+    ../public-files/public-function/io_func.cpp \
+    ../public-files/public-function/process_data_func.cpp \
+    ../public-files/public-function/secode_func.cpp \
+    ../public-files/public-function/terminal_func.cpp \
+    ../public-files/public-function/time_func.cpp \
+    ../public-files/public-function/widget_func.cpp
+#    ../public-function/excel_func.cpp \
+#    ../public-function/time_func.cpp \
+#    ../public-function/widget_func.cpp \
+#    ../public-class/database.cpp \
+#    ../public-class/realtimedatabase.cpp \
+#    ../public-function/secode_func.cpp \
+#    ../public-function/compute_func.cpp \
+#    ../public-function/io_func.cpp \
+#    ../public-function/process_data_func.cpp \
+#    ../public-function/terminal_func.cpp \
+#    ../public-class/macd.cpp \
+#    ../public-function/id_func.cpp \
+
 
 HEADERS  += updaterealtimedataform.h \
     realtimedataread.h \
@@ -59,21 +72,34 @@ HEADERS  += updaterealtimedataform.h \
     extractweightdata.h \
     extractindustrydata.h \
     choosesecodewindow.h \
-    ../public-function/excel_func.h \
-    ../public-function/time_func.h \
-    ../public-function/widget_func.h \
-    ../public-class/database.h \
-    ../public-class/realtimedatabase.h \
-    ../public-function/secode_func.h \
     wind_func.h \
-    ../public-function/compute_func.h \
-    ../public-function/io_func.h \
-    ../public-function/process_data_func.h \
-    ../public-function/terminal_func.h \
-    ../public-class/macd.h \
-    ../public-function/id_func.h \
     treeitem.h \
-    treemodel.h
+    treemodel.h \
+    ../public-files/public-class/database.h \
+    ../public-files/public-class/macd.h \
+    ../public-files/public-class/realtimedatabase.h \
+    ../public-files/public-function/compute_func.h \
+    ../public-files/public-function/excel_func.h \
+    ../public-files/public-function/id_func.h \
+    ../public-files/public-function/io_func.h \
+    ../public-files/public-function/process_data_func.h \
+    ../public-files/public-function/secode_func.h \
+    ../public-files/public-function/terminal_func.h \
+    ../public-files/public-function/time_func.h \
+    ../public-files/public-function/widget_func.h
+#    ../public-function/excel_func.h \
+#    ../public-function/time_func.h \
+#    ../public-function/widget_func.h \
+#    ../public-class/database.h \
+#    ../public-class/realtimedatabase.h \
+#    ../public-function/secode_func.h \
+#    ../public-function/compute_func.h \
+#    ../public-function/io_func.h \
+#    ../public-function/process_data_func.h \
+#    ../public-function/terminal_func.h \
+#    ../public-class/macd.h \
+#    ../public-function/id_func.h \
+
 
 
 
