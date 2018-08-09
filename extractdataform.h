@@ -100,6 +100,12 @@ private slots:
 
     void on_chooseSecodeListFromTable_pushButton_clicked();
 
+    void on_chooseSecodeList_pushButton_clicked();
+
+    void on_importSecodeList_pushButton_clicked();
+
+    void on_startExtractFundament_pushButton_clicked();
+
 private:
     Ui::ExtractDataForm *       ui;
 
@@ -134,7 +140,7 @@ private:
 
     bool                        m_setIndustryCombox;
 
-    ChooseSecodeWindow*         m_chooseSecodeWindow;
+    QList<ChooseSecodeWindow*>  m_chooseSecodeWindowList;
 };
 
 #endif // EXTRACTDATAFORM_H

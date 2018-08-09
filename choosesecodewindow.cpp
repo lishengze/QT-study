@@ -15,8 +15,8 @@ ChooseSecodeWindow::ChooseSecodeWindow(QWidget *parent) :
     ui->setupUi(this);
 }
 
-ChooseSecodeWindow::ChooseSecodeWindow(QString dbhost, QWidget *parent) :
-    m_dbhost(dbhost), QMainWindow(parent),
+ChooseSecodeWindow::ChooseSecodeWindow(QString dbhost, bool bShowIndex, QWidget *parent) :
+    m_dbhost(dbhost), m_bShowIndex(bShowIndex), QMainWindow(parent),
     ui(new Ui::ChooseSecodeWindow)
 {
     ui->setupUi(this);
@@ -29,6 +29,7 @@ ChooseSecodeWindow::ChooseSecodeWindow(QString dbhost, QWidget *parent) :
 
 ChooseSecodeWindow::~ChooseSecodeWindow()
 {
+    qDebug() << "~ChooseSecodeWindow()";
     delete ui;
 }
 
@@ -61,7 +62,9 @@ void ChooseSecodeWindow::initTreeView() {
              << "    创业板"  << "    中小企业板" << "    中小企业板(含ST)"
              << "    沪深300" << "    中证100"  << "    中证200" << "    中证500"
              << "    中证800" << "    中证1000" << "    上证50";
-    treeData << "指数" << "    沪深指数" << "    中证指数" << "    上证指数";
+    if (m_bShowIndex) {
+        treeData << "指数" << "    沪深指数" << "    中证指数" << "    上证指数";
+    }
     QList<QVariant> rootData;
     rootData.append("分类");
 
@@ -109,9 +112,11 @@ QStringList ChooseSecodeWindow::getCandidateData(QString info) {
         }
     }
 
-
     if (info == "沪深指数") {
-        result << "SH000300 [沪深300]";
+        result << "SH000300 [沪深300]" << "SH000908 [沪深300能源]" << "SH000909 [沪深300材料]"
+               << "SH000910 [沪深300工业]" << "SH000911 [沪深300可选]" << "SH000912 [沪深300消费]"
+               << "SH000913 [沪深300医药]" << "SH000913 [沪深300医药]" << "SH000915 [沪深300信息]"
+               << "SH000917 [沪深300公用]" << "SH000951 [300银行]" << "SH000952 [300地产]" << "SH000849 [300非银]";
     }
 
     if (info == "中证指数") {

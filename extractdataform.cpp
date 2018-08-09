@@ -51,9 +51,11 @@ ExtractDataForm::~ExtractDataForm()
         }
     }
 
-    if (NULL != m_chooseSecodeWindow) {
-        delete m_chooseSecodeWindow;
-        m_chooseSecodeWindow = NULL;
+    for (int i = 0; i < m_chooseSecodeWindowList.size(); ++i) {
+        if (NULL != m_chooseSecodeWindowList[i]) {
+            delete m_chooseSecodeWindowList[i];
+            m_chooseSecodeWindowList[i] = NULL;
+        }
     }
 }
 
@@ -62,7 +64,6 @@ void ExtractDataForm::initCommonData() {
     m_extractTimes = 0;
     m_keyValueList.clear();
     m_extractThreadCount = 16;
-    m_chooseSecodeWindow = NULL;
 
     initDataTypeMap();
     initKeyValueMap();
@@ -98,18 +99,22 @@ void ExtractDataForm::initFileDir() {
             m_desFileDir = xlsx.cellAt(2, 1)->value().toString();
         }
     }
-    qDebug() << "m_oriFileDir: " << m_oriFileDir;
-    qDebug() << "m_desFileDir: " << m_desFileDir;
+//    qDebug() << "m_oriFileDir: " << m_oriFileDir;
+//    qDebug() << "m_desFileDir: " << m_desFileDir;
 }
 
 void ExtractDataForm::initDataTypeMap() {
-    m_dataTypeMap.insert(QString("天"), "MarketData_day");
+
 //    m_dataTypeMap.insert(QString("1分"), "MarketData_1m");
 //    m_dataTypeMap.insert(QString("5分"), "MarketData_5m");
     m_dataTypeMap.insert(QString("10分"), "MarketData_10m");
     m_dataTypeMap.insert(QString("15分"), "MarketData_15m");
     m_dataTypeMap.insert(QString("30分"), "MarketData_30m");
     m_dataTypeMap.insert(QString("60分"), "MarketData_60m");
+    m_dataTypeMap.insert(QString("120分"), "MarketData_120m");
+    m_dataTypeMap.insert(QString("天"), "MarketData_day");
+    m_dataTypeMap.insert(QString("周"), "MarketData_week");
+    m_dataTypeMap.insert(QString("月"), "MarketData_month");
 }
 
 void ExtractDataForm::initKeyValueMap() {
@@ -487,7 +492,7 @@ QStringList ExtractDataForm::checkMarketSecodeList(QStringList oriSecodeList, QS
         }
     }
 
-    printList(errorCodeList, "errorCodeList");
+//    printList(errorCodeList, "errorCodeList");
 
     if (errorCodeList.size() > 0) {
         QString info = QString("存在错误股票代码: \n%1,\n是否放弃当前源股票代码信息文件, 否则忽略错误股票代码")
@@ -614,7 +619,7 @@ QStringList ExtractDataForm::getCurrIndustryList() {
         }
     }
     result.removeAll(QString("全选"));
-    qDebug() << "result: " << result;
+//    qDebug() << "result: " << result;
     return result;
 }
 
@@ -682,7 +687,7 @@ void ExtractDataForm::on_oriFile_tableView_clicked(const QModelIndex &index)
     QFile tmpFile(cmpFileName);
     if (tmpFile.exists()) {
         m_currOriFile = cmpFileName;
-        qDebug() << "m_currOriFile: " << m_currOriFile;
+//        qDebug() << "m_currOriFile: " << m_currOriFile;
         m_marketSecodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
     } else {
         QMessageBox::critical(NULL, "Error", QString("当前文件不存在,请刷新当前表格"));
@@ -727,7 +732,7 @@ void ExtractDataForm::stateChanged(int state) {
         {
             QString strText = pCheckBox->text();
             strSelectedData.append(strText).append(";");
-            qDebug() << "strText: " << strText;
+//            qDebug() << "strText: " << strText;
         }
     }
     state;
@@ -776,14 +781,41 @@ void ExtractDataForm::on_chooseSecodeListFromExcel_pushButton_clicked()
 
 void ExtractDataForm::on_chooseSecodeListFromTable_pushButton_clicked()
 {
-//    m_chooseSecodeWindow = new ChooseSecodeWindow();
     QString dbhost = ui->chooseDataSource_comboBox->currentText();
-    m_chooseSecodeWindow = new ChooseSecodeWindow(dbhost);
-    connect(m_chooseSecodeWindow, SIGNAL(get_secodeList_signal(QStringList)),
+    ChooseSecodeWindow* chooseSecodeWindow = new ChooseSecodeWindow(dbhost);
+    connect(chooseSecodeWindow, SIGNAL(get_secodeList_signal(QStringList)),
             this, SLOT(get_secodeList_slot(QStringList)));
-    m_chooseSecodeWindow->show();
+    chooseSecodeWindow->show();
+    m_chooseSecodeWindowList.append(chooseSecodeWindow);
 }
 
 void ExtractDataForm::get_secodeList_slot(QStringList marketSecodeList) {
     m_marketSecodeList = marketSecodeList;
+}
+
+void ExtractDataForm::on_chooseSecodeList_pushButton_clicked()
+{
+    QString dbhost = ui->chooseDataSource_comboBox->currentText();
+    ChooseSecodeWindow* chooseSecodeWindow = new ChooseSecodeWindow(dbhost,false);
+    connect(chooseSecodeWindow, SIGNAL(get_secodeList_signal(QStringList)),
+            this, SLOT(get_secodeList_slot(QStringList)));
+    chooseSecodeWindow->show();
+    m_chooseSecodeWindowList.append(chooseSecodeWindow);
+}
+
+void ExtractDataForm::on_importSecodeList_pushButton_clicked()
+{
+    QString file_name = QFileDialog::getOpenFileName(NULL, QString("选择导入的EXCEL, 文档第一列为股票代码"),
+                                                          ".", QString("Excel Files(*.xlsx)"));
+    qDebug() << "file_name: " <<file_name;
+    if (file_name != "") {
+        m_currOriFile = file_name;
+        updateProgramInfo(ui->programInfo_Table, QString("选择了股票代码列表文件: %1").arg(m_currOriFile));
+        m_marketSecodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
+    }
+}
+
+void ExtractDataForm::on_startExtractFundament_pushButton_clicked()
+{
+
 }

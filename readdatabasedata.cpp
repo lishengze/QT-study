@@ -63,11 +63,13 @@ void ReadDatabaseData::startReadMarketData_slot() {
     for (QString secode : m_secodeList) {
         QList<QStringList> ori_result = m_database->getDataByDate(m_startDate, m_endDate, m_keyValueList,
                                                                   completeSecode(secode), m_dataType);
+        qDebug() << "Ori "<< secode << ori_result.size() << ", m_indexTimeList.size: " << m_indexTimeList.size();
         if (ori_result.size() > 0) {
             completeExcelData(ori_result, m_indexTimeList);
         } else {
             qDebug() << QString("%1 datanumb is 0").arg(secode);
         }
+        qDebug() << "Com "<< secode << ori_result.size() << ", m_indexTimeList.size: " << m_indexTimeList.size();
 
         QStringList title;
         title << secode;
@@ -76,7 +78,7 @@ void ReadDatabaseData::startReadMarketData_slot() {
         emit readOneMarketDataComplete_signal();
     }
     emit readMarketDataComplete_signal(sumResult);
-    qDebug() << QThread::currentThreadId() << "Done!";
+//    qDebug() << QThread::currentThreadId() << "Done!";
 }
 
 void ReadDatabaseData::startReadWeightData_slot() {

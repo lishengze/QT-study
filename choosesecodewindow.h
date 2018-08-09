@@ -16,7 +16,7 @@ class ChooseSecodeWindow : public QMainWindow
 
 public:
     explicit ChooseSecodeWindow(QWidget *parent = 0);
-     ChooseSecodeWindow(QString dbhost, QWidget *parent = 0);
+     ChooseSecodeWindow(QString dbhost, bool bShowIndex=true, QWidget *parent = 0);
     ~ChooseSecodeWindow();
 
     void initMarketInfoMap();
@@ -57,6 +57,7 @@ private:
     QString                m_databaseName;
     Database*              m_database;
     TreeModel*             m_treeModel;
+    bool                   m_bShowIndex;
 
 };
 

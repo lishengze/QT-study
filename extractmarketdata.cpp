@@ -195,8 +195,8 @@ void ExtractMarketData::readOneMarketDataComplete_slot() {
 void ExtractMarketData::readMarketDataComplete_slot(QList<QList<QStringList>> threadResult) {
     QMutexLocker locker(&m_oneThreadCompleteMutex);
     m_sumResult += threadResult;
-    qDebug() << QString("m_sumResult.size: %1, threadResult.size: %2")
-                .arg(m_sumResult.size()).arg(threadResult.size());
+//    qDebug() << QString("m_sumResult.size: %1, threadResult.size: %2")
+//                .arg(m_sumResult.size()).arg(threadResult.size());
     threadResult.clear();
     if (m_sumResult.size() == m_secodeList.size()) {
         m_workProgressDialog->disableStopButton();
