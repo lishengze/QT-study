@@ -239,6 +239,17 @@ int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_
         }
     }
 
+    // 补充停牌的数据
+    for (int i = 0; i < index_time_list.size(); ++i) {
+        if (ori_result[i][0] != index_time_list[i][0] || ori_result[i][1] != index_time_list[i][1]) {
+            QStringList delist_data;
+            delist_data.append(index_time_list[i][0]);
+            delist_data.append(index_time_list[i][1]);
+            delist_data.append(QString("%1").arg(ori_result[i-1][2]));
+            ori_result.insert(i, delist_data);
+        }
+    }
+
     // 可能多余的数据
     for (int i = 0; i < ori_result.size(); ++i) {
         QStringList tmp_data;

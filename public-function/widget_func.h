@@ -3,6 +3,7 @@
 #include <QTableView>
 #include <QStandardItemModel>
 #include <QFileInfo>
+#include <QListWidget>
 
 QMap <int, int> getSelectRows(QTableView* tableView);
 
@@ -16,4 +17,5 @@ QStandardItemModel* getStandardItemModel(QList<QString> valueList);
 
 QStandardItemModel* getStandardItemModel(QList<QFileInfo> valueList);
 
+QStringList getComboBoxKeyList(QListWidget* currWidget);
 #endif // WIDGET_FUNC_H

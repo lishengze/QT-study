@@ -148,19 +148,19 @@ QList<QStringList> Database::getAllRealtimeData(QString tableName, QStringList k
     return result;
 }
 
-QList<QStringList> Database::getDataByDate(QString startDate, QString endDate, QStringList keyValue,
+QList<QStringList> Database::getDataByDate(QString startDate, QString endDate, QStringList keyValueList,
                                        QString tableName, QString databaseName) {
     QList<QStringList> result;
     if(m_db.open ()) {
         QSqlQuery queryObj(m_db);
         QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
-        QString keyValueStr = keyValue.join(",");
+        QString keyValueStr = keyValueList.join(",");
         QString sqlstr = QString("select %1 from %2 where TDATE >= %3 and TDATE <= %4 order by TDATE, TIME")
                         .arg(keyValueStr).arg(completeTableName).arg(startDate).arg(endDate);
         queryObj.exec(sqlstr);
          while(queryObj.next ()) {
              QStringList tmpResult;
-             for (int i = 0; i < keyValue.size(); ++i) {
+             for (int i = 0; i < keyValueList.size(); ++i) {
                  tmpResult.append(queryObj.value (i).toString());
              }
             result.append(tmpResult);

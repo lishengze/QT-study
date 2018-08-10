@@ -6,6 +6,7 @@
 #include <QModelIndex>
 #include <QStandardItemModel>
 #include <QScrollBar>
+#include <QCheckBox>
 
 QMap <int, int> getSelectRows(QTableView* tableView)
 {
@@ -71,4 +72,20 @@ QStandardItemModel* getStandardItemModel(QList<QFileInfo> fileInfoList) {
         standardItemModel->setItem(i, 0, new QStandardItem(fileInfoList[i].fileName()));
     }
     return standardItemModel;
+}
+
+QStringList getComboBoxKeyList(QListWidget* currWidget) {
+    QStringList result;
+    for (int i = 0; i < currWidget->count(); ++i)
+    {
+        QListWidgetItem *pItem = currWidget->item(i);
+        QWidget *pWidget = currWidget->itemWidget(pItem);
+        QCheckBox *pCheckBox = (QCheckBox *)pWidget;
+        if (pCheckBox->isChecked())
+        {
+            QString strText = pCheckBox->text();
+            result.append(strText);
+        }
+    }
+    return result;
 }
