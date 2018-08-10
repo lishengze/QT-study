@@ -13,12 +13,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = layout
 TEMPLATE = app
 
-#INCLUDEPATH +=D:\client\public-function
-#INCLUDEPATH +=D:\client\public-class
-
-
-INCLUDEPATH +=../public-function
-INCLUDEPATH +=../public-class
+INCLUDEPATH += ../public-files/public-function
+INCLUDEPATH += ../public-files/public-class
 
 SOURCES  += main.cpp\
             widget.cpp \
@@ -34,22 +30,9 @@ SOURCES  += main.cpp\
             historydata.cpp \
             announcementform.cpp \
             generateportfolioform.cpp \
-    futurechart.cpp \
-    extractdatawindow.cpp \
-    indexchart.cpp \
-#    ../public-function/excel_func.cpp \
-#    ../public-function/time_func.cpp \
-#    ../public-function/widget_func.cpp \
-#    ../public-function/secode_func.cpp \
-#    ../public-class/database.cpp \
-#    ../public-class/realtimedatabase.cpp \
-#    ../public-function/compute_func.cpp \
-#    ../public-function/process_data_func.cpp \
-#    ../public-function/io_func.cpp \
-#    ../public-function/terminal_func.cpp \
-#    ../public-class/macd.cpp \
-#    ../public-function/id_func.cpp \
-#    ../public-class/basechart.cpp \
+            futurechart.cpp \
+            extractdatawindow.cpp \
+            indexchart.cpp \
     ../public-files/public-class/basechart.cpp \
     ../public-files/public-class/database.cpp \
     ../public-files/public-class/macd.cpp \
@@ -64,7 +47,6 @@ SOURCES  += main.cpp\
     ../public-files/public-function/time_func.cpp \
     ../public-files/public-function/widget_func.cpp
 
-
 HEADERS  += widget.h \
             toolfunc.h \
             test.h \
@@ -78,22 +60,9 @@ HEADERS  += widget.h \
             historydata.h \
             announcementform.h \
             generateportfolioform.h \
-    futurechart.h \
-    extractdatawindow.h \
-    indexchart.h \
-#    ../public-function/excel_func.h \
-#    ../public-function/time_func.h \
-#    ../public-function/widget_func.h \
-#    ../public-function/secode_func.h \
-#    ../public-class/database.h \
-#    ../public-class/realtimedatabase.h \
-#    ../public-function/compute_func.h \
-#    ../public-function/process_data_func.h \
-#    ../public-function/io_func.h \
-#    ../public-function/terminal_func.h \
-#    ../public-class/macd.h \
-#    ../public-function/id_func.h \
-#    ../public-class/basechart.h \
+            futurechart.h \
+            extractdatawindow.h \
+            indexchart.h \
     ../public-files/public-class/basechart.h \
     ../public-files/public-class/database.h \
     ../public-files/public-class/macd.h \
@@ -107,7 +76,6 @@ HEADERS  += widget.h \
     ../public-files/public-function/terminal_func.h \
     ../public-files/public-function/time_func.h \
     ../public-files/public-function/widget_func.h
-
 
 FORMS    += widget.ui \
     chartform.ui \
