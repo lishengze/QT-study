@@ -12,8 +12,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = layout
 TEMPLATE = app
-INCLUDEPATH +=../public-function
-INCLUDEPATH +=../public-class
+
+INCLUDEPATH += ../public-files/public-function
+INCLUDEPATH += ../public-files/public-class
 
 SOURCES += main.cpp\
     updaterealtimedataform.cpp \
@@ -30,7 +31,7 @@ SOURCES += main.cpp\
     extractindustrydata.cpp \
     choosesecodewindow.cpp \
     treeitem.cpp \
-    treemodel.cpp\
+    treemodel.cpp \
     wind_func.cpp \
     ../public-files/public-class/database.cpp \
     ../public-files/public-class/macd.cpp \
@@ -99,9 +100,6 @@ HEADERS  += updaterealtimedataform.h \
 #    ../public-function/terminal_func.h \
 #    ../public-class/macd.h \
 #    ../public-function/id_func.h \
-
-
-
 
 FORMS    += updaterealtimedataform.ui \
     extractdataform.ui \

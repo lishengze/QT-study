@@ -13,7 +13,7 @@ class ExtractMarketData:public QObject
 {
     Q_OBJECT
 public:
-    ExtractMarketData(QString dbhost, int dbConnectID, QString dataType,
+    ExtractMarketData(QString dbhost, QString dataType,
                       QString startDate, QString endDate,
                       QStringList secodeList, QString desDirName,
                       QStringList keyValueList, int threadCount,
@@ -53,7 +53,6 @@ public slots:
 private:
     int                         m_extractID;
     QString                     m_dbhost;
-    int                         m_dbConnectID;
     QString                     m_dataType;
     QString                     m_oriFileName;
     QString                     m_desFileName;

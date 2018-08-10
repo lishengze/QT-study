@@ -8,12 +8,12 @@
 #include <QDebug>
 #pragma execution_character_set("utf-8")
 
-ExtractMarketData::ExtractMarketData(QString dbhost, int dbConnectID, QString dataType,
+ExtractMarketData::ExtractMarketData(QString dbhost, QString dataType,
                                      QString startDate, QString endDate,
                                      QStringList secodeList, QString desDirName,
                                      QStringList keyValueList, int threadCount,
                                      QObject *parent):
-    m_dbhost(dbhost), m_dbConnectID(dbConnectID), m_dataType(dataType),
+    m_dbhost(dbhost),m_dataType(dataType),
     m_startDate(startDate), m_endDate(endDate),
     m_secodeList(secodeList), m_desDirName(desDirName),
     m_keyValueList(keyValueList), m_readThreadCount(threadCount),
@@ -80,6 +80,15 @@ void ExtractMarketData::initKeyValueMap() {
     m_keyValueMap.insert("VOTRUNOVER", QString("成交额"));
     m_keyValueMap.insert("YCLOSE", QString("昨收"));
     m_keyValueMap.insert("TURNOVER", QString("换手率"));
+
+    m_keyValueMap.insert("TOPEN", QString("开盘价"));
+    m_keyValueMap.insert("TCLOSE", QString("收盘价"));
+    m_keyValueMap.insert("HIGH", QString("最高价"));
+    m_keyValueMap.insert("LOW", QString("最低价"));
+    m_keyValueMap.insert("VATRUNOVER", QString("成交量"));
+    m_keyValueMap.insert("VOTRUNOVER", QString("成交额"));
+    m_keyValueMap.insert("YCLOSE", QString("昨收"));
+    m_keyValueMap.insert("TURNOVER", QString("换手率"));
 }
 
 void ExtractMarketData::initWorkProgressDialog() {
@@ -91,7 +100,7 @@ void ExtractMarketData::initWorkProgressDialog() {
 }
 
 void ExtractMarketData::initDatabase() {
-    m_database = new Database(QString("%1").arg(m_dbConnectID), m_dbhost);
+    m_database = new Database("1", m_dbhost);
 }
 
 void ExtractMarketData::initSecodeMap() {
@@ -140,9 +149,7 @@ void ExtractMarketData::createReadThreads() {
     for (int i = 0; i < m_readThreadData.size(); ++i) {
         QStringList currThreadData = m_readThreadData[i];
         QThread* currThread = new QThread();
-        int dbConnectID = m_dbConnectID + 10 + i;
-        ReadDatabaseData* currReadDatabaseData = new ReadDatabaseData(m_dbhost, dbConnectID,
-                                                                      m_dataType, m_startDate, m_endDate,
+        ReadDatabaseData* currReadDatabaseData = new ReadDatabaseData(m_dbhost, 1, m_dataType, m_startDate, m_endDate,
                                                                       currThreadData, m_indexTimeList, m_keyValueList);
         currReadDatabaseData->moveToThread(currThread);
 
@@ -230,6 +237,7 @@ void ExtractMarketData::stopWork_slot() {
 void ExtractMarketData::storeData() {
     QMap<QString, QList<QStringList>> excelData;
     for (QString keyValue:m_keyValueList) {
+        if (keyValue == "ROE") continue;
         QList<QStringList> emptyData;
         emptyData.append(m_indexTimeStrList);
         for(int i = 0; i < m_secodeList.size()+1; ++i) {
@@ -245,11 +253,20 @@ void ExtractMarketData::storeData() {
         QString currSecode = currSecodeData[0][0];
         currSecodeData.pop_front();
 
+        if (m_keyValueList.indexOf("ROE") >= 0) {
+            QList<QString> singleResult = currSecodeData.last();
+            currSecodeData.pop_back();
+            singleResult.insert(0, currSecode);
+            excelData[currKey][secodePos-1] = singleResult;
+        }
+
         for (int j = 0; j < m_keyValueList.size(); ++j) {
+            QString currKey = m_keyValueList[j];
+            if (currKey == "ROE") continue;
+            int secodePos = m_secodeMap[currSecode];
             QList<QString> singleResult = getSingleColData(currSecodeData, j);
             singleResult.insert(0, currSecode);
-    //            excelData[m_keyValueList[j]].append(singleResult);
-            excelData[m_keyValueList[j]][m_secodeMap[currSecode]] = singleResult;
+            excelData[currKey][secodePos] = singleResult;
         }
     }
     m_sumResult.clear();

@@ -57,12 +57,31 @@ void ReadDatabaseData::releaseDatabase() {
     }
 }
 
+
+
 void ReadDatabaseData::startReadMarketData_slot() {
     qDebug() << "receive startReadMarketData_signal" << QThread::currentThreadId();
     QList<QList<QStringList>> sumResult;
     for (QString secode : m_secodeList) {
+        if (m_dataType.indexOf("FundamentData") >= 0 && !(m_keyValueList.size() == 1 && m_keyValueList[0] == "ROE")) {
+            m_keyValueList.insert(0, "TDATE");
+        }
+        QStringList ROEResult;
+        if (m_keyValueList.indexOf("ROE") >= 0) {
+            m_keyValueList.removeAll("ROE");
+            QStringList roeKeyValueList;
+            roeKeyValueList << "TDATE" << "ROE";
+            QString databaseName = "ROEData";
+            QList<QStringList> tmpROEResult = m_database->getDataByDate(m_startDate, m_endDate, roeKeyValueList,
+                                                              completeSecode(secode), databaseName);
+
+            for (int i = 0; i < tmpROEResult.size(); ++i) {
+                ROEResult.append(QString("%1 %2").arg(tmpROEResult[i][0]).arg(tmpROEResult[i][1]));
+            }
+        }
         QList<QStringList> ori_result = m_database->getDataByDate(m_startDate, m_endDate, m_keyValueList,
                                                                   completeSecode(secode), m_dataType);
+
         qDebug() << "Ori "<< secode << ori_result.size() << ", m_indexTimeList.size: " << m_indexTimeList.size();
         if (ori_result.size() > 0) {
             completeExcelData(ori_result, m_indexTimeList);
@@ -74,6 +93,9 @@ void ReadDatabaseData::startReadMarketData_slot() {
         QStringList title;
         title << secode;
         ori_result.insert(0, title);
+        if (ROEResult.size() > 0) {
+            ori_result.append(ROEResult);
+        }
         sumResult.append(ori_result);
         emit readOneMarketDataComplete_signal();
     }

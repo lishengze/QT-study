@@ -68,6 +68,7 @@ void ExtractDataForm::initCommonData() {
     initDataTypeMap();
     initKeyValueMap();
     initIndexCodeMap();
+    initFundamentKeyMap();
     initIndustryList();
 
     initFileDir();
@@ -138,6 +139,17 @@ void ExtractDataForm::initIndexCodeMap() {
     m_indexCodeMap.insert(QString("中证100"), "SZ399903");
 }
 
+void ExtractDataForm::initFundamentKeyMap() {
+    m_FundamentKeyMap.insert(QString("市盈增长率"), "PEG");
+    m_FundamentKeyMap.insert(QString("市盈率"), "PE");
+    m_FundamentKeyMap.insert(QString("市净率"), "PB");
+    m_FundamentKeyMap.insert(QString("市销率"), "PS");
+    m_FundamentKeyMap.insert(QString("每股现金流量净额"), "CFP");
+    m_FundamentKeyMap.insert(QString("每股收益"), "EPS");
+    m_FundamentKeyMap.insert(QString("总市值"), "MV");
+    m_FundamentKeyMap.insert(QString("单季度.净资产收益率"), "ROE");
+}
+
 void ExtractDataForm::initIndustryList() {
     m_industryList.append(QString("中证一级行业"));
     m_industryList.append(QString("中证二级行业"));
@@ -160,6 +172,7 @@ void ExtractDataForm::initWidget() {
     initMarketKeyComboBox();
     initIndexCodeComboBox();
     initIndustryComboBox();
+    initFundamentKeyComboBox();
 
     initTableContextMenu();
     initProgramTable();
@@ -195,14 +208,11 @@ void ExtractDataForm::initMarketKeyComboBox() {
     for (QMap<QString, QString>::iterator it = m_keyValueMap.begin();
          it != m_keyValueMap.end(); ++it) {
         QListWidgetItem *pItem = new QListWidgetItem(m_marketKeyListWidget);
-//        m_marketKeyListWidget->addItem(pItem);
         pItem->setData(Qt::UserRole, it.key());
         QCheckBox *pCheckBox = new QCheckBox(this);
         pCheckBox->setText(it.key());
         m_marketKeyListWidget->addItem(pItem);
         m_marketKeyListWidget->setItemWidget(pItem, pCheckBox);
-        connect(pCheckBox, SIGNAL(stateChanged(int)),
-                this,     SLOT(stateChanged(int)));
     }
     ui->keyValue_comboBox->setModel(m_marketKeyListWidget->model());
     ui->keyValue_comboBox->setView(m_marketKeyListWidget);
@@ -235,11 +245,24 @@ void ExtractDataForm::initIndustryComboBox() {
         pCheckBox->setText(industryCode);
         m_industryListWidget->addItem(pItem);
         m_industryListWidget->setItemWidget(pItem, pCheckBox);
-        connect(pCheckBox, SIGNAL(stateChanged(int)),
-                this,     SLOT(industryComboxStateChange(int)));
     }
     ui->industry_comboBox->setModel(m_industryListWidget->model());
     ui->industry_comboBox->setView(m_industryListWidget);
+}
+
+void ExtractDataForm::initFundamentKeyComboBox() {
+    m_fundamentKeyWidget = new QListWidget(this);
+    for (QMap<QString, QString>::iterator it = m_FundamentKeyMap.begin();
+         it != m_FundamentKeyMap.end(); ++it) {
+        QListWidgetItem *pItem = new QListWidgetItem(m_fundamentKeyWidget);
+        pItem->setData(Qt::UserRole, it.key());
+        QCheckBox *pCheckBox = new QCheckBox(this);
+        pCheckBox->setText(it.key());
+        m_fundamentKeyWidget->addItem(pItem);
+        m_fundamentKeyWidget->setItemWidget(pItem, pCheckBox);
+    }
+    ui->fundamentValue_comboBox->setModel(m_fundamentKeyWidget->model());
+    ui->fundamentValue_comboBox->setView(m_fundamentKeyWidget);
 }
 
 void ExtractDataForm::initDataSourceCombox() {
@@ -464,23 +487,40 @@ void ExtractDataForm::basicTest() {
 
 QStringList ExtractDataForm::getCurrKeyValueList() {
     QStringList result;
-    m_keyValueList.clear();
-    for (int i = 0; i < m_marketKeyListWidget->count(); ++i)
-    {
-        QListWidgetItem *pItem = m_marketKeyListWidget->item(i);
-        QWidget *pWidget = m_marketKeyListWidget->itemWidget(pItem);
-        QCheckBox *pCheckBox = (QCheckBox *)pWidget;
-        if (pCheckBox->isChecked())
-        {
-            QString strText = pCheckBox->text();
-            result.append(m_keyValueMap[strText]);
-            m_keyValueList.append(strText);
-        }
+    m_keyValueList = getComboBoxKeyList(m_marketKeyListWidget);
+    for (QString key:m_keyValueList) {
+        result.append(m_keyValueMap[key]);
     }
     return result;
 }
 
-QStringList ExtractDataForm::checkMarketSecodeList(QStringList oriSecodeList, QString dbhost, QString dbName) {
+QStringList ExtractDataForm::getCurrIndexCodeList() {
+    QStringList result;
+    m_indexCodeList = getComboBoxKeyList(m_weightIndexListWidget);
+    for (QString key:m_indexCodeList) {
+        result.append(m_indexCodeMap[key]);
+    }
+    return result;
+}
+
+QStringList ExtractDataForm::getCurrIndustryList() {
+    QStringList result = getComboBoxKeyList(m_industryListWidget);
+    if (result.indexOf(QString("全选")) >= 0) {
+        result = m_industryList;
+    }
+    return result;
+}
+
+QStringList ExtractDataForm::getCurrFundamentKeyList() {
+    QStringList result;
+    m_fundamentKeyList = getComboBoxKeyList(m_fundamentKeyWidget);
+    for (QString key:m_fundamentKeyList) {
+        result.append(m_FundamentKeyMap[key]);
+    }
+    return result;
+}
+
+QStringList ExtractDataForm::checkSecodeList(QStringList oriSecodeList, QString dbhost, QString dbName) {
     QStringList result;
     Database databaseObj("0", dbhost);
     QList<QString> tableList = databaseObj.getTableList(dbName);
@@ -491,8 +531,6 @@ QStringList ExtractDataForm::checkMarketSecodeList(QStringList oriSecodeList, QS
             result.removeAll(secode);
         }
     }
-
-//    printList(errorCodeList, "errorCodeList");
 
     if (errorCodeList.size() > 0) {
         QString info = QString("存在错误股票代码: \n%1,\n是否放弃当前源股票代码信息文件, 否则忽略错误股票代码")
@@ -510,11 +548,10 @@ void ExtractDataForm::on_extractMarketData_pushButton_clicked()
     QString dbhost = ui->chooseDataSource_comboBox->currentText();
     QString startDate = ui->startDate_dateEdit->date().toString("yyyyMMdd");
     QString endDate = ui->endDate_dateEdit->date().toString("yyyyMMdd");
-    int dbConnectId = m_extractTimes * m_extractThreadCount;
     QStringList keyValueList = getCurrKeyValueList();
 
 
-    QStringList checkRst = checkMarketSecodeList(m_marketSecodeList, dbhost, databaseName);
+    QStringList checkRst = checkSecodeList(m_secodeList, dbhost, databaseName);
     if (checkRst.size() > 0 &&  checkRst[0] == "Error")  {
         if (QMessageBox::No == QMessageBox::information(NULL, QString("确认信息"),
                                                         checkRst[1], QMessageBox::Yes | QMessageBox::No)) {
@@ -534,9 +571,9 @@ void ExtractDataForm::on_extractMarketData_pushButton_clicked()
         if (QMessageBox::Yes == QMessageBox::information(NULL, QString("确认信息"),
                                                          info, QMessageBox::Yes | QMessageBox::No)) {
             updateProgramInfo(ui->programInfo_Table, info);
-            ExtractMarketData* currExtractMarketDataObj = new ExtractMarketData(dbhost, dbConnectId, databaseName,
+            ExtractMarketData* currExtractMarketDataObj = new ExtractMarketData(dbhost, databaseName,
                                                                                 startDate, endDate,
-                                                                                m_marketSecodeList, m_desFileDir,
+                                                                                m_secodeList, m_desFileDir,
                                                                                 keyValueList, m_extractThreadCount);
 
             connect(currExtractMarketDataObj, SIGNAL(extractMarketDataComplete_signal(QStringList)),
@@ -547,24 +584,6 @@ void ExtractDataForm::on_extractMarketData_pushButton_clicked()
             m_extractMarketDataObjList.append(currExtractMarketDataObj);
         }
     }
-}
-
-QStringList ExtractDataForm::getCurrIndexCodeList() {
-    QStringList result;
-    m_indexCodeList.clear();
-    for (int i = 0; i < m_weightIndexListWidget->count(); ++i)
-    {
-        QListWidgetItem *pItem = m_weightIndexListWidget->item(i);
-        QWidget *pWidget = m_weightIndexListWidget->itemWidget(pItem);
-        QCheckBox *pCheckBox = (QCheckBox *)pWidget;
-        if (pCheckBox->isChecked())
-        {
-            QString strText = pCheckBox->text();
-            result.append(m_indexCodeMap[strText]);
-            m_indexCodeList.append(strText);
-        }
-    }
-    return result;
 }
 
 void ExtractDataForm::on_extractWeightData_pushButton_clicked()
@@ -599,30 +618,6 @@ void ExtractDataForm::on_extractWeightData_pushButton_clicked()
     }
 }
 
-QStringList ExtractDataForm::getCurrIndustryList() {
-    QStringList result;
-    for (int i = 0; i < m_industryListWidget->count(); ++i)
-    {
-        QListWidgetItem *pItem = m_industryListWidget->item(i);
-        QWidget *pWidget = m_industryListWidget->itemWidget(pItem);
-        QCheckBox *pCheckBox = (QCheckBox *)pWidget;
-        if (pCheckBox->isChecked())
-        {
-            QString strText = pCheckBox->text();
-            if (strText == QString("全选")) {
-                result = m_industryList;
-                qDebug() << "Choose All";
-                break;
-            } else {
-                result.append(strText);
-            }
-        }
-    }
-    result.removeAll(QString("全选"));
-//    qDebug() << "result: " << result;
-    return result;
-}
-
 void ExtractDataForm::on_extractIndustryData_pushButton_clicked()
 {
     ++m_extractTimes;
@@ -651,6 +646,49 @@ void ExtractDataForm::on_extractIndustryData_pushButton_clicked()
             currExtractIndustryData -> startReadData();
 
             m_extractIndustryDataObjList.append(currExtractIndustryData);
+        }
+    }
+}
+
+void ExtractDataForm::on_startExtractFundament_pushButton_clicked()
+{
+    QString databaseName = "FundamentData";
+    QString dbhost = ui->chooseDataSource_comboBox->currentText();
+    QString startDate = ui->fundamentStart_dateEdit->date().toString("yyyyMMdd");
+    QString endDate = ui->fundamentEnd_dateEdit->date().toString("yyyyMMdd");
+    QStringList keyValueList = getCurrFundamentKeyList();
+
+
+    QStringList checkRst = checkSecodeList(m_fundamentKeyList, dbhost, databaseName);
+    if (checkRst.size() > 0 &&  checkRst[0] == "Error")  {
+        if (QMessageBox::No == QMessageBox::information(NULL, QString("确认信息"),
+                                                        checkRst[1], QMessageBox::Yes | QMessageBox::No)) {
+            return;
+        }
+    }
+
+    qDebug() << databaseName << dbhost << startDate << endDate << keyValueList;
+
+    if (keyValueList.size() == 0) {
+        QMessageBox::critical(NULL, "Error", QString(QString("还未选择指标")));
+    } else {
+        QString info = QString("开始提取基本面数据: \n提取的指标: %2,\n时间区间: [%3, %4], \n")
+                                .arg(m_keyValueList.join(",")).arg(startDate).arg(endDate);
+
+        if (QMessageBox::Yes == QMessageBox::information(NULL, QString("确认信息"),
+                                                         info, QMessageBox::Yes | QMessageBox::No)) {
+            updateProgramInfo(ui->programInfo_Table, info);
+            ExtractMarketData* currExtractMarketDataObj = new ExtractMarketData(dbhost, databaseName,
+                                                                                startDate, endDate,
+                                                                                m_secodeList, m_desFileDir,
+                                                                                keyValueList, m_extractThreadCount);
+
+            connect(currExtractMarketDataObj, SIGNAL(extractMarketDataComplete_signal(QStringList)),
+                    this, SLOT(extractDataComplete_slot(QStringList)));
+
+            currExtractMarketDataObj->startReadData();
+
+            m_extractMarketDataObjList.append(currExtractMarketDataObj);
         }
     }
 }
@@ -688,7 +726,7 @@ void ExtractDataForm::on_oriFile_tableView_clicked(const QModelIndex &index)
     if (tmpFile.exists()) {
         m_currOriFile = cmpFileName;
 //        qDebug() << "m_currOriFile: " << m_currOriFile;
-        m_marketSecodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
+        m_secodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
     } else {
         QMessageBox::critical(NULL, "Error", QString("当前文件不存在,请刷新当前表格"));
     }
@@ -718,24 +756,6 @@ void ExtractDataForm::on_desFile_tableView_doubleClicked(const QModelIndex &inde
     } else {
         QMessageBox::critical(NULL, "Error", QString("当前文件不存在,请刷新当前表格"));
     }
-}
-
-void ExtractDataForm::stateChanged(int state) {
-    QString strSelectedData("");
-    int nCount = m_marketKeyListWidget->count();
-    for (int i = 0; i < nCount; ++i)
-    {
-        QListWidgetItem *pItem = m_marketKeyListWidget->item(i);
-        QWidget *pWidget = m_marketKeyListWidget->itemWidget(pItem);
-        QCheckBox *pCheckBox = (QCheckBox *)pWidget;
-        if (pCheckBox->isChecked())
-        {
-            QString strText = pCheckBox->text();
-            strSelectedData.append(strText).append(";");
-//            qDebug() << "strText: " << strText;
-        }
-    }
-    state;
 }
 
 void ExtractDataForm::checkAllIndustry() {
@@ -775,7 +795,7 @@ void ExtractDataForm::on_chooseSecodeListFromExcel_pushButton_clicked()
     if (file_name != "") {
         m_currOriFile = file_name;
         updateProgramInfo(ui->programInfo_Table, QString("选择了股票代码列表文件: %1").arg(m_currOriFile));
-        m_marketSecodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
+        m_secodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
     }
 }
 
@@ -790,7 +810,7 @@ void ExtractDataForm::on_chooseSecodeListFromTable_pushButton_clicked()
 }
 
 void ExtractDataForm::get_secodeList_slot(QStringList marketSecodeList) {
-    m_marketSecodeList = marketSecodeList;
+    m_secodeList = marketSecodeList;
 }
 
 void ExtractDataForm::on_chooseSecodeList_pushButton_clicked()
@@ -811,11 +831,8 @@ void ExtractDataForm::on_importSecodeList_pushButton_clicked()
     if (file_name != "") {
         m_currOriFile = file_name;
         updateProgramInfo(ui->programInfo_Table, QString("选择了股票代码列表文件: %1").arg(m_currOriFile));
-        m_marketSecodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
+        m_secodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
     }
 }
 
-void ExtractDataForm::on_startExtractFundament_pushButton_clicked()
-{
 
-}

@@ -29,6 +29,7 @@ public:
     void initDataTypeMap();
     void initKeyValueMap();
     void initIndexCodeMap();
+    void initFundamentKeyMap();
     void initIndustryList();
 
     void initWidget();
@@ -37,6 +38,7 @@ public:
     void initDataTypeCombox();
     void initKeyValueCombox();
     void initMarketKeyComboBox();
+    void initFundamentKeyComboBox();
     void initIndexCodeComboBox();
     void initIndustryComboBox();
     void checkAllIndustry();
@@ -48,10 +50,11 @@ public:
     void initTableContextMenu();
 
     void basicTest();
-    QStringList checkMarketSecodeList(QStringList oriSecodeList, QString dbhost, QString dbName);
+    QStringList checkSecodeList(QStringList oriSecodeList, QString dbhost, QString dbName);
     QStringList getCurrKeyValueList();    
     QStringList getCurrIndexCodeList();
     QStringList getCurrIndustryList();
+    QStringList getCurrFundamentKeyList();
     ~ExtractDataForm();
 
 public slots:
@@ -86,8 +89,6 @@ private slots:
 
     void on_desFile_tableView_doubleClicked(const QModelIndex &index);
 
-    void stateChanged(int state);
-
     void industryComboxStateChange(int state);
 
     void on_extractWeightData_pushButton_clicked();
@@ -111,10 +112,11 @@ private:
 
     int                         m_extractThreadCount;
     QList<QString>              m_dbhostList;
-    QStringList                 m_marketSecodeList;
+    QStringList                 m_secodeList;
     QStringList                 m_keyValueList;
     QStringList                 m_indexCodeList;
     QStringList                 m_industryList;
+    QStringList                 m_fundamentKeyList;
 
     QList<ExtractMarketData*>   m_extractMarketDataObjList;
     QList<ExtractWeightData*>   m_extractWeightDataObjList;
@@ -123,7 +125,7 @@ private:
     QMap<QString, QString>      m_dataTypeMap;
     QMap<QString, QString>      m_keyValueMap;
     QMap<QString, QString>      m_indexCodeMap;
-
+    QMap<QString, QString>      m_FundamentKeyMap;
 
     QString                     m_nativeFileName;
     QString                     m_oriFileDir;
@@ -137,6 +139,7 @@ private:
     QListWidget*                m_marketKeyListWidget;
     QListWidget*                m_weightIndexListWidget;
     QListWidget*                m_industryListWidget;
+    QListWidget*                m_fundamentKeyWidget;
 
     bool                        m_setIndustryCombox;
 
