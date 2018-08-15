@@ -116,6 +116,8 @@ private slots:
 
     void on_showIndexHedgedPic_pushButton_clicked();
 
+    void on_showAVEEnergy_pushButton_clicked();
+
 private:
     Ui::Widget *             ui;
 

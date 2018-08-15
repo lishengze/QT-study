@@ -33,6 +33,7 @@
 #include "xlsxdocument.h"
 #include "futurechart.h"
 #include "database.h"
+#include "csschartformone.h"
 
 QT_CHARTS_USE_NAMESPACE
 #pragma execution_character_set("utf-8")
@@ -751,4 +752,45 @@ void Widget::on_showIndexHedgedPic_pushButton_clicked()
                            .arg(startDate).arg(endDate)
                            .arg(timeType).arg(aveNumb);
     updateProgramInfo (ui->programInfo_tableView, info);
+}
+
+void Widget::on_showAVEEnergy_pushButton_clicked()
+{
+    QString startDate = "20160101";
+    QString endDate = "20170101";
+    QString dbhost = ui->dataSource_ComboBox->currentText();
+    QString timeType = "day";
+    QString databaseName = QString("MarketData_%1").arg(timeType);
+    QString codeName = "SH000300";
+    QList<int> aveNumbList;
+    aveNumbList << 12 << 25;
+    QList<bool> isEMAList;
+    isEMAList << false << true;
+
+    int mainAveNumb = 32;
+    int subAveNumb = 32 / 2.6;
+    int energyAveNumb = 84;
+    double css12Rate = 0.014;
+    double mainCssRate1 = 1/3;
+    double mainCssRate2 = 2/3;
+    double energyCssRate1 = 11/13;
+    double energyCssRate2 = 2/13;
+    double maxCSS = 300;
+    double minCSS = -300;
+
+
+    if (startDate.toInt () >= endDate.toInt ()) {
+        QMessageBox::critical(NULL, "Error", QString("起始时间晚于截止时间"));
+        return;
+    }
+
+    QWidget* charView = new CSSChartFormOne(dbhost, databaseName,
+                                            startDate, endDate, codeName,
+                                            aveNumbList, isEMAList,
+                                            mainAveNumb, subAveNumb, energyAveNumb,
+                                            css12Rate, mainCssRate1, mainCssRate2,
+                                            energyCssRate1, energyCssRate2, maxCSS, minCSS);
+    m_chartViews.append (charView);
+    charView->setWindowTitle("均线势能");
+    charView->show();
 }

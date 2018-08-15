@@ -65,4 +65,6 @@ void testGetRelativeProfit();
 
 void testIndexChart();
 
+void testMean();
+
 #endif // TEST_H

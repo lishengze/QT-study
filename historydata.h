@@ -34,6 +34,15 @@ public:
                 double m_maxCSS, double m_minCSS,
                 QObject *parent = 0);
 
+    HistoryData(QString dbhost, QString databaseName,
+                QString startDate, QString endDate, QString codeName,
+                QList<int> aveNumbList, QList<bool> isEMAList,
+                int mainAveNumb, int subAveNumb, int energyAveNumb,
+                double css12Rate, double mainCssRate1, double mainCssRate2,
+                double energyCssRate1, double energyCssRate2,
+                double maxCSS, double minCSS,
+                QObject *parent = 0);
+
     ~HistoryData();
 
     void initCommonData();
@@ -63,11 +72,15 @@ signals:
                                   QList<double>, QList<double>, QList<double>);
     void sendHistIndexError_signal(QString);
 
+    void sendCSSData_signal(QList<QString>, QList<QList<double>>, QList<QList<double>>);
+
 public slots:
     void getHistData();
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
     void getProcessedData_slot(QList<QList<double>> allData);
     void getIndexHistData_slot();
+
+    void getCSSData_slot();
 
 private:
     bool                               m_isRealTime;
@@ -112,6 +125,18 @@ private:
     double                             m_cssRate2;
     double                             m_maxCSS;
     double                             m_minCSS;
+
+    QString                            m_singleCodeName;
+    int                                m_mainAveNumb;
+    int                                m_subAveNumb;
+    int                                m_energyAveNumb;
+    double                             m_mainCssRate1;
+    double                             m_mainCssRate2;
+    double                             m_energyCssRate1;
+    double                             m_energyCssRate2;
+
+    QList<int>                         m_aveNumbList;
+    QList<bool>                        m_isEMAList;
 };
 
 #endif // HISTORYDATA_H

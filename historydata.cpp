@@ -49,6 +49,27 @@ HistoryData::HistoryData(int chartViewID, QString dbhost, QString databaseName,
     initDatabase(chartViewID);
 }
 
+HistoryData::HistoryData(QString dbhost, QString databaseName,
+                         QString startDate, QString endDate, QString codeName,
+                         QList<int> aveNumbList, QList<bool> isEMAList,
+                         int mainAveNumb, int subAveNumb, int energyAveNumb,
+                         double css12Rate, double mainCssRate1, double mainCssRate2,
+                         double energyCssRate1, double energyCssRate2,
+                         double maxCSS, double minCSS,
+                         QObject *parent):
+    m_dbhost(dbhost), m_databaseName(databaseName),
+    m_startDate(startDate), m_endDate(endDate), m_singleCodeName(codeName),
+    m_aveNumbList(aveNumbList), m_isEMAList(isEMAList),
+    m_mainAveNumb(mainAveNumb), m_subAveNumb(subAveNumb), m_energyAveNumb(energyAveNumb),
+    m_css12Rate(css12Rate), m_mainCssRate1(mainCssRate1), m_mainCssRate2(mainCssRate2),
+    m_energyCssRate1(energyCssRate1), m_energyCssRate2(energyCssRate2),
+    m_maxCSS(maxCSS), m_minCSS(minCSS),
+    QObject(parent)
+{
+    initCommonData();
+    initDatabase(0);
+}
+
 HistoryData::~HistoryData() {
     for (int i = 0; i < m_dataProcessThreadList.size(); ++i) {
          delete m_dataProcessThreadList[i];
@@ -125,8 +146,6 @@ void HistoryData::initReadDataSignal() {
         m_dataReaderList.append(curDataReader);
         m_dataReaderThreadList.append(curThread);
     }
-
-//    qDebug() << "HistoryData::initReadDataSignal: " << QThread::currentThreadId();
 }
 
 void HistoryData::getHistData() {
@@ -138,11 +157,6 @@ void HistoryData::receiveOriginalData (QMap<QString, QList<QStringList>> subThre
     QMutexLocker locker(&m_mutex);
     m_completeTableData.unite (subThreadData);
     ++m_readDataThreadCount;
-
-//    qDebug() << "HistoryData::receiveOriginalData: " << QThread::currentThreadId()
-//             << ", dataNumb: " << subThreadData.size ()
-//             << ", m_readDataThreadCount: " << m_readDataThreadCount << "\n";
-
     emit tableViewInfoSignal(QString(QString("完成股票指数读取数目: %1"))
                              .arg(m_completeTableData.size ()));
 
@@ -287,4 +301,33 @@ void HistoryData::getIndexHistData_slot() {
 
 }
 
+void HistoryData::getCSSData_slot() {
+    QStringList keyList;
+    keyList << "TDATE" << "TIME" << "TCLOSE" << "TOPEN";
+    qDebug() << m_startDate << m_endDate << m_singleCodeName << m_databaseName;
+    QList<QStringList> oriDatabaseData = m_database->getDataByDate(m_startDate, m_endDate, keyList,
+                                                                   m_singleCodeName, m_databaseName);
+//    printList(oriDatabaseData, "oriDatabaseData");
+    QList<QString> timeList;
+    QList<double> typList;
+    for (int i = 0; i < oriDatabaseData.size(); ++i) {
+        timeList.append(QString("%1 %2").arg(oriDatabaseData[i][0]).arg(oriDatabaseData[i][1]));
+        typList.append((oriDatabaseData[i][2].toDouble() + oriDatabaseData[i][3].toDouble()) / 2);
+    }
+    QList<QList<double>> aveList = getAVEList(typList, m_aveNumbList, m_isEMAList);
+    printList(aveList, "aveList");
+
+//    QList<double> mainList = getCSSList(typList,  m_mainAveNumb, m_css12Rate,
+//                                        m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);
+//    QList<double> subValueList = getCSSList(typList,  m_subAveNumb, m_css12Rate,
+//                                        m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);
+//    QList<double> energyValueList = getCSSList(typList,  m_energyAveNumb, m_css12Rate,
+//                                            m_energyCssRate1, m_energyCssRate2, m_maxCSS, m_minCSS, true);
+//    QList<QList<double>> cssList;
+//    cssList.append(mainList);
+//    cssList.append(subValueList);
+//    cssList.append(energyValueList);
+
+//    emit sendCSSData_signal(timeList, aveList, cssList);
+}
 
