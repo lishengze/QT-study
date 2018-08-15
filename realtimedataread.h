@@ -4,8 +4,6 @@
 #include <QObject>
 #include <QTimer>
 #include "realtimedatabase.h"
-//#include "strategymodel.h"
-//#include "excel.h"
 
 class RealTimeDataRead:public QObject
 {

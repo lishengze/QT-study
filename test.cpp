@@ -74,7 +74,7 @@ void Test::get_database_data() {
         qDebug() << "ori_result.size: " << ori_result.size();
         qDebug() << ori_result[0];
 
-        completeExcelData(ori_result, indexTimeList);
+        completeExcelData(ori_result, indexTimeList, keyValueList.size());
         qDebug() << "compResult.size: " << ori_result.size();
         qDebug() << ori_result[0];
     }
@@ -91,7 +91,7 @@ void Test::get_database_data() {
             QString tableName = secodeList[i];
             QList<QStringList> ori_result = databaseObj.getDataByDate(startDate, endDate, keyValueList,
                                                                       tableName, databaseName);
-            completeExcelData(ori_result, indexTimeList);
+            completeExcelData(ori_result, indexTimeList, keyValueList.size());
             QList<QString> singleResult = getSingleColData(ori_result, 0);
             singleResult.insert(0, tableName);
             sumResult.append(singleResult);

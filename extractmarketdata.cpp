@@ -255,6 +255,8 @@ void ExtractMarketData::storeData() {
 
         if (m_keyValueList.indexOf("ROE") >= 0) {
             QList<QString> singleResult = currSecodeData.last();
+            QString currKey = "ROE";
+            int secodePos = m_secodeMap[currSecode];
             currSecodeData.pop_back();
             singleResult.insert(0, currSecode);
             excelData[currKey][secodePos-1] = singleResult;
