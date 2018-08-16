@@ -267,7 +267,7 @@ void Widget::setStrategyTable() {
 void Widget::setBuySalePortfolioTable() {
     m_buySalePortfolioFileInfoList = getExcelFileInfo(m_buySalePortfolioFileDir);
     m_portfolioAmount = getPortfolioAmountMap(m_buySalePortfolioFileInfoList);
-    printMap(m_portfolioAmount, "m_portfolioAmount: ");
+//    printMap(m_portfolioAmount, "m_portfolioAmount: ");
 
     QStandardItemModel* standardItemModel = dynamic_cast<QStandardItemModel*>(ui->buySalePortfolio_table->model ());
     if (NULL == standardItemModel) {
@@ -423,8 +423,8 @@ void Widget::on_buySalePortfolio_table_clicked(const QModelIndex &index)
 
     m_buyStrategyMap = readExcelMapInt(cmpFileName, "buy");
     m_saleStrategyMap = readExcelMapInt(cmpFileName, "sale");
-    printMap(m_buyStrategyMap, "m_buyStrategyMap: ");
-    printMap(m_saleStrategyMap, "m_saleStrategyMap: ");
+//    printMap(m_buyStrategyMap, "m_buyStrategyMap: ");
+//    printMap(m_saleStrategyMap, "m_saleStrategyMap: ");
 
     if (m_buyStrategyMap.find("Error") != m_buyStrategyMap.end()) {
         updateProgramInfo(ui->programInfo_tableView, QString("%1 没有正确的买入组合信息").arg(fileName));
@@ -771,10 +771,10 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
     int subAveNumb = 32 / 2.6;
     int energyAveNumb = 84;
     double css12Rate = 0.014;
-    double mainCssRate1 = 1/3;
-    double mainCssRate2 = 2/3;
-    double energyCssRate1 = 11/13;
-    double energyCssRate2 = 2/13;
+    double mainCssRate1 = 1.0/3.0;
+    double mainCssRate2 = 2.0/3.0;
+    double energyCssRate1 = 11.0/13.0;
+    double energyCssRate2 = 2.0/13.0;
     double maxCSS = 300;
     double minCSS = -300;
 

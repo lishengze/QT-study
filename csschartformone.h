@@ -42,6 +42,7 @@ public:
     ~CSSChartFormOne();
 
     void initHistoryData();
+    void registSignalParamsType();
 
     void startGetData();
 

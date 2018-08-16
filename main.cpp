@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 //    extractWindow.setWindowTitle("提取数据");
 //    extractWindow.show();
 
-    testMain();
+//    testMain();
 
     return a.exec();
 }

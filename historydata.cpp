@@ -310,24 +310,33 @@ void HistoryData::getCSSData_slot() {
 //    printList(oriDatabaseData, "oriDatabaseData");
     QList<QString> timeList;
     QList<double> typList;
+    QList<double> closeList;
+
     for (int i = 0; i < oriDatabaseData.size(); ++i) {
         timeList.append(QString("%1 %2").arg(oriDatabaseData[i][0]).arg(oriDatabaseData[i][1]));
+        closeList.append(oriDatabaseData[i][2].toDouble());
         typList.append((oriDatabaseData[i][2].toDouble() + oriDatabaseData[i][3].toDouble()) / 2);
     }
-    QList<QList<double>> aveList = getAVEList(typList, m_aveNumbList, m_isEMAList);
-    printList(aveList, "aveList");
+    QList<QList<double>> aveList = getAVEList(closeList, m_aveNumbList, m_isEMAList);
+    aveList.insert(0, closeList);
+//    qDebug() << typList;
+//    printList(aveList, "aveList");
 
-//    QList<double> mainList = getCSSList(typList,  m_mainAveNumb, m_css12Rate,
-//                                        m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);
-//    QList<double> subValueList = getCSSList(typList,  m_subAveNumb, m_css12Rate,
-//                                        m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);
-//    QList<double> energyValueList = getCSSList(typList,  m_energyAveNumb, m_css12Rate,
-//                                            m_energyCssRate1, m_energyCssRate2, m_maxCSS, m_minCSS, true);
-//    QList<QList<double>> cssList;
-//    cssList.append(mainList);
-//    cssList.append(subValueList);
-//    cssList.append(energyValueList);
+    QList<double> mainList = getCSSList(typList,  m_mainAveNumb, m_css12Rate,
+                                        m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);
+    QList<double> subValueList = getCSSList(typList,  m_subAveNumb, m_css12Rate,
+                                        m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);
+    QList<double> energyValueList = getCSSList(typList,  m_energyAveNumb, m_css12Rate,
+                                            m_energyCssRate1, m_energyCssRate2, m_maxCSS, m_minCSS, true);
+//    qDebug() << mainList;
+//    qDebug() << subValueList;
+//    qDebug() << energyValueList;
 
-//    emit sendCSSData_signal(timeList, aveList, cssList);
+    QList<QList<double>> cssList;
+    cssList.append(mainList);
+    cssList.append(subValueList);
+    cssList.append(energyValueList);
+
+    emit sendCSSData_signal(timeList, aveList, cssList);
 }
 

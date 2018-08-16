@@ -1,6 +1,7 @@
 ﻿#include "csschartformone.h"
 #include "ui_csschartformone.h"
 #include "process_data_func.h"
+#include "io_func.h"
 
 #pragma execution_character_set("utf-8")
 
@@ -28,7 +29,9 @@ CSSChartFormOne::CSSChartFormOne(QString dbhost, QString databaseName,
                         BaseChart(parent),ui(new Ui::CSSChartFormOne)
 {
     ui->setupUi(this);
+    m_chartXaxisTickCount = 5;
     initHistoryData();
+    registSignalParamsType();
     startGetData();
 }
 
@@ -68,6 +71,11 @@ void CSSChartFormOne::initHistoryData() {
     m_histdataThread.start();
 }
 
+void CSSChartFormOne::registSignalParamsType() {
+    qRegisterMetaType<QList<QString>>("QList<QString>");
+    qRegisterMetaType<QList<QList<double>>>("QList<QList<double>>");
+}
+
 void CSSChartFormOne::initLayout() {
 //    this->setWindowTitle(QString("%1").arg(m_selectIndex));
 //    ui->title_label->setText(QString("指数: %1 与指数: %2, %3频, 实时对冲图")
@@ -77,10 +85,11 @@ void CSSChartFormOne::initLayout() {
 //    initTableContextMenu();
 
     if (m_aveChartView != NULL) {
+        qDebug() << "add avechart";
         ui->gridLayout->addWidget(m_aveChartView, 1, 0);
     }
 
-    if (m_aveChartView != NULL) {
+    if (m_cssChartView != NULL) {
         ui->gridLayout->addWidget(m_cssChartView, 2, 0);
     }
     this->setMouseTracking(true);
@@ -99,78 +108,101 @@ void CSSChartFormOne::initTheme() {
     ui->title_Label->setStyleSheet(QStringLiteral("color: rgb(250, 250, 250);font: 75 14pt \"微软雅黑\";"));
 }
 
+QLineSeries* getTestLineSeries() {
+    QLineSeries* result = new QLineSeries;
+    for (int i = 0; i < 100; ++i) {
+        result->append(i,i);
+    }
+    return result;
+}
+
 void CSSChartFormOne::initChartView() {
     QCategoryAxis* timeAxisX = getTimeAxisX(m_timeList, m_chartXaxisTickCount);
     QValueAxis* aveAxisY = new QValueAxis;
     QList<double> aveRange =getChartYvalueRange(m_aveList);
     aveAxisY->setRange(aveRange[0], aveRange[1]);
 
-    QValueAxis* cssAxisY = new QValueAxis;
-    QList<double> cssRange =getChartYvalueRange(m_cssList);
-    cssAxisY->setRange(cssRange[0], cssRange[1]);
-
-    for (int i = 0; i < m_aveNumbList.size(); ++i) {
+    for (int i = 0; i < m_aveList.size(); ++i) {
         QLineSeries* currSeries = new QLineSeries;
         for (int j = 0; j < m_aveList[i].size(); ++j) {
             currSeries->append(j, m_aveList[i][j]);
         }
-        currSeries->setName(QString("%1").arg(m_aveNumbList[i]));
-        currSeries->setUseOpenGL(true);
-        currSeries->attachAxis(timeAxisX);
-        currSeries->attachAxis(aveAxisY);
-        m_aveLineSeries.append(currSeries);
-    }
-
-    QList<int> aveList;
-    aveList << m_mainAveNumb << m_subAveNumb << m_energyAveNumb;
-    for (int i = 0; i < 3; ++i) {
-        QLineSeries* currSeries = new QLineSeries;
-        for (int j = 0; j < m_cssList[i].size(); ++j) {
-            currSeries->append(j+aveList[j], m_cssList[i][j]);
+        if (i == 0) {
+            currSeries->setName(QString("收盘价"));
+        } else {
+            currSeries->setName(QString("%1").arg(m_aveNumbList[i-1]));
         }
         currSeries->setUseOpenGL(true);
-        currSeries->attachAxis(timeAxisX);
-        currSeries->attachAxis(cssAxisY);
-        m_cssLineSeries.append(currSeries);
+        m_aveLineSeries.append(currSeries);
     }
-    m_cssLineSeries[0]->setName("主指标");
-    m_cssLineSeries[0]->setName("从指标");
-    m_cssLineSeries[0]->setName("势能");
 
     m_aveChart = new QChart();
     for (int i = 0; i < m_aveLineSeries.size(); ++i) {
         m_aveChart->addSeries(m_aveLineSeries[i]);
     }
-    m_aveChart->setAnimationOptions(QChart::NoAnimation);
-    m_aveChart->addAxis(timeAxisX, Qt::AlignBottom);
-    m_aveChart->addAxis(aveAxisY, Qt::AlignLeft);
 
     m_aveChartView = new QMyChartView(m_aveChart);
     m_aveChartView->setRenderHint(QPainter::Antialiasing);
-    m_aveChartView->installEventFilter(this);
+//    m_aveChartView->installEventFilter(this); // 存在问题;
     m_aveChartView->setMouseTracking(true);
+
+    m_aveChart->setAnimationOptions(QChart::NoAnimation);
+//    m_aveChart->addAxis(timeAxisX, Qt::AlignBottom);
+    m_aveChart->addAxis(aveAxisY, Qt::AlignLeft);
+    for (int i = 0; i < m_aveLineSeries.size(); ++i) {
+//        m_aveLineSeries[i]->attachAxis(timeAxisX);
+        m_aveLineSeries[i]->attachAxis(aveAxisY);
+    }
+
+    QValueAxis* cssAxisY = new QValueAxis;
+    QList<double> cssRange =getChartYvalueRange(m_cssList);
+    cssAxisY->setRange(cssRange[0], cssRange[1]);
+
+    QList<int> aveList;
+    aveList << m_mainAveNumb << m_subAveNumb << m_energyAveNumb;
+    for (int i = 0; i < 3; ++i) {
+        QLineSeries* currSeries = new QLineSeries;
+        for (int j = aveList[i]; j < m_cssList[i].size(); ++j) {
+            currSeries->append(j, m_cssList[i][j]);
+        }
+        currSeries->setUseOpenGL(true);
+        m_cssLineSeries.append(currSeries);
+    }
+    m_cssLineSeries[0]->setName("主指标");
+    m_cssLineSeries[1]->setName("从指标");
+    m_cssLineSeries[2]->setName("势能");
 
     m_cssChart = new QChart();
     for (int i = 0; i < m_cssLineSeries.size(); ++i) {
+//        qDebug() << m_cssLineSeries[i]->points();
         m_cssChart->addSeries(m_cssLineSeries[i]);
     }
-    m_cssChart->setAnimationOptions(QChart::NoAnimation);
-    m_cssChart->addAxis(timeAxisX, Qt::AlignBottom);
-    m_cssChart->addAxis(cssAxisY, Qt::AlignLeft);
 
     m_cssChartView = new QMyChartView(m_cssChart);
     m_cssChartView->setRenderHint(QPainter::Antialiasing);
-    m_cssChartView->installEventFilter(this);
+//    m_cssChartView->installEventFilter(this);
     m_cssChartView->setMouseTracking(true);
+
+    m_cssChart->setAnimationOptions(QChart::NoAnimation);
+    m_cssChart->addAxis(timeAxisX, Qt::AlignBottom);
+    m_cssChart->addAxis(cssAxisY, Qt::AlignLeft);
+    for (int i = 0; i < m_cssLineSeries.size(); ++i) {
+        m_cssLineSeries[i]->attachAxis(timeAxisX);
+        m_cssLineSeries[i]->attachAxis(cssAxisY);
+    }
 
 }
 
 void CSSChartFormOne::sendCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
                                        QList<QList<double>> cssList) {
 
+    qDebug() << "CSSChartFormOne::sendCSSData_slot";
+
     m_timeList = timeList;
     m_aveList = aveList;
     m_cssList = cssList;
+
+//    printList(m_aveList, "m_aveList");
 
     initLayout();
 }
