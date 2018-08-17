@@ -99,7 +99,6 @@ void ChartForm::initCommonData() {
     m_preSpread = 0;
     m_isclosed = false;
     m_isLayoutSetted = false;
-    m_isKeyMove = false;
 
     initSecodeStyle();
     initSecodeList();

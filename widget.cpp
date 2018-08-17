@@ -756,16 +756,22 @@ void Widget::on_showIndexHedgedPic_pushButton_clicked()
 
 void Widget::on_showAVEEnergy_pushButton_clicked()
 {
-    QString startDate = "20160101";
-    QString endDate = "20170101";
+    QString startDate = "20140101";
+    QString endDate = "20180801";
     QString dbhost = ui->dataSource_ComboBox->currentText();
     QString timeType = "day";
     QString databaseName = QString("MarketData_%1").arg(timeType);
     QString codeName = "SH000300";
     QList<int> aveNumbList;
-    aveNumbList << 12 << 25;
     QList<bool> isEMAList;
-    isEMAList << false << true;
+
+//    aveNumbList << 12 << 25;
+//    isEMAList << false << true;
+
+    aveNumbList << 12 << 25 << 55 << 99 << 144
+                << 233 << 320 << 453 << 620 << 730;
+    isEMAList << false << true << true << false << false
+              << false << false << false << false << false;
 
     int mainAveNumb = 32;
     int subAveNumb = 32 / 2.6;

@@ -5,6 +5,8 @@
 #include <QLineSeries>
 #include <QChart>
 #include <QCategoryAxis>
+#include <QLabel>
+#include <QStackedBarSeries>
 
 #include "basechart.h"
 #include "qmychartview.h"
@@ -41,10 +43,12 @@ public:
                             QWidget *parent = 0);
     ~CSSChartFormOne();
 
+    void initCommonData();
     void initHistoryData();
     void registSignalParamsType();
 
     void startGetData();
+    void addPropertyLabel();
 
     virtual void initLayout();
     virtual void initTheme();
@@ -71,8 +75,11 @@ signals:
 public slots:
     void sendCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>);
 
+    void connectMarkers();
+    void disconnectMarkers();
+    void handleMarkerClicked();
+
 protected:
-    virtual bool eventFilter (QObject *watched, QEvent *event);
     virtual void closeEvent(QCloseEvent *event);
 
 private:
@@ -97,6 +104,7 @@ private:
     double                             m_minCSS;
     QList<int>                         m_aveNumbList;
     QList<bool>                        m_isEMAList;
+    QList<double>                      m_cssMarkValueList;
 
     QList<QList<double>>               m_aveList;
     QList<QList<double>>               m_cssList;
@@ -104,13 +112,22 @@ private:
 
     QList<QLineSeries*>                m_aveLineSeries;
     QList<QLineSeries*>                m_cssLineSeries;
+    QList<QLineSeries*>                m_cssMarkLineSeries;
+    QStackedBarSeries*                 m_energySeries;
     QMyChartView*                      m_aveChartView;
     QChart*                            m_aveChart;
     QMyChartView*                      m_cssChartView;
     QChart*                            m_cssChart;
+    QList<QLabel*>                     m_labelList;
 
     HistoryData*                       m_histdataWorker;
     QThread                            m_histdataThread;
+
+    QPoint                             m_mouseInitPos;
+    double                             m_oldPointDistance;
+    int                                m_currTimeIndex;
+    int                                m_keyMoveCount;
+    bool                               m_isKeyMove;
 };
 
 #endif // CSSCHARTFORMONE_H

@@ -313,7 +313,11 @@ void HistoryData::getCSSData_slot() {
     QList<double> closeList;
 
     for (int i = 0; i < oriDatabaseData.size(); ++i) {
-        timeList.append(QString("%1 %2").arg(oriDatabaseData[i][0]).arg(oriDatabaseData[i][1]));
+        if (isMinuteType(m_databaseName)) {
+            timeList.append(QString("%1 %2").arg(oriDatabaseData[i][0]).arg(oriDatabaseData[i][1]));
+        } else {
+            timeList.append(QString("%1").arg(oriDatabaseData[i][0]));
+        }
         closeList.append(oriDatabaseData[i][2].toDouble());
         typList.append((oriDatabaseData[i][2].toDouble() + oriDatabaseData[i][3].toDouble()) / 2);
     }

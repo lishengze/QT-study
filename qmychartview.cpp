@@ -1,4 +1,4 @@
-#include <QChartView>
+﻿#include <QChartView>
 #include "chartform.h"
 #include "qmychartview.h"
 #include <QDebug>
@@ -21,5 +21,7 @@ void QMyChartView::mouseMoveEvent (QMouseEvent *event) {
 }
 
 void QMyChartView::mouseReleaseEvent(QMouseEvent *event) {
+//    event->ignore();
+    QChartView::mouseReleaseEvent((QMouseEvent *)event);
     event->ignore();
 }
