@@ -52,4 +52,7 @@ QDate getNextTradingData(QDate date);
 
 bool waitForNextTradingDay(QTableView* programInfoTableView);
 
+bool isMinuteType(QString dataType);
+
+
 #endif // TIME_FUNC_H

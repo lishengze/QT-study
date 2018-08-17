@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include "extractdatawindow.h"
 #include "excel_func.h"
+#include "process_data_func.h"
 #include <QDebug>
 #pragma execution_character_set("utf-8")
 
@@ -30,6 +31,7 @@ bool BaseChart::eventFilter (QObject *watched, QEvent *event) {
     }
     if (event->type() == QEvent::MouseButtonRelease) {
         mouseButtonReleaseFunc(watched, event);
+//        QChartView::mouseReleaseEvent((QMouseEvent *)event);
     }
     return QWidget::eventFilter (watched, event);
 }
@@ -67,4 +69,16 @@ void BaseChart::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fil
     } else {
         QMessageBox::critical(NULL, "错误", QString("文件 %1 写入失败").arg(fileName));
     }
+}
+
+QCategoryAxis* BaseChart::getTimeAxisX (QList<QString> timeList, int tickCount) {
+    QCategoryAxis* axisX = new QCategoryAxis;
+    axisX->setStartValue(0);
+    QList<int> axisXPosList = getNumbList(timeList.size(), tickCount);
+    for (int i = 0; i < axisXPosList.size(); ++i) {
+        int xpos = axisXPosList[i];
+        axisX->append (timeList[xpos], xpos);
+    }
+    axisX->setMax(timeList.size()-1);
+    return axisX;
 }

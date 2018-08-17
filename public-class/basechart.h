@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QMainWindow>
+#include <QCategoryAxis>
 #include "qmychartview.h"
 
 QT_CHARTS_BEGIN_NAMESPACE
@@ -19,14 +20,14 @@ public:
 
     void initTableContextMenu();
 
+    virtual void initLayout() = 0;
+    virtual void initTheme() = 0;
+    virtual void initChartView() = 0;
+
     virtual void initExtractKeyValueList() = 0;
     virtual QList<QMyChartView*> getChartViewList() = 0;
     virtual QString getExcelFileName(QStringList keyValueList, QString fileDir) = 0;
     virtual QList<QStringList> getExcelData(QStringList keyValueList) = 0;
-
-    virtual void initLayout() = 0;
-    virtual void initTheme() = 0;
-    virtual void initChartView() = 0;
 
     virtual void updateAxis() = 0;
     virtual void updateSeries() = 0;
@@ -39,6 +40,7 @@ public:
     virtual void moveMouse(int step) = 0;
     virtual double getPointXDistance() = 0;
 
+    QCategoryAxis* getTimeAxisX (QList<QString> timeList, int tickCount);
 signals:
 
 public slots:

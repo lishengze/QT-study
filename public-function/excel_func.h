@@ -31,7 +31,7 @@ int writeOneColData(QString fileName, QStringList oriData, int targetCol,
 int writeOneRowData(QString fileName, QStringList oriData, int targetRow,
                     int startCol = 0, QString sheetName="Sheet1");
 
-int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_time_list);
+int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_time_list, int keyCount);
 
 QStringList getIndexTimeStrList(QList<QStringList> indexTimeList);
 

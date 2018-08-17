@@ -74,6 +74,37 @@ QList<double> getChartYvalueRange(QList<QPointF> pointList ) {
     return result;
 }
 
+QList<double> getChartYvalueRange(QList<QList<double>> yValueList) {
+    QList<double> result;
+    if (yValueList.size() == 0) {
+        result.append(0);
+        result.append(1);
+    } else {
+        double maxValue = -1000000000000000000.0;
+        double minValue = 10000000000000000000.0;
+        for (int i = 0; i < yValueList.size(); ++i) {
+            for (int j = 0; j < yValueList[i].size(); ++j) {
+                maxValue = max(maxValue, yValueList[i][j]);
+                minValue = min(minValue, yValueList[i][j]);
+            }
+        }
+
+        int rangeInterval = 6;
+        maxValue += (maxValue - minValue) / rangeInterval;
+        minValue -= (maxValue - minValue) / rangeInterval;
+
+        if (maxValue == minValue) {
+            double addedRange = abs(maxValue) / rangeInterval;
+            maxValue = maxValue + addedRange;
+            minValue = minValue - addedRange;
+        }
+        result.append (minValue);
+        result.append (maxValue);
+    }
+
+    return result;
+}
+
 QList<double> getChartYvalueRange(QList<double> yValueList ) {
     QList<double> result;
     if (yValueList.size() == 0) {
@@ -96,11 +127,6 @@ QList<double> getChartYvalueRange(QList<double> yValueList ) {
             maxValue = maxValue + addedRange;
             minValue = minValue - addedRange;
         }
-
-//        if (abs(maxValue - minValue) / abs(minValue) < 0.2) {
-//            maxValue += max(abs(maxValue),  abs(minValue)) / 4;
-//            minValue -= max(abs(maxValue),  abs(minValue)) / 4;
-//        }
         result.append (minValue);
         result.append (maxValue);
     }

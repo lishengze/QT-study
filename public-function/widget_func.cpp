@@ -7,6 +7,9 @@
 #include <QStandardItemModel>
 #include <QScrollBar>
 #include <QCheckBox>
+#include <QCategoryAxis>
+
+#include "process_data_func.h"
 
 QMap <int, int> getSelectRows(QTableView* tableView)
 {
@@ -89,3 +92,15 @@ QStringList getComboBoxKeyList(QListWidget* currWidget) {
     }
     return result;
 }
+
+//QCategoryAxis* getTimeAxisX  (QList<QString> timeList, int tickCount) {
+//    QCategoryAxis* axisX = new QCategoryAxis;
+//    axisX->setStartValue(0);
+//    QList<int> axisXPosList = getNumbList(timeList.size(), tickCount);
+//    for (int i = 0; i < axisXPosList.size(); ++i) {
+//        int xpos = axisXPosList[i];
+//        axisX->append (timeList[xpos], xpos);
+//    }
+//    axisX->setMax(timeList.size()-1);
+//    return axisX;
+//}

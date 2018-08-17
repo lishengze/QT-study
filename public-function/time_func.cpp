@@ -230,3 +230,12 @@ bool waitForNextTradingDay(QTableView* programInfoTableView) {
     }
     return waitDays != -1;
 }
+
+bool isMinuteType(QString dataType) {
+    if (dataType.indexOf("day") >= 0 || dataType.indexOf("month") >=0
+        || dataType.indexOf("week") >= 0) {
+        return false;
+    } else {
+        return true;
+    }
+}

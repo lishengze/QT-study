@@ -215,7 +215,7 @@ int writeOneRowData(QString fileName, QStringList oriData, int targetRow, int st
 
 // 补充未上市的数据;
 // 删除可能多余的数据;
-int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_time_list) {
+int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_time_list, int keyCount) {
     QList<QStringList> ori_time_list;
     for (int i = 0; i <ori_result.size(); ++i) {
         QStringList tmp_data;
@@ -230,7 +230,7 @@ int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_
             QStringList unlist_data;
             unlist_data.append(index_time_list[i][0]);
             unlist_data.append(index_time_list[i][1]);
-            for (int j = 2; j < ori_result[0].size(); ++j) {
+            for (int j = 2; j < keyCount; ++j) {
                 unlist_data.append(QString("%1").arg(-1));
             }
             ori_result.insert(i, unlist_data);
@@ -260,12 +260,10 @@ int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_
         }
     }
 
-//    qDebug() << "ori_result: " << ori_result;
     for (int i = 0; i < ori_result.size(); ++i) {
         ori_result[i].removeAt(0);
         ori_result[i].removeAt(0);
     }
-//    qDebug() << "ori_result: " << ori_result;
     return 1;
 }
 

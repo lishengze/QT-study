@@ -7,6 +7,9 @@
 #include "process_data_func.h"
 #include <algorithm>
 using std::abs;
+using std::max;
+
+int g_errorNumbValue = -10000000;
 
 double getAveValue(QList<double> oriData) {
     double result = 0;
@@ -14,6 +17,20 @@ double getAveValue(QList<double> oriData) {
         result += oriData[i];
     }
     return result/oriData.size();
+}
+
+double getAveValue(QList<double> oriData, int startPos, int endPos) {
+//    qDebug() << "startPos: " << startPos << ", endPos: " << endPos;
+    if (startPos < 0 || startPos > oriData.size()-1
+      || endPos < 0 || endPos > oriData.size()
+      || oriData.size() == 0 || startPos >= endPos) {
+        return g_errorNumbValue;
+    }
+    double result = 0;
+    for (int i = startPos; i < endPos; ++i) {
+        result += oriData[i];
+    }
+    return result / (endPos - startPos);
 }
 
 double getAveDev(QList<double> oriData) {
@@ -326,3 +343,130 @@ QList<QStringList> getCSSList(QList<QStringList> profiltList, int aveNumb, doubl
 
     return result;
 }
+
+QList<double> getCSSList(QList<double> oriTypList, int aveNumb, double csst12Rate,
+                              double csstRate1, double csstRate2, double maxCSS, double minCSS,
+                              bool isPotentialEnergy) {
+    QList<double> result;
+    QList<double> csstList;
+    QList<double> cssList;
+    QList<double> typList;
+    for (int i = 0; i < aveNumb; ++i) {
+        csstList.append(0);
+        cssList.append(0);
+        result.append(0);
+    }
+    result.append(0);
+
+    for (int i = 1; i < oriTypList.size(); ++i) {
+        typList.append((oriTypList[i] + oriTypList[i-1]) / 2);
+    }
+//    qDebug() << typList;
+
+//    qDebug() << aveNumb << csst12Rate << csstRate1 << csstRate2 << maxCSS << minCSS;
+
+    for (int i = aveNumb-1; i < typList.size(); ++i) {
+        double typAveValue = getAveValue(typList, i-aveNumb+1, i+1);
+        double csst11 = typList[i] - typAveValue;
+        double csst12 = csst12Rate * getAveDev(getSubList(typList, i-aveNumb+1, i+1));
+        double csst13 = csst11 / csst12;
+        double csst;
+        if (i == aveNumb-1) {
+            csst = csst13;
+        } else {
+//            qDebug() << csstList.last() << csst13;
+            csst = csstList.last() * csstRate1 + csst13 * csstRate2;
+        }
+        csstList.append(csst);
+
+//        qDebug() << QString("css12[%1]: %2, css13[%1]: %3, csst[%1]: %4")
+//                    .arg(i-aveNumb+1).arg(csst12).arg(csst13).arg(csst);
+
+        double css = reboundValue(csst, maxCSS, minCSS);
+        cssList.append(css);
+    }
+
+    if (!isPotentialEnergy) {
+        for (int i = aveNumb; i < cssList.size()-1; ++i) {
+            result.append((cssList[i] + cssList[i+1]) / 2);
+        }
+    } else {
+        result = cssList;
+    }
+
+    return result;
+}
+
+QList<QList<double>> getAVEList(QList<double> oridata, QList<int> aveNumb, QList<bool> isEMAList) {
+    QList<QList<double>> result;
+    for (int i = 0; i < aveNumb.size(); ++i) {
+        QList<double> emptyData;
+        result.append(emptyData);
+    }
+
+    for (int i = 0; i < aveNumb.size(); ++i) {
+        int currAveNumb = aveNumb[i];
+        if (isEMAList[i]) {
+            result[i].append(oridata[0]);
+            for (int j = 1; j < oridata.size(); ++j) {
+                double emaValue = result[i].last() * (currAveNumb - 1) / (currAveNumb + 1)
+                                + oridata[j] * 2 / (currAveNumb + 1);
+                result[i].append(emaValue);
+            }
+        } else {
+            for (int j = 0; j < oridata.size(); ++j) {
+                int startPos = max(0, j - currAveNumb+1);
+                result[i].append(getAveValue(oridata, startPos, j+1));
+            }
+        }
+    }
+    return result;
+}
+
+QList<double> getAVEList(QList<double> oridata, int aveNumb, bool isEMAList) {
+    QList<double> result;
+    if (isEMAList) {
+        result.append(oridata[0]);
+        for (int j = 1; j < oridata.size(); ++j) {
+            double emaValue = result.last() * (aveNumb - 1) / (aveNumb + 1)
+                            + oridata[j] * 2 / (aveNumb + 1);
+            result.append(emaValue);
+        }
+    } else {
+        for (int j = 0; j < oridata.size(); ++j) {
+            int startPos = max(0, j-aveNumb+1);
+            result.append(getAveValue(oridata, startPos, j+1));
+        }
+    }
+    return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

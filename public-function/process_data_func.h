@@ -11,6 +11,8 @@ QList<QPointF> mergeSortedPointedList(QList<QPointF> firstList, int firstBuyCoun
 
 QList<double> getChartYvalueRange(QList<QPointF> pointList );
 
+QList<double> getChartYvalueRange(QList<QList<double>> yValueList);
+
 QList<double> getChartYvalueRange(QList<double> yValueList );
 
 QList<double> getMACDRange(QList<MACD> oriData);

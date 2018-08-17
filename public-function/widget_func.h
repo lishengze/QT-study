@@ -4,6 +4,7 @@
 #include <QStandardItemModel>
 #include <QFileInfo>
 #include <QListWidget>
+//#include <QCategoryAxis>
 
 QMap <int, int> getSelectRows(QTableView* tableView);
 
@@ -18,4 +19,7 @@ QStandardItemModel* getStandardItemModel(QList<QString> valueList);
 QStandardItemModel* getStandardItemModel(QList<QFileInfo> valueList);
 
 QStringList getComboBoxKeyList(QListWidget* currWidget);
+
+//QCategoryAxis* getTimeAxisX(QList<QString> timeList, int tickCount);
+
 #endif // WIDGET_FUNC_H

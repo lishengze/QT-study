@@ -4,7 +4,11 @@
 #include <QPointF>
 #include "macd.h"
 
+extern int g_errorNumbValue;
+
 double getAveValue(QList<double>);
+
+double getAveValue(QList<double> oriData, int startPos, int endPos);
 
 double getAveDev(QList<double> oriData);
 
@@ -37,5 +41,30 @@ QList<QStringList> getRelativeProfitList(QList<QStringList> selectIndexData, QLi
 
 QList<QStringList> getCSSList(QList<QStringList> profiltList, int aveNumb, double csst12Rate,
                               double csstRate1, double csstRate2, double maxCSS, double minCSS);
+
+QList<double> getCSSList(QList<double> typList, int aveNumb, double csst12Rate,
+                         double csstRate1, double csstRate2, double maxCSS, double minCSS,
+                         bool isPotentialEnergy);
+
+QList<QList<double>> getAVEList(QList<double> oridata, QList<int> aveNumb, QList<bool> isEMAList);
+
+QList<double> getAVEList(QList<double> oridata, int aveNumb, bool isEMAList);
+
+template<class T>
+T mean(QList<T> oridata, int startPos, int endPos) {
+    if (startPos < 0 || startPos > oridata.size()-1
+      || endPos < 0 || endPos > oridata.size()
+      || oridata.size() == 0 || startPos >= endPos) {
+        return g_errorNumbValue;
+    }
+    double sum = 0;
+    for (int i = startPos; i < endPos; ++i) {
+        sum += oridata[i];
+    }
+    double result = sum / (endPos - startPos);
+    return result;
+
+}
+
 
 #endif // COMPUTE_FUNC_H
