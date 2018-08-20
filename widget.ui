@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1399</width>
-    <height>1005</height>
+    <width>1406</width>
+    <height>1095</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -22,7 +22,7 @@
   <property name="windowTitle">
    <string>Widget</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_10">
+  <layout class="QGridLayout" name="gridLayout_13">
    <item row="0" column="0">
     <widget class="QGroupBox" name="CalendarBox">
      <property name="minimumSize">
@@ -233,7 +233,7 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>0</width>
+       <width>350</width>
        <height>0</height>
       </size>
      </property>
@@ -402,6 +402,12 @@
    </item>
    <item row="2" column="0">
     <widget class="QGroupBox" name="chooseAnnouncement">
+     <property name="minimumSize">
+      <size>
+       <width>350</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="maximumSize">
       <size>
        <width>350</width>
@@ -460,6 +466,12 @@
    </item>
    <item row="3" column="0">
     <widget class="QGroupBox" name="choooseFuture">
+     <property name="minimumSize">
+      <size>
+       <width>350</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="maximumSize">
       <size>
        <width>350</width>
@@ -523,6 +535,12 @@
    </item>
    <item row="4" column="0">
     <widget class="QGroupBox" name="chooseIndexBox">
+     <property name="minimumSize">
+      <size>
+       <width>350</width>
+       <height>160</height>
+      </size>
+     </property>
      <property name="maximumSize">
       <size>
        <width>350</width>
@@ -532,111 +550,127 @@
      <property name="title">
       <string>选择对冲指数</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0">
-       <widget class="QLabel" name="timeFre_label_2">
-        <property name="maximumSize">
-         <size>
-          <width>60</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="sizeIncrement">
-         <size>
-          <width>40</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>时间频率:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="index_dataFrequency">
-        <property name="maximumSize">
-         <size>
-          <width>80</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>目标指数: </string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLabel" name="hedgeTarget_Label_2">
-        <property name="maximumSize">
-         <size>
-          <width>60</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>对冲指数:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0" colspan="2">
-       <widget class="QLabel" name="startTimeLabel_3">
-        <property name="text">
-         <string>起始时间:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2" colspan="3">
-       <widget class="QDateEdit" name="chooseIndexStartDate"/>
-      </item>
-      <item row="3" column="0" colspan="2">
-       <widget class="QLabel" name="endTimeLabel_3">
-        <property name="text">
-         <string>终止时间:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="4">
-       <widget class="QComboBox" name="hedgeIndex_comboBox">
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QComboBox" name="targetIndex_QComboBox"/>
-      </item>
-      <item row="3" column="2" colspan="3">
-       <widget class="QDateEdit" name="chooseIndexEndDate"/>
-      </item>
-      <item row="0" column="3">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>平均数:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="4">
-       <widget class="QPushButton" name="showIndexHedgedPic_pushButton">
-        <property name="text">
-         <string>显示对冲图像</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4">
-       <widget class="QSpinBox" name="indexAveNunb_spinBox"/>
-      </item>
-     </layout>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>325</width>
+        <height>129</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="QLabel" name="timeFre_label_2">
+         <property name="maximumSize">
+          <size>
+           <width>60</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="sizeIncrement">
+          <size>
+           <width>40</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>时间频率:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="index_dataFrequency">
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>平均数:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QSpinBox" name="indexAveNunb_spinBox"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>目标指数: </string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="targetIndex_QComboBox"/>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLabel" name="hedgeTarget_Label_2">
+         <property name="maximumSize">
+          <size>
+           <width>60</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>对冲指数:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QComboBox" name="hedgeIndex_comboBox">
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="startTimeLabel_3">
+         <property name="text">
+          <string>起始时间:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="endTimeLabel_3">
+         <property name="text">
+          <string>终止时间:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
+        <widget class="QPushButton" name="showIndexHedgedPic_pushButton">
+         <property name="text">
+          <string>显示对冲图像</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2" colspan="2">
+        <widget class="QDateEdit" name="chooseIndexStartDate"/>
+       </item>
+       <item row="3" column="2" colspan="2">
+        <widget class="QDateEdit" name="chooseIndexEndDate"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item row="5" column="0">
     <widget class="QGroupBox" name="chooseEnergy_groupBox">
+     <property name="minimumSize">
+      <size>
+       <width>350</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="maximumSize">
       <size>
        <width>350</width>
@@ -646,19 +680,137 @@
      <property name="title">
       <string>选择势能参数</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_9">
+     <layout class="QGridLayout" name="gridLayout_10">
       <item row="0" column="0">
-       <widget class="QPushButton" name="showAVEEnergy_pushButton">
-        <property name="text">
-         <string>显示图像</string>
-        </property>
-       </widget>
+       <layout class="QGridLayout" name="gridLayout_9">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>开始时间:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3" colspan="3">
+         <widget class="QDateEdit" name="energyStart_dateEdit"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>结束时间:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3" colspan="3">
+         <widget class="QDateEdit" name="energyEnd_dateEdit"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>时间频率:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3" colspan="3">
+         <widget class="QComboBox" name="energyDataFrequency_comboBox"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>指数:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0" colspan="3">
+         <widget class="QLabel" name="label_11">
+          <property name="minimumSize">
+           <size>
+            <width>60</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>股票(多个输入用 &quot;,&quot; 隔开)：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="3" colspan="3">
+         <widget class="QLineEdit" name="energyStockCode_lineEdit">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>均线参数: </string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QComboBox" name="energyAveParam_comboBox"/>
+        </item>
+        <item row="5" column="2" colspan="2">
+         <widget class="QLabel" name="label_13">
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>指标参数： </string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="4" colspan="2">
+         <widget class="QComboBox" name="energyCssParam_comboBox">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="5">
+         <widget class="QPushButton" name="showAVEEnergy_pushButton">
+          <property name="text">
+           <string>显示图像</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3" colspan="3">
+         <widget class="QComboBox" name="energyIndexCode_comboBox"/>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
    </item>
    <item row="6" column="0">
     <widget class="QGroupBox" name="chooseDataSource">
+     <property name="minimumSize">
+      <size>
+       <width>350</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="title">
       <string>选择数据源</string>
      </property>

@@ -18,6 +18,7 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 
+#include "secode_func.h"
 #include "excel_func.h"
 #include "widget_func.h"
 #include "io_func.h"
@@ -114,10 +115,10 @@ void Widget::initWidegt() {
     initDatasourceCombox();
     initSpreadSpinbox();
 
-    initHedgeIndexDataFrequency();
+    initDataFrequency();
     initSelectIndexComboBox();
     initHedgedIndexComboBox();
-    initIndexDate();
+    initEnergyIndexCodeComboBox();
     initIndexAveNumb();
 
     setFutureContractList();
@@ -139,6 +140,18 @@ void Widget::initCalendar () {
     QDate sevenDayAgo = today.addDays(-7);
     ui->AnnouncementStartDate->setDate(sevenDayAgo);
     ui->AnnouncementEndDate->setDate(today);
+
+    ui->chooseIndexStartDate->setCalendarPopup (true);
+    ui->chooseIndexEndDate->setCalendarPopup (true);
+
+    ui->chooseIndexStartDate->setDate (QDate::currentDate().addDays(-30));
+    ui->chooseIndexEndDate->setDate (QDate::currentDate());
+
+    ui->energyStart_dateEdit->setCalendarPopup (true);
+    ui->energyEnd_dateEdit->setCalendarPopup (true);
+
+    ui->energyStart_dateEdit->setDate (QDate::currentDate().addDays(-365*5));
+    ui->energyEnd_dateEdit->setDate (QDate::currentDate());
 }
 
 void Widget::initHedgeComboBox() {
@@ -153,19 +166,17 @@ void Widget::initHedgeComboBox() {
     ui->hedgeCount_spinBox->setValue (2);
 }
 
-void Widget::initIndexDate() {
-    ui->chooseIndexStartDate->setCalendarPopup (true);
-    ui->chooseIndexEndDate->setCalendarPopup (true);
-
-    ui->chooseIndexStartDate->setDate (QDate::currentDate().addDays(-30));
-    ui->chooseIndexEndDate->setDate (QDate::currentDate());
-}
-
-void Widget::initHedgeIndexDataFrequency() {
+void Widget::initDataFrequency() {
     QStringList timeFre;
-    timeFre << "5m" << "10m" << "15m" << "30m" << "60m"<< "day";
+    timeFre << "5m" << "10m" << "15m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
     ui->index_dataFrequency->addItems (timeFre);
     ui->index_dataFrequency->setCurrentText ("15m");
+
+    ui->dataFrequency->addItems (timeFre);
+    ui->dataFrequency->setCurrentText ("day");
+
+    ui->energyDataFrequency_comboBox->addItems(timeFre);
+    ui->energyDataFrequency_comboBox->setCurrentText ("day");
 }
 
 void Widget::initSelectIndexComboBox() {
@@ -196,13 +207,6 @@ void Widget::initMacdTime () {
     ui->DIFFTimeSpinBox->setValue (9);
 }
 
-void Widget::initDataFrequency () {
-    QStringList timeFre;
-    timeFre << "5m" << "10m" << "15m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
-    ui->dataFrequency->addItems (timeFre);
-    ui->dataFrequency->setCurrentText ("day");
-}
-
 void Widget::setFutureContractCombox() {
     ui->futureList_ComboBox->clear();
     ui->futureList_ComboBox->addItems(m_futureList);
@@ -229,6 +233,14 @@ void Widget::initSpreadSpinbox() {
 
     ui->maxSpread_SpinBox->setValue(100);
     ui->minSpread_SpinBox->setValue(-100);
+}
+
+void Widget::initEnergyIndexCodeComboBox() {
+    QStringList indexList;
+    indexList << "000300" << "000849" << "000908" << "000909" << "000910" << "000911"
+              << "000912" << "000913" << "000915" << "000917" << "000951" << "000952";
+    ui->energyIndexCode_comboBox->addItems (indexList);
+    ui->energyIndexCode_comboBox->setCurrentText ("000300");
 }
 
 void Widget::initProgramWorkInfoTableView () {
@@ -714,7 +726,6 @@ void Widget::closeEvent(QCloseEvent *event) {
 
 void Widget::on_dataSource_ComboBox_currentIndexChanged(const QString &arg1)
 {
-//    qDebug() << "arg1: " << arg1;
     m_currDBHost = arg1;
     setFutureContractList();
     setFutureContractCombox();
@@ -731,7 +742,7 @@ void Widget::on_showIndexHedgedPic_pushButton_clicked()
     QString hedgedIndex = ui->hedgeIndex_comboBox->currentText();
     int aveNumb = ui->indexAveNunb_spinBox->value();
 
-    if (startDate.toInt () >= endDate.toInt ()) {
+    if (startDate.toInt () > endDate.toInt ()) {
         QMessageBox::critical(NULL, "Error", QString("起始时间晚于截止时间"));
         return;
     }
@@ -756,12 +767,19 @@ void Widget::on_showIndexHedgedPic_pushButton_clicked()
 
 void Widget::on_showAVEEnergy_pushButton_clicked()
 {
-    QString startDate = "20140101";
-    QString endDate = "20180801";
+    QString startDate = ui->energyStart_dateEdit->date().toString("yyyyMMdd");
+    QString endDate = ui->energyEnd_dateEdit->date().toString("yyyyMMdd");
     QString dbhost = ui->dataSource_ComboBox->currentText();
-    QString timeType = "day";
+    QString timeType = ui->energyDataFrequency_comboBox->currentText();
     QString databaseName = QString("MarketData_%1").arg(timeType);
-    QString codeName = "SH000300";
+    QString indexCodeName = getCompleteIndexCode(ui->energyIndexCode_comboBox->currentText());
+    QString codeName = indexCodeName;
+    QString stockCodeName = ui->energyStockCode_lineEdit->text();
+    if (stockCodeName != "") {
+        stockCodeName = getCompleteSecode(stockCodeName);
+        codeName = stockCodeName;
+    }
+
     QList<int> aveNumbList;
     QList<bool> isEMAList;
 
@@ -784,19 +802,35 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
     double maxCSS = 300;
     double minCSS = -300;
 
-
-    if (startDate.toInt () >= endDate.toInt ()) {
+    if (startDate.toInt () > endDate.toInt ()) {
         QMessageBox::critical(NULL, "Error", QString("起始时间晚于截止时间"));
         return;
     }
 
-    QWidget* charView = new CSSChartFormOne(dbhost, databaseName,
-                                            startDate, endDate, codeName,
-                                            aveNumbList, isEMAList,
-                                            mainAveNumb, subAveNumb, energyAveNumb,
-                                            css12Rate, mainCssRate1, mainCssRate2,
-                                            energyCssRate1, energyCssRate2, maxCSS, minCSS);
-    m_chartViews.append (charView);
-    charView->setWindowTitle("均线势能");
-    charView->show();
+    if (!isCodeInDatabase(codeName, databaseName, dbhost)) {
+        QMessageBox::critical(NULL, "Error", QString("选择的代码: %1, 不在数据库中").arg(codeName));
+        return;
+    }
+
+    QString info = QString("开始显示指标图: \n代码为: %1, 起始时间: %2, 终止时间: %3\n")
+                   .arg(codeName).arg(startDate).arg(endDate)
+                 + QString("数据频率: %1 \n主指标平均值: %2 \n从指标平均值: %3 \n势能指标平均值: %4\n")
+                   .arg(timeType).arg(mainAveNumb).arg(subAveNumb)
+                   .arg(energyAveNumb);
+
+    if (QMessageBox::Yes == QMessageBox::warning(this, "确认信息", info, QMessageBox::Yes|QMessageBox::No)) {
+        updateProgramInfo (ui->programInfo_tableView, info);
+
+        QWidget* charView = new CSSChartFormOne(dbhost, databaseName,
+                                                startDate, endDate, codeName,
+                                                aveNumbList, isEMAList,
+                                                mainAveNumb, subAveNumb, energyAveNumb,
+                                                css12Rate, mainCssRate1, mainCssRate2,
+                                                energyCssRate1, energyCssRate2, maxCSS, minCSS);
+        m_chartViews.append (charView);
+        charView->setWindowTitle(QString("%1,[%2, %3], %4 指标图")
+                                 .arg(codeName).arg(startDate).arg(endDate).arg(timeType));
+        charView->show();
+    }
+
 }

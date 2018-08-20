@@ -7,6 +7,7 @@
 #include <QLegendMarker>
 #include <QChartView>
 #include <QBarSet>
+#include <QColor>
 
 #pragma execution_character_set("utf-8")
 
@@ -24,13 +25,13 @@ CSSChartFormOne::CSSChartFormOne(QString dbhost, QString databaseName,
                                 double energyCssRate1, double energyCssRate2,
                                 double maxCSS, double minCSS,
                                 QWidget *parent):
-                        m_dbhost(dbhost), m_databaseName(databaseName),
-                        m_startDate(startDate), m_endDate(endDate), m_singleCodeName(codeName),
-                        m_aveNumbList(aveNumbList), m_isEMAList(isEMAList),
-                        m_mainAveNumb(mainAveNumb), m_subAveNumb(subAveNumb), m_energyAveNumb(energyAveNumb),
-                        m_css12Rate(css12Rate), m_mainCssRate1(mainCssRate1), m_mainCssRate2(mainCssRate2),
-                        m_energyCssRate1(energyCssRate1), m_energyCssRate2(energyCssRate2),
-                        m_maxCSS(maxCSS), m_minCSS(minCSS),
+                                m_dbhost(dbhost), m_databaseName(databaseName),
+                                m_startDate(startDate), m_endDate(endDate), m_singleCodeName(codeName),
+                                m_aveNumbList(aveNumbList), m_isEMAList(isEMAList),
+                                m_mainAveNumb(mainAveNumb), m_subAveNumb(subAveNumb), m_energyAveNumb(energyAveNumb),
+                                m_css12Rate(css12Rate), m_mainCssRate1(mainCssRate1), m_mainCssRate2(mainCssRate2),
+                                m_energyCssRate1(energyCssRate1), m_energyCssRate2(energyCssRate2),
+                                m_maxCSS(maxCSS), m_minCSS(minCSS),
                         BaseChart(parent),ui(new Ui::CSSChartFormOne)
 {
     ui->setupUi(this);
@@ -64,7 +65,10 @@ void CSSChartFormOne::initCommonData() {
     m_isKeyMove = false;
     m_mouseInitPos = QPoint(-1, -1);
     m_oldPointDistance = -1;
-    m_cssMarkValueList << -200 << 200 << -158 << 158 << -130 << 130 << -80 << 80;
+//    m_cssMarkValueList << -200 << 200 << -158 << 158 << -130 << 130 << -80 << 80 << 300;
+    m_cssMarkValueList << -200  << -158  << -130 << -80 << 80 << 130 << 158<< 200<< 300;
+
+//    m_cssMarkValueList << 200;
 }
 
 void CSSChartFormOne::initHistoryData() {
@@ -152,7 +156,6 @@ void CSSChartFormOne::addPropertyLabel() {
 }
 
 void CSSChartFormOne::initLayout() {
-    this->setWindowTitle(QString("%1").arg(m_singleCodeName));
     ui->title_Label->setText(QString("%1: [%2, %3] 指标图")
                              .arg(m_singleCodeName).arg(m_startDate).arg(m_endDate));
     initChartView();
@@ -172,6 +175,8 @@ void CSSChartFormOne::initLayout() {
     this->setMouseTracking(true);
 
     initTheme();
+
+    setLineColor();
 }
 
 void CSSChartFormOne::initTheme() {
@@ -191,6 +196,75 @@ QLineSeries* getTestLineSeries() {
         result->append(i,i);
     }
     return result;
+}
+
+void CSSChartFormOne::setLineColor() {
+    m_aveLineSeries[0]->setPen(QPen(QBrush(QColor(200,80,0)), 1.6));
+    m_aveLineSeries[1]->setColor(QColor(211, 211, 211));
+    m_aveLineSeries[2]->setColor(QColor(34,139,34));
+    m_aveLineSeries[3]->setColor(QColor(255,255,0));
+    m_aveLineSeries[4]->setColor(QColor(213,0,249));
+    m_aveLineSeries[5]->setColor(QColor(130,119,23));
+    m_aveLineSeries[6]->setColor(QColor(0,172,193));
+    m_aveLineSeries[7]->setColor(QColor(67,160,71));
+    m_aveLineSeries[8]->setColor(QColor(229,115,115));
+    m_aveLineSeries[9]->setColor(QColor(255, 255, 255));
+    m_aveLineSeries[10]->setColor(QColor(255, 0, 0));
+
+    m_cssLineSeries[0]->setColor(QColor(255,255,0));
+    m_cssLineSeries[1]->setColor(QColor(34,139,34));
+
+//    m_cssMarkLineSeries[0]->setPen(QPen(QBrush(QColor(253,216,53)), 0.5));   // -200
+//    m_cssMarkLineSeries[1]->setPen(QPen(QBrush(QColor(117,117,117)), 0.5));  // -158
+//    m_cssMarkLineSeries[2]->setPen(QPen(QBrush(QColor(229,115,115)), 2));    // -130
+//    m_cssMarkLineSeries[3]->setPen(QPen(QBrush(QColor(211,47,47)), 0.5));    // -80
+//    m_cssMarkLineSeries[4]->setPen(QPen(QBrush(QColor(0,172,193)), 0.5));    // 80
+//    m_cssMarkLineSeries[5]->setPen(QPen(QBrush(QColor(0,172,193)), 0.5));    // 130
+//    m_cssMarkLineSeries[6]->setPen(QPen(QBrush(QColor(117,117,117)), 0.5));  // 158
+//    m_cssMarkLineSeries[7]->setPen(QPen(QBrush(QColor(253,216,53)), 0.5));   // 200
+//    m_cssMarkLineSeries[8]->setPen(QPen(QBrush(QColor(180,180,180)), 0.5)); // 300
+
+//    m_cssMarkLineSeries[0]->setColor(QColor(253,216,53));
+//    m_cssMarkLineSeries[1]->setColor(QColor(253,216,53));
+//    m_cssMarkLineSeries[2]->setColor(QColor(117,117,117));
+//    m_cssMarkLineSeries[3]->setColor(QColor(117,117,117));
+//    m_cssMarkLineSeries[4]->setColor(QColor(229,115,115));
+//    m_cssMarkLineSeries[5]->setColor(QColor(0,172,193));
+//    m_cssMarkLineSeries[6]->setColor(QColor(211,47,47));
+//    m_cssMarkLineSeries[7]->setColor(QColor(0,172,193));
+}
+
+void CSSChartFormOne::testLineColor() {
+    qDebug() << "m_aveLineSeries[0].color: " << m_aveLineSeries[0]->color();
+
+//    qDebug() << m_cssChart->axisY()->count();
+}
+
+QCategoryAxis* CSSChartFormOne::getCCSAxisY () {
+    QCategoryAxis* axisY = new QCategoryAxis;
+    axisY->setStartValue(m_minCSS);
+    axisY->setMax(m_maxCSS);
+    axisY->setMin(m_minCSS);
+    axisY->setGridLineVisible(false);
+    for (auto markValue:m_cssMarkValueList) {
+        int pos = markValue - m_minCSS;
+        axisY->append(QString("%1").arg(markValue), pos);
+        qDebug() << pos << markValue;
+    }
+    return axisY;
+}
+
+QBarCategoryAxis* CSSChartFormOne::getQBarCategoryAxisAxisY() {
+    QBarCategoryAxis* axisY = new QBarCategoryAxis;
+//    axisY->setMax(m_maxCSS);
+//    axisY->setMin(m_minCSS);
+    axisY->setGridLineVisible(false);
+    for (auto markValue:m_cssMarkValueList) {
+        int pos = markValue - m_minCSS;
+        axisY->insert(pos, QString("%1").arg(markValue));
+        qDebug() << pos << markValue;
+    }
+    return axisY;
 }
 
 void CSSChartFormOne::initChartView() {
@@ -231,6 +305,12 @@ void CSSChartFormOne::initChartView() {
 
     QValueAxis* cssAxisY = new QValueAxis;
     cssAxisY->setRange(m_minCSS, m_maxCSS);
+    cssAxisY->setGridLineVisible(false);
+    cssAxisY->setLineVisible(true);
+    cssAxisY->setLabelsVisible(false);
+
+    QCategoryAxis* cssAxisYRight = getCCSAxisY();
+//    QBarCategoryAxis* cssAxisYRight = getQBarCategoryAxisAxisY();
 
     QList<int> aveList;
     aveList << m_mainAveNumb << m_subAveNumb;
@@ -279,18 +359,25 @@ void CSSChartFormOne::initChartView() {
 
     m_cssChart->setAnimationOptions(QChart::NoAnimation);
     m_cssChart->addAxis(timeAxisX, Qt::AlignBottom);
-    m_cssChart->addAxis(cssAxisY, Qt::AlignLeft);
+//    m_cssChart->addAxis(cssAxisY, Qt::AlignLeft);
+//    m_cssChart->addAxis(cssAxisYRight, Qt::AlignRight);
+    m_cssChart->addAxis(cssAxisYRight, Qt::AlignLeft);
+
     for (auto lineSeries:m_cssLineSeries) {
         lineSeries->attachAxis(timeAxisX);
-        lineSeries->attachAxis(cssAxisY);
+//        lineSeries->attachAxis(cssAxisY);
+        lineSeries->attachAxis(cssAxisYRight);
     }
     for (auto lineSeries:m_cssMarkLineSeries) {
         lineSeries->attachAxis(timeAxisX);
-        lineSeries->attachAxis(cssAxisY);
+//        lineSeries->attachAxis(cssAxisY);
+        lineSeries->attachAxis(cssAxisYRight);
     }
     m_energySeries->attachAxis(timeAxisX);
-    m_energySeries->attachAxis(cssAxisY);
+//    m_energySeries->attachAxis(cssAxisY);
+    m_energySeries->attachAxis(cssAxisYRight);
 }
+
 
 void CSSChartFormOne::sendCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
                                        QList<QList<double>> cssList) {
@@ -465,7 +552,7 @@ double CSSChartFormOne::getPointXDistance() {
 }
 
 void CSSChartFormOne::closeEvent(QCloseEvent *event) {
-
+    event;
 }
 
 void CSSChartFormOne::connectMarkers()
@@ -491,10 +578,12 @@ void CSSChartFormOne::connectMarkers()
 void CSSChartFormOne::disconnectMarkers()
 {
     foreach (QLegendMarker* marker, m_aveChart->legend()->markers()) {
-        QObject::disconnect(marker, SIGNAL(clicked()), this, SLOT(handleMarkerClicked()));
+        QObject::disconnect(marker, SIGNAL(clicked()),
+                            this, SLOT(handleMarkerClicked()));
     }
     foreach (QLegendMarker* marker, m_cssChart->legend()->markers()) {
-        QObject::disconnect(marker, SIGNAL(clicked()), this, SLOT(handleMarkerClicked()));
+        QObject::disconnect(marker, SIGNAL(clicked()),
+                            this, SLOT(handleMarkerClicked()));
     }
 }
 
@@ -504,43 +593,77 @@ void CSSChartFormOne::handleMarkerClicked()
     Q_ASSERT(marker);
 //    qDebug() << "handleMarkerClicked";
 
+    // Toggle visibility of series
+    marker->series()->setVisible(!marker->series()->isVisible());
+
+    // Turn legend marker back to visible, since hiding series also hides the marker
+    // and we don't want it to happen now.
+    marker->setVisible(true);
+    // Dim the marker, if series is not visible
+    qreal alpha = 1.0;
+
+    if (!marker->series()->isVisible()) {
+        alpha = 0.5;
+    }
+
+    QColor color;
+    QBrush brush = marker->labelBrush();
+    color = brush.color();
+    color.setAlphaF(alpha);
+    brush.setColor(color);
+    marker->setLabelBrush(brush);
+
+    brush = marker->brush();
+    color = brush.color();
+    color.setAlphaF(alpha);
+    brush.setColor(color);
+    marker->setBrush(brush);
+
+    QPen pen = marker->pen();
+    color = pen.color();
+    color.setAlphaF(alpha);
+    pen.setColor(color);
+    marker->setPen(pen);
+
+    /*
     switch (marker->type())
     {
-        case QLegendMarker::LegendMarkerTypeXY:
+//        case QLegendMarker::LegendMarkerTypeXY:
+        case true:
         {
-        // Toggle visibility of series
-        marker->series()->setVisible(!marker->series()->isVisible());
+            // Toggle visibility of series
+            marker->series()->setVisible(!marker->series()->isVisible());
 
-        // Turn legend marker back to visible, since hiding series also hides the marker
-        // and we don't want it to happen now.
-        marker->setVisible(true);
-        // Dim the marker, if series is not visible
-        qreal alpha = 1.0;
+            // Turn legend marker back to visible, since hiding series also hides the marker
+            // and we don't want it to happen now.
+            marker->setVisible(true);
+            // Dim the marker, if series is not visible
+            qreal alpha = 1.0;
 
-        if (!marker->series()->isVisible()) {
-            alpha = 0.5;
-        }
+            if (!marker->series()->isVisible()) {
+                alpha = 0.5;
+            }
 
-        QColor color;
-        QBrush brush = marker->labelBrush();
-        color = brush.color();
-        color.setAlphaF(alpha);
-        brush.setColor(color);
-        marker->setLabelBrush(brush);
+            QColor color;
+            QBrush brush = marker->labelBrush();
+            color = brush.color();
+            color.setAlphaF(alpha);
+            brush.setColor(color);
+            marker->setLabelBrush(brush);
 
-        brush = marker->brush();
-        color = brush.color();
-        color.setAlphaF(alpha);
-        brush.setColor(color);
-        marker->setBrush(brush);
+            brush = marker->brush();
+            color = brush.color();
+            color.setAlphaF(alpha);
+            brush.setColor(color);
+            marker->setBrush(brush);
 
-        QPen pen = marker->pen();
-        color = pen.color();
-        color.setAlphaF(alpha);
-        pen.setColor(color);
-        marker->setPen(pen);
+            QPen pen = marker->pen();
+            color = pen.color();
+            color.setAlphaF(alpha);
+            pen.setColor(color);
+            marker->setPen(pen);
 
-        break;
+            break;
         }
     default:
         {
@@ -548,5 +671,6 @@ void CSSChartFormOne::handleMarkerClicked()
         break;
         }
     }
+    */
 }
 

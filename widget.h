@@ -44,11 +44,10 @@ public:
     void initCalendar();
     void initHedgeComboBox();
     void initDataFrequency();
-    void initIndexDate();
-    void initHedgeIndexDataFrequency();
     void initSelectIndexComboBox();
     void initHedgedIndexComboBox();
     void initIndexAveNumb();
+    void initEnergyIndexCodeComboBox();
 
     void initMacdTime();
     void setFutureContractCombox();

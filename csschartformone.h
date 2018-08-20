@@ -7,6 +7,7 @@
 #include <QCategoryAxis>
 #include <QLabel>
 #include <QStackedBarSeries>
+#include <QBarCategoryAxis>
 
 #include "basechart.h"
 #include "qmychartview.h"
@@ -49,6 +50,11 @@ public:
 
     void startGetData();
     void addPropertyLabel();
+    void setLineColor();
+    void testLineColor();
+
+    QCategoryAxis* getCCSAxisY ();
+    QBarCategoryAxis* getQBarCategoryAxisAxisY();
 
     virtual void initLayout();
     virtual void initTheme();
