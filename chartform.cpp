@@ -41,7 +41,7 @@ ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
                      QMap<QString, int> strategyMap, QString strategyName,
                      QMap<QString, int> buyStrategyMap, QMap<QString, int> saleStrategyMap,
                      bool isRealTime, QString startDate, QString endDate, QString timeType):
-    BaseChart(parent), m_programInfoTableView(programInfoTableView),
+    BaseChart(chartViewID, parent), m_programInfoTableView(programInfoTableView),
     m_chartViewID(chartViewID), m_dbhost(dbhost), m_isBuySalePortfolio(isBuySalePortfolio),
     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount), m_macdTime(macdTime),
     m_secodebuyCountMap(strategyMap), m_strategyName(strategyName),
@@ -923,6 +923,7 @@ void ChartForm::closeEvent(QCloseEvent *event) {
                 m_monitorWorker->stopTimer();
             }            
         }
+        emit windowClose_signal(m_chartViewID);
         m_isclosed = true;
     }
 }

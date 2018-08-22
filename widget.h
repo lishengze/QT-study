@@ -15,7 +15,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QFileInfo>
-
+#include <QListWidget>
 
 #include "announcementform.h"
 #include "database.h"
@@ -44,6 +44,7 @@ public:
     void initCalendar();
     void initHedgeComboBox();
     void initDataFrequency();
+    void initEnergyDataFreq();
     void initSelectIndexComboBox();
     void initHedgedIndexComboBox();
     void initIndexAveNumb();
@@ -57,6 +58,12 @@ public:
     void initTableContextMenu();
     void initProgramWorkInfoTableView();
 
+    void initCSSParamComBox();
+    bool checkCodeInDatabase(QString codeName, QString dbhost, QStringList timeTypeList);
+
+    QStringList getEnergyDataFreq();
+    QList<int> getCSSParams();
+    void getAveParams(QList<int>& aveNumbList, QList<bool>& isEMAList);
     void setFutureContractList();
     void setStrategyTable();
     void setBuySalePortfolioTable();
@@ -69,7 +76,7 @@ protected:
 signals:
 
 public slots:
-    void receiveChartCLoseSignal(int chartViewID);
+    void windowClose_slot(int windowID);
 
 private slots:
     void on_chooseStartDate_editingFinished();
@@ -110,7 +117,6 @@ private slots:
 
     void on_showFutureSpread_Button_clicked();
 
-
     void on_dataSource_ComboBox_currentIndexChanged(const QString &arg1);
 
     void on_showIndexHedgedPic_pushButton_clicked();
@@ -149,7 +155,9 @@ private:
     AnnouncementForm*        m_announcementView;
     GeneratePortfolioForm*   m_genePortfolioWindow;
 
-
+    QListWidget*             m_aveParamListWidget;
+    QListWidget*             m_cssParamListWidget;
+    QListWidget*             m_energyDataFreqListWidget;
 };
 
 #endif // WIDGET_H

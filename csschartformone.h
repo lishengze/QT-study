@@ -34,7 +34,7 @@ class CSSChartFormOne :  public BaseChart
 public:
 //    explicit CSSChartFormOne(QWidget *parent = 0);
 
-    explicit CSSChartFormOne(QString dbhost, QString databaseName,
+    explicit CSSChartFormOne(int chartID, QString dbhost, QString timeType,
                             QString startDate, QString endDate, QString codeName,
                             QList<int> aveNumbList, QList<bool> isEMAList,
                             int mainAveNumb, int subAveNumb, int energyAveNumb,
@@ -47,9 +47,9 @@ public:
     void initCommonData();
     void initHistoryData();
     void registSignalParamsType();
-
     void startGetData();
     void addPropertyLabel();
+
     void setLineColor();
     void testLineColor();
 
@@ -75,25 +75,28 @@ public:
     virtual void KeyReleaseFunc(QEvent *event);
     virtual void moveMouse(int step);
     virtual double getPointXDistance();
+
 signals:
     void getCSSData_signal();
 
+
 public slots:
-    void sendCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>);
+    void sendCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, QString);
 
     void connectMarkers();
     void disconnectMarkers();
     void handleMarkerClicked();
 
 protected:
-    virtual void closeEvent(QCloseEvent *event);
 
 private:
     Ui::CSSChartFormOne *              ui;
 
     QString                            m_dbhost;
     QString                            m_databaseName;
+    QString                            m_timeType;
     QString                            m_startDate;
+    QString                            m_newStartDate;
     QString                            m_endDate;
     int                                m_chartXaxisTickCount;
 
@@ -119,7 +122,7 @@ private:
     QList<QLineSeries*>                m_aveLineSeries;
     QList<QLineSeries*>                m_cssLineSeries;
     QList<QLineSeries*>                m_cssMarkLineSeries;
-    QStackedBarSeries*                 m_energySeries;
+    QList<QStackedBarSeries*>          m_energySeriesList;
     QMyChartView*                      m_aveChartView;
     QChart*                            m_aveChart;
     QMyChartView*                      m_cssChartView;

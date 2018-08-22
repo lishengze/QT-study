@@ -55,7 +55,7 @@ HistoryData::HistoryData(QString dbhost, QString databaseName,
                          int mainAveNumb, int subAveNumb, int energyAveNumb,
                          double css12Rate, double mainCssRate1, double mainCssRate2,
                          double energyCssRate1, double energyCssRate2,
-                         double maxCSS, double minCSS,
+                         double maxCSS, double minCSS, int dataID,
                          QObject *parent):
     m_dbhost(dbhost), m_databaseName(databaseName),
     m_startDate(startDate), m_endDate(endDate), m_singleCodeName(codeName),
@@ -63,7 +63,7 @@ HistoryData::HistoryData(QString dbhost, QString databaseName,
     m_mainAveNumb(mainAveNumb), m_subAveNumb(subAveNumb), m_energyAveNumb(energyAveNumb),
     m_css12Rate(css12Rate), m_mainCssRate1(mainCssRate1), m_mainCssRate2(mainCssRate2),
     m_energyCssRate1(energyCssRate1), m_energyCssRate2(energyCssRate2),
-    m_maxCSS(maxCSS), m_minCSS(minCSS),
+    m_maxCSS(maxCSS), m_minCSS(minCSS), m_databaseID(dataID),
     QObject(parent)
 {
     initCommonData();
@@ -341,6 +341,6 @@ void HistoryData::getCSSData_slot() {
     cssList.append(subValueList);
     cssList.append(energyValueList);
 
-    emit sendCSSData_signal(timeList, aveList, cssList);
+    emit sendCSSData_signal(timeList, aveList, cssList, m_databaseID);
 }
 

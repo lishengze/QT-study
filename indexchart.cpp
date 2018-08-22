@@ -8,12 +8,12 @@
 #include <QMessageBox>
 #pragma execution_character_set("utf-8")
 
-IndexChart::IndexChart(QWidget *parent) :
-    BaseChart(parent),
-    ui(new Ui::IndexChart)
-{
-    ui->setupUi(this);
-}
+//IndexChart::IndexChart(QWidget *parent) :
+//    BaseChart(parent),
+//    ui(new Ui::IndexChart)
+//{
+//    ui->setupUi(this);
+//}
 
 IndexChart::IndexChart(int chartViewID, QString dbhost, QString databaseName,
             QString selectIndex, QString hedgedIndex,
@@ -22,13 +22,13 @@ IndexChart::IndexChart(int chartViewID, QString dbhost, QString databaseName,
             double cssRate1, double cssRate2,
             double maxCSS, double minCSS,
             QWidget *parent):
-    m_chartViewID(chartViewID), m_dbhost(dbhost), m_databaseName(databaseName),
-    m_selectIndex(selectIndex), m_hedgedIndex(hedgedIndex),
-    m_startDate(startDate), m_endDate(endDate),
-    m_aveNumb(aveNumb), m_csst12Rate(css12Rate),
-    m_csstRate1(cssRate1), m_csstRate2(cssRate2),
-    m_maxCSS(maxCSS), m_minCSS(minCSS),
-    BaseChart(parent), ui(new Ui::IndexChart) {
+            m_chartViewID(chartViewID), m_dbhost(dbhost), m_databaseName(databaseName),
+            m_selectIndex(selectIndex), m_hedgedIndex(hedgedIndex),
+            m_startDate(startDate), m_endDate(endDate),
+            m_aveNumb(aveNumb), m_csst12Rate(css12Rate),
+            m_csstRate1(cssRate1), m_csstRate2(cssRate2),
+            m_maxCSS(maxCSS), m_minCSS(minCSS),
+            BaseChart(chartViewID, parent), ui(new Ui::IndexChart) {
 
     ui->setupUi(this);
 
@@ -579,4 +579,6 @@ void IndexChart::closeEvent(QCloseEvent *event) {
     if (NULL != m_monitorWorker) {
         m_monitorWorker->stopTimer();
     }
+
+    emit windowClose_signal(m_chartViewID);
 }

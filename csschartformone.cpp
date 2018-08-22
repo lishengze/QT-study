@@ -8,6 +8,10 @@
 #include <QChartView>
 #include <QBarSet>
 #include <QColor>
+#include <algorithm>
+#include "time_func.h"
+#include "compute_func.h"
+using std::max;
 
 #pragma execution_character_set("utf-8")
 
@@ -17,7 +21,7 @@
 //    ui->setupUi(this);
 //}
 
-CSSChartFormOne::CSSChartFormOne(QString dbhost, QString databaseName,
+CSSChartFormOne::CSSChartFormOne(int chartID, QString dbhost, QString timeType,
                                 QString startDate, QString endDate, QString codeName,
                                 QList<int> aveNumbList, QList<bool> isEMAList,
                                 int mainAveNumb, int subAveNumb, int energyAveNumb,
@@ -25,14 +29,14 @@ CSSChartFormOne::CSSChartFormOne(QString dbhost, QString databaseName,
                                 double energyCssRate1, double energyCssRate2,
                                 double maxCSS, double minCSS,
                                 QWidget *parent):
-                                m_dbhost(dbhost), m_databaseName(databaseName),
+                                m_dbhost(dbhost), m_timeType(timeType),
                                 m_startDate(startDate), m_endDate(endDate), m_singleCodeName(codeName),
                                 m_aveNumbList(aveNumbList), m_isEMAList(isEMAList),
                                 m_mainAveNumb(mainAveNumb), m_subAveNumb(subAveNumb), m_energyAveNumb(energyAveNumb),
                                 m_css12Rate(css12Rate), m_mainCssRate1(mainCssRate1), m_mainCssRate2(mainCssRate2),
                                 m_energyCssRate1(energyCssRate1), m_energyCssRate2(energyCssRate2),
                                 m_maxCSS(maxCSS), m_minCSS(minCSS),
-                        BaseChart(parent),ui(new Ui::CSSChartFormOne)
+                                BaseChart(chartID, parent),ui(new Ui::CSSChartFormOne)
 {
     ui->setupUi(this);
     initCommonData();
@@ -59,25 +63,26 @@ CSSChartFormOne::~CSSChartFormOne()
 }
 
 void CSSChartFormOne::initCommonData() {
+    m_databaseName = QString("MarketData_%1").arg(m_timeType);
     m_chartXaxisTickCount = 5;
     m_keyMoveCount = 0;
     m_currTimeIndex = 0;
     m_isKeyMove = false;
     m_mouseInitPos = QPoint(-1, -1);
     m_oldPointDistance = -1;
-//    m_cssMarkValueList << -200 << 200 << -158 << 158 << -130 << 130 << -80 << 80 << 300;
     m_cssMarkValueList << -200  << -158  << -130 << -80 << 80 << 130 << 158<< 200<< 300;
-
-//    m_cssMarkValueList << 200;
 }
 
 void CSSChartFormOne::initHistoryData() {
-    m_histdataWorker = new HistoryData(m_dbhost, m_databaseName, m_startDate, m_endDate,
+    int maxPreTimeNumb = Max(m_aveNumbList, 0, m_aveNumbList.size());
+    m_newStartDate = getPreDate(m_startDate, m_timeType, maxPreTimeNumb);
+    qDebug() << QString("maxPreTimeNumb: %1, newStartDate: %2").arg(maxPreTimeNumb).arg(m_newStartDate);
+    m_histdataWorker = new HistoryData(m_dbhost, m_databaseName, m_newStartDate, m_endDate,
                                        m_singleCodeName, m_aveNumbList, m_isEMAList,
                                        m_mainAveNumb, m_subAveNumb, m_energyAveNumb,
                                        m_css12Rate, m_mainCssRate1, m_mainCssRate2,
                                        m_energyCssRate1, m_energyCssRate2,
-                                       m_maxCSS, m_minCSS);
+                                       m_maxCSS, m_minCSS, 0);
 
     connect(&m_histdataThread, SIGNAL(finished()),
             m_histdataWorker, SLOT(deleteLater()));
@@ -85,8 +90,8 @@ void CSSChartFormOne::initHistoryData() {
     connect(this, SIGNAL(getCSSData_signal()),
             m_histdataWorker, SLOT(getCSSData_slot()));
 
-    connect(m_histdataWorker, SIGNAL(sendCSSData_signal(QList<QString>, QList<QList<double>>,  QList<QList<double>>)),
-            this, SLOT(sendCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>)));
+    connect(m_histdataWorker, SIGNAL(sendCSSData_signal(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)),
+            this, SLOT(sendCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)));
 
     m_histdataWorker->moveToThread(&m_histdataThread);
 
@@ -156,8 +161,10 @@ void CSSChartFormOne::addPropertyLabel() {
 }
 
 void CSSChartFormOne::initLayout() {
-    ui->title_Label->setText(QString("%1: [%2, %3] 指标图")
-                             .arg(m_singleCodeName).arg(m_startDate).arg(m_endDate));
+    QString time_type = m_databaseName.split("_")[1];
+    ui->title_Label->setText(QString("%1: [%2, %3],%4, 指标图")
+                             .arg(m_singleCodeName).arg(m_startDate)
+                             .arg(m_endDate).arg(time_type));
     initChartView();
 
 //    initTableContextMenu();
@@ -199,7 +206,7 @@ QLineSeries* getTestLineSeries() {
 }
 
 void CSSChartFormOne::setLineColor() {
-    m_aveLineSeries[0]->setPen(QPen(QBrush(QColor(200,80,0)), 1.6));
+    m_aveLineSeries[0]->setPen(QPen(QBrush(QColor(200,80,0)), 1.5));
     m_aveLineSeries[1]->setColor(QColor(211, 211, 211));
     m_aveLineSeries[2]->setColor(QColor(34,139,34));
     m_aveLineSeries[3]->setColor(QColor(255,255,0));
@@ -214,15 +221,15 @@ void CSSChartFormOne::setLineColor() {
     m_cssLineSeries[0]->setColor(QColor(255,255,0));
     m_cssLineSeries[1]->setColor(QColor(34,139,34));
 
-//    m_cssMarkLineSeries[0]->setPen(QPen(QBrush(QColor(253,216,53)), 0.5));   // -200
-//    m_cssMarkLineSeries[1]->setPen(QPen(QBrush(QColor(117,117,117)), 0.5));  // -158
-//    m_cssMarkLineSeries[2]->setPen(QPen(QBrush(QColor(229,115,115)), 2));    // -130
-//    m_cssMarkLineSeries[3]->setPen(QPen(QBrush(QColor(211,47,47)), 0.5));    // -80
-//    m_cssMarkLineSeries[4]->setPen(QPen(QBrush(QColor(0,172,193)), 0.5));    // 80
-//    m_cssMarkLineSeries[5]->setPen(QPen(QBrush(QColor(0,172,193)), 0.5));    // 130
-//    m_cssMarkLineSeries[6]->setPen(QPen(QBrush(QColor(117,117,117)), 0.5));  // 158
-//    m_cssMarkLineSeries[7]->setPen(QPen(QBrush(QColor(253,216,53)), 0.5));   // 200
-//    m_cssMarkLineSeries[8]->setPen(QPen(QBrush(QColor(180,180,180)), 0.5)); // 300
+    m_cssMarkLineSeries[0]->setPen(QPen(QBrush(QColor(253,216,53)), 0.5));   // -200
+    m_cssMarkLineSeries[1]->setPen(QPen(QBrush(QColor(117,117,117)), 0.5));  // -158
+    m_cssMarkLineSeries[2]->setPen(QPen(QBrush(QColor(229,115,115)), 2));    // -130
+    m_cssMarkLineSeries[3]->setPen(QPen(QBrush(QColor(211,47,47)), 0.5));    // -80
+    m_cssMarkLineSeries[4]->setPen(QPen(QBrush(QColor(0,172,193)), 0.5));    // 80
+    m_cssMarkLineSeries[5]->setPen(QPen(QBrush(QColor(0,172,193)), 0.5));    // 130
+    m_cssMarkLineSeries[6]->setPen(QPen(QBrush(QColor(117,117,117)), 0.5));  // 158
+    m_cssMarkLineSeries[7]->setPen(QPen(QBrush(QColor(253,216,53)), 0.5));   // 200
+    m_cssMarkLineSeries[8]->setPen(QPen(QBrush(QColor(180,180,180)), 0.5));  // 300
 
 //    m_cssMarkLineSeries[0]->setColor(QColor(253,216,53));
 //    m_cssMarkLineSeries[1]->setColor(QColor(253,216,53));
@@ -232,6 +239,13 @@ void CSSChartFormOne::setLineColor() {
 //    m_cssMarkLineSeries[5]->setColor(QColor(0,172,193));
 //    m_cssMarkLineSeries[6]->setColor(QColor(211,47,47));
 //    m_cssMarkLineSeries[7]->setColor(QColor(0,172,193));
+
+    QList<QBarSet*> upBarSet =  m_energySeriesList[0]->barSets();
+    upBarSet[0]->setBorderColor(QColor(239,154,154));
+    upBarSet[0]->setColor(QColor(239,154,154));
+    QList<QBarSet*> downBarSet =  m_energySeriesList[1]->barSets();
+    downBarSet[0]->setBorderColor(QColor(0,229,255));
+    downBarSet[0]->setColor(QColor(0,229,255));
 }
 
 void CSSChartFormOne::testLineColor() {
@@ -249,7 +263,7 @@ QCategoryAxis* CSSChartFormOne::getCCSAxisY () {
     for (auto markValue:m_cssMarkValueList) {
         int pos = markValue - m_minCSS;
         axisY->append(QString("%1").arg(markValue), pos);
-        qDebug() << pos << markValue;
+//        qDebug() << pos << markValue;
     }
     return axisY;
 }
@@ -307,7 +321,7 @@ void CSSChartFormOne::initChartView() {
     cssAxisY->setRange(m_minCSS, m_maxCSS);
     cssAxisY->setGridLineVisible(false);
     cssAxisY->setLineVisible(true);
-    cssAxisY->setLabelsVisible(false);
+//    cssAxisY->setLabelsVisible(false);
 
     QCategoryAxis* cssAxisYRight = getCCSAxisY();
 //    QBarCategoryAxis* cssAxisYRight = getQBarCategoryAxisAxisY();
@@ -325,13 +339,24 @@ void CSSChartFormOne::initChartView() {
     m_cssLineSeries[0]->setName("主指标");
     m_cssLineSeries[1]->setName("从指标");
 
-    m_energySeries = new QStackedBarSeries;
-    QBarSet *energySet = new QBarSet("势能指标");
+    QBarSet *energySetUp = new QBarSet("势能指标大于0");
+    QBarSet *energySetDown = new QBarSet("势能指标小于0");
     for (int i = 0; i < m_cssList[2].size(); ++i) {
-        energySet->append(m_cssList[2][i]);
+        if (m_cssList[2][i] > 0) {
+            energySetUp->append(m_cssList[2][i]);
+            energySetDown->append(0);
+        } else {
+            energySetDown->append(m_cssList[2][i]);
+            energySetUp->append(0);
+        }
     }
-    m_energySeries->append(energySet);
-    m_energySeries->setName("势能指标");
+
+    for (int i = 0; i < 2; ++i) {
+        QStackedBarSeries* energySeries = new QStackedBarSeries;
+        m_energySeriesList.append(energySeries);
+    }
+    m_energySeriesList[0]->append(energySetUp);
+    m_energySeriesList[1]->append(energySetDown);
 
     for (int i = 0; i < m_cssMarkValueList.size(); ++i) {
         QLineSeries* currSeries = new QLineSeries;
@@ -347,7 +372,9 @@ void CSSChartFormOne::initChartView() {
     for (auto lineSeries:m_cssLineSeries) {
         m_cssChart->addSeries(lineSeries);
     }
-    m_cssChart->addSeries(m_energySeries);
+    for (auto barSeries:m_energySeriesList) {
+        m_cssChart->addSeries(barSeries);
+    }
     for (auto lineSeries:m_cssMarkLineSeries) {
         m_cssChart->addSeries(lineSeries);
     }
@@ -359,34 +386,41 @@ void CSSChartFormOne::initChartView() {
 
     m_cssChart->setAnimationOptions(QChart::NoAnimation);
     m_cssChart->addAxis(timeAxisX, Qt::AlignBottom);
-//    m_cssChart->addAxis(cssAxisY, Qt::AlignLeft);
+    m_cssChart->addAxis(cssAxisY, Qt::AlignLeft);
 //    m_cssChart->addAxis(cssAxisYRight, Qt::AlignRight);
-    m_cssChart->addAxis(cssAxisYRight, Qt::AlignLeft);
+//    m_cssChart->addAxis(cssAxisYRight, Qt::AlignLeft);
 
     for (auto lineSeries:m_cssLineSeries) {
         lineSeries->attachAxis(timeAxisX);
-//        lineSeries->attachAxis(cssAxisY);
-        lineSeries->attachAxis(cssAxisYRight);
+        lineSeries->attachAxis(cssAxisY);
+//        lineSeries->attachAxis(cssAxisYRight);
     }
     for (auto lineSeries:m_cssMarkLineSeries) {
         lineSeries->attachAxis(timeAxisX);
-//        lineSeries->attachAxis(cssAxisY);
-        lineSeries->attachAxis(cssAxisYRight);
+        lineSeries->attachAxis(cssAxisY);
+//        lineSeries->attachAxis(cssAxisYRight);
     }
-    m_energySeries->attachAxis(timeAxisX);
-//    m_energySeries->attachAxis(cssAxisY);
-    m_energySeries->attachAxis(cssAxisYRight);
+    for (auto barSeries:m_energySeriesList) {
+        barSeries->attachAxis(timeAxisX);
+        barSeries->attachAxis(cssAxisY);
+    }
 }
 
-
 void CSSChartFormOne::sendCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
-                                       QList<QList<double>> cssList) {
+                                       QList<QList<double>> cssList, QString dataType) {
 
     qDebug() << "CSSChartFormOne::sendCSSData_slot";
+    int startPos = getStartIndex(m_startDate, timeList);
 
-    m_timeList = timeList;
-    m_aveList = aveList;
-    m_cssList = cssList;
+    qDebug() << QString("startPos: %1").arg(startPos);
+
+    m_timeList = getSubList(timeList, startPos, timeList.size());
+    for (int i = 0; i < aveList.size(); ++i) {
+        m_aveList.append(getSubList(aveList[i], startPos, aveList[i].size()));
+    }
+    for (int i = 0; i < cssList.size(); ++i) {
+        m_cssList.append(getSubList(cssList[i], startPos, cssList[i].size()));
+    }
 
 //    qDebug() << "m_timeList.size: " << m_timeList.size();
 //    for (int i =0; i < m_aveList.size(); ++i) {
@@ -397,7 +431,6 @@ void CSSChartFormOne::sendCSSData_slot(QList<QString> timeList, QList<QList<doub
 //    }
     initLayout();
 }
-
 
 void CSSChartFormOne::startGetData() {
     emit getCSSData_signal();
@@ -549,10 +582,6 @@ double CSSChartFormOne::getPointXDistance() {
     QPointF pointb = m_aveChart->mapToPosition(QPointF(testIndex+1, m_aveList[0][testIndex+1]));
     double distance = pointb.x() - pointa.x();
     return distance;
-}
-
-void CSSChartFormOne::closeEvent(QCloseEvent *event) {
-    event;
 }
 
 void CSSChartFormOne::connectMarkers()

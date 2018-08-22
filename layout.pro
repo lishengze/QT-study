@@ -46,7 +46,8 @@ SOURCES  += main.cpp\
     ../public-files/public-function/terminal_func.cpp \
     ../public-files/public-function/time_func.cpp \
     ../public-files/public-function/widget_func.cpp \
-    csschartformone.cpp
+    csschartformone.cpp \
+    csschartform.cpp
 
 HEADERS  += widget.h \
             toolfunc.h \
@@ -77,7 +78,8 @@ HEADERS  += widget.h \
     ../public-files/public-function/terminal_func.h \
     ../public-files/public-function/time_func.h \
     ../public-files/public-function/widget_func.h \
-    csschartformone.h
+    csschartformone.h \
+    csschartform.h
 
 FORMS    += widget.ui \
     chartform.ui \
@@ -88,7 +90,8 @@ FORMS    += widget.ui \
     futurechart.ui \
     extractdatawindow.ui \
     indexchart.ui \
-    csschartformone.ui
+    csschartformone.ui \
+    csschartform.ui
 
 include(qtxlsx/src/xlsx/qtxlsx.pri)
 

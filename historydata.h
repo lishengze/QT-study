@@ -40,7 +40,7 @@ public:
                 int mainAveNumb, int subAveNumb, int energyAveNumb,
                 double css12Rate, double mainCssRate1, double mainCssRate2,
                 double energyCssRate1, double energyCssRate2,
-                double maxCSS, double minCSS,
+                double maxCSS, double minCSS, int id,
                 QObject *parent = 0);
 
     ~HistoryData();
@@ -72,7 +72,7 @@ signals:
                                   QList<double>, QList<double>, QList<double>);
     void sendHistIndexError_signal(QString);
 
-    void sendCSSData_signal(QList<QString>, QList<QList<double>>, QList<QList<double>>);
+    void sendCSSData_signal(QList<QString>, QList<QList<double>>, QList<QList<double>>, int);
 
 public slots:
     void getHistData();
@@ -134,6 +134,7 @@ private:
     double                             m_mainCssRate2;
     double                             m_energyCssRate1;
     double                             m_energyCssRate2;
+    int                                m_databaseID;
 
     QList<int>                         m_aveNumbList;
     QList<bool>                        m_isEMAList;

@@ -19,7 +19,7 @@ FutureChart::FutureChart(int chartViewID, QString dbhost, QTableView* programInf
                          QWidget *parent) :
     m_chartViewID(chartViewID), m_dbhost(dbhost), m_programInfoTableView(programInfoTableView),
     m_futureName(futureName), m_maxSpreadValue(maxSpreadValue), m_minSpreadValue(minSpreadValue),
-    BaseChart(parent),
+    BaseChart(chartViewID, parent),
     ui(new Ui::FutureChart)
 {
     ui->setupUi(this);
@@ -395,6 +395,7 @@ void FutureChart::closeEvent(QCloseEvent *event) {
     if (NULL != m_monitorWorker) {
         m_monitorWorker->stopTimer();
     }
+    emit windowClose_signal(m_chartViewID);
 }
 
 FutureChart::~FutureChart()

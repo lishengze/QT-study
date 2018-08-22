@@ -30,7 +30,7 @@ class IndexChart : public BaseChart
     Q_OBJECT
 
 public:
-    explicit IndexChart(QWidget *parent = 0);
+//    explicit IndexChart(QWidget *parent = 0);
     IndexChart(int chartViewID, QString dbhost, QString databaseName,
                 QString selectIndex, QString hedgedIndex,
                 QString startDate, QString endDate,
