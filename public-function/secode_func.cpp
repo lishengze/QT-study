@@ -1,5 +1,18 @@
 ﻿#include "secode_func.h"
+#include "database.h"
+#include "id_func.h"
 #include <QList>
+
+bool isCodeInDatabase(QString codeName, QString databaseName, QString dbHost) {
+    Database database_obj = Database("0", dbHost);
+    QStringList tableList = database_obj.getTableList(databaseName);
+    if (tableList.indexOf(codeName) >= 0) {
+        return true;
+    } else {
+        return false;
+    }
+
+}
 
 QString completeSecode(QString secode, QString style) {
     if (secode.size() > 6) {

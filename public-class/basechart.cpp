@@ -8,8 +8,21 @@
 #include <QDebug>
 #pragma execution_character_set("utf-8")
 
-BaseChart::BaseChart(QWidget *parent) : QWidget(parent)
+BaseChart::BaseChart(int windowID, QWidget *parent) :
+    m_windowID(windowID),QWidget(parent)
 {
+
+}
+
+void BaseChart::initLayout() {
+
+}
+
+void BaseChart::initTheme() {
+
+}
+
+void BaseChart::initChartView() {
 
 }
 
@@ -20,6 +33,40 @@ void BaseChart::initTableContextMenu() {
         connect(chartViewList[i], SIGNAL(customContextMenuRequested(QPoint)),
                 this, SLOT(showContentMenu_slot(QPoint)));
     }
+}
+
+void BaseChart::initExtractKeyValueList() {
+
+}
+
+QList<QMyChartView*> BaseChart::getChartViewList() {
+    QList<QMyChartView*> result;
+    return result;
+}
+
+QString BaseChart::getExcelFileName(QStringList keyValueList, QString fileDir){
+    keyValueList;
+    fileDir;
+    QString result;
+    return result;
+}
+
+QList<QStringList> BaseChart::getExcelData(QStringList keyValueList) {
+    keyValueList;
+    QList<QStringList>  result;
+    return result;
+}
+
+void BaseChart::updateAxis() {
+
+}
+
+void BaseChart::updateSeries() {
+
+}
+
+void BaseChart::updateMousePos() {
+
 }
 
 bool BaseChart::eventFilter (QObject *watched, QEvent *event) {
@@ -34,6 +81,33 @@ bool BaseChart::eventFilter (QObject *watched, QEvent *event) {
 //        QChartView::mouseReleaseEvent((QMouseEvent *)event);
     }
     return QWidget::eventFilter (watched, event);
+}
+
+void BaseChart::setPropertyValue(int index) {
+    index;
+}
+
+void BaseChart::mouseMoveEvenFunc(QObject *watched, QEvent *event) {
+    watched;
+    event;
+}
+
+void BaseChart::mouseButtonReleaseFunc(QObject *watched, QEvent *event) {
+    watched;
+    event;
+}
+
+void BaseChart::KeyReleaseFunc(QEvent *event) {
+    event;
+}
+
+void BaseChart::moveMouse(int step) {
+    step;
+}
+
+double BaseChart::getPointXDistance() {
+    double result;
+    return result;
 }
 
 void BaseChart::showContentMenu_slot(QPoint pos) {
@@ -80,5 +154,11 @@ QCategoryAxis* BaseChart::getTimeAxisX (QList<QString> timeList, int tickCount) 
         axisX->append (timeList[xpos], xpos);
     }
     axisX->setMax(timeList.size()-1);
+    axisX->setLabelsAngle(15);
+    axisX->setGridLineVisible(false);
     return axisX;
+}
+
+void BaseChart::closeEvent(QCloseEvent *event) {
+    emit windowClose_signal(m_windowID);
 }

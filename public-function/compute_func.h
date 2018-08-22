@@ -66,5 +66,19 @@ T mean(QList<T> oridata, int startPos, int endPos) {
 
 }
 
+template<class T>
+T Max(QList<T> oridata, int startPos, int endPos) {
+    if (startPos < 0 || startPos > oridata.size()-1
+      || endPos < 0 || endPos > oridata.size()
+      || oridata.size() == 0 || startPos >= endPos) {
+        return g_errorNumbValue;
+    }
+    T result = oridata[startPos];
+    for (int i = startPos; i < endPos; ++i) {
+        if (oridata[i] > result) result = oridata[i];
+    }
+    return result;
+
+}
 
 #endif // COMPUTE_FUNC_H

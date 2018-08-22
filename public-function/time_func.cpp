@@ -2,6 +2,7 @@
 #include "toolfunc.h"
 #include <QThread>
 #include <QDebug>
+#include <QtMath>
 #include "widget_func.h"
 
 QDateTime transIntDateTime(long long data) {
@@ -238,4 +239,33 @@ bool isMinuteType(QString dataType) {
     } else {
         return true;
     }
+}
+
+QString getPreDate(QString oridata, QString timeType, int timeNumb) {
+    QDate oriDate = transIntDate(oridata.toInt());
+    int oneDayNumb = 1;
+    int oneYearTradingDays = 220;
+    if (timeType.indexOf("m") >=0 && timeType != "month") {
+        QString time = timeType.remove('m');
+        oneDayNumb = 4 * 60 / time.toInt();
+    }
+//    qDebug() << "onDayNumb: " << oneDayNumb;
+    int preDays = qCeil(double(timeNumb) / double(oneYearTradingDays) / double(oneDayNumb) * 365);
+    QDate result = oriDate.addDays(preDays*-1);
+    return result.toString("yyyyMMdd");
+}
+
+int getStartIndex(QString startDate, QList<QString>& timeList) {
+    int result = 0;
+    for (int i = 0; i < timeList.size(); ++i) {
+        QString currTime = timeList[i];
+        if (timeList[i].indexOf(" ") >= 0) {
+            currTime = timeList[i].split(" ")[0];
+        }
+        if (currTime.toInt() >= startDate.toInt()) {
+            result = i;
+            break;
+        }
+    }
+    return result;
 }

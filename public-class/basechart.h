@@ -16,32 +16,34 @@ class BaseChart : public QWidget
 {
     Q_OBJECT
 public:
-    explicit BaseChart(QWidget *parent = 0);
+    explicit BaseChart(int windowID, QWidget *parent = 0);
 
     void initTableContextMenu();
 
-    virtual void initLayout() = 0;
-    virtual void initTheme() = 0;
-    virtual void initChartView() = 0;
+    virtual void initLayout();
+    virtual void initTheme();
+    virtual void initChartView();
 
-    virtual void initExtractKeyValueList() = 0;
-    virtual QList<QMyChartView*> getChartViewList() = 0;
-    virtual QString getExcelFileName(QStringList keyValueList, QString fileDir) = 0;
-    virtual QList<QStringList> getExcelData(QStringList keyValueList) = 0;
+    virtual void initExtractKeyValueList() ;
+    virtual QList<QMyChartView*> getChartViewList() ;
+    virtual QString getExcelFileName(QStringList keyValueList, QString fileDir);
+    virtual QList<QStringList> getExcelData(QStringList keyValueList);
 
-    virtual void updateAxis() = 0;
-    virtual void updateSeries() = 0;
-    virtual void updateMousePos() = 0;
+    virtual void updateAxis() ;
+    virtual void updateSeries() ;
+    virtual void updateMousePos() ;
 
-    virtual void setPropertyValue(int index) = 0;
-    virtual void mouseMoveEvenFunc(QObject *watched, QEvent *event) = 0;
-    virtual void mouseButtonReleaseFunc(QObject *watched, QEvent *event) = 0;
-    virtual void KeyReleaseFunc(QEvent *event) = 0;
-    virtual void moveMouse(int step) = 0;
-    virtual double getPointXDistance() = 0;
+    virtual void setPropertyValue(int index);
+    virtual void mouseMoveEvenFunc(QObject *watched, QEvent *event);
+    virtual void mouseButtonReleaseFunc(QObject *watched, QEvent *event) ;
+    virtual void KeyReleaseFunc(QEvent *event);
+    virtual void moveMouse(int step);
+    virtual double getPointXDistance();
 
     QCategoryAxis* getTimeAxisX (QList<QString> timeList, int tickCount);
+
 signals:
+    void windowClose_signal(int windowID);
 
 public slots:
     void showContentMenu_slot(QPoint);
@@ -50,13 +52,13 @@ public slots:
 
 protected:
     virtual bool eventFilter (QObject *watched, QEvent *event);
-    virtual void closeEvent(QCloseEvent *event) = 0;
+    virtual void closeEvent(QCloseEvent *event);
 
 protected:
     QStringList  m_extractKeyValueList;
 
 private:
-
+    int         m_windowID;
 };
 
 #endif // BASECHART_H

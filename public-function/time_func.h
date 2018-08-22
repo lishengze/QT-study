@@ -10,8 +10,6 @@ QDateTime transIntDateTime(long long data);
 
 QDateTime transQStringDateTime(QString data, QString separator=" ");
 
-
-
 QDate transIntDate(int data);
 
 QTime transIntTime(int data);
@@ -54,5 +52,7 @@ bool waitForNextTradingDay(QTableView* programInfoTableView);
 
 bool isMinuteType(QString dataType);
 
+QString getPreDate(QString oridata, QString timeType, int timeNumb);
 
+int getStartIndex(QString startDate, QList<QString>& timeList);
 #endif // TIME_FUNC_H
