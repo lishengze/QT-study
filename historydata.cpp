@@ -307,7 +307,7 @@ void HistoryData::getCSSData_slot() {
     qDebug() << m_startDate << m_endDate << m_singleCodeName << m_databaseName;
     QList<QStringList> oriDatabaseData = m_database->getDataByDate(m_startDate, m_endDate, keyList,
                                                                    m_singleCodeName, m_databaseName);
-//    printList(oriDatabaseData, "oriDatabaseData");
+    qDebug() << "oriDatabaseData.size: " << oriDatabaseData.size();
     QList<QString> timeList;
     QList<double> typList;
     QList<double> closeList;
@@ -323,8 +323,6 @@ void HistoryData::getCSSData_slot() {
     }
     QList<QList<double>> aveList = getAVEList(closeList, m_aveNumbList, m_isEMAList);
     aveList.insert(0, closeList);
-//    qDebug() << typList;
-//    printList(aveList, "aveList");
 
     QList<double> mainList = getCSSList(typList,  m_mainAveNumb, m_css12Rate,
                                         m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);
@@ -332,15 +330,13 @@ void HistoryData::getCSSData_slot() {
                                         m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);
     QList<double> energyValueList = getCSSList(typList,  m_energyAveNumb, m_css12Rate,
                                             m_energyCssRate1, m_energyCssRate2, m_maxCSS, m_minCSS, true);
-//    qDebug() << mainList;
-//    qDebug() << subValueList;
-//    qDebug() << energyValueList;
 
     QList<QList<double>> cssList;
     cssList.append(mainList);
     cssList.append(subValueList);
     cssList.append(energyValueList);
 
+     qDebug() << "m_databaseID: " << m_databaseID;
     emit sendCSSData_signal(timeList, aveList, cssList, m_databaseID);
 }
 

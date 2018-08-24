@@ -156,7 +156,7 @@ void Widget::initCalendar () {
 //    ui->energyStart_dateEdit->setDate (QDate::currentDate().addDays(-365*5));
 //    ui->energyEnd_dateEdit->setDate (QDate::currentDate());
 
-    ui->energyStart_dateEdit->setDate (QDate(2008,1,1));
+    ui->energyStart_dateEdit->setDate (QDate(2011,1,1));
     ui->energyEnd_dateEdit->setDate (QDate(2012,1,1));
 }
 
@@ -197,6 +197,10 @@ void Widget::initEnergyDataFreq() {
 
         QCheckBox *pCheckBox = new QCheckBox(this);
         pCheckBox->setText(reqValue);
+//        if(reqValue == "day" || reqValue == "120m" || reqValue == "60m") {
+//            pCheckBox->setChecked(true);
+//        }
+
         if(reqValue == "day") {
             pCheckBox->setChecked(true);
         }
@@ -266,8 +270,11 @@ void Widget::initSpreadSpinbox() {
 
 void Widget::initEnergyIndexCodeComboBox() {
     QStringList indexList;
-    indexList << "000300" << "000849" << "000908" << "000909" << "000910" << "000911"
-              << "000912" << "000913" << "000915" << "000917" << "000951" << "000952";
+    indexList << "000016" << "000852" << "000904" << "000905"
+              << "000906" << "399903" << "000300" << "000849"
+              << "000908" << "000909" << "000910" << "000911"
+              << "000912" << "000913" << "000915" << "000917"
+              << "000951" << "000952";
     ui->energyIndexCode_comboBox->addItems (indexList);
     ui->energyIndexCode_comboBox->setCurrentText ("000300");
 }
@@ -510,9 +517,6 @@ void Widget::on_buySalePortfolio_table_clicked(const QModelIndex &index)
 
     m_buyStrategyMap = readExcelMapInt(cmpFileName, "buy");
     m_saleStrategyMap = readExcelMapInt(cmpFileName, "sale");
-//    printMap(m_buyStrategyMap, "m_buyStrategyMap: ");
-//    printMap(m_saleStrategyMap, "m_saleStrategyMap: ");
-
     if (m_buyStrategyMap.find("Error") != m_buyStrategyMap.end()) {
         updateProgramInfo(ui->programInfo_tableView, QString("%1 没有正确的买入组合信息").arg(fileName));
     }else if (m_saleStrategyMap.find("Error") != m_saleStrategyMap.end()) {
@@ -914,6 +918,7 @@ bool Widget::checkCodeInDatabase(QString codeName, QString dbhost, QStringList t
     return result;
 }
 
+/**/
 void Widget::on_showAVEEnergy_pushButton_clicked()
 {
     QString startDate = ui->energyStart_dateEdit->date().toString("yyyyMMdd");
@@ -961,9 +966,9 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
         return;
     }
 
-    if (!checkCodeInDatabase(codeName, dbhost, timeTypeList)) {
-        return;
-    }
+//    if (!checkCodeInDatabase(codeName, dbhost, timeTypeList)) {
+//        return;
+//    }
 
     QStringList strAveNumbList;
     for (int i = 0; i < aveNumbList.size(); ++i) {
@@ -1011,6 +1016,8 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
         chartView->show();
     }
 }
+
+
 /*
  * 临时多窗口方案
 void Widget::on_showAVEEnergy_pushButton_clicked()
@@ -1104,3 +1111,5 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
 
 }
 */
+
+

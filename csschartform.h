@@ -9,6 +9,7 @@
 #include <QStackedBarSeries>
 #include <QBarCategoryAxis>
 #include <QGridLayout>
+#include <QGroupBox>
 #include <QMutex>
 
 #include "basechart.h"
@@ -50,26 +51,28 @@ public:
     void initListData();
     void initHistoryData();
     void registSignalParamsType();
-//    void startGetData();
-//    void addPropertyLabel();
+    void startGetData();
 
+    void  initColors();
     virtual void initLayout();
-//    virtual void initTheme();
-//    virtual void initChartView();
+    virtual void initTheme();
 
-    void setChartView(int dataID);
+    void setChart(int dataID);
+    void setChartView();
+    void setLabels();
+    void setColors();
 
 //    virtual void initExtractKeyValueList();
 //    virtual QList<QMyChartView*> getChartViewList();
 //    virtual QString getExcelFileName(QStringList keyValueList, QString fileDir);
 //    virtual QList<QStringList> getExcelData(QStringList keyValueList);
 
-//    virtual void setPropertyValue(int index);
-//    virtual void mouseMoveEvenFunc(QObject *watched, QEvent *event);
-//    virtual void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
-//    virtual void KeyReleaseFunc(QEvent *event);
-//    virtual void moveMouse(int step);
-//    virtual double getPointXDistance();
+    void setPropertyValue(int index, int dataID);
+    virtual void mouseMoveEvenFunc(QObject *watched, QEvent *event);
+    virtual void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
+    virtual void KeyReleaseFunc(QEvent *event);
+    virtual void moveMouse(int step);
+    virtual double getPointXDistance();
 
 signals:
     void getCSSData_signal();
@@ -78,6 +81,9 @@ public slots:
     void sendCSSData_slot(QList<QString>, QList<QList<double>>,
                           QList<QList<double>>, int);
 
+    void connectMarkers();
+    void handleMarkerClicked();
+protected:
 
 private:
     Ui::CSSChartForm *                      ui;
@@ -88,7 +94,8 @@ private:
     QString                                 m_startDate;
     QString                                 m_endDate;
     int                                     m_chartXaxisTickCount;
-    QList<int>                              m_dataIDList;
+    int                                     m_maxColNumb;
+    int                                     m_currColNumb;
 
     QString                                 m_singleCodeName;
     int                                     m_mainAveNumb;
@@ -104,10 +111,12 @@ private:
     QList<int>                              m_aveNumbList;
     QList<bool>                             m_isEMAList;
     QList<double>                           m_cssMarkValueList;
+    int                                     m_currChartIndex;
 
     QList<QList<QList<double>>>             m_aveList;
     QList<QList<QList<double>>>             m_cssList;
     QList<QList<QString>>                   m_timeList;
+    QList<int>                              m_currDataIDList;
 
     QList<QGridLayout*>                     m_gridLayoutList;
     QGridLayout*                            m_mainGridLayout;
@@ -120,12 +129,23 @@ private:
     QList<QChart*>                          m_aveChartList;
     QList<QMyChartView*>                    m_cssChartViewList;
     QList<QChart*>                          m_cssChartList;
+    QList<QList<QGroupBox*>>                m_groupBoxListList;
+    QList<QList<QLabel*>>                   m_aveChartlabelListList;
+    QList<QList<QLabel*>>                   m_cssChartlabelListList;
+
+    QList<QColor>                           m_aveChartColorList;
+    QList<QColor>                           m_cssChartColorList;
 
     QList<HistoryData*>                     m_histdataWorkerList;
     QList<QThread*>                         m_histdataThreadList;
 
     QMutex                                  m_mutex;
 
+    QList<int>                              m_keyMoveCountList;
+    QList<int>                              m_currTimeIndexList;
+    QList<bool>                             m_isKeyMoveList;
+    QList<QPoint>                           m_mouseInitPosList;
+    int                                     m_currFoucusChartID;
 };
 
 #endif // CSSCHARTFORM_H

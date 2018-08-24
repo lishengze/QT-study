@@ -51,10 +51,11 @@ public:
     void addPropertyLabel();
 
     void setLineColor();
-    void testLineColor();
 
     QCategoryAxis* getCCSAxisY ();
     QBarCategoryAxis* getQBarCategoryAxisAxisY();
+
+    void updateLableSeries(int index);
 
     virtual void initLayout();
     virtual void initTheme();
@@ -64,10 +65,6 @@ public:
     virtual QList<QMyChartView*> getChartViewList();
     virtual QString getExcelFileName(QStringList keyValueList, QString fileDir);
     virtual QList<QStringList> getExcelData(QStringList keyValueList);
-
-    virtual void updateAxis();
-    virtual void updateSeries();
-    virtual void updateMousePos();
 
     virtual void setPropertyValue(int index);
     virtual void mouseMoveEvenFunc(QObject *watched, QEvent *event);
@@ -81,7 +78,7 @@ signals:
 
 
 public slots:
-    void sendCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, QString);
+    void sendCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int);
 
     void connectMarkers();
     void disconnectMarkers();
@@ -123,11 +120,19 @@ private:
     QList<QLineSeries*>                m_cssLineSeries;
     QList<QLineSeries*>                m_cssMarkLineSeries;
     QList<QStackedBarSeries*>          m_energySeriesList;
+
     QMyChartView*                      m_aveChartView;
     QChart*                            m_aveChart;
     QMyChartView*                      m_cssChartView;
     QChart*                            m_cssChart;
     QList<QLabel*>                     m_labelList;
+
+    QStackedBarSeries*                 m_aveChartLabelSeries;
+    QStackedBarSeries*                 m_cssChartLabelSeries;
+//    QLineSeries*                       m_aveChartLabelSeries;
+//    QLineSeries*                       m_cssChartLabelSeries;
+    int                                m_oldLabelIndex;
+    double                             m_aveChartMaxValue;
 
     HistoryData*                       m_histdataWorker;
     QThread                            m_histdataThread;

@@ -248,12 +248,6 @@ void CSSChartFormOne::setLineColor() {
     downBarSet[0]->setColor(QColor(0,229,255));
 }
 
-void CSSChartFormOne::testLineColor() {
-    qDebug() << "m_aveLineSeries[0].color: " << m_aveLineSeries[0]->color();
-
-//    qDebug() << m_cssChart->axisY()->count();
-}
-
 QCategoryAxis* CSSChartFormOne::getCCSAxisY () {
     QCategoryAxis* axisY = new QCategoryAxis;
     axisY->setStartValue(m_minCSS);
@@ -263,7 +257,6 @@ QCategoryAxis* CSSChartFormOne::getCCSAxisY () {
     for (auto markValue:m_cssMarkValueList) {
         int pos = markValue - m_minCSS;
         axisY->append(QString("%1").arg(markValue), pos);
-//        qDebug() << pos << markValue;
     }
     return axisY;
 }
@@ -286,6 +279,7 @@ void CSSChartFormOne::initChartView() {
     QValueAxis* aveAxisY = new QValueAxis;
     QList<double> aveRange =getChartYvalueRange(m_aveList);
     aveAxisY->setRange(aveRange[0], aveRange[1]);
+    m_aveChartMaxValue = aveRange[1];
 
     for (int i = 0; i < m_aveList.size(); ++i) {
         QLineSeries* currSeries = new QLineSeries;
@@ -301,10 +295,19 @@ void CSSChartFormOne::initChartView() {
         m_aveLineSeries.append(currSeries);
     }
 
+    QBarSet* aveLabel = new QBarSet("");
+    aveLabel->insert(m_timeList.size()/2, aveRange[1]);
+//    m_aveChartLabelSeries->append(m_aveList.size()/2, aveRange[1]);
+    m_aveChartLabelSeries = new QStackedBarSeries();
+    m_aveChartLabelSeries->append(aveLabel);
+    m_aveChartLabelSeries->setBarWidth(0);
+//    m_aveChartLabelSeries->hide();
+
     m_aveChart = new QChart();
     for (auto lineSeries:m_aveLineSeries) {
         m_aveChart->addSeries(lineSeries);
     }
+    m_aveChart->addSeries(m_aveChartLabelSeries);
 
     m_aveChartView = new QMyChartView(m_aveChart);
     m_aveChartView->setRenderHint(QPainter::Antialiasing);
@@ -316,21 +319,18 @@ void CSSChartFormOne::initChartView() {
     for (auto lineSeries:m_aveLineSeries) {
         lineSeries->attachAxis(aveAxisY);
     }
+    m_aveChartLabelSeries->attachAxis(aveAxisY);
 
     QValueAxis* cssAxisY = new QValueAxis;
     cssAxisY->setRange(m_minCSS, m_maxCSS);
     cssAxisY->setGridLineVisible(false);
     cssAxisY->setLineVisible(true);
-//    cssAxisY->setLabelsVisible(false);
-
-    QCategoryAxis* cssAxisYRight = getCCSAxisY();
-//    QBarCategoryAxis* cssAxisYRight = getQBarCategoryAxisAxisY();
 
     QList<int> aveList;
     aveList << m_mainAveNumb << m_subAveNumb;
     for (int i = 0; i < 2; ++i) {
         QLineSeries* currSeries = new QLineSeries;
-        for (int j = aveList[i]; j < m_cssList[i].size(); ++j) {
+        for (int j = 0; j < m_cssList[i].size(); ++j) {
             currSeries->append(j, m_cssList[i][j]);
         }
         currSeries->setUseOpenGL(true);
@@ -368,6 +368,16 @@ void CSSChartFormOne::initChartView() {
         currSeries->setName(QString("%1").arg(m_cssMarkValueList[i]));
     }
 
+    QBarSet* cssLabelUp = new QBarSet("");
+    cssLabelUp->insert(m_timeList.size()/2, m_maxCSS);
+    QBarSet* cssLabelDown = new QBarSet("");
+    cssLabelDown->insert(m_timeList.size()/2, m_minCSS);
+    m_cssChartLabelSeries = new QStackedBarSeries();
+    m_cssChartLabelSeries->append(cssLabelUp);
+    m_cssChartLabelSeries->append(cssLabelDown);
+    m_cssChartLabelSeries->setBarWidth(0);
+//    m_cssChartLabelSeries->hide();
+
     m_cssChart = new QChart();
     for (auto lineSeries:m_cssLineSeries) {
         m_cssChart->addSeries(lineSeries);
@@ -378,6 +388,7 @@ void CSSChartFormOne::initChartView() {
     for (auto lineSeries:m_cssMarkLineSeries) {
         m_cssChart->addSeries(lineSeries);
     }
+    m_cssChart->addSeries(m_cssChartLabelSeries);
 
     m_cssChartView = new QMyChartView(m_cssChart);
     m_cssChartView->setRenderHint(QPainter::Antialiasing);
@@ -387,27 +398,27 @@ void CSSChartFormOne::initChartView() {
     m_cssChart->setAnimationOptions(QChart::NoAnimation);
     m_cssChart->addAxis(timeAxisX, Qt::AlignBottom);
     m_cssChart->addAxis(cssAxisY, Qt::AlignLeft);
-//    m_cssChart->addAxis(cssAxisYRight, Qt::AlignRight);
-//    m_cssChart->addAxis(cssAxisYRight, Qt::AlignLeft);
 
     for (auto lineSeries:m_cssLineSeries) {
         lineSeries->attachAxis(timeAxisX);
         lineSeries->attachAxis(cssAxisY);
-//        lineSeries->attachAxis(cssAxisYRight);
     }
     for (auto lineSeries:m_cssMarkLineSeries) {
         lineSeries->attachAxis(timeAxisX);
         lineSeries->attachAxis(cssAxisY);
-//        lineSeries->attachAxis(cssAxisYRight);
     }
     for (auto barSeries:m_energySeriesList) {
         barSeries->attachAxis(timeAxisX);
         barSeries->attachAxis(cssAxisY);
     }
+//    m_cssChartLabelSeries->attachAxis(timeAxisX);
+    m_cssChartLabelSeries->attachAxis(cssAxisY);
+
+    m_oldLabelIndex = m_timeList.size() / 2;
 }
 
 void CSSChartFormOne::sendCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
-                                       QList<QList<double>> cssList, QString dataType) {
+                                       QList<QList<double>> cssList, int dataType) {
 
     qDebug() << "CSSChartFormOne::sendCSSData_slot";
     int startPos = getStartIndex(m_startDate, timeList);
@@ -426,9 +437,9 @@ void CSSChartFormOne::sendCSSData_slot(QList<QString> timeList, QList<QList<doub
 //    for (int i =0; i < m_aveList.size(); ++i) {
 //        qDebug() << QString("m_aveList[%1].size: %2").arg(i).arg(m_aveList[i].size());
 //    }
-//    for (int i =0; i < m_cssList.size(); ++i) {
-//        qDebug() << QString("m_cssList[%1].size: %2").arg(i).arg(m_cssList[i].size());
-//    }
+    for (int i =0; i < m_cssList.size(); ++i) {
+        qDebug() << QString("m_cssList[%1].size: %2").arg(i).arg(m_cssList[i].size());
+    }
     initLayout();
 }
 
@@ -455,18 +466,6 @@ QList<QStringList> CSSChartFormOne::getExcelData(QStringList keyValueList) {
     return result;
 }
 
-void CSSChartFormOne::updateAxis() {
-
-}
-
-void CSSChartFormOne::updateSeries() {
-
-}
-
-void CSSChartFormOne::updateMousePos() {
-
-}
-
 void CSSChartFormOne::setPropertyValue(int index) {
     if (index >-1 && index < m_timeList.size()) {
         m_labelList[0]->setText(QString("时间: %1").arg(m_timeList[index]));
@@ -486,6 +485,8 @@ void CSSChartFormOne::setPropertyValue(int index) {
                                                      .arg(m_subAveNumb).arg(m_cssList[1][index]));
         m_labelList[m_aveNumbList.size()+4]->setText(QString("势能指标_%1: %2")
                                                      .arg(m_energyAveNumb).arg(m_cssList[2][index]));
+
+        updateLableSeries(index);
     }
 }
 
@@ -703,3 +704,18 @@ void CSSChartFormOne::handleMarkerClicked()
     */
 }
 
+void CSSChartFormOne::updateLableSeries(int index) {
+    m_aveChartLabelSeries->barSets()[0]->remove(m_oldLabelIndex);
+    m_cssChartLabelSeries->barSets()[0]->remove(m_oldLabelIndex);
+    m_cssChartLabelSeries->barSets()[1]->remove(m_oldLabelIndex);
+
+    m_aveChartLabelSeries->barSets()[0]->insert(index, m_aveChartMaxValue);
+    m_cssChartLabelSeries->barSets()[0]->insert(index, m_maxCSS);
+    m_cssChartLabelSeries->barSets()[1]->insert(index, m_minCSS);
+    m_oldLabelIndex = index;
+    m_aveChartLabelSeries->hide();
+//    m_aveChartLabelSeries->show();
+    m_cssChartLabelSeries->hide();
+//    m_cssChartLabelSeries->show();
+    qDebug() << "m_oldLabelIndex: " << m_oldLabelIndex;
+}

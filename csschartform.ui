@@ -13,6 +13,15 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="main_gridLayout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+    </layout>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
