@@ -85,7 +85,20 @@ QMap<QString, int> readExcelMapInt(QString fileName, QString sheetName) {
             result.insert("Error", -1);
             break;
         } else {
-            for (int j = 0; j < 2; ++j) {
+//            for (int j = 0; j < 2; ++j) {
+//                if (result.find(oridata[i][0]) != result.end()) {
+//                    qDebug() << QString("%1: %2, %3").arg(oridata[i][0])
+//                            .arg(result[oridata[i][0]]).arg(oridata[i][1].toInt());
+//                    result[oridata[i][0]] += oridata[i][1].toInt();
+//                } else {
+//                    result.insert(oridata[i][0], oridata[i][1].toInt());
+//                }
+//            }
+            if (result.find(oridata[i][0]) != result.end()) {
+                qDebug() << QString("%1: %2, %3").arg(oridata[i][0])
+                        .arg(result[oridata[i][0]]).arg(oridata[i][1].toInt());
+                result[oridata[i][0]] += oridata[i][1].toInt();
+            } else {
                 result.insert(oridata[i][0], oridata[i][1].toInt());
             }
         }

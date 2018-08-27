@@ -36,6 +36,8 @@ QList<QStringList> transRealTimeDataToMinuteData(QList<QStringList> oriData, QLi
 
 void resizeMinuteData(QList<QStringList>& selectIndexTransData, QList<QStringList>& hedgedIndexTransData);
 
+void deleteDelistData(QList<QStringList>& oriData, int flagPos);
+
 template<class T>
 QStringList transNumbData(QString title, QList<T> oriData) {
     QStringList tmpData;

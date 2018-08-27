@@ -292,3 +292,14 @@ void resizeMinuteData(QList<QStringList>& selectIndexTransData, QList<QStringLis
     }
 }
 
+void deleteDelistData(QList<QStringList>& oriData, int flagPos) {
+    int delistCount = 0;
+    for (int i = 0; i < oriData.size(); ++i) {
+        if (oriData[i][flagPos].toDouble() == 0) {
+            oriData.removeAt(i);
+            --i;
+            ++delistCount;
+        }
+    }
+    qDebug() << "delistCount: " << delistCount;
+}
