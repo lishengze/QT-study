@@ -152,6 +152,8 @@ private:
     QString                  m_hedgeIndexCode;
     int                      m_hedgeIndexCount;
 
+    QMap<QString, QString>   m_indexMap;
+
     AnnouncementForm*        m_announcementView;
     GeneratePortfolioForm*   m_genePortfolioWindow;
 

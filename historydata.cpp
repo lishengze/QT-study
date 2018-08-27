@@ -303,10 +303,15 @@ void HistoryData::getIndexHistData_slot() {
 
 void HistoryData::getCSSData_slot() {
     QStringList keyList;
-    keyList << "TDATE" << "TIME" << "TCLOSE" << "TOPEN";
+    keyList << "TDATE" << "TIME" << "TCLOSE" << "TOPEN" << "VATRUNOVER";
     qDebug() << m_startDate << m_endDate << m_singleCodeName << m_databaseName;
     QList<QStringList> oriDatabaseData = m_database->getDataByDate(m_startDate, m_endDate, keyList,
                                                                    m_singleCodeName, m_databaseName);
+
+//    printList(oriDatabaseData, "oriDatabaseData");
+
+    deleteDelistData(oriDatabaseData, keyList.size()-1);
+
     qDebug() << "oriDatabaseData.size: " << oriDatabaseData.size();
     QList<QString> timeList;
     QList<double> typList;

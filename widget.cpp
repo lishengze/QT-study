@@ -24,6 +24,7 @@
 #include "widget_func.h"
 #include "io_func.h"
 #include "toolfunc.h"
+#include "process_data_func.h"
 #include "widget.h"
 #include "ui_widget.h"
 #include "QChartView"
@@ -270,11 +271,15 @@ void Widget::initSpreadSpinbox() {
 
 void Widget::initEnergyIndexCodeComboBox() {
     QStringList indexList;
-    indexList << "000016" << "000852" << "000904" << "000905"
-              << "000906" << "399903" << "000300" << "000849"
-              << "000908" << "000909" << "000910" << "000911"
-              << "000912" << "000913" << "000915" << "000917"
-              << "000951" << "000952";
+    indexList << "上证综指_000001" << "上证A指_000002" << "上证B指_000003" << "上证380_000009" << "上证180_000010"
+              << "深证成指_399001" << "深证综指_399106" << "深证A指_399107" << "深证B指_399108"
+              << "创业板50_399673" << "创业板指_399006" << "创业300_399102" << "创业板综_399102"
+              << "中小板指_399005" << "中小300_399008"<< "中小板综_399101"
+              << "上证50_000016" << "中证100_399903"  << "中证200_0904" << "中证500_000905" << "中证800_000906"
+              << "沪深300_000300" << "300非银_000849"
+              << "沪深300能源_000908" << "沪深300材料_000909" << "沪深300工业_000910" << "沪深300可选_000911"
+              << "沪深300消费_000912" << "沪深300医药_000913" << "沪深300信息_000915" << "沪深300公用_000917"
+              << "300银行_000951" << "300地产_000952";
     ui->energyIndexCode_comboBox->addItems (indexList);
     ui->energyIndexCode_comboBox->setCurrentText ("000300");
 }
@@ -487,13 +492,11 @@ void Widget::on_strategy_table_clicked(const QModelIndex &index)
     QStandardItemModel* standardItemModel =  dynamic_cast<QStandardItemModel*>(ui->strategy_table->model ());
     QString fileName = standardItemModel->item(index.row(), index.column())->text();
     QString cmpFileName = m_strategyFileDir + fileName;
-//    qDebug() << "cmpFileName: " << cmpFileName;
 
     m_currStrategyName = (fileName.split("."))[0];
-//    qDebug() << "m_currStrategyName: " << m_currStrategyName;
 
     m_strategyMap = readExcelMapInt(cmpFileName);
-//    qDebug() << "m_strategyMap: " << m_strategyMap;
+    printMap(m_strategyMap, "m_strategyMap");
 
     if (m_strategyMap.find("Error") != m_strategyMap.end()) {
         updateProgramInfo (ui->programInfo_tableView, QString(QString("读取策略: %1, 出错")).arg(fileName));
@@ -925,6 +928,7 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
     QString endDate = ui->energyEnd_dateEdit->date().toString("yyyyMMdd");
     QString dbhost = ui->dataSource_ComboBox->currentText();
     QString indexCodeName = getCompleteIndexCode(ui->energyIndexCode_comboBox->currentText());
+    indexCodeName = getCompleteIndexCode(indexCodeName.split("_")[1]);
     QString codeName = indexCodeName;
     QString stockCodeName = ui->energyStockCode_lineEdit->text();
     if (stockCodeName != "") {
@@ -986,7 +990,6 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
 
     if (QMessageBox::Yes == QMessageBox::warning(this, "确认信息", info, QMessageBox::Yes|QMessageBox::No)) {
         updateProgramInfo (ui->programInfo_tableView, info);
-
         QWidget* chartView;
         if (timeTypeList.size() == 1) {
             chartView = new CSSChartFormOne(m_chartViews.size(), dbhost, timeType,
@@ -1014,6 +1017,31 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
         m_chartViews.append (chartView);
 
         chartView->show();
+
+//        int maxColNumb = 3;
+//        for (int i = 0; i < timeTypeList.size();) {
+//            int endPos = min(timeTypeList.size(), i+maxColNumb);
+//            QStringList currTimeTypeList = getSubList(timeTypeList, i, endPos);
+//            QWidget* chartView = new CSSChartForm(m_chartViews.size(), dbhost, currTimeTypeList,
+//                                        startDate, endDate, codeName,
+//                                        aveNumbList, isEMAList,
+//                                        mainAveNumb, subAveNumb, energyAveNumb,
+//                                        css12Rate, mainCssRate1, mainCssRate2,
+//                                        energyCssRate1, energyCssRate2, maxCSS, minCSS);
+
+//            chartView->setWindowTitle(QString("%1,[%2, %3], %4 指标图")
+//                                     .arg(codeName).arg(startDate).arg(endDate).arg(currTimeTypeList.join(", ")));
+
+//            connect(chartView, SIGNAL(windowClose_signal(int)),
+//                    this, SLOT(windowClose_slot(int)));
+
+//            m_chartViews.append (chartView);
+
+//            chartView->show();
+
+//            i = endPos;
+//        }
+
     }
 }
 

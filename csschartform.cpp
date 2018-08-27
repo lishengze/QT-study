@@ -437,7 +437,7 @@ void CSSChartForm::setLabels() {
                 aveLabel->setText(QString("A%1: ").arg(m_aveNumbList[j]));
             }
             x_pos = x_pos + width + x_space;
-            if (j >= (m_aveNumbList.size()+3)/2-2 && isChangeLine == false) {
+            if (j >= (m_aveNumbList.size()+3)/2-2 && isChangeLine == false && m_timeTypeList.size() > 1) {
                 x_pos = x_start;
                 y_pos += height + y_space;
                 isChangeLine = true;

@@ -129,10 +129,14 @@ private:
 
     QStackedBarSeries*                 m_aveChartLabelSeries;
     QStackedBarSeries*                 m_cssChartLabelSeries;
+
 //    QLineSeries*                       m_aveChartLabelSeries;
 //    QLineSeries*                       m_cssChartLabelSeries;
+    QList<QBarSet*>                    m_LabelSetList;
+
     int                                m_oldLabelIndex;
     double                             m_aveChartMaxValue;
+    double                             m_aveChartMinValue;
 
     HistoryData*                       m_histdataWorker;
     QThread                            m_histdataThread;
