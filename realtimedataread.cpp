@@ -18,6 +18,7 @@ using namespace std;
 #include "time_func.h"
 #include "widget_func.h"
 #include "process_data_func.h"
+#include "io_func.h"
 
 RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView,
                                    QTableView* errorMsgTableView,
@@ -71,8 +72,8 @@ void RealTimeDataRead::initTimer() {
 void RealTimeDataRead::testSecodeList() {
     m_secodeList = getSecodeList();
     m_futureList = getFutureList();
-    qDebug() << "m_secodeList: " << m_secodeList;
-    qDebug() << "m_futureList: " << m_futureList;
+//    qDebug() << "m_secodeList: " << m_secodeList;
+//    qDebug() << "m_futureList: " << m_futureList;
     updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("m_secodeList.size: %1, m_futureList.size: %2")
                                                 .arg(m_secodeList.size()).arg(m_futureList.size()));
 }
@@ -174,9 +175,10 @@ QList<QString> RealTimeDataRead::getExcelSecodeList() {
 
 QList<QString> RealTimeDataRead::getSecodeList() {
 //    resetDatabase();
-    QString tableName = m_secodeList_IndexCode + "_SecodeList";
+    QString tableName = getCompleteIndexCode(m_secodeList_IndexCode) + "_SecodeList";
     QList<QString> result;
     result = m_realtimeDatabase->getSecodeList(tableName);
+    printList(result, "中证800");
     for (int i = 0; i < result.size(); ++i) {
         result[i] = completeSecode(result[i], "wind");
     }

@@ -109,8 +109,8 @@ FORMS    += updaterealtimedataform.ui \
 include(qtxlsx/src/xlsx/qtxlsx.pri)
 
 #RC_ICONS = stable.ico
-#RC_ICONS = lion.ico     # 更新实时数据;
-RC_ICONS = jewel.ico     # 提取数据;
+RC_ICONS = lion.ico     # 更新实时数据;
+#RC_ICONS = jewel.ico     # 提取数据;
 
 #LIBS += -LD:/github/workprogram/client-work -lWAPIWrapperCpp
 LIBS += -LD:/client/upData-dev -lWAPIWrapperCpp
