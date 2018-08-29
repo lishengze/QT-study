@@ -238,10 +238,11 @@ bool RealTimeDatabase::insertDataTimeTable(QString tableName, QString date) {
 
 QList<QString> RealTimeDatabase::getSecodeList(QString tableName) {
     QList<QString> result;
+
     if (m_db.open()) {
         QString completeTableName = "[" + m_connDbName + "].[dbo].[" + tableName + "]";
         QString sqlstr = "select * from" + completeTableName;
-//        qDebug() << "sqlstr: " << sqlstr;
+        qDebug() << "sqlstr: " << sqlstr;
         QSqlQuery queryObj(m_db);
         queryObj.exec(sqlstr);
         while(queryObj.next ()) {

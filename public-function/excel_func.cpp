@@ -95,8 +95,8 @@ QMap<QString, int> readExcelMapInt(QString fileName, QString sheetName) {
 //                }
 //            }
             if (result.find(oridata[i][0]) != result.end()) {
-                qDebug() << QString("%1: %2, %3").arg(oridata[i][0])
-                        .arg(result[oridata[i][0]]).arg(oridata[i][1].toInt());
+//                qDebug() << QString("%1: %2, %3").arg(oridata[i][0])
+//                        .arg(result[oridata[i][0]]).arg(oridata[i][1].toInt());
                 result[oridata[i][0]] += oridata[i][1].toInt();
             } else {
                 result.insert(oridata[i][0], oridata[i][1].toInt());
@@ -154,12 +154,12 @@ int writeFileInfo(QString fileName, QString colName, QString value, QString shee
 }
 
 int writeMatrixData(QString fileName, QList<QStringList>& oriData,
-                    QString sheetName, bool isTranspose) {
-//    qDebug() << "writeMatrixData";
-    checkFile(fileName);
+                    QString sheetName, bool isTranspose, bool isNewFile) {
+    if (true == isNewFile) {
+       checkFile(fileName);
+    }
     QXlsx::Document xlsx(fileName);
 
-//    qDebug() << 0;
     QStringList sheetNames = xlsx.sheetNames();
     if (sheetNames.indexOf(sheetName) < 0) {
         if (!xlsx.addSheet(sheetName)) {
@@ -167,13 +167,11 @@ int writeMatrixData(QString fileName, QList<QStringList>& oriData,
         }
     }
 
-//    qDebug() << 1;
     xlsx.moveSheet(sheetName, 0);
     if (!xlsx.selectSheet(sheetName)) {
         return -2;
     }
 
-//    qDebug() << "oriData: " << oriData;
     for (int rowIndex = 0; rowIndex < oriData.length(); ++rowIndex) {
         for (int colIndex = 0; colIndex < oriData[rowIndex].length(); ++colIndex) {
             if (isTranspose) {
@@ -183,7 +181,6 @@ int writeMatrixData(QString fileName, QList<QStringList>& oriData,
             }
         }
     }
-//    qDebug() << 2;
     xlsx.save();
     return 1;
 }

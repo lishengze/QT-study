@@ -23,7 +23,7 @@ void checkFile(QString fileName);
 int writeFileInfo(QString fileName, QString colName, QString value, QString sheetName="Sheet1");
 
 int writeMatrixData(QString fileName, QList<QStringList>& oriData,
-                    QString sheetName="Sheet1", bool isTranspose=false);
+                    QString sheetName="Sheet1", bool isTranspose=false, bool isNewFile=true);
 
 int writeOneColData(QString fileName, QStringList oriData, int targetCol,
                     int startRow = 0, QString sheetName="Sheet1");

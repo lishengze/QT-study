@@ -2,6 +2,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QMessageBox>
+#include <QDesktopServices>
 #include "extractdatawindow.h"
 #include "excel_func.h"
 #include "process_data_func.h"
@@ -126,20 +127,24 @@ void BaseChart::showExtractDialog_slot() {
     qDebug() << "showExtractDialog_slot";
     ExtractDataWindow* currExtractWindow = new ExtractDataWindow(m_extractKeyValueList,this);
 
-    connect(currExtractWindow, SIGNAL(getChoosenInfo_signal(QStringList, QString)),
-            this, SLOT(getChoosenInfo_slot(QStringList, QString)));
+    connect(currExtractWindow, SIGNAL(getChoosenInfo_signal(QStringList, QString, bool)),
+            this, SLOT(getChoosenInfo_slot(QStringList, QString, bool)));
 
     currExtractWindow->show();
 }
 
-void BaseChart::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fileDir) {
+void BaseChart::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fileDir, bool bOpenDesFile) {
     QList<QStringList> excelData = getExcelData(choosenKeyValueList);
     QString fileName = getExcelFileName(choosenKeyValueList, fileDir);
     qDebug() << "fileName: " << fileName;
     int result = writeMatrixData(fileName, excelData, "Sheet1", true);
     qDebug() << "writeExcelData: " << result;
     if (result == 1) {
-        QMessageBox::information(NULL, "信息", QString("文件 %1 写入成功").arg(fileName));
+        if (true == bOpenDesFile) {
+            QDesktopServices::openUrl(QUrl::fromLocalFile(fileName));
+        } else {
+            QMessageBox::information(NULL, "信息", QString("文件 %1 写入成功").arg(fileName));
+        }
     } else {
         QMessageBox::critical(NULL, "错误", QString("文件 %1 写入失败").arg(fileName));
     }

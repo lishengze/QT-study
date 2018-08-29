@@ -237,7 +237,12 @@ double getHedgedSpread(QMap<QString, QStringList> oriData, QMap<QString, int> se
     for (QMap<QString, int>::const_iterator i = seocdebuyCountMap.begin(); i != seocdebuyCountMap.end(); ++i) {
         QString secode = i.key();
         if (secode != indexCode) {
-            result += oriData[secode][0].toDouble() * i.value();
+            if(oriData.find(secode) == oriData.end()) {
+                qDebug() << "Lost secode: " << secode;
+            } else {
+                result += oriData[secode][0].toDouble() * i.value();
+            }
+
         }
     }
     result = result / (indexBuyCount * indexBaseCount) - oriData[indexCode][0].toDouble();

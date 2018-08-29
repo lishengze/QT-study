@@ -18,7 +18,7 @@ class BaseChart : public QWidget
 public:
     explicit BaseChart(int windowID, QWidget *parent = 0);
 
-    void initTableContextMenu();
+    virtual void initTableContextMenu();
 
     virtual void initLayout();
     virtual void initTheme();
@@ -48,7 +48,7 @@ signals:
 public slots:
     void showContentMenu_slot(QPoint);
     void showExtractDialog_slot();
-    void getChoosenInfo_slot(QStringList, QString);
+    virtual void getChoosenInfo_slot(QStringList, QString, bool);
 
 protected:
     virtual bool eventFilter (QObject *watched, QEvent *event);
