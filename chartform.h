@@ -94,10 +94,12 @@ public:
     void setVotRunoverChartView();
     void setStrategyChartView();
     void setMACDChartView();
+    void setLineColor();
 
     QCategoryAxis* getAxisX ();
     QCategoryAxis* getTimeAxis();
     void setTimeAxisUpdateData();
+    void updateLableSeries(int index);
 
     virtual void setPropertyValue(int index);
     virtual void mouseMoveEvenFunc(QObject *watched, QEvent *event);
@@ -202,6 +204,15 @@ private:
     QStackedBarSeries*          m_macdSeries;
     QMyChartView*               m_macdChartView;
     QChart*                     m_macdChart;
+
+    QLineSeries*                m_strategyLabelSeries;
+    QLineSeries*                m_votLabelSeries;
+    QLineSeries*                m_macdLabelSeries;
+    QList<double>               m_strategyChartRange;
+    QList<double>               m_votChartRange;
+    QList<double>               m_macdChartRange;
+    int                         m_oldLabelIndex;
+
 
 //    QStringList                 m_extractKeyValueList;
 //    QList<ExtractDataWindow*>   m_extractWindowList;

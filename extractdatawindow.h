@@ -21,7 +21,7 @@ public:
     void initChoosenCombox();
     QStringList getChoosenKeyValueList();
 signals:
-    void getChoosenInfo_signal(QStringList, QString);
+    void getChoosenInfo_signal(QStringList, QString, bool);
 
 public slots:
 

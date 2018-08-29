@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QThread>
 #include <algorithm>
+#include "io_func.h"
 #include "secode_func.h"
 #include "time_func.h"
 #include "compute_func.h"
@@ -118,7 +119,7 @@ void MonitorRealTimeData::stopTimer() {
 void MonitorRealTimeData::getPreCloseSpread() {
     qDebug() << "MonitorRealTimeData::getPreData" << QThread::currentThreadId();
     QMap<QString, QStringList> allPreCLoseData = m_database->getPreCloseData("PreCloseData");
-//    qDebug() << "allPreClosData: " << allPreCLoseData;
+//    printList(allPreCLoseData, "allPreCLoseData");
 //    qDebug() << "m_isBuySalePortfolio: " << m_isBuySalePortfolio;
     double preCloseSpread;
     if (m_isBuySalePortfolio) {

@@ -36,7 +36,6 @@ class CSSChartForm : public BaseChart
     Q_OBJECT
 
 public:
-//    explicit CSSChartForm(QWidget *parent = 0);
     explicit CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList,
                             QString startDate, QString endDate, QString codeName,
                             QList<int> aveNumbList, QList<bool> isEMAList,
@@ -58,13 +57,16 @@ public:
     virtual void initTheme();
 
     void setChart(int dataID);
+    void setAVEChart(int dataID);
+    void setCSSChart(int dataID);
     void setChartView();
     void setLabels();
     void setColors();
+    void updateLabelSeries(int index, int dataID);
 
-//    virtual void initExtractKeyValueList();
-//    virtual QList<QMyChartView*> getChartViewList();
-//    virtual QString getExcelFileName(QStringList keyValueList, QString fileDir);
+    virtual void initExtractKeyValueList();
+    virtual QList<QMyChartView*> getChartViewList();
+    virtual QString getExcelFileName(QStringList keyValueList, QString fileDir);
 //    virtual QList<QStringList> getExcelData(QStringList keyValueList);
 
     void setPropertyValue(int index, int dataID);
@@ -83,6 +85,8 @@ public slots:
 
     void connectMarkers();
     void handleMarkerClicked();
+    void getChoosenInfo_slot(QStringList keyValueList, QString fileDir, bool bOpenDesFile);
+
 protected:
 
 private:
@@ -132,6 +136,11 @@ private:
     QList<QList<QGroupBox*>>                m_groupBoxListList;
     QList<QList<QLabel*>>                   m_aveChartlabelListList;
     QList<QList<QLabel*>>                   m_cssChartlabelListList;
+
+    QList<QLineSeries*>                     m_aveChartLabelSeriesList;
+    QList<QLineSeries*>                     m_cssChartLabelSeriesList;
+    QList<int>                              m_oldLabelIndexList;
+    QList<QList<double>>                    m_aveChartRange;
 
     QList<QColor>                           m_aveChartColorList;
     QList<QColor>                           m_cssChartColorList;

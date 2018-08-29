@@ -496,7 +496,7 @@ void Widget::on_strategy_table_clicked(const QModelIndex &index)
     m_currStrategyName = (fileName.split("."))[0];
 
     m_strategyMap = readExcelMapInt(cmpFileName);
-    printMap(m_strategyMap, "m_strategyMap");
+//    printMap(m_strategyMap, "m_strategyMap");
 
     if (m_strategyMap.find("Error") != m_strategyMap.end()) {
         updateProgramInfo (ui->programInfo_tableView, QString(QString("读取策略: %1, 出错")).arg(fileName));
@@ -990,57 +990,58 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
 
     if (QMessageBox::Yes == QMessageBox::warning(this, "确认信息", info, QMessageBox::Yes|QMessageBox::No)) {
         updateProgramInfo (ui->programInfo_tableView, info);
-        QWidget* chartView;
-        if (timeTypeList.size() == 1) {
-            chartView = new CSSChartFormOne(m_chartViews.size(), dbhost, timeType,
-                                            startDate, endDate, codeName,
-                                            aveNumbList, isEMAList,
-                                            mainAveNumb, subAveNumb, energyAveNumb,
-                                            css12Rate, mainCssRate1, mainCssRate2,
-                                            energyCssRate1, energyCssRate2, maxCSS, minCSS);
 
-        } else {
-            chartView = new CSSChartForm(m_chartViews.size(), dbhost, timeTypeList,
-                                        startDate, endDate, codeName,
-                                        aveNumbList, isEMAList,
-                                        mainAveNumb, subAveNumb, energyAveNumb,
-                                        css12Rate, mainCssRate1, mainCssRate2,
-                                        energyCssRate1, energyCssRate2, maxCSS, minCSS);
-        }
+//        QWidget* chartView;
+//        if (timeTypeList.size() == 1) {
+//            chartView = new CSSChartFormOne(m_chartViews.size(), dbhost, timeType,
+//                                            startDate, endDate, codeName,
+//                                            aveNumbList, isEMAList,
+//                                            mainAveNumb, subAveNumb, energyAveNumb,
+//                                            css12Rate, mainCssRate1, mainCssRate2,
+//                                            energyCssRate1, energyCssRate2, maxCSS, minCSS);
 
-        chartView->setWindowTitle(QString("%1,[%2, %3], %4 指标图")
-                                 .arg(codeName).arg(startDate).arg(endDate).arg(timeType));
-
-        connect(chartView, SIGNAL(windowClose_signal(int)),
-                this, SLOT(windowClose_slot(int)));
-
-        m_chartViews.append (chartView);
-
-        chartView->show();
-
-//        int maxColNumb = 3;
-//        for (int i = 0; i < timeTypeList.size();) {
-//            int endPos = min(timeTypeList.size(), i+maxColNumb);
-//            QStringList currTimeTypeList = getSubList(timeTypeList, i, endPos);
-//            QWidget* chartView = new CSSChartForm(m_chartViews.size(), dbhost, currTimeTypeList,
+//        } else {
+//            chartView = new CSSChartForm(m_chartViews.size(), dbhost, timeTypeList,
 //                                        startDate, endDate, codeName,
 //                                        aveNumbList, isEMAList,
 //                                        mainAveNumb, subAveNumb, energyAveNumb,
 //                                        css12Rate, mainCssRate1, mainCssRate2,
 //                                        energyCssRate1, energyCssRate2, maxCSS, minCSS);
-
-//            chartView->setWindowTitle(QString("%1,[%2, %3], %4 指标图")
-//                                     .arg(codeName).arg(startDate).arg(endDate).arg(currTimeTypeList.join(", ")));
-
-//            connect(chartView, SIGNAL(windowClose_signal(int)),
-//                    this, SLOT(windowClose_slot(int)));
-
-//            m_chartViews.append (chartView);
-
-//            chartView->show();
-
-//            i = endPos;
 //        }
+
+//        chartView->setWindowTitle(QString("%1,[%2, %3], %4 指标图")
+//                                 .arg(codeName).arg(startDate).arg(endDate).arg(timeType));
+
+//        connect(chartView, SIGNAL(windowClose_signal(int)),
+//                this, SLOT(windowClose_slot(int)));
+
+//        m_chartViews.append (chartView);
+
+//        chartView->show();
+
+        int maxColNumb = 3;
+        for (int i = 0; i < timeTypeList.size();) {
+            int endPos = min(timeTypeList.size(), i+maxColNumb);
+            QStringList currTimeTypeList = getSubList(timeTypeList, i, endPos);
+            QWidget* chartView = new CSSChartForm(m_chartViews.size(), dbhost, currTimeTypeList,
+                                        startDate, endDate, codeName,
+                                        aveNumbList, isEMAList,
+                                        mainAveNumb, subAveNumb, energyAveNumb,
+                                        css12Rate, mainCssRate1, mainCssRate2,
+                                        energyCssRate1, energyCssRate2, maxCSS, minCSS);
+
+            chartView->setWindowTitle(QString("%1,[%2, %3], %4 指标图")
+                                     .arg(codeName).arg(startDate).arg(endDate).arg(currTimeTypeList.join(", ")));
+
+            connect(chartView, SIGNAL(windowClose_signal(int)),
+                    this, SLOT(windowClose_slot(int)));
+
+            m_chartViews.append (chartView);
+
+            chartView->show();
+
+            i = endPos;
+        }
 
     }
 }

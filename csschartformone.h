@@ -56,6 +56,10 @@ public:
     QBarCategoryAxis* getQBarCategoryAxisAxisY();
 
     void updateLableSeries(int index);
+    void updateMouseLine();
+
+    void initAveChart();
+    void initCSSChart();
 
     virtual void initLayout();
     virtual void initTheme();
@@ -85,6 +89,7 @@ public slots:
     void handleMarkerClicked();
 
 protected:
+    void paintEvent(QPaintEvent *);
 
 private:
     Ui::CSSChartFormOne *              ui;
@@ -127,11 +132,11 @@ private:
     QChart*                            m_cssChart;
     QList<QLabel*>                     m_labelList;
 
-    QStackedBarSeries*                 m_aveChartLabelSeries;
-    QStackedBarSeries*                 m_cssChartLabelSeries;
+//    QStackedBarSeries*                 m_aveChartLabelSeries;
+//    QStackedBarSeries*                 m_cssChartLabelSeries;
 
-//    QLineSeries*                       m_aveChartLabelSeries;
-//    QLineSeries*                       m_cssChartLabelSeries;
+    QLineSeries*                       m_aveChartLabelSeries;
+    QLineSeries*                       m_cssChartLabelSeries;
     QList<QBarSet*>                    m_LabelSetList;
 
     int                                m_oldLabelIndex;

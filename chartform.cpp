@@ -21,6 +21,7 @@
 #include <QMetaType>
 #include <QMutexLocker>
 #include <QMenu>
+#include <QColor>
 
 #include "chartform.h"
 #include "ui_chartform.h"
@@ -100,6 +101,8 @@ void ChartForm::initCommonData() {
     m_isclosed = false;
     m_isLayoutSetted = false;
 
+    m_oldLabelIndex = 0;
+
     initSecodeStyle();
     initSecodeList();
     registSignalParamsType();
@@ -148,8 +151,6 @@ void ChartForm::registSignalParamsType () {
     qRegisterMetaType<QAbstractItemModel::LayoutChangeHint>("QAbstractItemModel::LayoutChangeHint");
 }
 
-
-
 void ChartForm::initExtractKeyValueList() {
     m_extractKeyValueList.append(QString("对冲点差值"));
     m_extractKeyValueList.append(QString("DIFF"));
@@ -191,7 +192,6 @@ void ChartForm::initRealTimeData() {
     m_databaseName = "MarketData_RealTime";
     m_updateTime = 3000;
     m_threadNumb = m_secodeNameList.size();
-//    m_threadNumb = 1;
     m_timeTypeFormat = "hh:mm:ss";
     m_chartXaxisTickCount = 5;
 
@@ -200,7 +200,7 @@ void ChartForm::initRealTimeData() {
 
     if (isTradingStart()) {
         initHistdataThread();
-        emit getHistDataSignal();
+//        emit getHistDataSignal();
     } else {
         initLayout();
         m_monitorWorker->startTimer();
@@ -278,6 +278,7 @@ void ChartForm::writeExcelData() {
     qDebug() << "writeExcelData: " << result;
 }
 
+/*
 //void ChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fileDir) {
 ////    qDebug() << "choosenKeyValueList: " << choosenKeyValueList;
 ////    qDebug() << "fileDir: " << fileDir;
@@ -292,6 +293,7 @@ void ChartForm::writeExcelData() {
 //        QMessageBox::critical(NULL, "错误", QString("文件 %1 写入失败").arg(fileName));
 //    }
 //}
+*/
 
 QList<QStringList> ChartForm::getExcelData(QStringList choosenKeyValueList) {
     QList<QStringList> excelData;
@@ -355,33 +357,18 @@ QString ChartForm::getExcelFileName(QStringList keyValueList, QString fileDir) {
     return fileName;
 }
 
-
 void ChartForm::receivePreCloseData(double preSpread) {
     m_preSpread = preSpread;
     if (m_isLayoutSetted) {
-        ui->preCLoseSpreadValue_Label->setText(QString(QString("昨日点差: %1")).arg(m_preSpread));
+        ui->preCLoseSpreadValue_Label->setText(QString("昨日点差: %1").arg(m_preSpread));
     }
     qDebug() << "m_PreSpread: " << m_preSpread;
     disconnect(m_monitorWorker, SIGNAL(sendPreCloseData(double)),
                this, SLOT(receivePreCloseData(double)));
-}
 
-void ChartForm::receiveRealTimeData(ChartData curChartData) {
-    qDebug() << "ChartForm::receiveRealTimeData(): " << QThread::currentThread();
-    m_strategyData.append(curChartData.strategyData);
-    m_votData.append(curChartData.votData);
-    m_timeData.append(curChartData.timeData);
-    m_macdData.append(curChartData.macdData);
-    updateChart();
-
-    if (isTradingOver(QTime::currentTime())) {
-        m_monitorWorker->stopTimer();
+    if (isTradingStart()) {
+        emit getHistDataSignal();
     }
-}
-
-void ChartForm::receiveTradeOver() {
-    qDebug() << "Trade is over: " << QTime::currentTime().toString("HHmmss");
-    m_monitorWorker->stopTimer();
 }
 
 void ChartForm::receiveMarketHistData_slot(QList<QList<double> > allData) {
@@ -409,14 +396,30 @@ void ChartForm::receiveMarketHistData_slot(QList<QList<double> > allData) {
 
     initLayout ();
 
-//    writeExcelData();
-
     if (m_isRealTime) {
         if (m_macdData.size() > 0) {
             m_monitorWorker->setInitMacd(m_macdData[m_macdData.size()-1]);
         }
         m_monitorWorker->startTimer();
     }
+}
+
+void ChartForm::receiveRealTimeData(ChartData curChartData) {
+    qDebug() << "ChartForm::receiveRealTimeData(): " << QThread::currentThread();
+    m_strategyData.append(curChartData.strategyData);
+    m_votData.append(curChartData.votData);
+    m_timeData.append(curChartData.timeData);
+    m_macdData.append(curChartData.macdData);
+    updateChart();
+
+    if (isTradingOver(QTime::currentTime())) {
+        m_monitorWorker->stopTimer();
+    }
+}
+
+void ChartForm::receiveTradeOver() {
+    qDebug() << "Trade is over: " << QTime::currentTime().toString("HHmmss");
+    m_monitorWorker->stopTimer();
 }
 
 void ChartForm::receiveTableViewInfo(QString msg) {
@@ -595,14 +598,17 @@ void ChartForm::initLayout () {
     initTheme();
 
     if (NULL != m_strategyChartView) {
-        ui->gridLayout->addWidget (m_strategyChartView, 1, 0);
+        ui->gridLayout->addWidget (m_strategyChartView, 0, 0);
     }
     if (NULL != m_votrunoverChartView) {
-        ui->gridLayout->addWidget (m_votrunoverChartView, 2, 0);
+        ui->gridLayout->addWidget (m_votrunoverChartView, 1, 0);
     }
     if (NULL != m_macdChartView) {
-        ui->gridLayout->addWidget (m_macdChartView, 3, 0);
+        ui->gridLayout->addWidget (m_macdChartView, 2, 0);
     }
+    ui->gridLayout->setRowStretch(0,2);
+    ui->gridLayout->setRowStretch(1,1);
+    ui->gridLayout->setRowStretch(2,1);
     this->setMouseTracking(true);
     m_timeAxisUpdateData = m_timeData;
     m_isLayoutSetted = true;
@@ -613,6 +619,8 @@ void ChartForm::initLayout () {
                                                .arg(costSecs/1000).arg(m_threadNumb));
 
     initTableContextMenu();
+
+    setLineColor();
 }
 
 QCategoryAxis* ChartForm::getAxisX () {
@@ -643,8 +651,9 @@ void ChartForm::setStrategyChartView () {
         m_strategySeries->append (i, m_strategyData.at (i));
     }
     if (m_isRealTime) {
-        ui->preCLoseSpreadValue_Label->setText(QString(QString("昨日点差: %1"))
-                                               .arg(m_preSpread));
+        QString info = QString(QString("昨日点差: %1").arg(m_preSpread));
+        ui->preCLoseSpreadValue_Label->setText(info);
+        qDebug() << info;
         for (int i = 0; i < m_strategyData.size (); ++i) {
             m_preSpreadSeries->append(i, m_preSpread);
         }
@@ -670,9 +679,16 @@ void ChartForm::setStrategyChartView () {
     axisY -> setRange (axisYRange[0], axisYRange[1]);
     axisY -> setLabelFormat ("%1.1e");
 
+    m_strategyChartRange = axisYRange;
+    m_strategyLabelSeries = new QLineSeries;
+    m_strategyLabelSeries->append(m_oldLabelIndex, m_strategyChartRange[0]);
+    m_strategyLabelSeries->append(m_oldLabelIndex, m_strategyChartRange[1]);
+
     m_strategyChart = new QChart();
     m_strategyChart->addSeries (m_strategySeries);
     m_strategyChart->addSeries(m_preSpreadSeries);
+    m_strategyChart->addSeries(m_strategyLabelSeries);
+
 //    m_strategyChart->legend()->setAlignment(Qt::AlignTop);
     m_strategyChart->legend()->hide();
     m_strategyChart->setAnimationOptions(QChart::NoAnimation);
@@ -688,6 +704,9 @@ void ChartForm::setStrategyChartView () {
     m_strategyChart->addAxis (axisY, Qt::AlignLeft);
     m_strategySeries->attachAxis (axisY);
     m_preSpreadSeries->attachAxis(axisY);
+
+    m_strategyLabelSeries->attachAxis(axisX);
+    m_strategyLabelSeries->attachAxis(axisY);
 }
 
 void ChartForm::setVotRunoverChartView () {
@@ -705,8 +724,14 @@ void ChartForm::setVotRunoverChartView () {
     axisY -> setRange (0, axisYRange[1]);
     axisY -> setLabelFormat ("%1.1e");
 
+    m_votChartRange = axisYRange;
+    m_votLabelSeries = new QLineSeries;
+    m_votLabelSeries->append(m_oldLabelIndex, m_votChartRange[0]);
+    m_votLabelSeries->append(m_oldLabelIndex, m_votChartRange[1]);
+
     m_votrunoverChart = new QChart();
     m_votrunoverChart->addSeries(m_votBarSeries);
+    m_votrunoverChart->addSeries(m_votLabelSeries);
     m_votrunoverChart->setAnimationOptions(QChart::NoAnimation);
 
 //    m_votrunoverChart->legend()->setAlignment(Qt::AlignTop);
@@ -722,6 +747,9 @@ void ChartForm::setVotRunoverChartView () {
 
     m_votrunoverChart->addAxis (axisY, Qt::AlignLeft);
     m_votBarSeries->attachAxis (axisY);
+
+    m_votLabelSeries->attachAxis(axisX);
+    m_votLabelSeries->attachAxis(axisY);
 }
 
 void ChartForm::setMACDChartView () {
@@ -748,10 +776,16 @@ void ChartForm::setMACDChartView () {
     axisY -> setRange (axisYRange[0], axisYRange[1]);
     axisY -> setLabelFormat ("%1.1e");
 
+    m_macdChartRange = axisYRange;
+    m_macdLabelSeries = new QLineSeries;
+    m_macdLabelSeries->append(m_oldLabelIndex, m_macdChartRange[0]);
+    m_macdLabelSeries->append(m_oldLabelIndex, m_macdChartRange[1]);
+
     m_macdChart = new QChart();
     m_macdChart->addSeries (m_diffSeries);
     m_macdChart->addSeries (m_deaSeries);
     m_macdChart->addSeries (m_macdSeries);
+    m_macdChart->addSeries(m_macdLabelSeries);
 //    m_macdChart->legend()->setAlignment(Qt::AlignTop);
     m_macdChart->legend()->hide();
     m_macdChart->setAnimationOptions(QChart::NoAnimation);
@@ -771,6 +805,8 @@ void ChartForm::setMACDChartView () {
     m_deaSeries->attachAxis (axisY);
     m_macdSeries->attachAxis (axisY);
 
+    m_macdLabelSeries->attachAxis(axisX);
+    m_macdLabelSeries->attachAxis(axisY);
 //    qDebug() << "m_macdChartView.size: "<< m_macdChartView->size();
 }
 
@@ -784,6 +820,17 @@ void ChartForm::initTheme() {
     window()->setPalette(pal);
     ui->groupBox->setPalette(pal);
     ui->Title_Label->setStyleSheet(QStringLiteral("color: rgb(250, 250, 250);font: 75 14pt \"微软雅黑\";"));
+}
+
+void ChartForm::setLineColor() {
+    m_diffSeries->setColor(QColor(220,220,220));
+    m_deaSeries->setColor(QColor(255,255,0));
+    m_macdSeries->barSets()[0]->setBorderColor(QColor(0,229,255));
+    m_macdSeries->barSets()[0]->setColor(QColor(0,229,255));
+
+    m_strategyLabelSeries->setPen(QPen(QBrush(QColor(255,255,255)), 1));
+    m_votLabelSeries->setPen(QPen(QBrush(QColor(255,255,255)), 1));
+    m_macdLabelSeries->setPen(QPen(QBrush(QColor(255,255,255)), 1));
 }
 
 void ChartForm::setPropertyValue(int currIndex) {
@@ -804,7 +851,27 @@ void ChartForm::setPropertyValue(int currIndex) {
         ui->DIFF_Label->setText(QString("DIFF: %1").arg(DIFF));
         ui->DEA_Label->setText(QString("DEA: %1").arg(DEA));
         ui->MACD_Label->setText(QString("MACD: %1").arg(Macd));
+
+        updateLableSeries(currIndex);
     }
+}
+
+void ChartForm::updateLableSeries(int index) {
+    m_strategyLabelSeries->remove(m_oldLabelIndex, m_strategyChartRange[0]);
+    m_strategyLabelSeries->remove(m_oldLabelIndex, m_strategyChartRange[1]);
+    m_votLabelSeries->remove(m_oldLabelIndex, m_votChartRange[0]);
+    m_votLabelSeries->remove(m_oldLabelIndex, m_votChartRange[1]);
+    m_macdLabelSeries->remove(m_oldLabelIndex, m_macdChartRange[0]);
+    m_macdLabelSeries->remove(m_oldLabelIndex, m_macdChartRange[1]);
+
+    m_oldLabelIndex = index;
+
+    m_strategyLabelSeries->append(m_oldLabelIndex, m_strategyChartRange[0]);
+    m_strategyLabelSeries->append(m_oldLabelIndex, m_strategyChartRange[1]);
+    m_votLabelSeries->append(m_oldLabelIndex, m_votChartRange[0]);
+    m_votLabelSeries->append(m_oldLabelIndex, m_votChartRange[1]);
+    m_macdLabelSeries->append(m_oldLabelIndex, m_macdChartRange[0]);
+    m_macdLabelSeries->append(m_oldLabelIndex, m_macdChartRange[1]);
 }
 
 void ChartForm::mouseMoveEvenFunc(QObject *watched, QEvent *event) {

@@ -9,6 +9,7 @@
 #include <QBarSet>
 #include <QColor>
 #include <algorithm>
+#include <QPainter>
 #include "time_func.h"
 #include "compute_func.h"
 using std::max;
@@ -231,6 +232,8 @@ void CSSChartFormOne::setLineColor() {
     m_cssMarkLineSeries[7]->setPen(QPen(QBrush(QColor(253,216,53)), 0.5));   // 200
     m_cssMarkLineSeries[8]->setPen(QPen(QBrush(QColor(180,180,180)), 0.5));  // 300
 
+    m_aveChartLabelSeries->setPen(QPen(QBrush(QColor(255,255,255)), 1));
+    m_cssChartLabelSeries->setPen(QPen(QBrush(QColor(255,255,255)), 1));
 //    m_cssMarkLineSeries[0]->setColor(QColor(253,216,53));
 //    m_cssMarkLineSeries[1]->setColor(QColor(253,216,53));
 //    m_cssMarkLineSeries[2]->setColor(QColor(117,117,117));
@@ -275,6 +278,11 @@ QBarCategoryAxis* CSSChartFormOne::getQBarCategoryAxisAxisY() {
 }
 
 void CSSChartFormOne::initChartView() {
+    initAveChart();
+    initCSSChart();
+}
+
+void CSSChartFormOne::initAveChart() {
     QCategoryAxis* timeAxisX = getTimeAxisX(m_timeList, m_chartXaxisTickCount);
     QValueAxis* aveAxisY = new QValueAxis;
     QList<double> aveRange =getChartYvalueRange(m_aveList);
@@ -297,12 +305,17 @@ void CSSChartFormOne::initChartView() {
     }
 
     m_oldLabelIndex = m_timeList.size() / 2;
-    QBarSet* aveLabel = new QBarSet("");
-    aveLabel->insert(m_oldLabelIndex, aveRange[1]);
-    m_aveChartLabelSeries = new QStackedBarSeries();
-    m_aveChartLabelSeries->append(aveLabel);
-    m_aveChartLabelSeries->setBarWidth(0);
-    m_LabelSetList.append(aveLabel);
+
+//    QBarSet* aveLabel = new QBarSet("");
+//    aveLabel->insert(m_oldLabelIndex, aveRange[1]);
+//    m_aveChartLabelSeries = new QStackedBarSeries();
+//    m_aveChartLabelSeries->append(aveLabel);
+//    m_aveChartLabelSeries->setBarWidth(0);
+//    m_LabelSetList.append(aveLabel);
+
+    m_aveChartLabelSeries = new QLineSeries();
+    m_aveChartLabelSeries->append(m_oldLabelIndex, m_aveChartMinValue);
+    m_aveChartLabelSeries->append(m_oldLabelIndex, m_aveChartMaxValue);
 
     m_aveChart = new QChart();
     for (auto lineSeries:m_aveLineSeries) {
@@ -317,11 +330,16 @@ void CSSChartFormOne::initChartView() {
 
     m_aveChart->setAnimationOptions(QChart::NoAnimation);
     m_aveChart->addAxis(aveAxisY, Qt::AlignLeft);
+    m_aveChart->addAxis(timeAxisX, Qt::AlignBottom);
     for (auto lineSeries:m_aveLineSeries) {
         lineSeries->attachAxis(aveAxisY);
     }
     m_aveChartLabelSeries->attachAxis(aveAxisY);
+    m_aveChartLabelSeries->attachAxis(timeAxisX);
+}
 
+void CSSChartFormOne::initCSSChart() {
+    QCategoryAxis* timeAxisX = getTimeAxisX(m_timeList, m_chartXaxisTickCount);
     QValueAxis* cssAxisY = new QValueAxis;
     cssAxisY->setRange(m_minCSS, m_maxCSS);
     cssAxisY->setGridLineVisible(false);
@@ -369,16 +387,20 @@ void CSSChartFormOne::initChartView() {
         currSeries->setName(QString("%1").arg(m_cssMarkValueList[i]));
     }
 
-    QBarSet* cssLabelUp = new QBarSet("");
-    cssLabelUp->insert(m_oldLabelIndex, m_maxCSS);
-    QBarSet* cssLabelDown = new QBarSet("");
-    cssLabelDown->insert(m_oldLabelIndex, m_minCSS);
-    m_cssChartLabelSeries = new QStackedBarSeries();
-    m_cssChartLabelSeries->append(cssLabelUp);
-    m_cssChartLabelSeries->append(cssLabelDown);
-    m_cssChartLabelSeries->setBarWidth(0);
-    m_LabelSetList.append(cssLabelUp);
-    m_LabelSetList.append(cssLabelDown);
+//    QBarSet* cssLabelUp = new QBarSet("");
+//    cssLabelUp->insert(m_oldLabelIndex, m_maxCSS);
+//    QBarSet* cssLabelDown = new QBarSet("");
+//    cssLabelDown->insert(m_oldLabelIndex, m_minCSS);
+//    m_cssChartLabelSeries = new QStackedBarSeries();
+//    m_cssChartLabelSeries->append(cssLabelUp);
+//    m_cssChartLabelSeries->append(cssLabelDown);
+//    m_cssChartLabelSeries->setBarWidth(0);
+//    m_LabelSetList.append(cssLabelUp);
+//    m_LabelSetList.append(cssLabelDown);
+
+    m_cssChartLabelSeries = new QLineSeries();
+    m_cssChartLabelSeries->append(m_oldLabelIndex, m_maxCSS);
+    m_cssChartLabelSeries->append(m_oldLabelIndex, m_minCSS);
 
     m_cssChart = new QChart();
     for (auto lineSeries:m_cssLineSeries) {
@@ -413,7 +435,7 @@ void CSSChartFormOne::initChartView() {
         barSeries->attachAxis(timeAxisX);
         barSeries->attachAxis(cssAxisY);
     }
-//    m_cssChartLabelSeries->attachAxis(timeAxisX);
+    m_cssChartLabelSeries->attachAxis(timeAxisX);
     m_cssChartLabelSeries->attachAxis(cssAxisY);
 }
 
@@ -542,7 +564,7 @@ void CSSChartFormOne::mouseButtonReleaseFunc(QObject *watched, QEvent *event) {
         QCursor::setPos(m_mouseInitPos);
     }
 
-
+    updateMouseLine();
 }
 
 void CSSChartFormOne::KeyReleaseFunc(QEvent *event) {
@@ -556,6 +578,7 @@ void CSSChartFormOne::KeyReleaseFunc(QEvent *event) {
         step = 1;
     }
     moveMouse(step);
+//    updateMouseLine();
 }
 
 void CSSChartFormOne::moveMouse(int step) {
@@ -583,6 +606,22 @@ double CSSChartFormOne::getPointXDistance() {
     QPointF pointb = m_aveChart->mapToPosition(QPointF(testIndex+1, m_aveList[0][testIndex+1]));
     double distance = pointb.x() - pointa.x();
     return distance;
+}
+
+void CSSChartFormOne::updateMouseLine() {
+//    update();
+//   QPoint cursorPos = QCursor::pos();
+//   QPoint windowPos = window()->pos();
+//   QSize windowSize = window()->size();
+//   qDebug() << "cursorPos: " << cursorPos
+//            << "windowPos: " << windowPos
+//            << "windowSize: " << windowSize;
+
+//   QPoint topPoint(cursorPos.x(), windowPos.y());
+//   QPoint buttomPoint(cursorPos.x(), windowPos.y()+windowSize.height());
+//   QPainter painter(this);
+//   painter.setPen(QPen(Qt::blue,4));         // 设置画笔形式
+//   painter.drawLine(topPoint,buttomPoint);   // 画直线
 }
 
 void CSSChartFormOne::connectMarkers()
@@ -705,32 +744,55 @@ void CSSChartFormOne::handleMarkerClicked()
 }
 
 void CSSChartFormOne::updateLableSeries(int index) {
-    qDebug() <<"m_oldLabelIndex: " << m_oldLabelIndex <<", index: " << index;
-//    m_aveChartLabelSeries->barSets()[0]->remove(m_oldLabelIndex);
-//    m_cssChartLabelSeries->barSets()[0]->remove(m_oldLabelIndex);
-//    m_cssChartLabelSeries->barSets()[1]->remove(m_oldLabelIndex);
+    /**/
+//    qDebug() <<"m_oldLabelIndex: " << m_oldLabelIndex <<", index: " << index;
 
-    m_LabelSetList[0]->remove(m_oldLabelIndex);
-    m_LabelSetList[1]->remove(m_oldLabelIndex);
-    m_LabelSetList[2]->remove(m_oldLabelIndex);
+//    m_LabelSetList[0]->remove(m_oldLabelIndex);
+//    m_LabelSetList[1]->remove(m_oldLabelIndex);
+//    m_LabelSetList[2]->remove(m_oldLabelIndex);
 
-    m_LabelSetList[0]->insert(index, m_aveChartMaxValue);
-    m_LabelSetList[1]->insert(index, m_maxCSS);
-    m_LabelSetList[2]->insert(index, m_minCSS);
+//    m_LabelSetList[0]->insert(index, m_aveChartMaxValue);
+//    m_LabelSetList[1]->insert(index, m_maxCSS);
+//    m_LabelSetList[2]->insert(index, m_minCSS);
+
+//    qDebug() << QString("m_LabelSetList[0]->count(): %1").arg(m_LabelSetList[0]->count());
+//    qDebug() << QString("m_LabelSetList[1]->count(): %1").arg(m_LabelSetList[1]->count());
+//    qDebug() << QString("m_LabelSetList[2]->count(): %1").arg(m_LabelSetList[1]->count());
+
+    //    m_aveChartLabelSeries->barSets()[0]->remove(m_oldLabelIndex);
+    //    m_cssChartLabelSeries->barSets()[0]->remove(m_oldLabelIndex);
+    //    m_cssChartLabelSeries->barSets()[1]->remove(m_oldLabelIndex);
 
 //    qDebug() << "m_aveChartLabelSeries->barSets()[0]->count(): " << m_aveChartLabelSeries->barSets()[0]->count();
 //    qDebug() << "m_cssChartLabelSeries->barSets()[0]->count(): " << m_cssChartLabelSeries->barSets()[0]->count();
 //    qDebug() << "m_cssChartLabelSeries->barSets()[1]->count(): " << m_cssChartLabelSeries->barSets()[1]->count();
-//    qDebug() << QString("m_aveChartLabelSeries->barSets()[0]->at(%1): %2").arg(m_oldLabelIndex).arg(m_aveChartLabelSeries->barSets()[0]->at(m_oldLabelIndex));
-//    qDebug() << QString("m_cssChartLabelSeries->barSets()[0]->at(%1): %2").arg(m_oldLabelIndex).arg(m_cssChartLabelSeries->barSets()[0]->at(m_oldLabelIndex));
-//    qDebug() << QString("m_cssChartLabelSeries->barSets()[1]->at(%1): %2").arg(m_oldLabelIndex).arg(m_cssChartLabelSeries->barSets()[1]->at(m_oldLabelIndex));
+//    qDebug() << QString("m_aveChartLabelSeries->barSets()[0]->at(%1): %2")
+//                .arg(m_oldLabelIndex).arg(m_aveChartLabelSeries->barSets()[0]->at(m_oldLabelIndex));
+//    qDebug() << QString("m_cssChartLabelSeries->barSets()[0]->at(%1): %2")
+//                .arg(m_oldLabelIndex).arg(m_cssChartLabelSeries->barSets()[0]->at(m_oldLabelIndex));
+//    qDebug() << QString("m_cssChartLabelSeries->barSets()[1]->at(%1): %2")
+//                .arg(m_oldLabelIndex).arg(m_cssChartLabelSeries->barSets()[1]->at(m_oldLabelIndex));
 
-    qDebug() << QString("m_LabelSetList[0]->count(): %1").arg(m_LabelSetList[0]->count());
-    qDebug() << QString("m_LabelSetList[1]->count(): %1").arg(m_LabelSetList[1]->count());
-    qDebug() << QString("m_LabelSetList[2]->count(): %1").arg(m_LabelSetList[1]->count());
-    qDebug() << QString("m_LabelSetList[0]->at(%1): %2").arg(m_oldLabelIndex).arg(m_LabelSetList[0]->at(m_oldLabelIndex));
-    qDebug() << QString("m_LabelSetList[1]->at(%1): %2").arg(m_oldLabelIndex).arg(m_LabelSetList[1]->at(m_oldLabelIndex));
-    qDebug() << QString("m_LabelSetList[2]->at(%1): %2").arg(m_oldLabelIndex).arg(m_LabelSetList[2]->at(m_oldLabelIndex));
+
+
+//    qDebug() << QString("m_LabelSetList[0]->at(%1): %2")
+//                .arg(m_oldLabelIndex).arg(m_LabelSetList[0]->at(m_oldLabelIndex));
+//    qDebug() << QString("m_LabelSetList[1]->at(%1): %2")
+//                .arg(m_oldLabelIndex).arg(m_LabelSetList[1]->at(m_oldLabelIndex));
+//    qDebug() << QString("m_LabelSetList[2]->at(%1): %2")
+//                .arg(m_oldLabelIndex).arg(m_LabelSetList[2]->at(m_oldLabelIndex));
+
+    m_cssChartLabelSeries->remove(m_oldLabelIndex, m_maxCSS);
+    m_cssChartLabelSeries->remove(m_oldLabelIndex, m_minCSS);
+    m_aveChartLabelSeries->remove(m_oldLabelIndex, m_aveChartMinValue);
+    m_aveChartLabelSeries->remove(m_oldLabelIndex, m_aveChartMaxValue);
+
+    m_cssChartLabelSeries->append(index, m_maxCSS);
+    m_cssChartLabelSeries->append(index, m_minCSS);
+    m_aveChartLabelSeries->append(index, m_aveChartMinValue);
+    m_aveChartLabelSeries->append(index, m_aveChartMaxValue);
+
+    update();
 
 //    m_aveChartLabelSeries->barSets()[0]->insert(index, m_aveChartMaxValue);
 //    m_cssChartLabelSeries->barSets()[0]->insert(index, m_maxCSS);
@@ -768,4 +830,25 @@ void CSSChartFormOne::updateLableSeries(int index) {
 //    qDebug() << m_aveChartLabelSeries->barSets()[0]->at(index);
 //    qDebug() << m_cssChartLabelSeries->barSets()[0]->at(index);
 //    qDebug() << m_cssChartLabelSeries->barSets()[1]->at(index);
+
 }
+
+void CSSChartFormOne::paintEvent(QPaintEvent *) {
+//    QPoint cursorPos = QCursor::pos();
+//    QPoint windowPos = window()->pos();
+//    QSize windowSize = window()->size();
+
+
+//    QPoint topPoint(cursorPos.x(), windowPos.y());
+//    QPoint buttomPoint(cursorPos.x(), windowPos.y()+windowSize.height());
+//    QPainter painter(this);
+//    painter.setPen(QPen(Qt::red,4));         // 设置画笔形式
+//    painter.drawLine(topPoint,buttomPoint);   // 画直线
+
+//    qDebug() << "cursorPos: " << cursorPos
+//             << ", windowPos: " << windowPos
+//             << ", windowSize: " << windowSize
+//             << ", topPoint: " << topPoint
+//             << ", buttomPoint: " << buttomPoint;
+}
+

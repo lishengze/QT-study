@@ -88,7 +88,12 @@ void ExtractDataWindow::on_startExtractData_pushButton_clicked()
 
     if (QMessageBox::Yes == QMessageBox::information(NULL, QString("确认信息"),
                                                      info, QMessageBox::Yes | QMessageBox::No)) {
-        emit getChoosenInfo_signal(choosenKeyValueList, m_dirName);
+        if (QMessageBox::Yes == QMessageBox::information(NULL, QString("确认信息"),
+                                                         "写入完成后,是否打开文件", QMessageBox::Yes | QMessageBox::No)) {
+            emit getChoosenInfo_signal(choosenKeyValueList, m_dirName, true);
+        } else {
+            emit getChoosenInfo_signal(choosenKeyValueList, m_dirName, false);
+        }
         this->close();
     }
 }

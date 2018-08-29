@@ -8,7 +8,10 @@
 #include <QChartView>
 #include <QBarSet>
 #include <QColor>
+#include <QMessageBox>
 #include <algorithm>
+#include <QDesktopServices>
+#include "excel_func.h"
 #include "time_func.h"
 #include "compute_func.h"
 using std::max;
@@ -98,6 +101,7 @@ void CSSChartForm::initCommonData() {
     m_maxColNumb = 3;
     m_chartXaxisTickCount = 5;
     m_cssMarkValueList << -200  << -158  << -130 << -80 << 80 << 130 << 158<< 200<< 300;
+    initExtractKeyValueList();
 }
 
 void CSSChartForm::initListData() {
@@ -133,10 +137,18 @@ void CSSChartForm::initListData() {
         m_aveChartlabelListList.append(emptyLabelList);
         m_cssChartlabelListList.append(emptyLabelList);
 
+        QList<double> emptyChartRange;
+        m_aveChartRange.append(emptyChartRange);
+
+        m_aveChartLabelSeriesList.append(NULL);
+        m_cssChartLabelSeriesList.append(NULL);
+
         m_keyMoveCountList.append(0);
         m_currTimeIndexList.append(0);
         m_isKeyMoveList.append(false);
         m_mouseInitPosList.append(QPoint(-1, -1));
+
+        m_oldLabelIndexList.append(0);
     }
 }
 
@@ -171,6 +183,10 @@ void CSSChartForm::initHistoryData() {
         m_histdataWorkerList.append(histdataWorker);
         m_histdataThreadList.append(histdataThread);
     }
+}
+
+void CSSChartForm::initExtractKeyValueList() {
+    m_extractKeyValueList << "全选";
 }
 
 void CSSChartForm::initColors() {
@@ -243,9 +259,15 @@ void CSSChartForm::sendCSSData_slot(QList<QString> timeList, QList<QList<double>
 }
 
 void CSSChartForm::setChart(int dataID) {
+    setAVEChart(dataID);
+    setCSSChart(dataID);
+}
+
+void CSSChartForm::setAVEChart(int dataID) {
     QCategoryAxis* timeAxisX = getTimeAxisX(m_timeList[dataID], m_chartXaxisTickCount);
     QValueAxis* aveAxisY = new QValueAxis;
     QList<double> aveRange =getChartYvalueRange(m_aveList[dataID]);
+    m_aveChartRange[dataID] = aveRange;
     aveAxisY->setRange(aveRange[0], aveRange[1]);
 
     for (int i = 0; i < m_aveList[dataID].size(); ++i) {
@@ -262,10 +284,16 @@ void CSSChartForm::setChart(int dataID) {
         m_aveLineSeriesList[dataID].append(currSeries);
     }
 
+    QLineSeries* aveChartLabelSeries = new QLineSeries();
+    aveChartLabelSeries->append(m_oldLabelIndexList[dataID], m_aveChartRange[dataID][0]);
+    aveChartLabelSeries->append(m_oldLabelIndexList[dataID], m_aveChartRange[dataID][1]);
+
     QChart* aveChart = new QChart();
     for (auto lineSeries:m_aveLineSeriesList[dataID]) {
         aveChart->addSeries(lineSeries);
     }
+    aveChart->addSeries(aveChartLabelSeries);
+    m_aveChartLabelSeriesList[dataID] = aveChartLabelSeries;
 
     QMyChartView* aveChartView = new QMyChartView(aveChart);
     aveChartView->setRenderHint(QPainter::Antialiasing);
@@ -274,13 +302,18 @@ void CSSChartForm::setChart(int dataID) {
 
     aveChart->setAnimationOptions(QChart::NoAnimation);
     aveChart->addAxis(aveAxisY, Qt::AlignLeft);
+    aveChart->addAxis(timeAxisX, Qt::AlignBottom);
     for (auto lineSeries:m_aveLineSeriesList[dataID]) {
         lineSeries->attachAxis(aveAxisY);
     }
-
+    aveChartLabelSeries->attachAxis(aveAxisY);
+    aveChartLabelSeries->attachAxis(timeAxisX);
     m_aveChartViewList[dataID] = aveChartView;
     m_aveChartList[dataID] = aveChart;
+}
 
+void CSSChartForm::setCSSChart(int dataID) {
+    QCategoryAxis* timeAxisX = getTimeAxisX(m_timeList[dataID], m_chartXaxisTickCount);
     QValueAxis* cssAxisY = new QValueAxis;
     cssAxisY->setRange(m_minCSS, m_maxCSS);
     cssAxisY->setGridLineVisible(false);
@@ -328,6 +361,10 @@ void CSSChartForm::setChart(int dataID) {
         currSeries->setName(QString("%1").arg(m_cssMarkValueList[i]));
     }
 
+    QLineSeries* cssChartLabelSeries = new QLineSeries();
+    cssChartLabelSeries->append(m_oldLabelIndexList[dataID], m_maxCSS);
+    cssChartLabelSeries->append(m_oldLabelIndexList[dataID], m_minCSS);
+
     QChart* cssChart = new QChart();
     for (auto lineSeries:m_cssLineSeriesList[dataID]) {
         cssChart->addSeries(lineSeries);
@@ -338,6 +375,8 @@ void CSSChartForm::setChart(int dataID) {
     for (auto lineSeries:m_cssMarkLineSeriesList[dataID]) {
         cssChart->addSeries(lineSeries);
     }
+    cssChart->addSeries(cssChartLabelSeries);
+    m_cssChartLabelSeriesList[dataID] = cssChartLabelSeries;
 
     QMyChartView* cssChartView = new QMyChartView(cssChart);
     cssChartView->setRenderHint(QPainter::Antialiasing);
@@ -360,9 +399,10 @@ void CSSChartForm::setChart(int dataID) {
         barSeries->attachAxis(timeAxisX);
         barSeries->attachAxis(cssAxisY);
     }
+    cssChartLabelSeries->attachAxis(timeAxisX);
+    cssChartLabelSeries->attachAxis(cssAxisY);
     m_cssChartViewList[dataID] = cssChartView;
     m_cssChartList[dataID] = cssChart;
-       /**/
 }
 
 void CSSChartForm::setChartView() {
@@ -390,6 +430,8 @@ void CSSChartForm::setChartView() {
     ui->main_gridLayout->setRowStretch(1,20);
     ui->main_gridLayout->setRowStretch(2,1);
     ui->main_gridLayout->setRowStretch(3,14);
+
+    initTableContextMenu();
 }
 
 void CSSChartForm::setLabels() {
@@ -489,6 +531,9 @@ void CSSChartForm::setColors() {
                                                          .arg(m_cssChartColorList[j].blue()));
         }
 
+        m_aveChartLabelSeriesList[i]->setPen(QPen(QBrush(QColor(255,255,255)), 1));
+        m_cssChartLabelSeriesList[i]->setPen(QPen(QBrush(QColor(255,255,255)), 1));
+
         for (int j = 0; j <2; ++j) {
             m_cssLineSeriesList[i][j]->setColor(m_cssChartColorList[j]);
         }
@@ -586,7 +631,26 @@ void CSSChartForm::setPropertyValue(int index, int dataID) {
                                                      .arg(m_subAveNumb).arg(m_cssList[dataID][1][index]));
         m_cssChartlabelListList[dataID][2]->setText(QString("势%1: %2")
                                                      .arg(m_energyAveNumb).arg(m_cssList[dataID][2][index]));
+
+        updateLabelSeries(index, dataID);
     }
+}
+
+void CSSChartForm::updateLabelSeries(int index, int dataID) {
+    m_cssChartLabelSeriesList[dataID]->remove(m_oldLabelIndexList[dataID], m_maxCSS);
+    m_cssChartLabelSeriesList[dataID]->remove(m_oldLabelIndexList[dataID], m_minCSS);
+
+    m_aveChartLabelSeriesList[dataID]->remove(m_oldLabelIndexList[dataID], m_aveChartRange[dataID][0]);
+    m_aveChartLabelSeriesList[dataID]->remove(m_oldLabelIndexList[dataID], m_aveChartRange[dataID][1]);
+
+    m_cssChartLabelSeriesList[dataID]->append(index, m_maxCSS);
+    m_cssChartLabelSeriesList[dataID]->append(index, m_minCSS);
+
+    m_aveChartLabelSeriesList[dataID]->append(index, m_aveChartRange[dataID][0]);
+    m_aveChartLabelSeriesList[dataID]->append(index, m_aveChartRange[dataID][1]);
+
+    m_oldLabelIndexList[dataID] = index;
+    update();
 }
 
 void CSSChartForm::mouseMoveEvenFunc(QObject *watched, QEvent *event) {
@@ -695,3 +759,92 @@ double CSSChartForm::getPointXDistance() {
     double distance = pointb.x() - pointa.x();
     return distance;
 }
+
+QList<QMyChartView*> CSSChartForm::getChartViewList() {
+    QList<QMyChartView*> result;
+    for (auto series: m_aveChartViewList) {
+        result.append(series);
+    }
+    for (auto series: m_cssChartViewList) {
+        result.append(series);
+    }
+    return result;
+}
+
+QString CSSChartForm::getExcelFileName(QStringList keyValueList, QString fileDir) {
+    QString fileName = fileDir;
+    fileName += QString("%1_%2_%3_%4.xlsx").arg(m_singleCodeName)
+                                            .arg(m_timeTypeList.join("_"))
+                                            .arg(m_startDate).arg(m_endDate);
+    return fileName;
+}
+
+
+void CSSChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fileDir, bool bOpenDesFile) {
+    QString fileName = getExcelFileName(choosenKeyValueList, fileDir);
+
+    qDebug() << "fileName: " << fileName;
+    int sumResult = 1;
+    /**/
+    for (int i = 0; i < m_timeTypeList.size(); ++i) {
+        QString sheetName = m_timeTypeList[i];
+        QList<QStringList> currSheetData;
+
+        currSheetData.append(m_timeList[i]);
+        currSheetData[0].insert(0, "时间");
+
+        for (int j = 0; j < m_aveList[i].size(); ++j) {
+            QStringList stringListData;
+            for (double data : m_aveList[i][j]) {
+                stringListData.append(QString("%1").arg(data));
+            }
+            if(j == 0) {
+                stringListData.insert(0, "收盘价");
+            } else {
+                if (m_isEMAList[j-1] == true) {
+                    stringListData.insert(0, QString("EMA_%1").arg(m_aveNumbList[j-1]));
+                } else {
+                    stringListData.insert(0, QString("MA_%1").arg(m_aveNumbList[j-1]));
+                }
+            }
+            currSheetData.append(stringListData);
+        }
+
+        for (int j = 0; j < m_cssList[i].size(); ++j) {
+            QStringList stringListData;
+            for (double data : m_cssList[i][j]) {
+                stringListData.append(QString("%1").arg(data));
+            }
+            switch (j) {
+            case 0:
+                stringListData.insert(0, "主指标");
+                break;
+            case 1:
+                stringListData.insert(0, "从指标");
+                break;
+            case 2:
+                stringListData.insert(0, "势能指标");
+                break;
+            }
+            currSheetData.append(stringListData);
+        }
+
+        int result = writeMatrixData(fileName, currSheetData, sheetName, true, false);
+
+//        qDebug() << m_timeTypeList[i] << result;
+
+        sumResult *= result;
+    }
+
+    if (sumResult == 1) {
+        if (true == bOpenDesFile) {
+            QDesktopServices::openUrl(QUrl::fromLocalFile(fileName));
+        } else {
+            QMessageBox::information(NULL, "信息", QString("文件 %1 写入成功").arg(fileName));
+        }
+    } else {
+        QMessageBox::critical(NULL, "错误", QString("文件 %1 写入失败").arg(fileName));
+    }
+
+}
+
