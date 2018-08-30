@@ -269,3 +269,32 @@ int getStartIndex(QString startDate, QList<QString>& timeList) {
     }
     return result;
 }
+
+QList<QList<int>> getShortedStartEndDateList(int oriStartDate, int oriEndDate,
+                                      QString databaseName, int dataNumbOnce) {
+    QList<QList<int>> result;
+    QString timeType = databaseName.split("_")[1];
+    int oneDayNumb = 1;
+    int oneYearTradingDays = 250;
+    if (timeType.indexOf("m") >=0 && timeType != "month") {
+        QString time = timeType.remove('m');
+        oneDayNumb = 4 * 60 / time.toInt();
+    }
+
+    QDate startDate = transIntDate(oriStartDate);
+    QDate endDate = transIntDate(oriEndDate);
+    int addedDaysOnce = (dataNumbOnce/oneDayNumb) * (365/oneYearTradingDays);
+    int allDataNumb = startDate.daysTo(endDate) / 365 * 250 * oneDayNumb;
+    while (startDate < endDate) {
+        QDate newEndDate = startDate.addDays(addedDaysOnce);
+        if (newEndDate > endDate) {
+            newEndDate = endDate;
+        }
+        QList<int> currStartEndDate;
+        currStartEndDate.append(startDate.toString("yyyyMMdd").toInt());
+        currStartEndDate.append(newEndDate.toString("yyyyMMdd").toInt());
+        result.append(currStartEndDate);
+        startDate = newEndDate;
+    }
+    return result;
+}

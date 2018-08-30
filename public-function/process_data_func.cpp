@@ -134,7 +134,7 @@ QList<double> getChartYvalueRange(QList<double> yValueList ) {
     return result;
 }
 
-QList<double> getMACDRange(QList<MACD> oriData) {
+QList<double> getMACDRange(QList<MACD> oriData, int rangeInterval) {
     QList<double> result;
     if (oriData.size() == 0) {
         result.append(0);
@@ -147,7 +147,6 @@ QList<double> getMACDRange(QList<MACD> oriData) {
             minValue = min(min(minValue, oriData[i].m_diff), min(oriData[i].m_dea, oriData[i].m_macd));
         }
 
-        int rangeInterval = 6;
         maxValue += (maxValue - minValue) / rangeInterval;
         minValue -= (maxValue - minValue) / rangeInterval;
 

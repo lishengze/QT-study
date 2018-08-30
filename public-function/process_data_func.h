@@ -15,7 +15,7 @@ QList<double> getChartYvalueRange(QList<QList<double>> yValueList);
 
 QList<double> getChartYvalueRange(QList<double> yValueList );
 
-QList<double> getMACDRange(QList<MACD> oriData);
+QList<double> getMACDRange(QList<MACD> oriData,int rangeInterval = 6);
 
 QList<int> getNumbList(int dataNumb, int desNumb);
 

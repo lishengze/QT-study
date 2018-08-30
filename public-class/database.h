@@ -33,7 +33,7 @@ public:
                                           QString databaseName="MarketData_RealTime");
 
     QList<QStringList> getDataByDate(QString startDate, QString endDate, QStringList keyValue,
-                                 QString tableName, QString databasename);
+                                 QString tableName, QString databasename, bool bGetShortedDate=false);
 
     QList<QStringList> getWeightData(QString date, QString tableName);
 

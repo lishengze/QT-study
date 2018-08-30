@@ -55,4 +55,8 @@ bool isMinuteType(QString dataType);
 QString getPreDate(QString oridata, QString timeType, int timeNumb);
 
 int getStartIndex(QString startDate, QList<QString>& timeList);
+
+QList<QList<int>> getShortedStartEndDateList(int oriStartDate, int oriEndDate,
+                                             QString databaseName, int dataNumbOnce = 2000);
+
 #endif // TIME_FUNC_H

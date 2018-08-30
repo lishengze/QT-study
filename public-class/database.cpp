@@ -148,6 +148,7 @@ QList<QStringList> Database::getAllRealtimeData(QString tableName, QStringList k
     return result;
 }
 
+/*
 QList<QStringList> Database::getDataByDate(QString startDate, QString endDate, QStringList keyValueList,
                                        QString tableName, QString databaseName) {
     QList<QStringList> result;
@@ -165,6 +166,51 @@ QList<QStringList> Database::getDataByDate(QString startDate, QString endDate, Q
              }
             result.append(tmpResult);
          }
+    } else {
+        QMessageBox::information (m_window, "Error", m_db.lastError().text());
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;
+}
+*/
+
+QList<QStringList> Database::getDataByDate(QString startDate, QString endDate, QStringList keyValueList,
+                                       QString tableName, QString databaseName, bool bGetShortedDate) {
+    QList<QStringList> result;
+    if(m_db.open ()) {
+        QSqlQuery queryObj(m_db);
+        QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
+        QString keyValueStr = keyValueList.join(",");
+        if (databaseName.indexOf("MarketData") >= 0 && bGetShortedDate == true) {
+            QList<QList<int>> shortedStartEndDateList = getShortedStartEndDateList(startDate.toInt(), endDate.toInt(), databaseName);
+            for (int i = 0; i < shortedStartEndDateList.size(); ++i) {
+                int currStartDate = shortedStartEndDateList[i][0];
+                int currEndDate = shortedStartEndDateList[i][1];
+                QString sqlstr = QString("select %1 from %2 where TDATE >= %3 and TDATE <= %4 order by TDATE, TIME")
+                                .arg(keyValueStr).arg(completeTableName).arg(currStartDate).arg(currEndDate);
+//                qDebug() << sqlstr;
+                queryObj.exec(sqlstr);
+                 while(queryObj.next ()) {
+                     QStringList tmpResult;
+                     for (int i = 0; i < keyValueList.size(); ++i) {
+                         tmpResult.append(queryObj.value (i).toString());
+                     }
+                    result.append(tmpResult);
+                 }
+            }
+        } else {
+            QString sqlstr = QString("select %1 from %2 where TDATE >= %3 and TDATE <= %4 order by TDATE, TIME")
+                            .arg(keyValueStr).arg(completeTableName).arg(startDate).arg(endDate);
+//            qDebug() << sqlstr;
+            queryObj.exec(sqlstr);
+             while(queryObj.next ()) {
+                 QStringList tmpResult;
+                 for (int i = 0; i < keyValueList.size(); ++i) {
+                     tmpResult.append(queryObj.value (i).toString());
+                 }
+                result.append(tmpResult);
+             }
+        }
     } else {
         QMessageBox::information (m_window, "Error", m_db.lastError().text());
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
