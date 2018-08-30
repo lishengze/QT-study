@@ -46,6 +46,7 @@ public:
     virtual void initTheme();
     virtual void initChartView();
 
+    void setLineColor();
     void setRealtimeFlag();
     void setDataFrequency();
     void initHistDataWorker();
@@ -56,6 +57,8 @@ public:
     virtual QList<QMyChartView*> getChartViewList();
     virtual QString getExcelFileName(QStringList keyValueList, QString fileDir);
     virtual QList<QStringList> getExcelData(QStringList keyValueList);
+
+    void updateLabelSeries(int index);
 
     void updateNextAddedTime();
     void updateNewValue(QStringList selectData, QStringList hedgedData);
@@ -153,6 +156,9 @@ private:
     QThread                            m_MonitorThread;
 
     double                             m_testCSSValue;
+
+    QLineSeries*                       m_labelSeries;
+    QList<double>                      m_labelRange;
 };
 
 #endif // INDEXCHART_H

@@ -48,6 +48,7 @@ public:
     virtual void initLayout();
     virtual void initTheme();
     virtual void initChartView();
+    void setLineColor();
 
     void transOriFutureData(QList<double> histFutureData);
 
@@ -60,7 +61,9 @@ public:
     virtual void updateSeries();
     virtual void updateMousePos();
 
+    void updateLabelSeries(int index);
     void monitorSpread(double spread, QDateTime time);
+
 
     QList<QDateTime> getExtendedFutureTime(QList<QDateTime> oriTime,
                                            int chartXaxisTickCount, int updateTime);
@@ -109,6 +112,10 @@ private:
     QLineSeries*            m_spreadLineSeries;
     QMyChartView*           m_spreadChartView;
     QChart*                 m_spreadChart;
+
+    QLineSeries*            m_labelSeries;
+    QList<double>           m_labelRange;
+    int                     m_oldLabelIndex;
 
     int                     m_updateTime;
     int                     m_chartXaxisTickCount;

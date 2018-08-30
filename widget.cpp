@@ -137,7 +137,7 @@ void Widget::initCalendar () {
     ui->chooseStartDate->setCalendarPopup (true);
     ui->chooseEndDate->setCalendarPopup (true);
 
-    ui->chooseStartDate->setDate (QDate::currentDate().addDays(-30));
+    ui->chooseStartDate->setDate (QDate::currentDate().addDays(-365*4));
     ui->chooseEndDate->setDate (QDate::currentDate());
 
     QDate today = QDate::currentDate();
@@ -182,16 +182,12 @@ void Widget::initDataFrequency() {
     ui->dataFrequency->addItems (timeFre);
     ui->dataFrequency->setCurrentText ("day");
 
-//    QStringList energyTimeFre;
-//    energyTimeFre << "10m" << "15m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
-//    ui->energyDataFrequency_comboBox->addItems(energyTimeFre);
-//    ui->energyDataFrequency_comboBox->setCurrentText ("day");
 }
 
 void Widget::initEnergyDataFreq() {
     m_energyDataFreqListWidget = new QListWidget(this);
     QStringList energyTimeFre;
-    energyTimeFre << "10m" << "15m" << "30m" << "60m" << "120m" << "day" << "week" << "month";
+    energyTimeFre << "month" << "week" << "day" << "120m" << "60m" << "30m" << "15m" << "10m";
     for (auto reqValue: energyTimeFre) {
         QListWidgetItem *pItem = new QListWidgetItem(m_energyDataFreqListWidget);
         pItem->setData(Qt::UserRole, reqValue);
@@ -970,9 +966,9 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
         return;
     }
 
-//    if (!checkCodeInDatabase(codeName, dbhost, timeTypeList)) {
-//        return;
-//    }
+    if (!checkCodeInDatabase(codeName, dbhost, timeTypeList)) {
+        return;
+    }
 
     QStringList strAveNumbList;
     for (int i = 0; i < aveNumbList.size(); ++i) {

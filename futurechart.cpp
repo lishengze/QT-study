@@ -40,6 +40,8 @@ void FutureChart::initCommonData() {
     m_mouseInitPos = QPoint(-1, -1);
     m_oldPointDistance = -1;
 
+    m_oldLabelIndex = 0;
+
     initMonitorWorker();
     registSignalParamsType();
     initExtractKeyValueList();
@@ -127,6 +129,7 @@ void FutureChart::initLayout() {
     this->setMouseTracking(true);
 
     initTheme();
+    setLineColor();
 }
 
 void FutureChart::initTheme() {
@@ -250,11 +253,15 @@ void FutureChart::initChartView() {
     m_spreadLineSeries->setUseOpenGL(true);
 
     QList<double> axisYRange = getChartYvalueRange(m_futureSpread);
+    m_labelRange = axisYRange;
     axisY -> setRange (axisYRange[0], axisYRange[1]);
-//    axisY -> setLabelFormat ("%1.1e");
+    m_labelSeries = new QLineSeries;
+    m_labelSeries->append(m_oldLabelIndex, m_labelRange[0]);
+    m_labelSeries->append(m_oldLabelIndex, m_labelRange[1]);
 
     m_spreadChart = new QChart();
     m_spreadChart->addSeries(m_spreadLineSeries);
+    m_spreadChart->addSeries(m_labelSeries);
     m_spreadChart->legend()->hide();
     m_spreadChart->setAnimationOptions(QChart::NoAnimation);
 
@@ -267,12 +274,20 @@ void FutureChart::initChartView() {
     m_spreadLineSeries->attachAxis(axisX);
     m_spreadChart->addAxis (axisY, Qt::AlignLeft);
     m_spreadLineSeries->attachAxis (axisY);
+    m_labelSeries->attachAxis(axisX);
+    m_labelSeries->attachAxis(axisY);
+}
+
+void FutureChart::setLineColor() {
+    m_labelSeries->setPen(QPen(QBrush(QColor(255,255,255)), 1));
+    m_spreadLineSeries->setPen(QPen(QBrush(QColor(67,160,71)), 1));
 }
 
 void FutureChart::updateAxis() {
     QList<double> axisYRange = getChartYvalueRange(m_futureSpread);
     QValueAxis* curYAxis = dynamic_cast<QValueAxis *>(m_spreadChart->axisY());
     curYAxis-> setRange (axisYRange[0], axisYRange[1]);
+    m_labelRange = axisYRange;
 
     if (m_futureTime.size() > m_extendedFutureTime.size()) {
         m_spreadChart->removeAxis(m_spreadChart->axisX());
@@ -280,6 +295,7 @@ void FutureChart::updateAxis() {
         QCategoryAxis* newAxisX = getAxisX(m_extendedFutureTime, m_chartXaxisTickCount);
         m_spreadChart->addAxis(newAxisX, Qt::AlignBottom);
         m_spreadLineSeries->attachAxis(newAxisX);
+        m_labelSeries->attachAxis(newAxisX);
     }
 }
 
@@ -287,19 +303,33 @@ void FutureChart::updateSeries() {
     m_spreadLineSeries->append(m_futureSpread.size()-1, m_futureSpread.back());
 }
 
+
+
 void FutureChart::updateMousePos() {
     moveMouse(0);
 }
 
 void FutureChart::setPropertyValue(int index) {
     if (index >=0 && index < m_futureSpread.size()) {
-//        qDebug() << "index: " << index << ", isKeyMove: " << m_isKeyMove;
         ui->time_label->setText(QString("时间: %1")
                                 .arg(m_futureTime[index].toString("hh:mm:ss")));
 
         ui->spread_label->setText(QString("基差: %1")
                                   .arg(m_futureSpread[index]));
+
     }
+}
+
+void FutureChart::updateLabelSeries(int index) {
+    if (index >=0 && index < m_futureSpread.size()) {
+        QList<QPointF> pointList = m_labelSeries->points();
+        for (QPointF point: pointList) {
+            m_labelSeries->remove(point);
+        }
+        m_labelSeries->append(index, m_labelRange[0]);
+        m_labelSeries->append(index, m_labelRange[1]);
+    }
+
 }
 
 void FutureChart::mouseMoveEvenFunc(QObject *watched, QEvent *event) {
@@ -316,6 +346,7 @@ void FutureChart::mouseMoveEvenFunc(QObject *watched, QEvent *event) {
 
         if (currIndex>=0 && currIndex < m_futureSpread.size()) {
             setPropertyValue(currIndex);
+            updateLabelSeries(currIndex);
         }
     }
 }
@@ -374,6 +405,7 @@ void FutureChart::moveMouse(int step) {
         if (m_currTimeIndex >= 0 && m_currTimeIndex < m_futureSpread.size()) {
             m_isKeyMove = true;
             setPropertyValue(m_currTimeIndex);
+            updateLabelSeries(m_currTimeIndex);
         }
 
         if (move_distance >= 1 || move_distance <=-1 || move_distance == 0) {

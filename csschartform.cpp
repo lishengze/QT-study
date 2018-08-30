@@ -637,11 +637,12 @@ void CSSChartForm::setPropertyValue(int index, int dataID) {
 }
 
 void CSSChartForm::updateLabelSeries(int index, int dataID) {
-    m_cssChartLabelSeriesList[dataID]->remove(m_oldLabelIndexList[dataID], m_maxCSS);
-    m_cssChartLabelSeriesList[dataID]->remove(m_oldLabelIndexList[dataID], m_minCSS);
-
-    m_aveChartLabelSeriesList[dataID]->remove(m_oldLabelIndexList[dataID], m_aveChartRange[dataID][0]);
-    m_aveChartLabelSeriesList[dataID]->remove(m_oldLabelIndexList[dataID], m_aveChartRange[dataID][1]);
+    for (QPointF point: m_cssChartLabelSeriesList[dataID]->points()) {
+        m_cssChartLabelSeriesList[dataID]->remove(point);
+    }
+    for (QPointF point:  m_aveChartLabelSeriesList[dataID]->points()) {
+         m_aveChartLabelSeriesList[dataID]->remove(point);
+    }
 
     m_cssChartLabelSeriesList[dataID]->append(index, m_maxCSS);
     m_cssChartLabelSeriesList[dataID]->append(index, m_minCSS);

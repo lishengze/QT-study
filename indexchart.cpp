@@ -324,6 +324,8 @@ void IndexChart::initLayout() {
     this->setMouseTracking(true);
 
     initTheme();
+
+    setLineColor();
 }
 
 void IndexChart::initTheme() {
@@ -353,6 +355,7 @@ void IndexChart::initChartView() {
         m_CSSLineSeries->append(i, m_CSSList[i]);
     }
 
+
     m_earningLineSeries->setName(QString("累计净值"));
     m_earningLineSeries->setUseOpenGL(true);
 
@@ -365,9 +368,15 @@ void IndexChart::initChartView() {
     QList<double> CSSYRange = getChartYvalueRange(m_CSSList);
     CSSAxisY -> setRange (CSSYRange[0], CSSYRange[1]);
 
+    m_labelSeries = new QLineSeries;
+    m_labelRange = earningYRange;
+    m_labelSeries->append(0, m_labelRange[0]);
+    m_labelSeries->append(0, m_labelRange[1]);
+
     m_Chart = new QChart();
     m_Chart->addSeries(m_earningLineSeries);
     m_Chart->addSeries(m_CSSLineSeries);
+    m_Chart->addSeries(m_labelSeries);
 //    m_Chart->legend()->hide();
     m_Chart->setAnimationOptions(QChart::NoAnimation);
 
@@ -380,10 +389,17 @@ void IndexChart::initChartView() {
     m_Chart->addAxis (earningAxisY, Qt::AlignLeft);
     m_Chart->addAxis (CSSAxisY, Qt::AlignRight);
 
+    m_labelSeries->attachAxis(timeAxisX);
+    m_labelSeries->attachAxis(earningAxisY);
+
     m_earningLineSeries->attachAxis(timeAxisX);
     m_earningLineSeries->attachAxis(earningAxisY);
     m_CSSLineSeries->attachAxis(timeAxisX);
     m_CSSLineSeries->attachAxis(CSSAxisY);
+}
+
+void IndexChart::setLineColor() {
+    m_labelSeries->setPen(QPen(QBrush(QColor(255,255,255)), 1));
 }
 
 QCategoryAxis* IndexChart::getTimeAxisX  (QList<QString> timeList, int tickCount) {
@@ -424,6 +440,7 @@ void IndexChart::updateAxis() {
     QValueAxis* earningAxisY = dynamic_cast<QValueAxis *>(m_Chart->axisY(m_earningLineSeries));
     if (m_earningList.last() > earningAxisY->max() || m_earningList.last() < earningAxisY->min()) {
         QList<double> earningYRange = getChartYvalueRange(m_earningList);
+        m_labelRange = earningYRange;
         earningAxisY -> setRange (earningYRange[0], earningYRange[1]);
     }
 
@@ -441,6 +458,7 @@ void IndexChart::updateAxis() {
         m_Chart->addAxis(newAxisX, Qt::AlignBottom);
         m_earningLineSeries->attachAxis(newAxisX);
         m_CSSLineSeries->attachAxis(newAxisX);
+        m_labelSeries->attachAxis(newAxisX);
     }
 }
 
@@ -488,6 +506,16 @@ void IndexChart::setPropertyValue(int index) {
     }
 }
 
+void IndexChart::updateLabelSeries(int index) {
+    if (index >=0 && index < m_timeList.size()) {
+        for (QPointF point: m_labelSeries->points()) {
+            m_labelSeries->remove(point);
+        }
+        m_labelSeries->append(index, m_labelRange[0]);
+        m_labelSeries->append(index, m_labelRange[1]);
+    }
+}
+
 void IndexChart::mouseMoveEvenFunc(QObject *watched, QEvent *event) {
     if (m_isKeyMove)  {
         m_isKeyMove = false;
@@ -501,6 +529,7 @@ void IndexChart::mouseMoveEvenFunc(QObject *watched, QEvent *event) {
         }
 
         setPropertyValue(currIndex);
+        updateLabelSeries(currIndex);
     }
 }
 
@@ -558,6 +587,7 @@ void IndexChart::moveMouse(int step) {
         if (m_currTimeIndex >= 0 && m_currTimeIndex < m_earningList.size()) {
             m_isKeyMove = true;
             setPropertyValue(m_currTimeIndex);
+            updateLabelSeries(m_currTimeIndex);
         }
 
         if (move_distance >= 1 || move_distance <=-1 || move_distance == 0) {
