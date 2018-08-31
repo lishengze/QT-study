@@ -966,9 +966,9 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
         return;
     }
 
-    if (!checkCodeInDatabase(codeName, dbhost, timeTypeList)) {
-        return;
-    }
+//    if (!checkCodeInDatabase(codeName, dbhost, timeTypeList)) {
+//        return;
+//    }
 
     QStringList strAveNumbList;
     for (int i = 0; i < aveNumbList.size(); ++i) {
