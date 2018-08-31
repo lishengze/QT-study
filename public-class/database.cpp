@@ -6,7 +6,7 @@
 #include <QTime>
 #include <QMessageBox>
 #include "time_func.h"
-#include "toolfunc.h"
+#include "io_func.h"
 #include "secode_func.h"
 #include "id_func.h"
 #pragma execution_character_set("utf-8")
@@ -183,6 +183,7 @@ QList<QStringList> Database::getDataByDate(QString startDate, QString endDate, Q
         QString keyValueStr = keyValueList.join(",");
         if (databaseName.indexOf("MarketData") >= 0 && bGetShortedDate == true) {
             QList<QList<int>> shortedStartEndDateList = getShortedStartEndDateList(startDate.toInt(), endDate.toInt(), databaseName);
+//            printList(shortedStartEndDateList, "shortedStartEndDateList");
             for (int i = 0; i < shortedStartEndDateList.size(); ++i) {
                 int currStartDate = shortedStartEndDateList[i][0];
                 int currEndDate = shortedStartEndDateList[i][1];

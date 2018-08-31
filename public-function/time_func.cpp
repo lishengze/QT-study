@@ -1,5 +1,5 @@
 ﻿#include "time_func.h"
-#include "toolfunc.h"
+//#include "toolfunc.h"
 #include <QThread>
 #include <QDebug>
 #include <QtMath>
@@ -284,7 +284,7 @@ QList<QList<int>> getShortedStartEndDateList(int oriStartDate, int oriEndDate,
     QDate startDate = transIntDate(oriStartDate);
     QDate endDate = transIntDate(oriEndDate);
     int addedDaysOnce = (dataNumbOnce/oneDayNumb) * (365/oneYearTradingDays);
-    int allDataNumb = startDate.daysTo(endDate) / 365 * 250 * oneDayNumb;
+//    int allDataNumb = startDate.daysTo(endDate) / 365 * 250 * oneDayNumb;
     while (startDate < endDate) {
         QDate newEndDate = startDate.addDays(addedDaysOnce);
         if (newEndDate > endDate) {
@@ -294,7 +294,7 @@ QList<QList<int>> getShortedStartEndDateList(int oriStartDate, int oriEndDate,
         currStartEndDate.append(startDate.toString("yyyyMMdd").toInt());
         currStartEndDate.append(newEndDate.toString("yyyyMMdd").toInt());
         result.append(currStartEndDate);
-        startDate = newEndDate;
+        startDate = newEndDate.addDays(1);
     }
     return result;
 }

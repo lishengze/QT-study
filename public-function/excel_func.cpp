@@ -1,4 +1,4 @@
-﻿#include "excel.h"
+﻿//#include "excel.h"
 #include "xlsxdocument.h"
 #include <QFileInfo>
 #include <QDir>
@@ -225,7 +225,7 @@ int writeOneRowData(QString fileName, QStringList oriData, int targetRow, int st
 
 // 补充未上市的数据;
 // 删除可能多余的数据;
-int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_time_list, int keyCount) {
+int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_time_list, int keyCount, QString secode) {
     QList<QStringList> ori_time_list;
     for (int i = 0; i <ori_result.size(); ++i) {
         QStringList tmp_data;
@@ -245,20 +245,12 @@ int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_
             }
             ori_result.insert(i, unlist_data);
         } else {
+//            qDebug() << ori_result[i];
             break;
         }
     }
-
-    // 补充停牌的数据
-    for (int i = 0; i < index_time_list.size(); ++i) {
-        if (ori_result[i][0] != index_time_list[i][0] || ori_result[i][1] != index_time_list[i][1]) {
-            QStringList delist_data;
-            delist_data.append(index_time_list[i][0]);
-            delist_data.append(index_time_list[i][1]);
-            delist_data.append(QString("%1").arg(ori_result[i-1][2]));
-            ori_result.insert(i, delist_data);
-        }
-    }
+//    qDebug() << "added unlist data: " << ori_result.size();
+//    qDebug() << ori_result.last();
 
     // 可能多余的数据
     for (int i = 0; i < ori_result.size(); ++i) {
@@ -267,13 +259,33 @@ int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_
         tmp_data.append(ori_result[i][1]);
         if (index_time_list.indexOf(tmp_data) < 0) {
             ori_result.removeAt(i);
+//            qDebug() << secode <<"delete data: " << tmp_data;
+            --i;
         }
     }
+//    qDebug() << "delete wrong data: " << ori_result.size();
+
+    // 补充停牌的数据
+    for (int i = 0; i < index_time_list.size(); ++i) {
+        if (i>= ori_result.size() ||  ori_result[i][0] != index_time_list[i][0] || ori_result[i][1] != index_time_list[i][1]) {
+            QStringList delist_data;
+            delist_data.append(index_time_list[i][0]);
+            delist_data.append(index_time_list[i][1]);
+            for (int j = 2; j < keyCount; ++j) {
+                delist_data.append(QString("%1").arg(ori_result[i-1][j]));
+            }
+            ori_result.insert(i, delist_data);
+//            qDebug() << QString("ori_result[%1][0]: %2, ori_result[%1][1]: %3;index_time_list[%1][0]: %4, index_time_list[%1][0]: %5")
+//                        .arg(i).arg(ori_result[i][0]).arg(ori_result[i][1]).arg(index_time_list[i][0]).arg(index_time_list[i][1]);
+        }
+    }
+//    qDebug() << "added delist data: " << ori_result.size();
 
     for (int i = 0; i < ori_result.size(); ++i) {
         ori_result[i].removeAt(0);
         ori_result[i].removeAt(0);
     }
+
     return 1;
 }
 
