@@ -5,7 +5,7 @@
 #include <QMessageBox>
 #include "test.h"
 #include "updaterealtimedataform.h"
-#include "extractdataform.h"
+//#include "extractdataform.h"
 
 #pragma execution_character_set("utf-8")
 
@@ -45,9 +45,9 @@ int main(int argc, char *argv[])
 //        return a.exec();
 //    }
 
-    UpdateRealtimeDataForm UpDataWindow;
-    UpDataWindow.setWindowTitle("更新实时数据");
-    UpDataWindow.show();
+//    UpdateRealtimeDataForm UpDataWindow;
+//    UpDataWindow.setWindowTitle("更新实时数据");
+//    UpDataWindow.show();
 
 //    ExtractDataForm extractDataWindow;
 //    extractDataWindow.setWindowTitle("提取数据");

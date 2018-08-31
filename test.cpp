@@ -5,6 +5,7 @@
 #include "database.h"
 #include "excel_func.h"
 #include "time_func.h"
+#include "io_func.h"
 #include "extractmarketdata.h"
 #include "readdatabasedata.h"
 #include <QThread>
@@ -15,7 +16,9 @@ Test::Test()
 //    get_future_data();
 //    get_database_data();
 //    test_extract_marketdata();
-    test_getWeightData();
+//    test_getWeightData();
+//    test_getShortedStartEndDateList();
+    test_getDateByDate();
 }
 
 void Test::IsTradingDay() {
@@ -134,4 +137,33 @@ void Test::test_getWeightData() {
     Database databaseObj(QString("%1").arg(dbConnectId), dbhost);
     QList<QStringList> ori_result = databaseObj.getWeightData(date, indexCode);
     qDebug() << ori_result;
+}
+
+void Test::test_getShortedStartEndDateList() {
+    int startDate = 20120101;
+    int endDate = 20150101;
+    QString databaseName = "MarketData_15m";
+    QList<QList<int>> shortedStartEndDateList = getShortedStartEndDateList(startDate, endDate, databaseName);
+
+    printList(shortedStartEndDateList, "shortedStartEndDateList");
+}
+
+void Test::test_getDateByDate() {
+    QString startDate = "20010101";
+    QString endDate = "20100101";
+    QString tableName = "SH000001";
+    QString databaseName = "MarketData_15m";
+    Database databaseObj("0", "192.168.211.162");
+    QStringList keyValueList;
+    keyValueList << "TDATE" << "TIME" << "TCLOSE" << "TOPEN";
+
+    QDateTime startDateTime = QDateTime::currentDateTime();
+    databaseObj.getDataByDate(startDate, endDate, keyValueList, tableName, databaseName, true);
+    QDateTime endDateTime = QDateTime::currentDateTime();
+    qDebug() << QString("Shorted costTime: %1s").arg(startDateTime.secsTo(endDateTime));
+
+    startDateTime = QDateTime::currentDateTime();
+    databaseObj.getDataByDate(startDate, endDate, keyValueList, tableName, databaseName, false);
+    endDateTime = QDateTime::currentDateTime();
+    qDebug() << QString("Ori costTime: %1s").arg(startDateTime.secsTo(endDateTime));
 }

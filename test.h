@@ -17,6 +17,9 @@ public:
 
      void test_getWeightData();
 
+     void test_getShortedStartEndDateList();
+
+     void test_getDateByDate();
 };
 
 #endif // TEST_H

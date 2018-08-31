@@ -115,7 +115,7 @@ void ExtractMarketData::initIndexTimeList() {
     m_indexTimeList = getIndexTimeList(m_startDate, m_endDate, m_dataType, m_dbhost);
     QStringList keyValueList;
     keyValueList << "TDATE" << "TIME";
-    m_indexCode = "SH000300";
+    m_indexCode = "SH000001";
     m_indexTimeList = m_database->getDataByDate(m_startDate, m_endDate, keyValueList,
                                                 m_indexCode, m_dataType);
     m_indexTimeStrList = getIndexTimeStrList(m_indexTimeList);
@@ -290,6 +290,7 @@ int ExtractMarketData::writeMatrixExcelData(QString fileName, QList<QStringList>
     checkFile(fileName);
     QXlsx::Document xlsx(fileName);
 
+
     QStringList sheetNames = xlsx.sheetNames();
     if (sheetNames.indexOf(sheetName) < 0) {
         if (!xlsx.addSheet(sheetName)) {
@@ -301,14 +302,27 @@ int ExtractMarketData::writeMatrixExcelData(QString fileName, QList<QStringList>
         return -2;
     }
 
+    QXlsx::Format numberFormat;
+    numberFormat.setNumberFormat("0.0000");
+
     m_workProgressDialog->setWorkInfo(QString("开始写入数据文件: %1").arg(fileName));
     m_workProgressDialog->setRange(oriData.length(), 0);
     for (int rowIndex = 0; rowIndex < oriData.length(); ++rowIndex) {
         for (int colIndex = 0; colIndex < oriData[rowIndex].length(); ++colIndex) {
             if (isTranspose) {
-              xlsx.write(colIndex+1, rowIndex+1, oriData[rowIndex][colIndex]);
+              if (colIndex != 0 && rowIndex != 0) {
+                xlsx.write(colIndex+1, rowIndex+1, oriData[rowIndex][colIndex], numberFormat);
+              }else {
+                xlsx.write(colIndex+1, rowIndex+1, oriData[rowIndex][colIndex]);
+              }
+
             } else {
-              xlsx.write(rowIndex+1, colIndex+1, oriData[rowIndex][colIndex]);
+                if (colIndex != 0 && rowIndex != 0) {
+                    xlsx.write(rowIndex+1, colIndex+1, oriData[rowIndex][colIndex], numberFormat);
+                }else {
+                    xlsx.write(rowIndex+1, colIndex+1, oriData[rowIndex][colIndex]);
+                }
+
             }
         }
         m_workProgressDialog->updateWorkState(rowIndex+1);

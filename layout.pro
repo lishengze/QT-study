@@ -23,15 +23,15 @@ SOURCES += main.cpp\
     realtimedataread.cpp \
     realtimedatawrite.cpp \
     test.cpp \
-    extractmarketdata.cpp \
+#    extractmarketdata.cpp \
     readdatabasedata.cpp \
-    extractdataform.cpp \
-    workprogressdialog.cpp \
-    extractweightdata.cpp \
-    extractindustrydata.cpp \
-    choosesecodewindow.cpp \
-    treeitem.cpp \
-    treemodel.cpp \
+#    extractdataform.cpp \
+#    workprogressdialog.cpp \
+#    extractweightdata.cpp \
+#    extractindustrydata.cpp \
+#    choosesecodewindow.cpp \
+#    treeitem.cpp \
+#    treemodel.cpp \
     wind_func.cpp \
     ../public-files/public-class/database.cpp \
     ../public-files/public-class/macd.cpp \
@@ -66,13 +66,11 @@ HEADERS  += updaterealtimedataform.h \
     realtimedatawrite.h \
     subwriteclass.h \
     test.h \
-    extractmarketdata.h \
+#    extractmarketdata.h \
     readdatabasedata.h \
-    extractdataform.h \
-    workprogressdialog.h \
-    extractweightdata.h \
-    extractindustrydata.h \
-    choosesecodewindow.h \
+#    workprogressdialog.h \
+#    extractweightdata.h \
+#    extractindustrydata.h \
     wind_func.h \
     treeitem.h \
     treemodel.h \
@@ -102,9 +100,9 @@ HEADERS  += updaterealtimedataform.h \
 #    ../public-function/id_func.h \
 
 FORMS    += updaterealtimedataform.ui \
-    extractdataform.ui \
-    workprogressdialog.ui \
-    choosesecodewindow.ui
+#    extractdataform.ui \
+#    workprogressdialog.ui \
+#    choosesecodewindow.ui
 
 include(qtxlsx/src/xlsx/qtxlsx.pri)
 
