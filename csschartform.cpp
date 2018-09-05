@@ -102,6 +102,7 @@ void CSSChartForm::initCommonData() {
     m_chartXaxisTickCount = 5;
     m_cssMarkValueList << -200  << -158  << -130 << -80 << 80 << 130 << 158<< 200<< 300;
     initExtractKeyValueList();
+    initLabelRowColNumb();
 }
 
 void CSSChartForm::initListData() {
@@ -183,6 +184,22 @@ void CSSChartForm::initHistoryData() {
         m_histdataWorkerList.append(histdataWorker);
         m_histdataThreadList.append(histdataThread);
     }
+}
+
+void CSSChartForm::initLabelRowColNumb() {
+    switch (m_timeTypeList.size()) {
+    case 1: m_labelRowNumb = 1; break;
+    case 2:
+    case 3: m_labelRowNumb = 2;break;
+    case 4: m_labelRowNumb = 3;break;
+    case 5:
+    case 6: m_labelRowNumb = 4;break;
+    default:
+        m_labelRowNumb = m_timeTypeList.size();
+    }
+
+    m_labelColNumb = qCeil(double(m_aveNumbList.size() + 3)/double(m_labelRowNumb));
+    qDebug() << QString("m_lableRowNumb: %1, m_labelColNumb: %2").arg(m_labelRowNumb).arg(m_labelColNumb);
 }
 
 void CSSChartForm::initExtractKeyValueList() {
@@ -426,7 +443,8 @@ void CSSChartForm::setChartView() {
     for (int i = 0; i <  m_aveChartViewList.size(); ++i) {
         ui->main_gridLayout->setColumnStretch(i,1);
     }
-    ui->main_gridLayout->setRowStretch(0,2);
+
+    ui->main_gridLayout->setRowStretch(0, m_labelRowNumb);
     ui->main_gridLayout->setRowStretch(1,20);
     ui->main_gridLayout->setRowStretch(2,1);
     ui->main_gridLayout->setRowStretch(3,14);
@@ -448,11 +466,13 @@ void CSSChartForm::setLabels() {
         QGroupBox* aveGroupBox = m_groupBoxListList[i][0];
         QGroupBox* cssGroupBox = m_groupBoxListList[i][1];
 
+        int lableIndex = 0;
         QLabel* dataFreqLabel = new QLabel(aveGroupBox);
         dataFreqLabel->setObjectName(QStringLiteral("dataFreq_Label"));
         dataFreqLabel->setGeometry(QRect(x_pos, y_pos, 50, height));
         dataFreqLabel->setText(QString("F: %1").arg(m_timeTypeList[i]));
         m_aveChartlabelListList[i].append(dataFreqLabel);
+        ++lableIndex;
 
         QLabel* timeLabel = new QLabel(aveGroupBox);
         timeLabel->setObjectName(QStringLiteral("time_Label"));
@@ -460,6 +480,7 @@ void CSSChartForm::setLabels() {
         timeLabel->setGeometry(QRect(x_pos, y_pos, 120, height));
         timeLabel->setText("T:");
         m_aveChartlabelListList[i].append(timeLabel);
+        ++lableIndex;
 
         QLabel* closeLabel = new QLabel(aveGroupBox);
         closeLabel->setObjectName(QStringLiteral("close_Label"));
@@ -467,6 +488,7 @@ void CSSChartForm::setLabels() {
         closeLabel->setGeometry(QRect(x_pos, y_pos, width, height));
         closeLabel->setText("C:");
         m_aveChartlabelListList[i].append(closeLabel);
+        ++lableIndex;
 
         bool isChangeLine = false;
         for (int j = 0; j < m_aveNumbList.size(); ++j) {
@@ -479,13 +501,19 @@ void CSSChartForm::setLabels() {
                 aveLabel->setText(QString("A%1: ").arg(m_aveNumbList[j]));
             }
             x_pos = x_pos + width + x_space;
-            if (j >= (m_aveNumbList.size()+3)/2-2 && isChangeLine == false && m_timeTypeList.size() > 1) {
+
+            if (lableIndex % m_labelColNumb == 0) {
                 x_pos = x_start;
                 y_pos += height + y_space;
-                isChangeLine = true;
             }
+//            if (j >= (m_aveNumbList.size()+3)/2-2 && isChangeLine == false && m_timeTypeList.size() > 1) {
+//                x_pos = x_start;
+//                y_pos += height + y_space;
+//                isChangeLine = true;
+//            }
             aveLabel->setGeometry(QRect(x_pos, y_pos, width, height));
             m_aveChartlabelListList[i].append(aveLabel);
+            ++lableIndex;
         }
 
         x_pos = x_start;

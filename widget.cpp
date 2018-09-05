@@ -281,6 +281,8 @@ void Widget::initEnergyIndexCodeComboBox() {
 }
 
 void Widget::initCSSParamComBox() {
+    ui->pictureNumb_spinBox->setValue(3);
+
     m_aveParamListWidget = new QListWidget(this);
     QList<int> aveNumbList;
 //    aveNumbList <<12 << -25 << -55 << 107 << 143
@@ -1015,7 +1017,7 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
 
 //        chartView->show();
 
-        int maxColNumb = 3;
+        int maxColNumb = ui->pictureNumb_spinBox->value();
         for (int i = 0; i < timeTypeList.size();) {
             int endPos = min(timeTypeList.size(), i+maxColNumb);
             QStringList currTimeTypeList = getSubList(timeTypeList, i, endPos);

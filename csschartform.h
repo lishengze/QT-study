@@ -49,6 +49,7 @@ public:
     void initCommonData();
     void initListData();
     void initHistoryData();
+    void initLabelRowColNumb();
     void registSignalParamsType();
     void startGetData();
 
@@ -147,6 +148,8 @@ private:
 
     QList<HistoryData*>                     m_histdataWorkerList;
     QList<QThread*>                         m_histdataThreadList;
+    int                                     m_labelRowNumb;
+    int                                     m_labelColNumb;
 
     QMutex                                  m_mutex;
 
