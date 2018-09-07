@@ -100,7 +100,8 @@ void CSSChartForm::initTheme() {
 void CSSChartForm::initCommonData() {
     m_maxColNumb = 3;
     m_chartXaxisTickCount = 5;
-    m_cssMarkValueList << -200  << -158  << -130 << -80 << 80 << 130 << 158<< 200<< 300;
+    m_cssMarkValueList << -265 << -240 << -200  << -158  << -130 << -80
+                       << 80 << 130 << 158<< 200 << 240 << 265 << 300;
     initExtractKeyValueList();
     initLabelRowColNumb();
 }
@@ -190,10 +191,10 @@ void CSSChartForm::initLabelRowColNumb() {
     switch (m_timeTypeList.size()) {
     case 1: m_labelRowNumb = 1; break;
     case 2:
-    case 3: m_labelRowNumb = 2;break;
-    case 4: m_labelRowNumb = 3;break;
+    case 3: m_labelRowNumb = 2; break;
+    case 4: m_labelRowNumb = 3; break;
     case 5:
-    case 6: m_labelRowNumb = 4;break;
+    case 6: m_labelRowNumb = 4; break;
     default:
         m_labelRowNumb = m_timeTypeList.size();
     }
@@ -226,6 +227,8 @@ void CSSChartForm::initColors() {
     m_cssChartColorList.append(QColor(34,139,34));      // 从指标颜色
     m_cssChartColorList.append(QColor(220,220,220));    // 势能label颜色
 
+    m_cssChartColorList.append(QColor(244,143,177));   // -265
+    m_cssChartColorList.append(QColor(0,229,255));   // -240
     m_cssChartColorList.append(QColor(253,216,53));   // -200
     m_cssChartColorList.append(QColor(117,117,117));  // -158
     m_cssChartColorList.append(QColor(229,115,115));  // -130
@@ -233,7 +236,10 @@ void CSSChartForm::initColors() {
     m_cssChartColorList.append(QColor(0,172,193));  // 80
     m_cssChartColorList.append(QColor(0,172,193));  // 130
     m_cssChartColorList.append(QColor(117,117,117));  // 158
-    m_cssChartColorList.append(QColor(253,216,53));  // 200
+    m_cssChartColorList.append(QColor(253,216,53));  // 200    
+    m_cssChartColorList.append(QColor(0,229,255));   // 240
+    m_cssChartColorList.append(QColor(244,143,177));   // 265
+
     m_cssChartColorList.append(QColor(180,180,180));  // 300
 
     m_cssChartColorList.append(QColor(239,154,154));    // 势能大于0
@@ -567,12 +573,26 @@ void CSSChartForm::setColors() {
         }
 
         for (int j=3; j < m_cssChartColorList.size()-2; ++j) {
-            m_cssMarkLineSeriesList[i][j-3]->setColor(m_cssChartColorList[j]);
+            if (m_cssMarkValueList[j-3] == 240 || m_cssMarkValueList[j-3] == -240) {
+                QPen dashPen(Qt::DashLine);
+                dashPen.setColor(m_cssChartColorList[j]);
+                m_cssMarkLineSeriesList[i][j-3]->setPen(dashPen);
+            }else if (m_cssMarkValueList[j-3] == 265 || m_cssMarkValueList[j-3] == -265) {
+                QPen dotPen(Qt::DotLine);
+                dotPen.setColor(m_cssChartColorList[j]);
+                m_cssMarkLineSeriesList[i][j-3]->setPen(dotPen);
+            } else {
+                m_cssMarkLineSeriesList[i][j-3]->setColor(m_cssChartColorList[j]);
+            }
+
         }
         m_energySeriesListList[i][0]->barSets()[0]->setColor(m_cssChartColorList[m_cssChartColorList.size()-2]);
         m_energySeriesListList[i][0]->barSets()[0]->setBorderColor(m_cssChartColorList[m_cssChartColorList.size()-2]);
         m_energySeriesListList[i][1]->barSets()[0]->setColor(m_cssChartColorList[m_cssChartColorList.size()-1]);
         m_energySeriesListList[i][1]->barSets()[0]->setBorderColor(m_cssChartColorList[m_cssChartColorList.size()-1]);
+
+        m_energySeriesListList[i][0]->setBarWidth(0);
+        m_energySeriesListList[i][1]->setBarWidth(0);
     }
 }
 
@@ -807,7 +827,6 @@ QString CSSChartForm::getExcelFileName(QStringList keyValueList, QString fileDir
                                             .arg(m_startDate).arg(m_endDate);
     return fileName;
 }
-
 
 void CSSChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fileDir, bool bOpenDesFile) {
     QString fileName = getExcelFileName(choosenKeyValueList, fileDir);
