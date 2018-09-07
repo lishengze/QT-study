@@ -19,7 +19,7 @@ void initDatabaeConnectId(int idNumb) {
 int getDatabaseConnectId() {
     g_databaseConnectIdMutex.lock();
     if (g_databaseIdList.empty()) {
-        int addedNumb = 1000;
+        int addedNumb = 5000;
         for (int i = 0; i < addedNumb; ++i) {
             g_databaseIdList.append(i + g_databaseIdNumb);
         }
