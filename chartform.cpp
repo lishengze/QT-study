@@ -196,11 +196,12 @@ void ChartForm::initRealTimeData() {
     m_chartXaxisTickCount = 5;
 
     initMonitorThread();
+
+    waitToTime(QTime(9,20,0));
     emit getPreCloseSpread();
 
     if (isTradingStart()) {
         initHistdataThread();
-//        emit getHistDataSignal();
     } else {
         initLayout();
         m_monitorWorker->startTimer();

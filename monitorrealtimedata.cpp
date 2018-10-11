@@ -139,13 +139,11 @@ void MonitorRealTimeData::setRealTimeData() {
     }
     if (isStockTrading()) {
         QMap<QString, QStringList> oriRealTimeData = m_database->getSnapShootData(m_secodeNameList);
-        // qDebug() << "oriRealTimeData.size: " << oriRealTimeData.size();
-        // printMap(oriRealTimeData, "oriRealTimeData");
+//         qDebug() << "oriRealTimeData.size: " << oriRealTimeData.size();
+         printMap(oriRealTimeData, "oriRealTimeData");
         bool isDataUseful = preProcessRealTimeData(oriRealTimeData);
-        // qDebug() << 0 << endl;
         if (isDataUseful) {
             emit sendRealTimeData(computeRealTimeData());
-        //    qDebug() << 1 << endl;
         }
     }
 }
