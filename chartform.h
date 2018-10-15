@@ -116,6 +116,7 @@ public slots:
     void receiveMarketHistData_slot(QList<QList<double>> allData);
 
     void receiveTradeOver();
+    void updatePrecloseData();
 
 signals:
     void getHistDataSignal();
@@ -213,6 +214,9 @@ private:
     QList<double>               m_macdChartRange;
     int                         m_oldLabelIndex;
 
+    QTimer                      m_getPreCloseDataTimer;
+    int                         m_getPreCloseDataUpdateTime;
+    QTime                       m_getPreCloseDataTime;
 
 //    QStringList                 m_extractKeyValueList;
 //    QList<ExtractDataWindow*>   m_extractWindowList;

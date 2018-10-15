@@ -194,16 +194,25 @@ void ChartForm::initRealTimeData() {
     m_threadNumb = m_secodeNameList.size();
     m_timeTypeFormat = "hh:mm:ss";
     m_chartXaxisTickCount = 5;
+    m_getPreCloseDataTime = QTime(9,20,0);
+    m_getPreCloseDataUpdateTime = 10000;
 
     initMonitorThread();
 
-    waitToTime(QTime(9,20,0));
-    emit getPreCloseSpread();
+    connect(&m_getPreCloseDataTimer, SIGNAL(timeout()),
+            this, SLOT(updatePrecloseData()));
 
     if (isTradingStart()) {
         initHistdataThread();
     } else {
-        initLayout();
+        initLayout();        
+
+        if (QTime::currentTime() < m_getPreCloseDataTime) {
+            m_getPreCloseDataTimer.start(m_getPreCloseDataUpdateTime);
+        } else {
+            emit getPreCloseSpread();
+        }
+
         m_monitorWorker->startTimer();
     }
 }
@@ -339,6 +348,15 @@ QString ChartForm::getExcelFileName(QStringList keyValueList, QString fileDir) {
     }
     fileName += QString("_%1.xlsx").arg(keyValueList.join("_"));
     return fileName;
+}
+
+void ChartForm::updatePrecloseData()
+{
+    if (QTime::currentTime() > m_getPreCloseDataTime) {
+        emit getPreCloseSpread();
+    } else {
+        m_getPreCloseDataTimer.stop();
+    }
 }
 
 void ChartForm::receivePreCloseData(double preSpread) {
