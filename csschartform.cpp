@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <algorithm>
 #include <QDesktopServices>
+#include "secode_func.h"
 #include "excel_func.h"
 #include "time_func.h"
 #include "compute_func.h"
@@ -21,15 +22,17 @@ using std::max;
 #pragma execution_character_set("utf-8")
 
 CSSChartForm::CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList,
-                            QString startDate, QString endDate, QString codeName,
+                            QString startDate, QString endDate,
+                            QString selectCodeName, QString hedgedCodeName,
                             QList<int> aveNumbList, QList<bool> isEMAList,
                             int mainAveNumb, int subAveNumb, int energyAveNumb,
                             double css12Rate, double mainCssRate1, double mainCssRate2,
                             double energyCssRate1, double energyCssRate2,
                             double maxCSS, double minCSS,
                             QWidget *parent):
-                            m_dbhost(dbhost), m_timeTypeList(timeTypeList),
-                            m_startDate(startDate), m_endDate(endDate), m_singleCodeName(codeName),
+                            m_isPortfolio(false), m_dbhost(dbhost), m_timeTypeList(timeTypeList),
+                            m_startDate(startDate), m_endDate(endDate),
+                            m_selectCodeName(selectCodeName), m_hedgedCodeName(hedgedCodeName),
                             m_aveNumbList(aveNumbList), m_isEMAList(isEMAList),
                             m_mainAveNumb(mainAveNumb), m_subAveNumb(subAveNumb), m_energyAveNumb(energyAveNumb),
                             m_css12Rate(css12Rate), m_mainCssRate1(mainCssRate1), m_mainCssRate2(mainCssRate2),
@@ -39,6 +42,37 @@ CSSChartForm::CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList
 {
     ui->setupUi(this);
     initCommonData();
+    initListData();
+    initHistoryData();
+    initColors();
+    registSignalParamsType();
+    startGetData();
+}
+
+CSSChartForm::CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList,
+                            QString startDate, QString endDate,
+                            QMap<QString, int> portfolioMap, QString portfolioName,
+                            QString hedgeIndexCode, int hedgeIndexCount,
+                            QList<int> aveNumbList, QList<bool> isEMAList,
+                            int mainAveNumb, int subAveNumb, int energyAveNumb,
+                            double css12Rate, double mainCssRate1, double mainCssRate2,
+                            double energyCssRate1, double energyCssRate2,
+                            double maxCSS, double minCSS,
+                            QWidget *parent):
+    m_isPortfolio(true), m_dbhost(dbhost), m_timeTypeList(timeTypeList),
+    m_startDate(startDate), m_endDate(endDate),
+    m_portfolioMap(portfolioMap), m_portfolioName(portfolioName),
+    m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount),
+    m_aveNumbList(aveNumbList), m_isEMAList(isEMAList),
+    m_mainAveNumb(mainAveNumb), m_subAveNumb(subAveNumb), m_energyAveNumb(energyAveNumb),
+    m_css12Rate(css12Rate), m_mainCssRate1(mainCssRate1), m_mainCssRate2(mainCssRate2),
+    m_energyCssRate1(energyCssRate1), m_energyCssRate2(energyCssRate2),
+    m_maxCSS(maxCSS), m_minCSS(minCSS),
+    BaseChart(chartID, parent),ui(new Ui::CSSChartForm)
+{
+    ui->setupUi(this);
+    initCommonData();
+    initSecodeList();
     initListData();
     initHistoryData();
     initColors();
@@ -102,8 +136,21 @@ void CSSChartForm::initCommonData() {
     m_chartXaxisTickCount = 5;
     m_cssMarkValueList << -265 << -240 << -200  << -158  << -130 << -80
                        << 80 << 130 << 158<< 200 << 240 << 265 << 300;
+
     initExtractKeyValueList();
     initLabelRowColNumb();
+}
+
+void CSSChartForm::initSecodeList() {
+    m_secodeStyle = "tinysoft";
+    m_portfolioMap = transStrategyMap(m_portfolioMap, m_secodeStyle);
+
+    if (m_hedgeIndexCount != -1) {
+        m_hedgeIndexCode = getCompleteIndexCode(m_hedgeIndexCode, m_secodeStyle);
+        m_portfolioMap.insert (m_hedgeIndexCode, m_hedgeIndexCount);
+    }
+
+    m_secodeNameList = m_portfolioMap.keys();
 }
 
 void CSSChartForm::initListData() {
@@ -112,9 +159,11 @@ void CSSChartForm::initListData() {
         QList<QList<double>> emptyAVEData;
         QList<QList<double>> emptyCSSData;
         QList<QString> emptyTimeData;
+        QList<double> emptyIndexData;
         m_aveList.append(emptyAVEData);
         m_cssList.append(emptyCSSData);
         m_timeList.append(emptyTimeData);
+        m_indexDataList.append(emptyIndexData);
 
         QList<QLineSeries*> emptyLineSeries;
         m_aveLineSeriesList.append(emptyLineSeries);
@@ -161,12 +210,34 @@ void CSSChartForm::initHistoryData() {
         int maxPreTimeNumb = Max(m_aveNumbList, 0, m_aveNumbList.size());
         QString newStartDate = getPreDate(m_startDate, timeType, maxPreTimeNumb);
         qDebug() << QString("maxPreTimeNumb: %1, newStartDate: %2").arg(maxPreTimeNumb).arg(newStartDate);
-        HistoryData* histdataWorker = new HistoryData(m_dbhost, databaseName, newStartDate, m_endDate,
-                                                       m_singleCodeName, m_aveNumbList, m_isEMAList,
-                                                       m_mainAveNumb, m_subAveNumb, m_energyAveNumb,
-                                                       m_css12Rate, m_mainCssRate1, m_mainCssRate2,
-                                                       m_energyCssRate1, m_energyCssRate2,
-                                                       m_maxCSS, m_minCSS, i);
+        HistoryData* histdataWorker;
+        if (m_isPortfolio)
+        {
+            int threadNumb = m_secodeNameList.size();
+            QStringList keyValueList;
+            keyValueList << "TCLOSE" << "VOTRUNOVER";
+
+            histdataWorker = new HistoryData(m_dbhost, databaseName,
+                                             newStartDate, m_endDate,
+                                             threadNumb, m_secodeNameList, m_hedgeIndexCode,
+                                             m_portfolioMap, keyValueList,
+                                             m_aveNumbList, m_isEMAList,
+                                             m_mainAveNumb, m_subAveNumb, m_energyAveNumb,
+                                             m_css12Rate, m_mainCssRate1, m_mainCssRate2,
+                                             m_energyCssRate1, m_energyCssRate2,
+                                             m_maxCSS, m_minCSS, i);
+        }
+        else
+        {
+            histdataWorker = new HistoryData(m_dbhost, databaseName, newStartDate, m_endDate,
+                                             m_selectCodeName, m_hedgedCodeName,
+                                             m_aveNumbList, m_isEMAList,
+                                             m_mainAveNumb, m_subAveNumb, m_energyAveNumb,
+                                             m_css12Rate, m_mainCssRate1, m_mainCssRate2,
+                                             m_energyCssRate1, m_energyCssRate2,
+                                             m_maxCSS, m_minCSS, i);
+        }
+
         QThread* histdataThread = new QThread();
 
         connect(histdataThread, SIGNAL(finished()),
@@ -258,15 +329,23 @@ void CSSChartForm::registSignalParamsType() {
 void CSSChartForm::sendCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
                                     QList<QList<double>> cssList, int dataID) {
     QMutexLocker locker(&m_mutex);
-    qDebug() << "CSSChartFormOne::sendCSSData_slot: " << dataID;
+//    qDebug() << "CSSChartForm::sendCSSData_slot: " << dataID;
     int startPos = getStartIndex(m_startDate, timeList);
 
+    qDebug() <<"dataID: " << dataID <<", startPos: " << startPos;
+
     m_timeList[dataID] = getSubList(timeList, startPos, timeList.size());
-    for (int i = 0; i < aveList.size(); ++i) {
+    for (int i = 0; i < m_aveNumbList.size() + 1; ++i) {
         m_aveList[dataID].append(getSubList(aveList[i], startPos, aveList[i].size()));
     }
+
     for (int i = 0; i < cssList.size(); ++i) {
         m_cssList[dataID].append(getSubList(cssList[i], startPos, cssList[i].size()));
+    }
+
+    if(m_isPortfolio)
+    {
+        m_indexDataList[dataID] = getSubList(aveList.last(), startPos, aveList.last().size()) ;
     }
 
     setChart(dataID);
@@ -496,7 +575,7 @@ void CSSChartForm::setLabels() {
         m_aveChartlabelListList[i].append(closeLabel);
         ++lableIndex;
 
-        bool isChangeLine = false;
+//        bool isChangeLine = false;
         for (int j = 0; j < m_aveNumbList.size(); ++j) {
             QLabel* aveLabel = new QLabel(aveGroupBox);
             if (m_isEMAList[j]) {
@@ -822,9 +901,19 @@ QList<QMyChartView*> CSSChartForm::getChartViewList() {
 
 QString CSSChartForm::getExcelFileName(QStringList keyValueList, QString fileDir) {
     QString fileName = fileDir;
-    fileName += QString("%1_%2_%3_%4.xlsx").arg(m_singleCodeName)
-                                            .arg(m_timeTypeList.join("_"))
-                                            .arg(m_startDate).arg(m_endDate);
+    if (m_isPortfolio)
+    {
+        fileName += QString("%1_%2_%3_%4.xlsx").arg(m_portfolioName)
+                                               .arg(m_timeTypeList.join("_"))
+                                               .arg(m_startDate).arg(m_endDate);
+    }
+    else
+    {
+        fileName += QString("%1_%2_%3_%4.xlsx").arg(m_selectCodeName)
+                                               .arg(m_timeTypeList.join("_"))
+                                               .arg(m_startDate).arg(m_endDate);
+    }
+    keyValueList;
     return fileName;
 }
 
@@ -834,7 +923,8 @@ void CSSChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString 
     qDebug() << "fileName: " << fileName;
     int sumResult = 1;
     /**/
-    for (int i = 0; i < m_timeTypeList.size(); ++i) {
+    for (int i = 0; i < m_timeTypeList.size(); ++i)
+    {
         QString sheetName = m_timeTypeList[i];
         QList<QStringList> currSheetData;
 
@@ -877,10 +967,17 @@ void CSSChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString 
             currSheetData.append(stringListData);
         }
 
+        if (m_isPortfolio)
+        {
+            QStringList stringListData;
+            for (double data : m_indexDataList[i]) {
+                stringListData.append(QString("%1").arg(data));
+            }
+            stringListData.insert(0, m_hedgeIndexCode);
+            currSheetData.append(stringListData);
+        }
+
         int result = writeMatrixData(fileName, currSheetData, sheetName, true, false);
-
-//        qDebug() << m_timeTypeList[i] << result;
-
         sumResult *= result;
     }
 

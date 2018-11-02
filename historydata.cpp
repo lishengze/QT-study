@@ -15,12 +15,13 @@ HistoryData::HistoryData(int chartViewID, bool isBuySalePortfolio,
                          QMap<QString, int> seocdebuyCountMap, QMap<QString, int> buyStrategyMap,
                          QMap<QString, int> saleStrategyMap,
                          QObject *parent):
+    m_isPortfolio(true), m_isCSSChart(false),
     m_chartViewID(chartViewID), m_isBuySalePortfolio(isBuySalePortfolio),
     m_dbhost(dbhost), m_databaseName(databaseName),
     m_isRealTime(isRealTime), m_threadNumb(threadNumb), m_secodeNameList(secodeNameList),
     m_macdTime(macdTime), m_hedgeIndexCode(hedgeIndexCode),
     m_startDate(startDate), m_endDate(endDate), m_keyValueList(keyValueList),
-    m_seocdebuyCountMap(seocdebuyCountMap), m_buyStrategyMap(buyStrategyMap),
+    m_portfolioMap(seocdebuyCountMap), m_buyStrategyMap(buyStrategyMap),
     m_saleStrategyMap(saleStrategyMap),
     QObject(parent)
 {
@@ -37,6 +38,7 @@ HistoryData::HistoryData(int chartViewID, QString dbhost, QString databaseName,
             double cssRate1, double cssRate2,
             double maxCSS, double minCSS,
             QObject *parent):
+    m_isPortfolio(false), m_isCSSChart(true),
     m_chartViewID(chartViewID), m_dbhost(dbhost), m_databaseName(databaseName),
     m_selectIndex(selectIndex), m_hedgedIndex(hedgedIndex),
     m_startDate(startDate), m_endDate(endDate), m_isRealTime(isRealTime),
@@ -50,15 +52,18 @@ HistoryData::HistoryData(int chartViewID, QString dbhost, QString databaseName,
 }
 
 HistoryData::HistoryData(QString dbhost, QString databaseName,
-                         QString startDate, QString endDate, QString codeName,
+                         QString startDate, QString endDate,
+                         QString selectCodeName, QString hedgedCodeName,
                          QList<int> aveNumbList, QList<bool> isEMAList,
                          int mainAveNumb, int subAveNumb, int energyAveNumb,
                          double css12Rate, double mainCssRate1, double mainCssRate2,
                          double energyCssRate1, double energyCssRate2,
                          double maxCSS, double minCSS, int dataID,
                          QObject *parent):
+    m_isPortfolio(false), m_isCSSChart(true),
     m_dbhost(dbhost), m_databaseName(databaseName),
-    m_startDate(startDate), m_endDate(endDate), m_singleCodeName(codeName),
+    m_startDate(startDate), m_endDate(endDate),
+    m_selectCodeName(selectCodeName), m_hedgedCodeName(hedgedCodeName),
     m_aveNumbList(aveNumbList), m_isEMAList(isEMAList),
     m_mainAveNumb(mainAveNumb), m_subAveNumb(subAveNumb), m_energyAveNumb(energyAveNumb),
     m_css12Rate(css12Rate), m_mainCssRate1(mainCssRate1), m_mainCssRate2(mainCssRate2),
@@ -69,6 +74,36 @@ HistoryData::HistoryData(QString dbhost, QString databaseName,
     initCommonData();
     initDatabase(0);
 }
+
+HistoryData::HistoryData(QString dbhost, QString databaseName,
+                        QString startDate, QString endDate,
+                        int threadNumb, QList<QString> secodeNameList, QString hedgeIndexCode,
+                        QMap<QString, int> portfolioMap, QStringList keyValueList,
+                        QList<int> aveNumbList, QList<bool> isEMAList,
+                        int mainAveNumb, int subAveNumb, int energyAveNumb,
+                        double css12Rate, double mainCssRate1, double mainCssRate2,
+                        double energyCssRate1, double energyCssRate2,
+                        double maxCSS, double minCSS, int dataID,
+                        QObject *parent):
+                        m_isRealTime(false), m_isPortfolio(true),
+                        m_isCSSChart(true), m_isBuySalePortfolio(false),
+                        m_dbhost(dbhost), m_databaseName(databaseName),
+                        m_startDate(startDate), m_endDate(endDate),
+                        m_threadNumb(threadNumb), m_secodeNameList(secodeNameList), m_hedgeIndexCode(hedgeIndexCode),
+                        m_portfolioMap(portfolioMap), m_keyValueList(keyValueList),
+                        m_aveNumbList(aveNumbList), m_isEMAList(isEMAList),
+                        m_mainAveNumb(mainAveNumb), m_subAveNumb(subAveNumb), m_energyAveNumb(energyAveNumb),
+                        m_css12Rate(css12Rate), m_mainCssRate1(mainCssRate1), m_mainCssRate2(mainCssRate2),
+                        m_energyCssRate1(energyCssRate1), m_energyCssRate2(energyCssRate2),
+                        m_maxCSS(maxCSS), m_minCSS(minCSS), m_databaseID(dataID),
+                        QObject(parent)
+{
+    initCommonData();
+    initSignalType();
+    initThreadSecodeList();
+    initReadDataSignal();
+}
+
 
 HistoryData::~HistoryData() {
     for (int i = 0; i < m_dataProcessThreadList.size(); ++i) {
@@ -119,6 +154,7 @@ void HistoryData::initThreadSecodeList() {
 }
 
 void HistoryData::initReadDataSignal() {
+    qRegisterMetaType<QMap<QString, QList<QStringList>>>("QMap<QString, QList<QStringList>>");
     for (int i = 0; i < m_threadSecodeList.size (); ++i) {
         DataRead* curDataReader;
         if (m_threadSecodeList[i].size() > 0) {
@@ -157,16 +193,18 @@ void HistoryData::receiveOriginalData (QMap<QString, QList<QStringList>> subThre
     QMutexLocker locker(&m_mutex);
     m_completeTableData.unite (subThreadData);
     ++m_readDataThreadCount;
-    emit tableViewInfoSignal(QString(QString("完成股票指数读取数目: %1"))
-                             .arg(m_completeTableData.size ()));
+    emit tableViewInfoSignal(QString("完成股票指数读取数目: %1").arg(m_completeTableData.size ()));
 
     if (m_readDataThreadCount == m_threadNumb) {
-
+        qDebug() << "Oridata.size: " << m_completeTableData.size();
         releaseDataReaderSrc ();
         m_readDataThreadCount = 0;
-        if (m_completeTableData.find("Error")!= m_completeTableData.end()) {
+        if (m_completeTableData.find("Error")!= m_completeTableData.end())
+        {
             emit tableViewInfoSignal(QString("Error: 读取数据出错"));
-        } else {
+        }
+        else
+        {
             startProcessData();
         }
         m_completeTableData.clear ();
@@ -182,13 +220,31 @@ void HistoryData::initProcessDataSignal() {
                              .arg(oridataCount));
 
     DataProcess* curDataProcess;
-    if (m_isBuySalePortfolio) {
-        curDataProcess = new DataProcess(m_isRealTime, m_isBuySalePortfolio, m_completeTableData,
-                                         m_buyStrategyMap, m_saleStrategyMap, m_macdTime);
-    } else {
-        curDataProcess = new DataProcess(m_isRealTime, m_isBuySalePortfolio, m_completeTableData,
-                                         m_seocdebuyCountMap, m_hedgeIndexCode, m_macdTime);
+    if (m_isCSSChart)
+    {
+        curDataProcess = new DataProcess(m_completeTableData,
+                                         m_portfolioMap, m_hedgeIndexCode,
+                                         m_aveNumbList, m_isEMAList,
+                                         m_mainAveNumb, m_subAveNumb, m_energyAveNumb,
+                                         m_css12Rate, m_mainCssRate1, m_mainCssRate2,
+                                         m_energyCssRate1, m_energyCssRate2,
+                                         m_maxCSS, m_minCSS);
     }
+    else
+    {
+        if (m_isBuySalePortfolio)
+        {
+            curDataProcess = new DataProcess(m_isRealTime, m_isBuySalePortfolio, m_completeTableData,
+                                             m_buyStrategyMap, m_saleStrategyMap, m_macdTime);
+        }
+        else
+        {
+            curDataProcess = new DataProcess(m_isRealTime, m_isBuySalePortfolio, m_completeTableData,
+                                             m_portfolioMap, m_hedgeIndexCode, m_macdTime);
+        }
+    }
+
+
 
     QThread* curDataProcessThread = new QThread();
     curDataProcess->moveToThread (curDataProcessThread);
@@ -210,13 +266,48 @@ void HistoryData::initProcessDataSignal() {
 void HistoryData::startProcessData () {
     initProcessDataSignal();
     emit startProcessDataSignal("all");
-//    qDebug() << "Start Process History Data!!";
+    qDebug() << "Start Process History Data!!";
     emit tableViewInfoSignal(QString("开始计算历史数据"));
 }
 
 void HistoryData::getProcessedData_slot (QList<QList<double>> allData) {
-//    qDebug() << "HistoryData::receiveProcessedHistoryData: " << QThread::currentThreadId();
-    emit receiveMarketHistData_Signal(allData);
+    if (m_isCSSChart)
+    {
+        qDebug() << "getProcessedData_slot ";
+        QList<QString> timeList;
+        QList<QList<double>> cssList;
+        QList<QList<double>> aveList;
+        QString timeType;
+        if (!isMinuteType(m_databaseName))
+        {
+            timeType = "yyyyMMdd";
+        }
+        else
+        {
+            timeType = "yyyyMMdd hh:mm";
+        }
+        for (int i = 0;i < allData[0].size(); ++i)
+        {
+            timeList.append(QDateTime::fromMSecsSinceEpoch(allData[0][i]).toString(timeType));
+        }
+        int index = 1;
+        while(index < 4)
+        {
+            cssList.append(allData[index++]);
+        }
+        while (index < allData.size())
+        {
+            aveList.append(allData[index++]);
+        }
+
+        emit sendCSSData_signal(timeList, aveList, cssList, m_databaseID);
+    }
+    else
+    {
+
+        emit receiveMarketHistData_Signal(allData);
+    }
+
     releaseDataProcessSrc();
 }
 
@@ -302,30 +393,35 @@ void HistoryData::getIndexHistData_slot() {
 }
 
 void HistoryData::getCSSData_slot() {
+    if (m_isPortfolio)
+    {
+        qDebug() << "getCSSData_slot m_isPortfolio";
+        emit startReadDataSignal(m_signalType);
+        return;
+    }
+
     QStringList keyList;
-    keyList << "TDATE" << "TIME" << "TCLOSE" << "TOPEN" << "VATRUNOVER";
-    qDebug() << m_startDate << m_endDate << m_singleCodeName << m_databaseName;
-    QList<QStringList> oriDatabaseData = m_database->getDataByDate(m_startDate, m_endDate, keyList,
-                                                                   m_singleCodeName, m_databaseName);
-
-//    printList(oriDatabaseData, "oriDatabaseData");
-
-    deleteDelistData(oriDatabaseData, keyList.size()-1);
-
-    qDebug() << "oriDatabaseData.size: " << oriDatabaseData.size();
+    keyList << "TDATE" << "TIME" << "TCLOSE" << "TOPEN" << "PCTCHG" << "VATRUNOVER" ;
+    qDebug() << m_startDate << m_endDate << m_selectCodeName << m_databaseName;
+    QList<QStringList> selectDBData = m_database->getDataByDate(m_startDate, m_endDate, keyList,
+                                                                m_selectCodeName, m_databaseName);
     QList<QString> timeList;
     QList<double> typList;
     QList<double> closeList;
 
-    for (int i = 0; i < oriDatabaseData.size(); ++i) {
-        if (isMinuteType(m_databaseName)) {
-            timeList.append(QString("%1 %2").arg(oriDatabaseData[i][0]).arg(oriDatabaseData[i][1]));
-        } else {
-            timeList.append(QString("%1").arg(oriDatabaseData[i][0]));
-        }
-        closeList.append(oriDatabaseData[i][2].toDouble());
-        typList.append((oriDatabaseData[i][2].toDouble() + oriDatabaseData[i][3].toDouble()) / 2);
+    if (m_hedgedCodeName.size() != 0)
+    {
+        QList<QStringList> hedgedDBData = m_database->getDataByDate(m_startDate, m_endDate, keyList,
+                                                                    m_hedgedCodeName, m_databaseName);
+
+        setHedgedTYPClose(selectDBData, hedgedDBData, isMinuteType(m_databaseName),
+                          timeList, typList, closeList);
     }
+    else
+    {
+        setHedgedTYPClose(selectDBData, isMinuteType(m_databaseName), timeList, typList, closeList);
+    }
+
     QList<QList<double>> aveList = getAVEList(closeList, m_aveNumbList, m_isEMAList);
     aveList.insert(0, closeList);
 
@@ -334,14 +430,17 @@ void HistoryData::getCSSData_slot() {
     QList<double> subValueList = getCSSList(typList,  m_subAveNumb, m_css12Rate,
                                         m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);
     QList<double> energyValueList = getCSSList(typList,  m_energyAveNumb, m_css12Rate,
-                                            m_energyCssRate1, m_energyCssRate2, m_maxCSS, m_minCSS, true);
+                                        m_energyCssRate1, m_energyCssRate2, m_maxCSS, m_minCSS, true);
 
     QList<QList<double>> cssList;
     cssList.append(mainList);
     cssList.append(subValueList);
     cssList.append(energyValueList);
 
-     qDebug() << "m_databaseID: " << m_databaseID;
+    qDebug() << QString("timeList.size: %1, typList.size: %2, closelist.size: %3, mainList.size: %4, subValueList.size: %5, energyValueList.size: %6")
+                .arg(timeList.size()).arg(typList.size()).arg(closeList.size())
+                .arg(mainList.size()).arg(subValueList.size()).arg(energyValueList.size());
+
     emit sendCSSData_signal(timeList, aveList, cssList, m_databaseID);
 }
 

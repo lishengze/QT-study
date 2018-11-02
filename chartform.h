@@ -55,9 +55,23 @@ class ChartForm : public BaseChart
     Q_OBJECT
 
 public:
+
     ChartForm(QWidget *parent, QTableView* programInfoTableView,
               int chartViewID, QString dbhost, bool isBuySalePortfolio,
               QString hedgeIndexCode, int hedgeIndexCount, QList<int> macdTime,
+              QMap<QString, int> strategyMap = EmpytQStringIntMap(), QString strategyName="",
+              QMap<QString, int> buyStrategyList = EmpytQStringIntMap(),
+              QMap<QString, int> saleStrategyList = EmpytQStringIntMap(),
+              bool isRealTime = true, QString startDate ="", QString endDate="", QString timeType ="");
+
+
+    ChartForm(QWidget *parent, QTableView* programInfoTableView,
+              int chartViewID, QString dbhost, bool isBuySalePortfolio,
+              QString hedgeIndexCode, int hedgeIndexCount, QList<int> macdTime,              
+              int mainAveNumb, int subAveNumb, int energyAveNumb,
+              double css12Rate, double mainCssRate1, double mainCssRate2,
+              double energyCssRate1, double energyCssRate2,
+              double maxCSS, double minCSS,
               QMap<QString, int> strategyMap = EmpytQStringIntMap(), QString strategyName="",
               QMap<QString, int> buyStrategyList = EmpytQStringIntMap(),
               QMap<QString, int> saleStrategyList = EmpytQStringIntMap(),
@@ -148,10 +162,22 @@ private:
     int                  m_hedgeIndexCount;
     QTableView*          m_programInfoTableView;
 
+    int                  m_mainAveNumb;
+    int                  m_subAveNumb;
+    int                  m_energyAveNumb;
+    double               m_mainCssRate1;
+    double               m_mainCssRate2;
+    double               m_energyCssRate1;
+    double               m_energyCssRate2;
+
+    double               m_css12Rate;
+    double               m_maxCSS;
+    double               m_minCSS;
+
     QString              m_strategyName;
     QMap<QString, int>   m_buyStrategyMap;
     QMap<QString, int>   m_saleStrategyMap;
-    QMap<QString, int>   m_secodebuyCountMap;
+    QMap<QString, int>   m_portfolioMap;
     QStringList          m_secodeNameList;
 
     QStringList          m_keyValueList;
@@ -167,10 +193,14 @@ private:
     double               m_preSpread;
 
     QList<double>        m_timeData;
-    QList<double>        m_strategyData;
+    QList<double>        m_hedgedData;
     QList<double>        m_votData;
     QList<MACD>          m_macdData;
     QList<double>        m_indexCodeData;
+
+    QList<double>        m_mainList;
+    QList<double>        m_subValueList;
+    QList<double>        m_energyValueList;
 
     QTime                m_startTime;
     QTime                m_endTime;

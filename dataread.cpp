@@ -40,23 +40,21 @@ QMap<QString, QList<QStringList>> DataRead::readHistoryData () {
 
     QMap<QString, QList<QStringList>> result = m_database->getLongTimeHistoryData(m_startDate, m_endDate,
                                                                                   m_keyValueList, m_tableNameList, m_dbName);
-    for (QMap<QString, QList<QStringList>>::iterator it = result.begin();
-         it != result.end(); ++it) {
-        qDebug() << "secode: " << it.key() << ", datanumb: " << it.value().size();
-    }
+//    for (QMap<QString, QList<QStringList>>::iterator it = result.begin();
+//         it != result.end(); ++it) {
+//        qDebug() << "secode: " << it.key() << ", datanumb: " << it.value().size();
+//    }
 
     return result;
 }
 
 QMap<QString, QList<QStringList>> DataRead::readRealTimeData () {
-//    qDebug() << "DataRead::readRealTimeData: " << QThread::currentThreadId()
-//             << ", tableList.size: " << m_tableNameList.size();
     QMap<QString, QList<QStringList>> result = m_database->getSnapShootHistoryData(m_tableNameList);
 
-    for (QMap<QString, QList<QStringList>>::iterator it = result.begin();
-         it != result.end(); ++it) {
-        qDebug() << "secode: " << it.key() << ", datanumb: " << it.value().size();
-    }
+//    for (QMap<QString, QList<QStringList>>::iterator it = result.begin();
+//         it != result.end(); ++it) {
+//        qDebug() << "secode: " << it.key() << ", datanumb: " << it.value().size();
+//    }
     return result;
 }
 

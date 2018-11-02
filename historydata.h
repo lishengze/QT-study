@@ -35,12 +35,24 @@ public:
                 QObject *parent = 0);
 
     HistoryData(QString dbhost, QString databaseName,
-                QString startDate, QString endDate, QString codeName,
+                QString startDate, QString endDate,
+                QString selectCodeName, QString hedgedCodeName,
                 QList<int> aveNumbList, QList<bool> isEMAList,
                 int mainAveNumb, int subAveNumb, int energyAveNumb,
                 double css12Rate, double mainCssRate1, double mainCssRate2,
                 double energyCssRate1, double energyCssRate2,
                 double maxCSS, double minCSS, int id,
+                QObject *parent = 0);
+
+    HistoryData(QString dbhost, QString databaseName,
+                QString startDate, QString endDate,
+                int threadNumb, QList<QString> secodeNameList, QString hedgeIndexCode,
+                QMap<QString, int> seocdebuyCountMap, QStringList keyValueList,
+                QList<int> aveNumbList, QList<bool> isEMAList,
+                int mainAveNumb, int subAveNumb, int energyAveNumb,
+                double css12Rate, double mainCssRate1, double mainCssRate2,
+                double energyCssRate1, double energyCssRate2,
+                double maxCSS, double minCSS, int id = 0,
                 QObject *parent = 0);
 
     ~HistoryData();
@@ -83,7 +95,9 @@ public slots:
     void getCSSData_slot();
 
 private:
+    bool                               m_isPortfolio;
     bool                               m_isRealTime;
+    bool                               m_isCSSChart;
     int                                m_threadNumb;
 
     QString                            m_signalType;
@@ -103,7 +117,7 @@ private:
 
     QMap<QString, int>                 m_buyStrategyMap;
     QMap<QString, int>                 m_saleStrategyMap;
-    QMap<QString, int>                 m_seocdebuyCountMap;
+    QMap<QString, int>                 m_portfolioMap;
     QList<QString>                     m_secodeNameList;
 
     QList<DataProcess*>                m_dataProcessList;
@@ -126,7 +140,9 @@ private:
     double                             m_maxCSS;
     double                             m_minCSS;
 
-    QString                            m_singleCodeName;
+    QString                            m_selectCodeName;
+    QString                            m_hedgedCodeName;
+
     int                                m_mainAveNumb;
     int                                m_subAveNumb;
     int                                m_energyAveNumb;

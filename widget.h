@@ -41,32 +41,24 @@ public:
     void initFileDir();
 
     void initWidegt();    
-    void initCalendar();
-    void initHedgeComboBox();
-    void initDataFrequency();
-    void initEnergyDataFreq();
-    void initSelectIndexComboBox();
-    void initHedgedIndexComboBox();
-    void initIndexAveNumb();
-    void initEnergyIndexCodeComboBox();
 
-    void initMacdTime();
-    void setFutureContractCombox();
-    void initDatasourceCombox();
-    void initSpreadSpinbox();
-
-    void initTableContextMenu();
-    void initProgramWorkInfoTableView();
+    void initHedgedWidget();
+    void initEnergyWidget();
+    void initFutureWidget();
+    void initAnnounceWidget();
+    void initDatasourceWidget();
+    void initProgramWorkInfoWidget();
+    void initTableContextMenuWidget();
+    void setPortfolioTableWidget();
+    void setBuySalePortfolioTableWidget();
 
     void initCSSParamComBox();
+
     bool checkCodeInDatabase(QString codeName, QString dbhost, QStringList timeTypeList);
 
     QStringList getEnergyDataFreq();
     QList<int> getCSSParams();
     void getAveParams(QList<int>& aveNumbList, QList<bool>& isEMAList);
-    void setFutureContractList();
-    void setStrategyTable();
-    void setBuySalePortfolioTable();
 
     ~Widget();
 
@@ -119,9 +111,9 @@ private slots:
 
     void on_dataSource_ComboBox_currentIndexChanged(const QString &arg1);
 
-    void on_showIndexHedgedPic_pushButton_clicked();
-
     void on_showAVEEnergy_pushButton_clicked();
+
+    void on_historyEnergyChart_clicked();
 
 private:
     Ui::Widget *             ui;
@@ -131,7 +123,7 @@ private:
     QString                  m_currDBHost;
     QString                  m_nativeFileName;
     QString                  m_strategyFileDir;
-    QString                  m_currStrategyName;
+    QString                  m_portfolioFileName;
 
     QString                  m_buySalePortfolioFileDir;
     QString                  m_currBuySalePortfolioName;
@@ -139,7 +131,7 @@ private:
     QList<QString>           m_futureList;
     bool                     m_isBuySalePortfolio;
 
-    QMap<QString, int>       m_strategyMap;
+    QMap<QString, int>       m_portfolioMap;
     QList<QFileInfo>         m_strategyFileInfoList;
 
     QMap<QString, int>       m_buyStrategyMap;
@@ -161,5 +153,15 @@ private:
     QListWidget*             m_cssParamListWidget;
     QListWidget*             m_energyDataFreqListWidget;
 };
+
+//    void initCalendar();
+//    void initHedgeComboBox();
+//    void initDataFrequency();
+//    void initEnergyDataFreq();
+//    void initEnergyIndexCodeComboBox();
+//    void initMacdTime();
+//    void setFutureContractCombox();
+//    void setFutureContractList();
+//    void initSpreadSpinbox();
 
 #endif // WIDGET_H

@@ -37,16 +37,30 @@ class CSSChartForm : public BaseChart
 
 public:
     explicit CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList,
-                            QString startDate, QString endDate, QString codeName,
+                            QString startDate, QString endDate,
+                            QString selectCodeName, QString hedgedCodeName,
                             QList<int> aveNumbList, QList<bool> isEMAList,
                             int mainAveNumb, int subAveNumb, int energyAveNumb,
                             double css12Rate, double mainCssRate1, double mainCssRate2,
                             double energyCssRate1, double energyCssRate2,
                             double maxCSS, double minCSS,
                             QWidget *parent = 0);
+
+    explicit CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList,
+                            QString startDate, QString endDate,
+                            QMap<QString, int> portfolioMap,  QString portfolioName,
+                            QString hedgeIndexCode, int hedgeIndexCount,
+                            QList<int> aveNumbList, QList<bool> isEMAList,
+                            int mainAveNumb, int subAveNumb, int energyAveNumb,
+                            double css12Rate, double mainCssRate1, double mainCssRate2,
+                            double energyCssRate1, double energyCssRate2,
+                            double maxCSS, double minCSS,
+                            QWidget *parent = 0);
+
     ~CSSChartForm();
 
     void initCommonData();
+    void initSecodeList();
     void initListData();
     void initHistoryData();
     void initLabelRowColNumb();
@@ -102,7 +116,17 @@ private:
     int                                     m_maxColNumb;
     int                                     m_currColNumb;
 
-    QString                                 m_singleCodeName;
+    bool                                    m_isPortfolio;
+    QMap<QString, int>                      m_portfolioMap;
+    QString                                 m_portfolioName;
+    QString                                 m_hedgeIndexCode;
+    int                                     m_hedgeIndexCount;
+    QString                                 m_secodeStyle;
+    QList<QString>                          m_secodeNameList;
+
+    QString                                 m_selectCodeName;
+    QString                                 m_hedgedCodeName;
+
     int                                     m_mainAveNumb;
     int                                     m_subAveNumb;
     int                                     m_energyAveNumb;
@@ -121,6 +145,7 @@ private:
     QList<QList<QList<double>>>             m_aveList;
     QList<QList<QList<double>>>             m_cssList;
     QList<QList<QString>>                   m_timeList;
+    QList<QList<double>>                    m_indexDataList;
     QList<int>                              m_currDataIDList;
 
     QList<QGridLayout*>                     m_gridLayoutList;

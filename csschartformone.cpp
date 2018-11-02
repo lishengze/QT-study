@@ -79,7 +79,7 @@ void CSSChartFormOne::initHistoryData() {
     m_newStartDate = getPreDate(m_startDate, m_timeType, maxPreTimeNumb);
     qDebug() << QString("maxPreTimeNumb: %1, newStartDate: %2").arg(maxPreTimeNumb).arg(m_newStartDate);
     m_histdataWorker = new HistoryData(m_dbhost, m_databaseName, m_newStartDate, m_endDate,
-                                       m_singleCodeName, m_aveNumbList, m_isEMAList,
+                                       m_singleCodeName, "", m_aveNumbList, m_isEMAList,
                                        m_mainAveNumb, m_subAveNumb, m_energyAveNumb,
                                        m_css12Rate, m_mainCssRate1, m_mainCssRate2,
                                        m_energyCssRate1, m_energyCssRate2,
