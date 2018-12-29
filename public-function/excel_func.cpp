@@ -1,10 +1,12 @@
-﻿//#include "excel.h"
-#include "xlsxdocument.h"
+﻿#include "xlsxdocument.h"
 #include <QFileInfo>
 #include <QDir>
 #include <QDebug>
+#include <QCoreApplication>
 #include "secode_func.h"
 #include "database.h"
+#include "excel_func.h"
+#include "io_func.h"
 
 QList<QFileInfo> getExcelFileInfo(QString dirName) {
     QDir *dir=new QDir(dirName);
@@ -38,17 +40,17 @@ QList<QStringList> readExcelData(QString fileName, QString sheetName) {
     QXlsx::CellRange range = xlsx.dimension();
     int rowCount = range.rowCount();
     int colCount = range.columnCount();
-    qDebug() <<"fileName: " << fileName <<"rowCount: " << rowCount << ", colCount" << colCount;
+    // qDebug() <<"fileName: " << fileName <<"rowCount: " << rowCount << ", colCount" << colCount;
 
-//    int defaultColNumb = 2;
-//    if (colCount < defaultColNumb) {
-//        defaultColNumb = colCount;
-//    }
+    //    int defaultColNumb = 2;
+    //    if (colCount < defaultColNumb) {
+    //        defaultColNumb = colCount;
+    //    }
 
     for (int i = 1; i <= rowCount; i++){
         QStringList tmpData;
          for (int j = 1; j <= colCount; j++){
-             if(int(xlsx.cellAt(i,j)) != 0) {
+             if(xlsx.cellAt(i,j)!= nullptr) {
                  tmpData.append(xlsx.cellAt(i, j)->value().toString());
              } else {
                  break;
@@ -85,18 +87,18 @@ QMap<QString, int> readExcelMapInt(QString fileName, QString sheetName) {
             result.insert("Error", -1);
             break;
         } else {
-//            for (int j = 0; j < 2; ++j) {
-//                if (result.find(oridata[i][0]) != result.end()) {
-//                    qDebug() << QString("%1: %2, %3").arg(oridata[i][0])
-//                            .arg(result[oridata[i][0]]).arg(oridata[i][1].toInt());
-//                    result[oridata[i][0]] += oridata[i][1].toInt();
-//                } else {
-//                    result.insert(oridata[i][0], oridata[i][1].toInt());
-//                }
-//            }
+    //            for (int j = 0; j < 2; ++j) {
+    //                if (result.find(oridata[i][0]) != result.end()) {
+    //                    qDebug() << QString("%1: %2, %3").arg(oridata[i][0])
+    //                            .arg(result[oridata[i][0]]).arg(oridata[i][1].toInt());
+    //                    result[oridata[i][0]] += oridata[i][1].toInt();
+    //                } else {
+    //                    result.insert(oridata[i][0], oridata[i][1].toInt());
+    //                }
+    //            }
             if (result.find(oridata[i][0]) != result.end()) {
-//                qDebug() << QString("%1: %2, %3").arg(oridata[i][0])
-//                        .arg(result[oridata[i][0]]).arg(oridata[i][1].toInt());
+    //                qDebug() << QString("%1: %2, %3").arg(oridata[i][0])
+    //                        .arg(result[oridata[i][0]]).arg(oridata[i][1].toInt());
                 result[oridata[i][0]] += oridata[i][1].toInt();
             } else {
                 result.insert(oridata[i][0], oridata[i][1].toInt());
@@ -114,7 +116,7 @@ QList<QString> getExcelFileName(QString dirName) {
     QList<QFileInfo> *fileInfo=new QList<QFileInfo>(dir->entryInfoList(filter));
     QList<QString> filaPathList;
 
-//    qDebug() << "fileCount: " <<fileInfo->count ();
+    //    qDebug() << "fileCount: " <<fileInfo->count ();
     for (int i = 0; i < fileInfo->count (); ++i) {
         filaPathList.append (fileInfo->at(i).filePath());
     }
@@ -202,6 +204,8 @@ int writeOneColData(QString fileName, QStringList oriData, int targetCol, int st
     for (int index = 0; index < oriData.length(); ++index) {
         xlsx.write(startRow+index, targetCol, oriData[index]);
     }
+
+    return 0;
 }
 
 int writeOneRowData(QString fileName, QStringList oriData, int targetRow, int startCol,QString sheetName) {
@@ -221,10 +225,11 @@ int writeOneRowData(QString fileName, QStringList oriData, int targetRow, int st
     for (int index = 0; index < oriData.length(); ++index) {
         xlsx.write(targetRow, startCol + index, oriData[index]);
     }
+    return 0;
 }
 
-// 补充未上市的数据;
-// 删除可能多余的数据;
+    // 补充未上市的数据;
+    // 删除可能多余的数据;
 int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_time_list, int keyCount, QString secode) {
     QList<QStringList> ori_time_list;
     for (int i = 0; i <ori_result.size(); ++i) {
@@ -234,7 +239,7 @@ int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_
         ori_time_list.append(tmp_data);
     }
 
-    // 未上市的数据
+        // 未上市的数据
     for (int i = 0; i < index_time_list.size(); ++i) {
         if (ori_time_list.indexOf(index_time_list[i]) < 0) {
             QStringList unlist_data;
@@ -245,27 +250,27 @@ int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_
             }
             ori_result.insert(i, unlist_data);
         } else {
-//            qDebug() << ori_result[i];
+    //            qDebug() << ori_result[i];
             break;
         }
     }
-//    qDebug() << "added unlist data: " << ori_result.size();
-//    qDebug() << ori_result.last();
+    //    qDebug() << "added unlist data: " << ori_result.size();
+    //    qDebug() << ori_result.last();
 
-    // 可能多余的数据
+        // 可能多余的数据
     for (int i = 0; i < ori_result.size(); ++i) {
         QStringList tmp_data;
         tmp_data.append(ori_result[i][0]);
         tmp_data.append(ori_result[i][1]);
         if (index_time_list.indexOf(tmp_data) < 0) {
             ori_result.removeAt(i);
-//            qDebug() << secode <<"delete data: " << tmp_data;
+    //            qDebug() << secode <<"delete data: " << tmp_data;
             --i;
         }
     }
-//    qDebug() << "delete wrong data: " << ori_result.size();
+    //    qDebug() << "delete wrong data: " << ori_result.size();
 
-    // 补充停牌的数据
+        // 补充停牌的数据
     for (int i = 0; i < index_time_list.size(); ++i) {
         if (i>= ori_result.size() ||  ori_result[i][0] != index_time_list[i][0] || ori_result[i][1] != index_time_list[i][1]) {
             QStringList delist_data;
@@ -275,11 +280,11 @@ int completeExcelData(QList<QStringList>& ori_result, QList<QStringList>& index_
                 delist_data.append(QString("%1").arg(ori_result[i-1][j]));
             }
             ori_result.insert(i, delist_data);
-//            qDebug() << QString("ori_result[%1][0]: %2, ori_result[%1][1]: %3;index_time_list[%1][0]: %4, index_time_list[%1][0]: %5")
-//                        .arg(i).arg(ori_result[i][0]).arg(ori_result[i][1]).arg(index_time_list[i][0]).arg(index_time_list[i][1]);
+    //            qDebug() << QString("ori_result[%1][0]: %2, ori_result[%1][1]: %3;index_time_list[%1][0]: %4, index_time_list[%1][0]: %5")
+    //                        .arg(i).arg(ori_result[i][0]).arg(ori_result[i][1]).arg(index_time_list[i][0]).arg(index_time_list[i][1]);
         }
     }
-//    qDebug() << "added delist data: " << ori_result.size();
+    //    qDebug() << "added delist data: " << ori_result.size();
 
     for (int i = 0; i < ori_result.size(); ++i) {
         ori_result[i].removeAt(0);
@@ -329,12 +334,12 @@ void initExcelFile(QString fileName) {
 
         QXlsx::Document xlsx(fileName);
         QStringList sheetNames = xlsx.sheetNames();
-//        qDebug() << "init sheetNames: " << sheetNames;
+    //        qDebug() << "init sheetNames: " << sheetNames;
         for (QString sheetname : sheetNames) {
             if (xlsx.deleteSheet(sheetname)) {
-//                qDebug() << "delete " << sheetname << " successfully!";
+    //                qDebug() << "delete " << sheetname << " successfully!";
             } else {
-//                qDebug() << "delete " << sheetname << " failed!";
+    //                qDebug() << "delete " << sheetname << " failed!";
             }
         }
         xlsx.save();
@@ -407,7 +412,7 @@ int writePortfolio(QMap<QString, double> portfolio, QString fileName,
         } else if (type == "sale") {
             keyWord = "2";
         }
-//        qDebug() << accountName << ", keyWord: " << keyWord;
+    //        qDebug() << accountName << ", keyWord: " << keyWord;
         int index = 2;
         for (QMap<QString, double>::iterator it = portfolio.begin();
              it != portfolio.end(); ++it) {
@@ -420,7 +425,7 @@ int writePortfolio(QMap<QString, double> portfolio, QString fileName,
 
     xlsx.save();
 
-//    qDebug() << "sheetNames: " << xlsx.sheetNames();
+    //    qDebug() << "sheetNames: " << xlsx.sheetNames();
 
     return 1;
 }
@@ -456,4 +461,33 @@ QMap<QString, QString> getPortfolioAmountMap(QList<QFileInfo> fileInfoList) {
     return result;
 }
 
+class TestExcel
+{
+    public:
+        TestExcel();
 
+        void test_readExcelData();
+};
+
+TestExcel::TestExcel()
+{
+    test_readExcelData();
+}
+
+void TestExcel::test_readExcelData()
+{
+    // QString fileName = "D:/client/chart-dev/info.xlsx";
+    QString fileName = QString("%1/%2").arg(QCoreApplication::applicationDirPath()).arg("./info.xlsx");
+    QString sheetName = "specialNoTradingDays";
+    QList<QStringList> oriData = readExcelData(fileName, sheetName);
+    printList(oriData, "oriData");
+
+    QString curDirName = QCoreApplication::applicationDirPath();
+    qDebug() << "curDirName: " << curDirName;
+    qDebug() << QDir::currentPath();
+}
+
+void TestExcelMain()
+{
+    TestExcel testExcelObj;
+}

@@ -52,4 +52,6 @@ double getPortfolioAmount(QMap<QString, double> priceMap, QMap<QString, double> 
 QMap<QString, QString> getPortfolioAmountMap(QList<QFileInfo> fileInfoList);
 
 
+void TestExcelMain();
+
 #endif // EXCEL_FUNC_H

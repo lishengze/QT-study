@@ -20,18 +20,18 @@ MACD computeMACDData(double newData, MACD oldData, int t1, int t2, int t3);
 
 QList<double> computeMACDDoubleData(QList<double> oriData, int t1, int t2, int t3);
 
-QList<QList<double>> getHedgedData(QList<QPointF> pointDataList, QMap<QString, QStringList> indexHedgeData,
+QList<QList<double>> getHedgedData(QList<QPointF>& pointDataList, QMap<QString, QStringList>& indexHedgeData,
                             int indexBuyCount, int indexBaseCount);
 
-QList<QPointF> getHedgedData(QList<QPointF> buyPointDataList, QList<QPointF> salePointDataList);
+QList<QList<double>> getHedgedData(QList<QPointF>& buyPointDataList, QList<QPointF>& salePointDataList);
 
-QList<double> getHedgedData(QMap<QString, QStringList> oneTimeData, QMap<QString, int> seocdebuyCountMap,
+QList<double> getHedgedData(QMap<QString, QStringList>& oneTimeData, QMap<QString, int> seocdebuyCountMap,
                             QString indexCode, int indexBuyCount, int indexBaseCount);
 
-QList<double> getHedgedData(QMap<QString, QStringList> oneTimeData,
+QList<double> getHedgedData(QMap<QString, QStringList>& oneTimeData,
                             QMap<QString, int> buyStrategy, QMap<QString, int> saleStrategy);
 
-double getHedgedSpread(QMap<QString, QStringList> preCloseData, QMap<QString, int> seocdebuyCountMap,
+double getHedgedSpread(QMap<QString, QStringList>& preCloseData, QMap<QString, int> seocdebuyCountMap,
                                 QString indexCode, int indexBuyCount, int indexBaseCount);
 
 double getHedgedSpread(QMap<QString, QStringList> preCloseData,
@@ -46,7 +46,32 @@ QList<double> getCSSList(QList<double> typList, int aveNumb, double csst12Rate,
                          double csstRate1, double csstRate2, double maxCSS, double minCSS,
                          bool isPotentialEnergy);
 
+double getCSSAtom(QList<double>& typList, QList<double>& csstList, QList<double>& cssaList, 
+                    int dataIndex, int aveNumb, double csst12Rate,
+                    double csstRate1, double csstRate2, double maxCSS, double minCSS,
+                    bool isPotentialEnergy);
+
 QList<QList<double>> getAVEList(QList<double> oridata, QList<int> aveNumb, QList<bool> isEMAList);
+
+
+
+
+QList<double> computeCSSList(QList<double> typList, double& curCSST, double& curCSSA, 
+                            int aveNumb, double csst12Rate,
+                            double csstRate1, double csstRate2, double maxCSS, double minCSS,
+                            bool isPotentialEnergy);
+
+double computeCSSAtom(QList<double>& typList, double& curCSST, double& curCSSA, 
+                    int dataIndex, int aveNumb, double csst12Rate,
+                    double csstRate1, double csstRate2, double maxCSS, double minCSS,
+                    bool isPotentialEnergy);
+
+void computeAVEAtom(QList<double> oridataList, int oridataIndex, 
+                    QList<QList<double>>& aveList, 
+                    QList<int> aveNumb, QList<bool> isEMAList);
+
+void computeAVEList(QList<double>& oridataList, QList<QList<double>>& aveList, 
+                    QList<int> aveNumb, QList<bool> isEMAList);
 
 QList<double> getAVEList(QList<double> oridata, int aveNumb, bool isEMAList);
 

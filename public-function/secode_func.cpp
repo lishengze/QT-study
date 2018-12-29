@@ -107,24 +107,65 @@ QString getSimpleSecode(QString secode) {
 }
 
 QString getCompleteIndexCode(QString secode, QString style) {
-    while (secode.size() < 6) {
+    while (secode.size() < 6) 
+    {
         secode.prepend("0");
     }
 
-    if (style == "tinysoft") {
-        if (secode.startsWith("0")) {
-            secode.prepend("SH");
-        } else {
-            secode.prepend("SZ");
+    if (style == "tinysoft") 
+    {
+        if (secode.size() == 9)
+        {
+            if (secode.endsWith("SH"))
+            {
+                secode = secode.remove(6,3).prepend("SH");
+            }
+
+            if (secode.endsWith("SZ"))
+            {
+                secode = secode.remove(6,3).prepend("SZ");
+            }
+        }
+
+        if (secode.size() == 6)
+        {
+            if (secode.startsWith("0")) 
+            {
+                secode.prepend("SH");
+            } 
+            else 
+            {
+                secode.prepend("SZ");
+            }            
         }
     }
 
-    if (style == "wind") {
-        if (secode.startsWith("0")) {
-            secode.append(".SH");
-        } else {
-            secode.append(".SZ");
+    if (style == "wind") 
+    {
+        if (secode.size() == 8)
+        {
+            if (secode.startsWith("SH"))
+            {
+                secode = secode.remove(0,2).append(".SH");
+            }
+
+            if (secode.startsWith("SZ"))
+            {
+                secode = secode.remove(0,2).append(".SZ");
+            }
         }
+
+        if (secode.size() == 6)
+        {
+            if (secode.startsWith("0")) 
+            {
+                secode.append(".SH");
+            } 
+            else 
+            {
+                secode.append(".SZ");
+            }            
+        }        
     }
 
     return secode;
@@ -132,7 +173,8 @@ QString getCompleteIndexCode(QString secode, QString style) {
 
 QList<QString> getIndexCode(QString style) {
     QList<QString> indexCodeList;
-    if (style == "wind") {
+    if (style == "wind") 
+    {
         indexCodeList << "000300.SH" << "000016.SH" << "000852.SH"
                       << "000904.SH" << "000905.SH" << "000906.SH" << "399903.SZ"
                       << "000908.SH" << "000909.SH" << "000910.SH" << "000911.SH"

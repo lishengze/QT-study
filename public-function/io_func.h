@@ -17,9 +17,9 @@ void OutputMsg(QWidget* window,QString msg);
 QList<QFileInfo> getDirName(QString dirName);
 
 template<class valueType>
-void printList(QList<valueType> data, QString message) {
+void printList(QList<valueType> data, QString message, int dataNumb=50) {
     qDebug() << "message: " << message << ", datasize: " <<  data.size();
-    for (int i = 0; i < data.size(); ++i) {
+    for (int i = 0; i < data.size() && i < dataNumb; ++i) {
         qDebug() << data[i];
     }
 }

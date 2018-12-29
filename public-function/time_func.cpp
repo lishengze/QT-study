@@ -1,9 +1,12 @@
 ﻿#include "time_func.h"
-//#include "toolfunc.h"
 #include <QThread>
 #include <QDebug>
 #include <QtMath>
+#include <QDateTime>
+#include <QCoreApplication>
 #include "widget_func.h"
+#include "excel_func.h"
+#include "io_func.h"
 
 QDateTime transIntDateTime(long long data) {
     // 20180414113400
@@ -49,7 +52,7 @@ QTime transIntTime(int data) {
     return QTime(hour, minut, second);
 }
 
-qint64 transDateTime(double oridata) {
+qint64 transToEpochTime(double oridata) {
     long long  datetime = long long (oridata);
     int year = datetime / 10000000000;
     datetime = datetime % 10000000000;
@@ -62,13 +65,10 @@ qint64 transDateTime(double oridata) {
     int miniute = datetime / 100;
     datetime = datetime % 100;
     int secs = datetime;
-//    qDebug() << "oriData: " << oridata;
-//    qDebug() << "year: " << year << ", month: " << month << ", day: " << day << ", "
-//             << "hour: " << hour << ", miniute: " << miniute << ", secs: " << secs;
+
     QDate curDate = QDate(year, month, day);
     QTime curTime = QTime(hour, miniute, secs);
     QDateTime DateTime = QDateTime(curDate, curTime);
-//    qDebug()<< "DateTime: " << DateTime;
     return DateTime.toMSecsSinceEpoch();
 }
 
@@ -112,6 +112,11 @@ QDate getDate(QString date) {
     return result;
 }
 
+QTime getTime(QString time)
+{
+    return transIntTime(time.toInt());
+}
+
 QTime StockAmStartTime() {
     return QTime(9, 30, 0);
 }
@@ -152,6 +157,17 @@ bool isStockTradingOver(QTime time) {
 
 bool isTradingDay(QDate day) {
     QList<QDate> specialNoTradingDay;
+    QString fileName = QString("%1/%2").arg(QCoreApplication::applicationDirPath()).arg("./info.xlsx");
+    QList<QStringList> specialNoTradingDayStrList = readExcelData(fileName, "specialNoTradingDays");
+    for (int i = 0; i < specialNoTradingDayStrList.size(); ++i)
+    {
+        for (int j = 0; j < specialNoTradingDayStrList[i].size(); ++j)
+        {
+            specialNoTradingDay.append(getDate(specialNoTradingDayStrList[i][j]));
+        }
+    }
+
+    /*
     specialNoTradingDay << QDate(2018, 12, 30) << QDate(2018, 12, 31) << QDate(2018, 1,1) // 元旦
                         << QDate(2018, 2, 15)  << QDate(2018, 2, 16)  << QDate(2018, 2, 17) // 春节
                         << QDate(2018, 2, 18)  << QDate(2018, 2, 19)  << QDate(2018, 2, 20) << QDate(2018, 2, 21)
@@ -162,10 +178,16 @@ bool isTradingDay(QDate day) {
                         << QDate(2018, 10, 1)  << QDate(2018, 10, 2)  << QDate(2018, 10, 3) // 国庆节
                         << QDate(2018, 10, 4)  << QDate(2018, 10, 5)  << QDate(2018, 10, 6)
                         << QDate(2018, 10, 7);
+    */
 
-    if (day.dayOfWeek() > 5  || specialNoTradingDay.indexOf(day) >= 0) {
+    // printList(specialNoTradingDay, "specialNoTradingDay");
+
+    if (day.dayOfWeek() > 5  || specialNoTradingDay.indexOf(day) >= 0)
+    {
         return false;
-    } else {
+    }
+    else
+    {
         return true;
     }
 }
@@ -232,6 +254,17 @@ bool waitForNextTradingDay(QTableView* programInfoTableView) {
     return waitDays != -1;
 }
 
+void waitToTime(QTime waitedTime)
+{
+    QTime currTime = QTime::currentTime();
+    if (currTime < waitedTime)
+    {
+        int sleepMsecs = currTime.secsTo(waitedTime) * 1000;
+        qDebug() << "Wait msces: " << sleepMsecs;
+        QThread::msleep(sleepMsecs);
+    }
+}
+
 bool isMinuteType(QString dataType) {
     if (dataType.indexOf("day") >= 0 || dataType.indexOf("month") >=0
         || dataType.indexOf("week") >= 0) {
@@ -242,6 +275,10 @@ bool isMinuteType(QString dataType) {
 }
 
 QString getPreDate(QString oridata, QString timeType, int timeNumb) {
+    if(oridata == "")
+    {
+        return oridata;
+    }
     QDate oriDate = transIntDate(oridata.toInt());
     int oneDayNumb = 1;
     int oneYearTradingDays = 220;
@@ -249,9 +286,13 @@ QString getPreDate(QString oridata, QString timeType, int timeNumb) {
         QString time = timeType.remove('m');
         oneDayNumb = 4 * 60 / time.toInt();
     }
-//    qDebug() << "onDayNumb: " << oneDayNumb;
     int preDays = qCeil(double(timeNumb) / double(oneYearTradingDays) / double(oneDayNumb) * 365);
     QDate result = oriDate.addDays(preDays*-1);
+    QDate deadLine = QDate(2007,1,1);
+    if (result < deadLine)
+    {
+        result = deadLine;
+    }
     return result.toString("yyyyMMdd");
 }
 
@@ -266,6 +307,17 @@ int getStartIndex(QString startDate, QList<QString>& timeList) {
             result = i;
             break;
         }
+    }
+    return result;
+}
+
+int getStartIndex(QString startDate, QList<double>& timeList)
+{
+    int result = 0;
+    qint64 qStartDate = QDateTime(getDate(startDate), QTime(9, 0, 0)).toMSecsSinceEpoch();
+    while(timeList[result] < qStartDate)
+    {
+        ++result;
     }
     return result;
 }
@@ -295,6 +347,59 @@ QList<QList<int>> getShortedStartEndDateList(int oriStartDate, int oriEndDate,
         currStartEndDate.append(newEndDate.toString("yyyyMMdd").toInt());
         result.append(currStartEndDate);
         startDate = newEndDate.addDays(1);
+    }
+    return result;
+}
+
+bool isTimeLate(QStringList timea, QStringList timeb)
+{
+    bool result = false;
+    if (timea[0].toDouble() > timeb[0].toDouble()
+     ||(timea[0].toDouble() == timeb[0].toDouble()
+     && timea[1].toDouble() > timeb[1].toDouble()))
+    {
+        result = true;
+    }
+    return result;
+}
+
+bool isTimeEarly(QStringList timea, QStringList timeb)
+{
+    bool result = false;
+    if (timea[0].toDouble() < timeb[0].toDouble()
+     ||(timea[0].toDouble() == timeb[0].toDouble()
+     && timea[1].toDouble() < timeb[1].toDouble()))
+    {
+        result = true;
+    }
+    return result;
+}
+
+int getTimeStartPos(QString databaseName, int tradingDays)
+{
+    QString timeType = databaseName.split("_")[1];
+    int oneDayNumb = 1;
+    if (timeType.indexOf("m") >=0 && timeType != "month") {
+        QString time = timeType.remove('m');
+        oneDayNumb = 4 * 60 / time.toInt();
+    }
+    int result = oneDayNumb * tradingDays;
+    return result;
+}
+
+int getDelayStartDate(QList<QStringList>& oriDBData, int delayDays)
+{
+    QDate startDate = getDate(oriDBData[0][0]);
+    QString newStartDate = startDate.addDays(delayDays).toString("yyyyMMdd");
+    // qDebug() << "startDate: " << startDate << ", newStartDate: " << newStartDate;
+    int result = 0;
+    for (int i = 0; i < oriDBData.size(); ++i)
+    {
+        if (oriDBData[i][0].toLong() >= newStartDate.toLong())
+        {
+            result = i;
+            break;
+        }
     }
     return result;
 }

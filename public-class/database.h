@@ -8,111 +8,124 @@
 
 class Database
 {
-public:
-    Database(QWidget* window, QString connName="0", QString host="localhost",
-             QString userName="sa", QString userPwd="sasa",
-             QString connDbName = "master", QString port ="1433",
-             QString dataSourceName="SqlServer", QString databaseDriver="QODBC");
+    public:
+        Database(QWidget* window, QString connName="0", QString host="localhost",
+                QString userName="sa", QString userPwd="sasa",
+                QString connDbName = "master", QString port ="1433",
+                QString dataSourceName="SqlServer", QString databaseDriver="QODBC");
 
-    Database(QString connName="0", QString host="localhost",
-             QString userName="sa", QString userPwd="sasa",
-             QString connDbName = "master", QString port ="1433",
-             QString dataSourceName="SqlServer", QString databaseDriver="QODBC");
+        /*
+        Database(QString connName="0", QString host="localhost",
+                QString userName="sa", QString userPwd="sasa",
+                QString connDbName = "master", QString port ="1433",
+                QString dataSourceName="SqlServer", QString databaseDriver="QODBC");
+        */
 
-    ~Database();
+        Database(QString host="localhost", QString userName="sa", QString userPwd="sasa",
+                QString connDbName = "master", QString port ="1433",
+                QString dataSourceName="SqlServer", QString databaseDriver="QODBC");             
 
-    void initDatabase();
-    QSqlDatabase getDatabase();
-    bool isDatabaseOpen();
+        ~Database();
 
-    QList<QString> getAllData(QString tableName, QString databaseName);
+        void initDatabase();
+        QSqlDatabase getDatabase();
+        bool isDatabaseOpen();
 
-    QList<QStringList> getAllData(QString tableName, QString databaseName, QStringList keyValueList);
+        QList<QString> getAllData(QString tableName, QString databaseName);
 
-    QList<QStringList> getAllRealtimeData(QString tableName, QStringList keyValueList,
-                                          QString databaseName="MarketData_RealTime");
+        QList<QStringList> getAllData(QString tableName, QString databaseName, QStringList keyValueList);
 
-    QList<QStringList> getDataByDate(QString startDate, QString endDate, QStringList keyValue,
-                                 QString tableName, QString databasename, bool bGetShortedDate=false);
+        QList<QStringList> getAllRealtimeData(QString tableName, QStringList keyValueList,
+                                            QString databaseName="MarketData_RealTime");
 
-    QList<QStringList> getWeightData(QString date, QString tableName);
+        QList<QStringList> getDataByDate(QString startDate, QString endDate, QStringList keyValue,
+                                    QString tableName, QString databasename, bool bGetShortedDate=false);
 
-    QList<QStringList> getIndustryData(QStringList keyValueList, QString tableName);
+        QList<QStringList> getWeightData(QString date, QString tableName);
 
-    QList<QPointF> getOriChartData(QString startDate, QString endDate, QString keyValue,
-                                   QString tableName, QString databasename="MarketData");
+        QList<QStringList> getIndustryData(QStringList keyValueList, QString tableName);
 
-    QList<QStringList> getOriChartData(QString startDate, QString endDate, QStringList keyValue,
-                                       QString tableName, QString databaseName="MarketData");
+        QList<QPointF> getOriChartData(QString startDate, QString endDate, QString keyValue,
+                                    QString tableName, QString databasename="MarketData");
 
-    QMap<QString, QStringList> getSnapShootData(QString tableName="AllData", 
-                                                QString databaseName="MarketData_RealTime");   
+        QList<QStringList> getOriChartData(QString startDate, QString endDate, QStringList keyValue,
+                                        QString tableName, QString databaseName="MarketData");
 
-    QMap<QString, QStringList> getSnapShootData(QList<QString> tableNameArray, 
-                                                QString databaseName="MarketData_RealTime");
+        QMap<QString, QStringList> getSnapShootData(QString tableName="AllData", 
+                                                    QString databaseName="MarketData_RealTime");   
 
-    QStringList getSnapShootData(QString tableName, QStringList keyValueList,
-                                 QString databaseName="MarketData_RealTime");
+        QMap<QString, QStringList> getSnapShootData(QList<QString> tableNameArray, 
+                                                    QString databaseName="MarketData_RealTime");
 
-    QMap<QString, QList<QStringList>> getSnapShootHistoryData(QList<QString> tableNameArray, 
-                                                              QString databaseName="MarketData_RealTime");
+        QStringList getSnapShootData(QString tableName, QStringList keyValueList,
+                                    QString databaseName="MarketData_RealTime");
 
-    QMap<QString, QList<QStringList>> getLongTimeHistoryData(QString startDate, QString endDate, QStringList keyValueList,
-                                                             QStringList tableNameList, QString databaseName="MarketData");
+        QDate getRealtimeDBDate();
 
-    QMap<QString, QStringList> getPreCloseData(QString tableName="PreCloseData", 
-                                                QString databaseName="MarketData_RealTime");
+        QMap<QString, QList<QStringList>> getSnapShootHistoryData(QList<QString> tableNameArray, 
+                                                                QString databaseName="MarketData_RealTime");
 
-    QList<double> getFutureSpread(QString future,
-                           QString databaseName="MarketData_RealTime");
+        QList<QStringList> getSnapShootHistoryData(QString tableName, QString databaseName="MarketData_RealTime");                                                                
 
-    QList<double> getHistFutureSpread(QString future,
-                           QString databaseName="MarketData_RealTime");
+        QMap<QString, QList<QStringList>> getLongTimeHistoryData(QString startDate, QString endDate, QStringList keyValueList,
+                                                                QStringList tableNameList, QString databaseName="MarketData");
 
-    double getClosePrice(QString secode, QString date);
+        QMap<QString, QStringList> getPreCloseData(QString tableName="PreCloseData", 
+                                                    QString databaseName="MarketData_RealTime");
 
-    QList<QString> getTableList(QString databaseName);
+        QList<double> getFutureSpread(QString future,
+                            QString databaseName="MarketData_RealTime");
 
-    QMap<QString, QList<QStringList>> getAnnouncement(QList<QString> tableNameArray, 
-                                                      QString startDate, QString endDate,
-                                                      QString databaseName="Announcement");
+        QList<double> getHistFutureSpread(QString future,
+                            QString databaseName="MarketData_RealTime");
 
-    QList<int> getOneDayTimeList(QString tableName, QString databaseName);
+        double getClosePrice(QString secode, QString date);
 
-    QList<QStringList> getMarketSecodeList(QString tableName, QString databaseName="Market_Info");
+        QList<QString> getTableList(QString databaseName);
 
-    QString getDatabaseName();
-    QString dropTable(QString tableName);
-    QString clear();
+        QMap<QString, QList<QStringList>> getAnnouncement(QList<QString> tableNameArray, 
+                                                        QString startDate, QString endDate,
+                                                        QString databaseName="Announcement");
 
-    virtual QString completeTable(QList<QString> tableList);
-    virtual bool checkData(QString tableName, QString colName, QString value);
+        QList<int> getOneDayTimeList(QString tableName, QString databaseName);
 
-    virtual QString getCreateStr(QString tableName);
-    virtual QString createTable(QString tableName);
+        QList<QStringList> getMarketSecodeList(QString tableName, QString databaseName="Market_Info");
 
-    virtual QString getInsertStr(QString tableName, QList<QString> data);
-    virtual QString insertData(QString tableName, QList<QString> data);
+        QString getDatabaseName();
+        QString dropTable(QString tableName);
+        QString clear();
 
-    virtual QString getUpdateStr(QString tableName, QList<QString> data);
-    virtual QString updateData(QString tableName, QList<QString> data);
+        virtual QString completeTable(QList<QString> tableList);
+        virtual bool checkData(QString tableName, QString colName, QString value);
 
-protected:
-    QString        m_connDbName;
+        virtual QString getCreateStr(QString tableName);
+        virtual QString createTable(QString tableName);
 
-private:
-    QString        m_connName;
-    QString        m_hostName;
-    QString        m_userName;
-    QString        m_userPwd;
-    QString        m_port;
-    QString        m_dataSourceName;
-    QString        m_databaseDriver;
-    QWidget*       m_window;
+        virtual QString getInsertStr(QString tableName, QList<QString> data);
+        virtual QString insertData(QString tableName, QList<QString> data);
 
-public:
-    QSqlDatabase   m_db;
-    bool           m_bdatabaseOpen;
+        virtual QString getUpdateStr(QString tableName, QList<QString> data);
+        virtual QString updateData(QString tableName, QList<QString> data);
+
+    protected:
+        QString        m_connDbName;
+
+    private:
+        QString        m_connName;
+        QString        m_hostName;
+        QString        m_userName;
+        QString        m_userPwd;
+        QString        m_port;
+        QString        m_dataSourceName;
+        QString        m_databaseDriver;
+        QWidget*       m_window;
+
+    public:
+        QSqlDatabase   m_db;
+        bool           m_bdatabaseOpen;
 };
+
+
+void TestDatabaseMain();
 
 #endif // DATABASE_H

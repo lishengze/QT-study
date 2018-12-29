@@ -19,7 +19,7 @@ RealTimeDatabase::RealTimeDatabase(QString connName, QString connDbName,
                                    QString host, QString port,
                                    QString userName, QString userPwd,                                    
                                    QString dataSourceName, QString databaseDriver):
-    Database(connName, host, userName, userPwd,
+    Database(host, userName, userPwd,
              connDbName, port, dataSourceName, databaseDriver)
 {
 }
@@ -35,7 +35,6 @@ QDate RealTimeDatabase::getDatabaseDataDate(QString tableName) {
     QList<int> tmpDate;
      while(queryObj.next ()) {
          tmpDate = getDateList(queryObj.value (0).toInt ());
-         qDebug() << "CurrDate: " << tmpDate;
      }
      if (tmpDate.size() > 0) {
          date = QDate(tmpDate[0], tmpDate[1], tmpDate[2]);
@@ -56,25 +55,26 @@ bool RealTimeDatabase::checkdataTime(QString tableName) {
 
 QString RealTimeDatabase::getCreateStr(QString tableName) {
     QString value_str = QString::fromLocal8Bit(" (股票 varchar(15) not null, 日期 int not null, 时间 int not null, \
-                          最新成交价 decimal(15,4), 前收 decimal(15,4), 成交金额 decimal(25,4), \
-                          请求时间 varchar(35) not null,  Primary Key(股票, 请求时间))");
+                          最新成交价 decimal(15,4), 前收 decimal(15,4), 成交金额 decimal(25,4), 开盘 decimal(15, 4), \
+                          请求时间 varchar(35) not null,   Primary Key(股票, 请求时间))");
     QString complete_tablename = "[" + m_connDbName + "].[dbo].["+ tableName + "]";
     QString create_str = "create table " + complete_tablename + value_str;
     return create_str;
 }
 
 QString RealTimeDatabase::getInsertStr(QString tableName, QList<QString> oridata) {
-    QString col_str = QString::fromLocal8Bit(" (股票, 日期, 时间, 最新成交价, 前收, 成交金额, 请求时间)");
+    QString col_str = QString::fromLocal8Bit(" (股票, 日期, 时间, 最新成交价, 前收, 成交金额, 开盘, 请求时间)");
     QString secode = oridata[0];
     QString date = oridata[1] ;
     QString time = oridata[2];
     QString last = oridata[3];
     QString pre_close = oridata[4];
     QString amt = oridata[5];
-    QString wsqtime = oridata[6];
+    QString open  = oridata[6];
+    QString wsqtime = oridata.last();
 
-    QString valStr = "\'" + secode + "\', " + date + ", " + time + ", "+ last + "," \
-                   + pre_close + ", " + amt + ", \'" + wsqtime + "\' ";
+    QString valStr = "\'" + secode + "\', " + date + ", " + time + ", "+ last + ","
+                   + pre_close + ", " + amt + ", " + open + ", \'" + wsqtime + "\' " ;
 
     QString complete_tablename = "[" + m_connDbName + "].[dbo].[" + tableName + "]" ;
     QString insertStr = "insert into "+ complete_tablename + col_str + "values ("+ valStr +")";

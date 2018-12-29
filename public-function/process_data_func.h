@@ -6,8 +6,9 @@
 
 QList<QPointF> sortPointFList(QList<QPointF> oridata);
 
-QList<QPointF> mergeSortedPointedList(QList<QPointF> firstList, int firstBuyCount,
-                                      QList<QPointF> secondList, int secondBuyCount);
+QList<QPointF> mergeSortedPointedList(QList<QPointF>& firstList, int firstBuyCount,
+                                      QList<QPointF>& secondList, int secondBuyCount,
+                                      bool isUnion=true);
 
 QList<double> getChartYvalueRange(QList<QPointF> pointList );
 
@@ -38,6 +39,21 @@ void resizeMinuteData(QList<QStringList>& selectIndexTransData, QList<QStringLis
 
 void deleteDelistData(QList<QStringList>& oriData, int flagPos);
 
+void getHedegdTYP(QList<QStringList>& selectData, QList<QStringList>& hedgedData,
+                   QList<QStringList>& result);
+
+void getHedegdTYP(QList<double>& hedgedValueList, QList<double>& indexValueList,
+                  QList<double>& typList, QList<double>& earningList);
+
+void setTransedTYP(QList<double>& oriTypeList, QList<double>& desTypList);
+
+void setHedgedTYPClose(QList<QStringList>& selectData, QList<QStringList>& hedgedData, bool isMinute,
+                       QList<QString>& timeList, QList<double>& typList, QList<double>& earningList);
+
+void setHedgedTYPClose(QList<QStringList>& selectData, bool isMinute,
+                       QList<QString>& timeList, QList<double>& typList,
+                       QList<double>& closeList);
+
 template<class T>
 QStringList transNumbData(QString title, QList<T> oriData) {
     QStringList tmpData;
@@ -49,7 +65,7 @@ QStringList transNumbData(QString title, QList<T> oriData) {
 }
 
 template<class T>
-QList<T> getSubList(QList<T> oriData, int startIndex, int endIndex) {
+QList<T> getSubList(QList<T>& oriData, int startIndex, int endIndex) {
     QList<T> result;
     if (startIndex < 0) return result;
 

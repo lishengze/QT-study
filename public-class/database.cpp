@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QSqlResult>
 #include <QDateTime>
 #include <QTime>
 #include <QMessageBox>
@@ -27,6 +28,7 @@ Database::Database(QWidget* window, QString connName, QString host,
     initDatabase();
 }
 
+/*
 Database::Database(QString connName, QString host,
                    QString userName, QString userPwd,
                    QString connDbName, QString port,
@@ -40,21 +42,29 @@ Database::Database(QString connName, QString host,
 {
     initDatabase();
 }
+*/
+
+Database::Database(QString host,
+                   QString userName, QString userPwd,
+                   QString connDbName, QString port,
+                   QString dataSourceName, QString databaseDriver):
+    m_window(NULL), m_hostName(host),
+    m_userName(userName),m_userPwd(userPwd),
+    m_connDbName(connDbName), m_port(port),
+    m_dataSourceName(dataSourceName), m_databaseDriver(databaseDriver),
+    m_bdatabaseOpen(false)
+{
+    initDatabase();
+}
+
 
 Database::~Database () {
     m_db.close ();
-//    releaseDatabaseConnectId(m_connName.toInt());
 }
 
 void Database::initDatabase() {
     m_connName = QString("%1").arg(getDatabaseConnectId());
     m_db = QSqlDatabase::addDatabase (m_databaseDriver, m_connName);
-    //    QString dataSourceName = m_dataSourceName;
-    //    m_db.setHostName(m_hostName);
-    //    m_db.setDatabaseName (dataSourceName);
-    //    m_db.setUserName (m_userName);
-    //    m_db.setPassword (m_userPwd);
-
     QString dsn = QString("Driver={sql server};SERVER=%1;PORT=%2;DATABASE=%3;UID=%4;PWD=%5;")
                   .arg(m_hostName)
                   .arg(m_port)
@@ -70,7 +80,6 @@ void Database::initDatabase() {
     } else {
         QString succStr = "Open database: " + m_connDbName  + ", "+ m_hostName
                         + ", " + m_connName +" successfully!";
-        qDebug() << "succStr: " << succStr;
         m_bdatabaseOpen = true;
     }
 }
@@ -183,13 +192,13 @@ QList<QStringList> Database::getDataByDate(QString startDate, QString endDate, Q
         QString keyValueStr = keyValueList.join(",");
         if (databaseName.indexOf("MarketData") >= 0 && bGetShortedDate == true) {
             QList<QList<int>> shortedStartEndDateList = getShortedStartEndDateList(startDate.toInt(), endDate.toInt(), databaseName);
-//            printList(shortedStartEndDateList, "shortedStartEndDateList");
+    //            printList(shortedStartEndDateList, "shortedStartEndDateList");
             for (int i = 0; i < shortedStartEndDateList.size(); ++i) {
                 int currStartDate = shortedStartEndDateList[i][0];
                 int currEndDate = shortedStartEndDateList[i][1];
                 QString sqlstr = QString("select %1 from %2 where TDATE >= %3 and TDATE <= %4 order by TDATE, TIME")
                                 .arg(keyValueStr).arg(completeTableName).arg(currStartDate).arg(currEndDate);
-//                qDebug() << sqlstr;
+    //                qDebug() << sqlstr;
                 queryObj.exec(sqlstr);
                  while(queryObj.next ()) {
                      QStringList tmpResult;
@@ -202,7 +211,7 @@ QList<QStringList> Database::getDataByDate(QString startDate, QString endDate, Q
         } else {
             QString sqlstr = QString("select %1 from %2 where TDATE >= %3 and TDATE <= %4 order by TDATE, TIME")
                             .arg(keyValueStr).arg(completeTableName).arg(startDate).arg(endDate);
-//            qDebug() << sqlstr;
+    //            qDebug() << sqlstr;
             queryObj.exec(sqlstr);
              while(queryObj.next ()) {
                  QStringList tmpResult;
@@ -356,11 +365,11 @@ QMap<QString, QStringList> Database::getSnapShootData(QString tableName, QString
     QMap<QString, QStringList> result;
     if(m_db.open ()) {
     QSqlQuery queryObj(m_db);
-//    QString sqlstr = QString("select * from [") + databaseName + "].[dbo].[" + tableName + "] ";
+    //    QString sqlstr = QString("select * from [") + databaseName + "].[dbo].[" + tableName + "] ";
     QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
     QString sqlstr = "select * from" + completeTableName + "where 时间 = (select max(时间) from " + completeTableName + ")";
 
-//    qDebug() <<"sqlStr: "<< sqlstr;
+    //    qDebug() <<"sqlStr: "<< sqlstr;
     queryObj.exec(sqlstr);
     int valueNumb = 7;
      while(queryObj.next ()) {
@@ -382,13 +391,11 @@ QMap<QString, QStringList> Database::getSnapShootData(QList<QString> tableNameAr
     QMap<QString, QStringList> result;
     if(m_db.open ()) {
         QSqlQuery queryObj(m_db);
-//        qDebug() << "tableNameArray: " << tableNameArray;
         for (int i = 0; i < tableNameArray.size(); ++i) {
             QString secode = tableNameArray[i];
             QString tableName = secode;
             QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
             QString sqlstr = "select * from" + completeTableName + "where 时间 = (select max(时间) from " + completeTableName + ")";
-//            qDebug() <<"sqlStr: "<< sqlstr;
             queryObj.exec(sqlstr);
             int valueNumb = 7;
              while(queryObj.next ()) {
@@ -397,9 +404,7 @@ QMap<QString, QStringList> Database::getSnapShootData(QList<QString> tableNameAr
                  for (int j = 1; j < valueNumb; ++j) {
                      signalData.append(queryObj.value (j).toString());
                  }
-                 result.insert(secode, signalData);
-//                 qDebug() << "signalData: " << signalData;
-             }
+                 result.insert(secode, signalData);             }
         }
     } else {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
@@ -415,11 +420,12 @@ QStringList Database::getSnapShootData(QString tableName, QStringList keyValueLi
         QString keyValueStr = keyValueList.join(",");
         QString sqlstr = QString("select top 1 %1 from %2 where 时间 = (select max(时间) from %2)")
                         .arg(keyValueStr).arg(completeTableName);
-//        qDebug() << "sqlstr: " << sqlstr;
         queryObj.exec(sqlstr);
-        while(queryObj.next()) {
-            for (int i = 0; i < keyValueList.size(); ++i) {
-//                qDebug() << queryObj.value (i).toString();
+        
+        while(queryObj.next()) 
+        {
+            for (int i = 0; i < keyValueList.size(); ++i) 
+            {
                 result.append(queryObj.value (i).toString());
             }
         }
@@ -503,6 +509,55 @@ QMap<QString, QList<QStringList>> Database::getSnapShootHistoryData(QList<QStrin
     return result;
 }
 
+QList<QStringList> Database::getSnapShootHistoryData(QString tableName, QString databaseName)
+{
+    QList<QStringList> result;
+    if(m_db.open()) 
+    {
+        QSqlQuery queryObj(m_db);
+        QString completeTableName = "[" + databaseName + "].[dbo].[" + tableName + "]";
+        QString sqlstr = "select * from" + completeTableName;
+        queryObj.exec(sqlstr);
+        int valueNumb = 7;
+        QList<QStringList> oneSecodeData;
+        while(queryObj.next ()) 
+        {
+            QStringList signalData;
+            QString secode = queryObj.value (0).toString();
+            for (int j = 1; j < valueNumb; ++j) 
+            {
+                     signalData.append(queryObj.value (j).toString());
+            }
+            result.append(signalData);
+        }
+    } else {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;    
+}
+
+QDate Database::getRealtimeDBDate()
+{
+    QDate result;
+    if(m_db.open ()) 
+    {
+        QSqlQuery queryObj(m_db);
+        QString sqlstr = "select * from [MarketData_RealTime].[dbo].[DataTime]";
+        queryObj.exec(sqlstr);
+        if (queryObj.next())
+        {
+            QString dateStr = queryObj.value(0).toString();
+            // qDebug() << "dateStr: " << dateStr;
+            result = getDate(dateStr);
+        }
+    } 
+    else 
+    {
+        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+    }
+    return result;    
+}
+
 QList<double> Database::getFutureSpread(QString futureName, QString databaseName) {
     QList<double> result;
     double spread = g_maxFutureSpread;
@@ -559,7 +614,7 @@ QList<QString> Database::getTableList(QString databaseName) {
     QList<QString> result;
     if(m_db.open ()) {
         QSqlQuery queryObj(m_db);
-        QString sqlstr = "select name from "+ databaseName +"..sysobjects where xtype= 'U'";
+        QString sqlstr = "select name from "+ databaseName +" ..sysobjects where xtype= 'U'";
         queryObj.exec(sqlstr);
         while(queryObj.next ()) {
              result.append(queryObj.value (0).toString());
@@ -613,7 +668,7 @@ QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> table
             queryObj.exec(sqlstr);
             int valueNumb = 4;
             QList<QStringList> oneSecodeData;
-//            qDebug() << "secode: " <<secode;
+    //            qDebug() << "secode: " <<secode;
              while(queryObj.next ()) {
                  QStringList signalData;
                  QString secode = queryObj.value (0).toString();
@@ -624,7 +679,7 @@ QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> table
                  }
                  oneSecodeData.append(signalData);
              }
-//             qDebug() << "oneSecodeData.size: " <<oneSecodeData.size();
+    //             qDebug() << "oneSecodeData.size: " <<oneSecodeData.size();
              if (oneSecodeData.size() > 0) {
                  result.insert(secode, oneSecodeData);
              }      
@@ -632,7 +687,7 @@ QMap<QString, QList<QStringList>> Database::getAnnouncement(QList<QString> table
     } else {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }
-//    qDebug() << "result: " << result.size();
+    //    qDebug() << "result: " << result.size();
     return result;
 }
 
@@ -643,7 +698,7 @@ QList<int> Database::getOneDayTimeList(QString tableName, QString databaseName) 
         QString completeTableName = QString("[%1].[dbo].[%2]").arg(databaseName).arg(tableName);
         QString sqlstr = QString("select TIME from %1 where TDATE = (select min(TDATE) from %1) order by TIME")
                         .arg(completeTableName);
-        qDebug() << "sqlstr " << sqlstr;
+            // qDebug() << "sqlstr " << sqlstr;
         queryObj.exec(sqlstr);
          while(queryObj.next ()) {
              int curr_time = queryObj.value (0).toString().toInt();
@@ -770,9 +825,11 @@ QString Database::insertData(QString tableName, QList<QString> data) {
     QString msg = "SUCCESS";
     if (m_db.open()) {
         QString insert_str = getInsertStr(tableName, data);
+        
         QSqlQuery queryObj(m_db);
         bool result = queryObj.exec(insert_str);
         if (!result) {
+            qDebug() << "insert_str: " << insert_str;
             msg = "insert " + tableName +" faild";
         }
     } else {
@@ -800,5 +857,30 @@ QString Database::updateData(QString tableName, QList<QString> data) {
     return msg;
 }
 
+class TestDatabase
+{
+public:
+    TestDatabase();
 
+    void test_getRealtimeDBDate();
+};
 
+TestDatabase::TestDatabase()
+{
+    test_getRealtimeDBDate();
+}
+
+void TestDatabase::test_getRealtimeDBDate()
+{
+    QString dbHost = "192.168.211.162";
+    Database dbObj = Database(dbHost);
+    qDebug() << "RealtimeDB_Date: " << dbObj.getRealtimeDBDate();
+    QStringList keyList;
+    keyList << "日期" << "时间";
+    // qDebug() <<dbObj.getSnapShootData("000300.SH", keyList);
+}
+
+void TestDatabaseMain()
+{
+    TestDatabase testDatabaseObj;
+}

@@ -133,7 +133,8 @@ void BaseChart::showExtractDialog_slot() {
     currExtractWindow->show();
 }
 
-void BaseChart::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fileDir, bool bOpenDesFile) {
+void BaseChart::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fileDir, bool bOpenDesFile) 
+{
     QList<QStringList> excelData = getExcelData(choosenKeyValueList);
     QString fileName = getExcelFileName(choosenKeyValueList, fileDir);
     qDebug() << "fileName: " << fileName;
@@ -150,7 +151,8 @@ void BaseChart::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fil
     }
 }
 
-QCategoryAxis* BaseChart::getTimeAxisX (QList<QString> timeList, int tickCount) {
+QCategoryAxis* BaseChart::getTimeAxisX (QList<QString> timeList, int tickCount) 
+{
     QCategoryAxis* axisX = new QCategoryAxis;
     axisX->setStartValue(0);
     QList<int> axisXPosList = getNumbList(timeList.size(), tickCount);
@@ -164,6 +166,7 @@ QCategoryAxis* BaseChart::getTimeAxisX (QList<QString> timeList, int tickCount) 
     return axisX;
 }
 
-void BaseChart::closeEvent(QCloseEvent *event) {
+void BaseChart::closeEvent(QCloseEvent *event) 
+{
     emit windowClose_signal(m_windowID);
 }
