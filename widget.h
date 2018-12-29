@@ -17,9 +17,11 @@
 #include <QFileInfo>
 #include <QListWidget>
 
+#include "WorkProgressDialog.h"
 #include "announcementform.h"
 #include "database.h"
 #include "generateportfolioform.h"
+#include "historydata.h"
 
 //#include "excel.h"
 //#include "strategymodel.h"
@@ -38,6 +40,7 @@ public:
     explicit Widget(QWidget *parent = 0);
 
     void initCommonData();
+    void setDBTableNameMap();
     void initFileDir();
 
     void initWidegt();    
@@ -51,6 +54,7 @@ public:
     void initTableContextMenuWidget();
     void setPortfolioTableWidget();
     void setBuySalePortfolioTableWidget();
+    void initWorkProgressDialog();
 
     void initCSSParamComBox();
 
@@ -66,9 +70,11 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 signals:
+    void startGetTableList_signal();
 
 public slots:
     void windowClose_slot(int windowID);
+    void getTableList_slot(QString timeType, QStringList tableList);
 
 private slots:
     void on_chooseStartDate_editingFinished();
@@ -152,6 +158,12 @@ private:
     QListWidget*             m_aveParamListWidget;
     QListWidget*             m_cssParamListWidget;
     QListWidget*             m_energyDataFreqListWidget;
+    QStringList              m_timeTypeList;
+
+    QMap<QString, QStringList>   m_databaseTableNameMap;
+    WorkProgressDialog*          m_workProgressDialog;
+    HistoryData*                 m_histDataWorker;
+    QThread                      m_histDataThread;
 };
 
 //    void initCalendar();

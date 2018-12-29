@@ -28,6 +28,8 @@ int main(int argc, char *argv[])
     spreadWindow.setWindowTitle("点差客户端");
     spreadWindow.show();
 
+    spreadWindow.setDBTableNameMap();
+
 //    GeneratePortfolioForm genePorfolioWindow;
 //    genePorfolioWindow.setWindowTitle("生成组合客户端");
 //    genePorfolioWindow.show();

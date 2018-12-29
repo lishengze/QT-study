@@ -42,32 +42,6 @@ using std::max;
 
 ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
                      int chartViewID, QString dbhost, bool isBuySalePortfolio,
-                     QString hedgeIndexCode, int hedgeIndexCount, QList<int> macdTime,                     
-                     int mainAveNumb, int subAveNumb, int energyAveNumb,
-                     double css12Rate, double mainCssRate1, double mainCssRate2,
-                     double energyCssRate1, double energyCssRate2,
-                     double maxCSS, double minCSS,
-                     QMap<QString, int> strategyMap, QString strategyName,
-                     QMap<QString, int> buyStrategyMap, QMap<QString, int> saleStrategyMap,
-                     bool isRealTime, QString startDate, QString endDate, QString timeType):
-                     BaseChart(chartViewID, parent), m_programInfoTableView(programInfoTableView),
-                     m_chartViewID(chartViewID), m_dbhost(dbhost), m_isBuySalePortfolio(isBuySalePortfolio),
-                     m_hedgeIndexCode(hedgeIndexCode), m_hedgeIndexCount(hedgeIndexCount), m_macdTime(macdTime),
-                     m_mainAveNumb(mainAveNumb), m_subAveNumb(subAveNumb), m_energyAveNumb(energyAveNumb),
-                     m_css12Rate(css12Rate), m_mainCssRate1(mainCssRate1), m_mainCssRate2(mainCssRate2),
-                     m_energyCssRate1(energyCssRate1), m_energyCssRate2(energyCssRate2),
-                     m_maxCSS(maxCSS), m_minCSS(minCSS),
-                     m_portfolioMap(strategyMap), m_strategyName(strategyName),
-                     m_buyStrategyMap(buyStrategyMap), m_saleStrategyMap(saleStrategyMap),
-                     m_isRealTime(isRealTime), m_startDate(startDate), m_endDate(endDate), m_timeType(timeType),
-                     ui(new Ui::ChartForm)
-{
-    initCommonData();
-    initHistoryData();
-}
-
-ChartForm::ChartForm(QWidget *parent, QTableView* programInfoTableView,
-                     int chartViewID, QString dbhost, bool isBuySalePortfolio,
                      QString hedgeIndexCode, int hedgeIndexCount, QList<int> macdTime,
                      QMap<QString, int> strategyMap, QString strategyName,
                      QMap<QString, int> buyStrategyMap, QMap<QString, int> saleStrategyMap,
@@ -107,13 +81,53 @@ ChartForm::~ChartForm()
     if (NULL != m_histdataWorker) {
         m_histdataWorker = NULL;
     }
+}
 
-//    for (int i = 0; i < m_extractWindowList.size(); ++i) {
-//        if (m_extractWindowList[i] != NULL) {
-//            delete m_m_extractWindowList[i];
-//            m_extractWindowList[i] = NULL;
-//        }
-//    }
+void ChartForm::initHistoryData () {
+    m_databaseName = "MarketData_" + m_timeType;
+    m_keyValueList << "TCLOSE" << "VOTRUNOVER";
+
+    m_threadNumb = m_secodeNameList.size();
+    if (m_timeType.contains("m") && m_timeType != "month") {
+        m_timeTypeFormat = "yyyy-MM-dd h:mm";
+    } else {
+        m_timeTypeFormat = "yyyy-MM-dd";
+    }
+    m_chartXaxisTickCount = 10;
+
+    initHistdataThread();
+
+    emit getHistDataSignal();
+}
+
+void ChartForm::initRealTimeData() {
+    m_databaseName = "MarketData_RealTime";
+    m_updateTime = 3000;
+    m_threadNumb = m_secodeNameList.size();
+    m_timeTypeFormat = "hh:mm:ss";
+    m_chartXaxisTickCount = 5;
+    m_getPreCloseDataTime = QTime(9,20,0);
+    m_getPreCloseDataUpdateTime = 10000;
+
+    initMonitorThread();
+
+    connect(&m_getPreCloseDataTimer, SIGNAL(timeout()),
+            this, SLOT(updatePrecloseData()));
+
+    if (isTradingStart()) {
+        initHistdataThread();
+        emit getPreCloseSpread();
+    } else {
+        initLayout();
+
+        if (QTime::currentTime() < m_getPreCloseDataTime) {
+            m_getPreCloseDataTimer.start(m_getPreCloseDataUpdateTime);
+        } else {
+            emit getPreCloseSpread();
+        }
+
+        m_monitorWorker->startTimer();
+    }
 }
 
 void ChartForm::initCommonData() {
@@ -202,60 +216,7 @@ QList<QMyChartView*> ChartForm::getChartViewList() {
     return result;
 }
 
-void ChartForm::initHistoryData () {
-    m_databaseName = "MarketData_" + m_timeType;
-    m_keyValueList << "TCLOSE" << "VOTRUNOVER";
-
-    m_threadNumb = m_secodeNameList.size();
-    if (m_timeType.contains("m") && m_timeType != "month") {
-        m_timeTypeFormat = "yyyy-MM-dd h:mm";
-    } else {
-        m_timeTypeFormat = "yyyy-MM-dd";
-    }
-    m_chartXaxisTickCount = 10;
-
-    initHistdataThread();
-
-    emit getHistDataSignal();
-}
-
-void ChartForm::initRealTimeData() {
-    m_databaseName = "MarketData_RealTime";
-    m_updateTime = 3000;
-    m_threadNumb = m_secodeNameList.size();
-    m_timeTypeFormat = "hh:mm:ss";
-    m_chartXaxisTickCount = 5;
-    m_getPreCloseDataTime = QTime(9,20,0);
-    m_getPreCloseDataUpdateTime = 10000;
-
-    initMonitorThread();
-
-    connect(&m_getPreCloseDataTimer, SIGNAL(timeout()),
-            this, SLOT(updatePrecloseData()));
-
-    if (isTradingStart()) {
-        initHistdataThread();
-        emit getPreCloseSpread();
-    } else {
-        initLayout();        
-
-        if (QTime::currentTime() < m_getPreCloseDataTime) {
-            m_getPreCloseDataTimer.start(m_getPreCloseDataUpdateTime);
-        } else {
-            emit getPreCloseSpread();
-        }
-
-        m_monitorWorker->startTimer();
-    }
-
-
-}
-
 void ChartForm::initHistdataThread() {
-//    int maxPreTimeNumb = max(max(m_mainAveNumb, m_subAveNumb), m_energyAveNumb) + 10;
-//    QString newStartDate = getPreDate(m_startDate, m_timeType, maxPreTimeNumb);
-//    qDebug() << QString("OriStartDate: %1, NewStartDate: %2").arg(m_startDate).arg(newStartDate);
-
     m_histdataWorker = new HistoryData(m_chartViewID, m_isBuySalePortfolio,
                                        m_dbhost, m_databaseName,
                                        m_isRealTime, m_threadNumb, m_secodeNameList,

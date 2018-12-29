@@ -104,6 +104,11 @@ HistoryData::HistoryData(QString dbhost, QString databaseName,
     initReadDataSignal();
 }
 
+HistoryData::HistoryData(QString dbhost, QStringList timeTypeList, QObject* parent):
+     m_timeTypeList(timeTypeList), QObject(parent)
+{
+    m_database = new Database("0", dbhost);
+}
 
 HistoryData::~HistoryData() {
     for (int i = 0; i < m_dataProcessThreadList.size(); ++i) {
@@ -181,6 +186,16 @@ void HistoryData::initReadDataSignal() {
         curThread->start();
         m_dataReaderList.append(curDataReader);
         m_dataReaderThreadList.append(curThread);
+    }
+}
+
+void HistoryData::startGetTableList_slot()
+{
+    for (int i = 0 ; i<m_timeTypeList.size(); ++i)
+    {
+        QString databaseName = QString("MarketData_%1").arg(m_timeTypeList[i]);
+        QStringList result = m_database->getTableList(databaseName);
+        emit getTableList_signal(m_timeTypeList[i], result);
     }
 }
 
@@ -284,7 +299,7 @@ void HistoryData::getProcessedData_slot (QList<QList<double>> allData) {
         }
         else
         {
-            timeType = "yyyyMMdd hh:mm";
+            timeType = "yyyyMMdd hhmm";
         }
         for (int i = 0;i < allData[0].size(); ++i)
         {
@@ -403,8 +418,13 @@ void HistoryData::getCSSData_slot() {
     QStringList keyList;
     keyList << "TDATE" << "TIME" << "TCLOSE" << "TOPEN" << "PCTCHG" << "VATRUNOVER" ;
     qDebug() << m_startDate << m_endDate << m_selectCodeName << m_databaseName;
+
     QList<QStringList> selectDBData = m_database->getDataByDate(m_startDate, m_endDate, keyList,
                                                                 m_selectCodeName, m_databaseName);
+    int secStartPos = getDelayStartDate(selectDBData);
+    qDebug() << "secStartPos: " << secStartPos;
+    selectDBData = getSubList(selectDBData, secStartPos, selectDBData.size());
+
     QList<QString> timeList;
     QList<double> typList;
     QList<double> closeList;
@@ -414,6 +434,9 @@ void HistoryData::getCSSData_slot() {
         QList<QStringList> hedgedDBData = m_database->getDataByDate(m_startDate, m_endDate, keyList,
                                                                     m_hedgedCodeName, m_databaseName);
 
+        int hedStartPos = getDelayStartDate(hedgedDBData);
+        qDebug() << "hedStartPos: " << hedStartPos;
+        hedgedDBData = getSubList(hedgedDBData, hedStartPos, hedgedDBData.size());
         setHedgedTYPClose(selectDBData, hedgedDBData, isMinuteType(m_databaseName),
                           timeList, typList, closeList);
     }
@@ -425,6 +448,7 @@ void HistoryData::getCSSData_slot() {
     QList<QList<double>> aveList = getAVEList(closeList, m_aveNumbList, m_isEMAList);
     aveList.insert(0, closeList);
 
+    // printList(typList, "TypList");
     QList<double> mainList = getCSSList(typList,  m_mainAveNumb, m_css12Rate,
                                         m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);
     QList<double> subValueList = getCSSList(typList,  m_subAveNumb, m_css12Rate,

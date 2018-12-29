@@ -90,10 +90,10 @@ void MonitorRealTimeData::initIndexHedgeTimer() {
 
 void MonitorRealTimeData::initIndexHedgeMetaInfo() {
     m_indexHedgeMetaInfo.insert("000300.SH", 300);
-    m_indexHedgeMetaInfo.insert("000016.SH", 50);
+    m_indexHedgeMetaInfo.insert("000016.SH", 300);
     m_indexHedgeMetaInfo.insert("000852.SH", 1000);
     m_indexHedgeMetaInfo.insert("000904.SH", 200);
-    m_indexHedgeMetaInfo.insert("000905.SH", 500);
+    m_indexHedgeMetaInfo.insert("000905.SH", 200);
     m_indexHedgeMetaInfo.insert("000906.SH", 800);
     m_indexHedgeMetaInfo.insert("399903.SZ", 100);
 }

@@ -55,6 +55,8 @@ public:
                 double maxCSS, double minCSS, int id = 0,
                 QObject *parent = 0);
 
+    HistoryData(QString dbhost, QStringList timeList, QObject* parent = 0);
+
     ~HistoryData();
 
     void initCommonData();
@@ -85,8 +87,11 @@ signals:
     void sendHistIndexError_signal(QString);
 
     void sendCSSData_signal(QList<QString>, QList<QList<double>>, QList<QList<double>>, int);
+    void getTableList_signal(QString timeType, QStringList tableList);
 
 public slots:
+    void startGetTableList_slot();
+
     void getHistData();
     void receiveOriginalData(QMap<QString, QList<QStringList>> subThreadData);
     void getProcessedData_slot(QList<QList<double>> allData);
@@ -105,7 +110,7 @@ private:
 
     int                                m_chartViewID;
     bool                               m_isBuySalePortfolio;
-
+    QStringList                        m_timeTypeList;
     QString                            m_dbhost;
     QString                            m_databaseName;
     QString                            m_startDate;

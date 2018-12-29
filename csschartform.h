@@ -77,6 +77,7 @@ public:
     void setChartView();
     void setLabels();
     void setColors();
+    void setWindowTitleName();
     void updateLabelSeries(int index, int dataID);
 
     virtual void initExtractKeyValueList();
@@ -146,6 +147,17 @@ private:
     QList<QList<QList<double>>>             m_cssList;
     QList<QList<QString>>                   m_timeList;
     QList<QList<double>>                    m_indexDataList;
+    QList<QList<double>>                    m_hedgedDataList;
+
+    QList<QList<QList<double>>>             m_aveListStore;
+    QList<QList<QList<double>>>             m_cssListStore;
+    QList<QList<QString>>                   m_timeListStore;
+    QList<QList<double>>                    m_indexDataListStore;
+    QList<QList<double>>                    m_hedgedDataListStore;
+    QString                                 m_realStartTime;
+    QString                                 m_realEndTime;
+    QString                                 m_titleName;
+
     QList<int>                              m_currDataIDList;
 
     QList<QGridLayout*>                     m_gridLayoutList;

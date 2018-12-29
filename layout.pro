@@ -47,7 +47,8 @@ SOURCES  += main.cpp\
     ../public-files/public-function/time_func.cpp \
     ../public-files/public-function/widget_func.cpp \
     csschartformone.cpp \
-    csschartform.cpp
+    csschartform.cpp \
+    workprogressdialog.cpp
 
 HEADERS  += widget.h \
             toolfunc.h \
@@ -79,7 +80,8 @@ HEADERS  += widget.h \
     ../public-files/public-function/time_func.h \
     ../public-files/public-function/widget_func.h \
     csschartformone.h \
-    csschartform.h
+    csschartform.h \
+    workprogressdialog.h
 
 FORMS    += widget.ui \
     chartform.ui \
@@ -91,7 +93,8 @@ FORMS    += widget.ui \
     extractdatawindow.ui \
     indexchart.ui \
     csschartformone.ui \
-    csschartform.ui
+    csschartform.ui \
+    workprogressdialog.ui
 
 include(qtxlsx/src/xlsx/qtxlsx.pri)
 

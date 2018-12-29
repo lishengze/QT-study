@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
 ** Form generated from reading UI file 'workprogressdialog.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.7.1
@@ -40,10 +40,6 @@ public:
         wrok_progressBar->setObjectName(QStringLiteral("wrok_progressBar"));
         wrok_progressBar->setGeometry(QRect(170, 70, 221, 41));
         wrok_progressBar->setValue(24);
-        stop_pushButton = new QPushButton(WorkProgressDialog);
-        stop_pushButton->setObjectName(QStringLiteral("stop_pushButton"));
-        stop_pushButton->setEnabled(true);
-        stop_pushButton->setGeometry(QRect(480, 150, 81, 21));
 
         retranslateUi(WorkProgressDialog);
 
@@ -54,7 +50,6 @@ public:
     {
         WorkProgressDialog->setWindowTitle(QApplication::translate("WorkProgressDialog", "Dialog", Q_NULLPTR));
         info_label->setText(QApplication::translate("WorkProgressDialog", "WorkInfo", Q_NULLPTR));
-        stop_pushButton->setText(QApplication::translate("WorkProgressDialog", "\345\201\234\346\255\242\346\217\220\345\217\226", Q_NULLPTR));
     } // retranslateUi
 
 };

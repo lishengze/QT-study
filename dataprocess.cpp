@@ -60,18 +60,18 @@ DataProcess::DataProcess(QMap<QString, QList<QStringList>>& oridata,
 
 void DataProcess::initIndexHedgeMetaInfo() {
     m_indexHedgeMetaInfo.insert("SH000300", 300);
-    m_indexHedgeMetaInfo.insert("SH000016", 50);
+    m_indexHedgeMetaInfo.insert("SH000016", 300);  // 上证50
     m_indexHedgeMetaInfo.insert("SH000852", 1000);
     m_indexHedgeMetaInfo.insert("SH000904", 200);
-    m_indexHedgeMetaInfo.insert("SH000905", 500);
+    m_indexHedgeMetaInfo.insert("SH000905", 200);
     m_indexHedgeMetaInfo.insert("SH000906", 800);
     m_indexHedgeMetaInfo.insert("SZ399903", 100);
 
     m_indexHedgeMetaInfo.insert("000300.SH", 300);
-    m_indexHedgeMetaInfo.insert("000016.SH", 50);
+    m_indexHedgeMetaInfo.insert("000016.SH", 300);
     m_indexHedgeMetaInfo.insert("000852.SH", 1000);
     m_indexHedgeMetaInfo.insert("000904.SH", 200);
-    m_indexHedgeMetaInfo.insert("000905.SH", 500);
+    m_indexHedgeMetaInfo.insert("000905.SH", 200);
     m_indexHedgeMetaInfo.insert("000906.SH", 800);
     m_indexHedgeMetaInfo.insert("399903.SZ", 100);
 }
@@ -127,9 +127,12 @@ QList<QList<double>> DataProcess::computeAllData() {
         allData.append(m_subValueList);
         allData.append(m_energyValueList);
         allData += m_aveList;
+        allData.append(m_hedgedData);
     }
 
     allData.append(m_indexCodeData);
+
+    qDebug() << "allData.size: " << allData.size();
     return allData;
 }
 
@@ -153,9 +156,6 @@ QList<QList<double>> DataProcess::computeHedgedData () {
                                      m_indexHedgeMetaInfo[m_hedgeIndexCode]);
     }
 
-//    qDebug() << "pointDataList.size: " << pointDataList.size()
-//             << "hedgedResult.size: " << hedgedResult.size();
-
     m_timeData = hedgedResult[0];
     m_hedgedData = hedgedResult[1];
     m_indexCodeData = hedgedResult[2];
@@ -169,11 +169,15 @@ QList<QList<double>> DataProcess::computeHedgedData () {
 
     if (m_isCSSChart)
     {
-        m_aveList = getAVEList(m_hedgedData, m_aveNumbList, m_isEMAList);
-        m_aveList.insert(0, m_hedgedData);
-
         QList<double> typList;
-        getHedegdTYP(m_hedgedData, m_indexCodeData, typList);
+        QList<double> earningList;
+        getHedegdTYP(m_hedgedData, m_indexCodeData, typList, earningList);
+
+        qDebug() << "typList.size: " << typList.size()
+                 << "earningList.size: " << earningList.size();
+
+        m_aveList = getAVEList(earningList, m_aveNumbList, m_isEMAList);
+        m_aveList.insert(0, earningList);
 
         m_mainList = getCSSList(typList,  m_mainAveNumb, m_css12Rate,
                                 m_mainCssRate1, m_mainCssRate2, m_maxCSS, m_minCSS,false);

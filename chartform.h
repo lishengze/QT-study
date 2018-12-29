@@ -64,19 +64,6 @@ public:
               QMap<QString, int> saleStrategyList = EmpytQStringIntMap(),
               bool isRealTime = true, QString startDate ="", QString endDate="", QString timeType ="");
 
-
-    ChartForm(QWidget *parent, QTableView* programInfoTableView,
-              int chartViewID, QString dbhost, bool isBuySalePortfolio,
-              QString hedgeIndexCode, int hedgeIndexCount, QList<int> macdTime,              
-              int mainAveNumb, int subAveNumb, int energyAveNumb,
-              double css12Rate, double mainCssRate1, double mainCssRate2,
-              double energyCssRate1, double energyCssRate2,
-              double maxCSS, double minCSS,
-              QMap<QString, int> strategyMap = EmpytQStringIntMap(), QString strategyName="",
-              QMap<QString, int> buyStrategyList = EmpytQStringIntMap(),
-              QMap<QString, int> saleStrategyList = EmpytQStringIntMap(),
-              bool isRealTime = true, QString startDate ="", QString endDate="", QString timeType ="");
-
     ~ChartForm();
 
     void registSignalParamsType();

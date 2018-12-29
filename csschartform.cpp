@@ -47,6 +47,7 @@ CSSChartForm::CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList
     initColors();
     registSignalParamsType();
     startGetData();
+    qDebug() << m_selectCodeName << m_hedgedCodeName;
 }
 
 CSSChartForm::CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList,
@@ -164,6 +165,13 @@ void CSSChartForm::initListData() {
         m_cssList.append(emptyCSSData);
         m_timeList.append(emptyTimeData);
         m_indexDataList.append(emptyIndexData);
+        m_hedgedDataList.append(emptyIndexData);
+
+        m_aveListStore.append(emptyAVEData);
+        m_cssListStore.append(emptyCSSData);
+        m_timeListStore.append(emptyTimeData);
+        m_indexDataListStore.append(emptyIndexData);
+        m_hedgedDataListStore.append(emptyIndexData);
 
         QList<QLineSeries*> emptyLineSeries;
         m_aveLineSeriesList.append(emptyLineSeries);
@@ -207,7 +215,7 @@ void CSSChartForm::initHistoryData() {
     for (int i = 0; i < m_timeTypeList.size(); ++i) {
         QString timeType = m_timeTypeList[i];
         QString databaseName = m_databaseNameList[i];
-        int maxPreTimeNumb = Max(m_aveNumbList, 0, m_aveNumbList.size());
+        int maxPreTimeNumb = Max(m_aveNumbList, 0, m_aveNumbList.size()) + 90;
         QString newStartDate = getPreDate(m_startDate, timeType, maxPreTimeNumb);
         qDebug() << QString("maxPreTimeNumb: %1, newStartDate: %2").arg(maxPreTimeNumb).arg(newStartDate);
         HistoryData* histdataWorker;
@@ -329,12 +337,14 @@ void CSSChartForm::registSignalParamsType() {
 void CSSChartForm::sendCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
                                     QList<QList<double>> cssList, int dataID) {
     QMutexLocker locker(&m_mutex);
-//    qDebug() << "CSSChartForm::sendCSSData_slot: " << dataID;
     int startPos = getStartIndex(m_startDate, timeList);
 
     qDebug() <<"dataID: " << dataID <<", startPos: " << startPos;
 
     m_timeList[dataID] = getSubList(timeList, startPos, timeList.size());
+    m_realStartTime = m_timeList[dataID][0];
+    m_realEndTime = m_timeList[dataID].last();
+
     for (int i = 0; i < m_aveNumbList.size() + 1; ++i) {
         m_aveList[dataID].append(getSubList(aveList[i], startPos, aveList[i].size()));
     }
@@ -345,7 +355,29 @@ void CSSChartForm::sendCSSData_slot(QList<QString> timeList, QList<QList<double>
 
     if(m_isPortfolio)
     {
+        m_hedgedDataList[dataID] = getSubList(aveList[aveList.size()-2], startPos, aveList.last().size()) ;
         m_indexDataList[dataID] = getSubList(aveList.last(), startPos, aveList.last().size()) ;
+    }
+
+    startPos = 0;
+    m_timeListStore[dataID] = getSubList(timeList, startPos, timeList.size());
+//    qDebug() << QString("m_timeListStore[%1].size: %2").arg(dataID).arg(timeList.size());
+    for (int i = 0; i < m_aveNumbList.size() + 1; ++i) {
+        m_aveListStore[dataID].append(getSubList(aveList[i], startPos, aveList[i].size()));
+//        qDebug() << QString("aveList[%1].size: %2").arg(i).arg(aveList[i].size());
+    }
+
+    for (int i = 0; i < cssList.size(); ++i) {
+        m_cssListStore[dataID].append(getSubList(cssList[i], startPos, cssList[i].size()));
+//        qDebug() << QString("cssList[%1].size: %2").arg(i).arg(cssList[i].size());
+    }
+
+    if(m_isPortfolio)
+    {
+        m_hedgedDataListStore[dataID] = getSubList(aveList[aveList.size()-2], startPos, aveList.last().size()) ;
+        m_indexDataListStore[dataID] = getSubList(aveList.last(), startPos, aveList.last().size()) ;
+//        qDebug() << QString("m_hedgedDataListStore[%1].size: %2,  m_indexDataListStore[%1].size: %3")
+//                    .arg(dataID).arg(aveList[aveList.size()-2].size()).arg(aveList.last().size());
     }
 
     setChart(dataID);
@@ -357,6 +389,7 @@ void CSSChartForm::sendCSSData_slot(QList<QString> timeList, QList<QList<double>
         setLabels();
         setColors();
         connectMarkers();
+        setWindowTitleName();
     }
 }
 
@@ -675,6 +708,32 @@ void CSSChartForm::setColors() {
     }
 }
 
+void CSSChartForm::setWindowTitleName()
+{
+    if (m_isPortfolio)
+    {
+        m_titleName = QString("%1_%2_%3_%4.xlsx").arg(m_portfolioName)
+                                               .arg(m_timeTypeList.join("_"))
+                                               .arg(m_realStartTime).arg(m_realEndTime);
+    }
+    else
+    {
+        if (m_hedgedCodeName.size() > 0)
+        {
+            m_titleName += QString("%1_%2_%3_%4_%5.xlsx").arg(m_selectCodeName).arg(m_hedgedCodeName)
+                                                      .arg(m_timeTypeList.join("_"))
+                                                      .arg(m_realStartTime).arg(m_realEndTime);
+        }
+        else
+        {
+            m_titleName += QString("%1_%2_%3_%4.xlsx").arg(m_selectCodeName)
+                                                   .arg(m_timeTypeList.join("_"))
+                                                   .arg(m_realStartTime).arg(m_realEndTime);
+        }
+    }
+    this->setWindowTitle(m_titleName);
+}
+
 void CSSChartForm::connectMarkers()
 {
     // Connect all markers to handler
@@ -703,15 +762,10 @@ void CSSChartForm::handleMarkerClicked()
 {
     QLegendMarker* marker = qobject_cast<QLegendMarker*> (sender());
     Q_ASSERT(marker);
-//    qDebug() << "handleMarkerClicked";
 
-    // Toggle visibility of series
     marker->series()->setVisible(!marker->series()->isVisible());
 
-    // Turn legend marker back to visible, since hiding series also hides the marker
-    // and we don't want it to happen now.
     marker->setVisible(true);
-    // Dim the marker, if series is not visible
     qreal alpha = 1.0;
 
     if (!marker->series()->isVisible()) {
@@ -901,18 +955,28 @@ QList<QMyChartView*> CSSChartForm::getChartViewList() {
 
 QString CSSChartForm::getExcelFileName(QStringList keyValueList, QString fileDir) {
     QString fileName = fileDir;
-    if (m_isPortfolio)
-    {
-        fileName += QString("%1_%2_%3_%4.xlsx").arg(m_portfolioName)
-                                               .arg(m_timeTypeList.join("_"))
-                                               .arg(m_startDate).arg(m_endDate);
-    }
-    else
-    {
-        fileName += QString("%1_%2_%3_%4.xlsx").arg(m_selectCodeName)
-                                               .arg(m_timeTypeList.join("_"))
-                                               .arg(m_startDate).arg(m_endDate);
-    }
+    fileName += m_titleName;
+//    if (m_isPortfolio)
+//    {
+//        fileName += QString("%1_%2_%3_%4.xlsx").arg(m_portfolioName)
+//                                               .arg(m_timeTypeList.join("_"))
+//                                               .arg(m_startDate).arg(m_endDate);
+//    }
+//    else
+//    {
+//        if (m_hedgedCodeName.size() > 0)
+//        {
+//            fileName += QString("%1_%2_%3_%4.xlsx").arg(m_selectCodeName)
+//                                                   .arg(m_timeTypeList.join("_"))
+//                                                   .arg(m_startDate).arg(m_endDate);
+//        }
+//        else
+//        {
+//            fileName += QString("%1_%2_%3_%4_%5.xlsx").arg(m_selectCodeName).arg(m_hedgedCodeName)
+//                                                      .arg(m_timeTypeList.join("_"))
+//                                                      .arg(m_startDate).arg(m_endDate);
+//        }
+//    }
     keyValueList;
     return fileName;
 }
@@ -928,12 +992,12 @@ void CSSChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString 
         QString sheetName = m_timeTypeList[i];
         QList<QStringList> currSheetData;
 
-        currSheetData.append(m_timeList[i]);
+        currSheetData.append(m_timeListStore[i]);
         currSheetData[0].insert(0, "时间");
 
-        for (int j = 0; j < m_aveList[i].size(); ++j) {
+        for (int j = 0; j < m_aveListStore[i].size(); ++j) {
             QStringList stringListData;
-            for (double data : m_aveList[i][j]) {
+            for (double data : m_aveListStore[i][j]) {
                 stringListData.append(QString("%1").arg(data));
             }
             if(j == 0) {
@@ -948,9 +1012,9 @@ void CSSChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString 
             currSheetData.append(stringListData);
         }
 
-        for (int j = 0; j < m_cssList[i].size(); ++j) {
+        for (int j = 0; j < m_cssListStore[i].size(); ++j) {
             QStringList stringListData;
-            for (double data : m_cssList[i][j]) {
+            for (double data : m_cssListStore[i][j]) {
                 stringListData.append(QString("%1").arg(data));
             }
             switch (j) {
@@ -970,11 +1034,19 @@ void CSSChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString 
         if (m_isPortfolio)
         {
             QStringList stringListData;
-            for (double data : m_indexDataList[i]) {
+            for (double data : m_indexDataListStore[i]) {
                 stringListData.append(QString("%1").arg(data));
             }
             stringListData.insert(0, m_hedgeIndexCode);
             currSheetData.append(stringListData);
+
+            stringListData.clear();
+            for (double data : m_hedgedDataListStore[i]) {
+                stringListData.append(QString("%1").arg(data));
+            }
+            stringListData.insert(0, QString("对冲值"));
+            currSheetData.append(stringListData);
+
         }
 
         int result = writeMatrixData(fileName, currSheetData, sheetName, true, false);
