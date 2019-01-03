@@ -1,9 +1,14 @@
 ﻿#include "secode_func.h"
 #include "database.h"
 #include "id_func.h"
+#include "excel_func.h"
+#include <QCoreApplication>
 #include <QList>
+#include <QFile>
+#include <QDebug>
 
-bool isCodeInDatabase(QString codeName, QString databaseName, QString dbHost) {
+bool isCodeInDatabase(QString codeName, QString databaseName, QString dbHost)
+{
     Database database_obj = Database("0", dbHost);
     QStringList tableList = database_obj.getTableList(databaseName);
     if (tableList.indexOf(codeName) >= 0) {
@@ -15,15 +20,83 @@ bool isCodeInDatabase(QString codeName, QString databaseName, QString dbHost) {
 }
 
 QString completeSecode(QString secode, QString style) {
-    if (secode.size() > 6) {
-        return secode;
-    }
-
-    while (secode.size() < 6) {
+    while (secode.size() < 6) 
+    {
         secode.prepend("0");
     }
 
+    if (style == "tinysoft") 
+    {
+        if (secode.size() == 9)
+        {
+            if (secode.endsWith("SH"))
+            {
+                secode = secode.remove(6,3).prepend("SH");
+            }
+
+            if (secode.endsWith("SZ"))
+            {
+                secode = secode.remove(6,3).prepend("SZ");
+            }
+        }
+
+        if (secode.size() == 6)
+        {
+            if (secode.startsWith("6"))
+            {
+                secode.prepend("SH");
+            } 
+            else 
+            {
+                secode.prepend("SZ");
+            }            
+        }
+    }
+
+    if (style == "wind") 
+    {
+        if (secode.size() == 8)
+        {
+            if (secode.startsWith("SH"))
+            {
+                secode = secode.remove(0,2).append(".SH");
+            }
+
+            if (secode.startsWith("SZ"))
+            {
+                secode = secode.remove(0,2).append(".SZ");
+            }
+        }
+
+        if (secode.size() == 6)
+        {
+            if (secode.startsWith("6"))
+            {
+                secode.append(".SH");
+            } 
+            else 
+            {
+                secode.append(".SZ");
+            }            
+        }        
+    }
+
+    if (style == "ori")
+    {
+        if (secode.size() == 8)
+        {
+            secode = secode.remove(0,2);
+        }  
+
+        if (secode.size() == 9)
+        {
+            secode = secode.remove(6,3);
+        }           
+    }
+
+    /*
     if (style == "tinysoft") {
+
         if (secode.startsWith("6")) {
             secode.prepend("SH");
         } else {
@@ -38,6 +111,7 @@ QString completeSecode(QString secode, QString style) {
             secode.append(".SZ");
         }
     }
+    */
 
     return secode;
 }
@@ -173,28 +247,41 @@ QString getCompleteIndexCode(QString secode, QString style) {
 
 QList<QString> getIndexCode(QString style) {
     QList<QString> indexCodeList;
-    if (style == "wind") 
+    QString indexFileName = QString("%1/%2").arg(QCoreApplication::applicationDirPath()).arg("./info.xlsx");
+    QFile indexFile(indexFileName);
+    if (indexFile.exists())
     {
-        indexCodeList << "000300.SH" << "000016.SH" << "000852.SH"
-                      << "000904.SH" << "000905.SH" << "000906.SH" << "399903.SZ"
-                      << "000908.SH" << "000909.SH" << "000910.SH" << "000911.SH"
-                      << "000912.SH" << "000913.SH" << "000951.SH" << "000849.SH"
-                      << "000952.SH" << "000915.SH" << "000917.SH";
+        indexCodeList = readExcelSecodeList(indexFileName, "indexList", 1, style);
+        // qDebug() << indexFileName << "exits";
     }
-    if (style == "tinysoft") {
-        indexCodeList  << "SH000300" << "SH000016" << "SH000852"
-                       << "SH000904" << "SH000905" << "SH000906" <<"SZ399903"
-                       << "SH000908" << "SH000909" << "SH000910" << "SH000911"
-                       << "SH000912" << "SH000913" << "SH000951" << "SH000849"
-                       << "SH000952" << "SH000915" << "SH000917";
+    else
+    {
+        if (style == "wind")
+        {
+            indexCodeList << "000300.SH" << "000016.SH" << "000852.SH"
+                          << "000904.SH" << "000905.SH" << "000906.SH" << "399903.SZ"
+                          << "000908.SH" << "000909.SH" << "000910.SH" << "000911.SH"
+                          << "000912.SH" << "000913.SH" << "000951.SH" << "000849.SH"
+                          << "000952.SH" << "000915.SH" << "000917.SH";
+        }
+        if (style == "tinysoft") {
+            indexCodeList  << "SH000300" << "SH000016" << "SH000852"
+                           << "SH000904" << "SH000905" << "SH000906" <<"SZ399903"
+                           << "SH000908" << "SH000909" << "SH000910" << "SH000911"
+                           << "SH000912" << "SH000913" << "SH000951" << "SH000849"
+                           << "SH000952" << "SH000915" << "SH000917";
+        }
+        if (style == "ori") {
+            indexCodeList << "000300" << "000016" << "000852"
+                          << "000904" << "000905" << "000906" << "399903"
+                          << "000908" << "000909" << "000910" << "000911"
+                          << "000912" << "000913" << "000951" << "000849"
+                          << "000952" << "000915" << "000917";
+        }
+         /**/
     }
-    if (style == "ori") {
-        indexCodeList << "000300" << "000016" << "000852"
-                      << "000904" << "000905" << "000906" << "399903"
-                      << "000908" << "000909" << "000910" << "000911"
-                      << "000912" << "000913" << "000951" << "000849"
-                      << "000952" << "000915" << "000917";
-    }
+
+
 
     return indexCodeList;
 }

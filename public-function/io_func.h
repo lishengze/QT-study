@@ -28,7 +28,8 @@ template<class keyType, class valueType>
 void printMap(QMap<keyType, valueType> data, QString message) {
     qDebug() << "message: " << message << ", datasize: " << data.size();
     for ( QMap<keyType, valueType>::iterator it = data.begin();
-          it != data.end(); ++it) {
+          it != data.end(); ++it) 
+    {
         qDebug() << it.key() << ": " << it.value();
     }
 }

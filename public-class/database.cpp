@@ -78,8 +78,9 @@ void Database::initDatabase() {
         qDebug() << m_db.lastError ();
         QMessageBox::information (m_window, "Error", m_db.lastError().text());
     } else {
-        QString succStr = "Open database: " + m_connDbName  + ", "+ m_hostName
-                        + ", " + m_connName +" successfully!";
+        QString succStr = QString("Open %1 : %2 : %3 successfuly")
+                            .arg(m_hostName).arg(m_connDbName).arg(m_connName);
+        qDebug() << succStr;
         m_bdatabaseOpen = true;
     }
 }
@@ -450,7 +451,8 @@ QMap<QString, QList<QStringList>> Database::getLongTimeHistoryData(QString start
             QString sqlstr = QString("select [TDATE], [TIME] ") + keyValueStr  \
                            + QString("from [") + databaseName + "].[dbo].[" + tableName + "] " \
                            + "where TDATE <= " + endDate + " and TDATE >= " + startDate;
-             QList<QStringList> oneSecodeData;
+            // qDebug() <<"getLongTimeHistoryData: " <<sqlstr;
+            QList<QStringList> oneSecodeData;
             if (queryObj.exec(sqlstr) ) {
                 while(queryObj.next ()) {
                    QStringList tmpResult;
@@ -770,20 +772,31 @@ QString Database::clear() {
     return msg;
 }
 
-QString Database::completeTable(QList<QString> tableList) {
+QString Database::completeTable(QList<QString> tableList) 
+{
     QString msg = "SUCCESS";
     QString curMsg = "";
     QList<QString> oriTableList = getTableList(m_connDbName);
-    for (int i = 0; i < tableList.size(); ++i) {
+    for (int i = 0; i < tableList.size(); ++i) 
+    {
         QString secode = tableList[i];
-        if (oriTableList.indexOf(secode) < 0) {
+        if (oriTableList.indexOf(secode) < 0) 
+        {
             QString tmpMsg = createTable(secode);
-            if (tmpMsg != "SUCCESS") {
-                curMsg += tmpMsg + "\n";
-            }
         }
     }
-    if (curMsg != "") {
+
+    QList<QString> completedTableList = getTableList(m_connDbName);
+    for (QString secode : tableList)
+    {
+        if (completedTableList.indexOf(secode) < 0)
+        {
+            curMsg += QString("\n create %1 failed").arg(secode);
+        }
+    }
+
+    if (curMsg != "") 
+    {
         msg = curMsg;
     }
     return msg;
@@ -807,15 +820,30 @@ QString Database::getUpdateStr(QString tableName, QList<QString> data) {
 
 QString Database::createTable(QString tableName) {
     QString msg = "SUCCESS";
-    if (m_db.open()) {
+    if (m_db.open()) 
+    {
         QString create_str = getCreateStr(tableName);
         QSqlQuery queryObj(m_db);
         bool result = queryObj.exec(create_str);
-        if (!result) {
-            msg = "createTable " + tableName +" faild";
+
+        /*
+        QList<QString> oriTableList = getTableList(m_connDbName);
+        if (oriTableList.indexOf(tableName) < 0)
+        {
+            msg = "createTable " + tableName +" faild: " + m_db.lastError().text();
+            qDebug() << msg;
         }
-    } else {
-        msg = m_db.lastError().text();
+        */
+
+        /**/
+        if (!result) 
+        {            
+            msg = "createTable " + tableName +" faild: " + m_db.lastError().text();
+        }        
+    } 
+    else 
+    {
+        msg = m_db.lastError().text();        
         qDebug() <<"error_SqlServer:\n" << msg;
     }
     return msg;

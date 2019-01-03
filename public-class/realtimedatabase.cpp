@@ -3,7 +3,6 @@
 #include <QDebug>
 #include "realtimedatabase.h"
 #include "time_func.h"
-//#include "toolfunc.h"
 
 RealTimeDatabase::RealTimeDatabase(QWidget* window, QString connName, QString connDbName,
                                    QString host, QString port,
@@ -47,13 +46,15 @@ QDate RealTimeDatabase::getDatabaseDataDate(QString tableName) {
 bool RealTimeDatabase::checkdataTime(QString tableName) {
     bool result = false;
     QList<QString> tableList = getTableList(m_connDbName);
-    if (tableList.indexOf(tableName) > 0 && getDatabaseDataDate(tableName) == QDate::currentDate()) {
+    if (tableList.indexOf(tableName) > 0 && getDatabaseDataDate(tableName) == QDate::currentDate()) 
+    {
         result = true;
     }
     return result;
 }
 
-QString RealTimeDatabase::getCreateStr(QString tableName) {
+QString RealTimeDatabase::getCreateStr(QString tableName) 
+{
     QString value_str = QString::fromLocal8Bit(" (股票 varchar(15) not null, 日期 int not null, 时间 int not null, \
                           最新成交价 decimal(15,4), 前收 decimal(15,4), 成交金额 decimal(25,4), 开盘 decimal(15, 4), \
                           请求时间 varchar(35) not null,   Primary Key(股票, 请求时间))");
@@ -92,10 +93,9 @@ bool RealTimeDatabase::createPreCloseTable(QString tableName) {
         QString value_str = QString::fromLocal8Bit("(股票 varchar(15) not null Primary Key(股票), 前收 decimal(15,4))");
         QString complete_tablename = "[" + m_connDbName + "].[dbo].["+ tableName + "]";
         QString create_str = "create table " + complete_tablename + value_str;
+        // qDebug() << create_str;
         QSqlQuery queryObj(m_db);
         result = queryObj.exec(create_str);
-//        qDebug() << "create str: " << create_str;
-//        qDebug() << "create " <<tableName << " rst: " << result;
     } else {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }
@@ -212,7 +212,7 @@ bool RealTimeDatabase::createDataTimeTable(QString tableName) {
         QSqlQuery queryObj(m_db);
 
         result = queryObj.exec(create_str);
-        qDebug() << tableName << result;
+        // qDebug() << tableName << result;
     } else {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }
@@ -238,18 +238,19 @@ bool RealTimeDatabase::insertDataTimeTable(QString tableName, QString date) {
 
 QList<QString> RealTimeDatabase::getSecodeList(QString tableName) {
     QList<QString> result;
-
-    if (m_db.open()) {
+    if (m_db.open()) 
+    {
         QString completeTableName = "[" + m_connDbName + "].[dbo].[" + tableName + "]";
         QString sqlstr = "select * from" + completeTableName;
-        qDebug() << "sqlstr: " << sqlstr;
         QSqlQuery queryObj(m_db);
         queryObj.exec(sqlstr);
         while(queryObj.next ()) {
             QString secode = queryObj.value (0).toString();
             result.append(secode);
         }
-    } else {
+    } 
+    else 
+    {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }
     return result;
@@ -262,10 +263,10 @@ void RealTimeDatabase::updatePreCloseData(QString tableName, QList<QString> orid
         QString set_str = "  set 前收 = " +  pre_close + " where 股票 = \'" + secode + "\'";
         QString complete_tablename = "[" + m_connDbName+ "].[dbo].[" + tableName + "]";
         QString update_str = "update "+ complete_tablename + set_str ;
-        qDebug() << "update str: " << update_str;
+        // qDebug() << "update str: " << update_str;
         QSqlQuery queryObj(m_db);
         bool result = queryObj.exec(update_str);
-        qDebug() << "update rst: " << result;
+        // qDebug() << "update rst: " << result;
     } else {
         qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
     }
@@ -276,9 +277,9 @@ bool RealTimeDatabase::checkData(QString colname, QString keyvalue, QString tabl
     if (m_db.open()) {
         QString complete_tablename = "[" + m_connDbName+ "].[dbo].[" + tableName + "]";
         QString check_str = "select * from "  + complete_tablename + "where " + colname + " = " + "\'" + keyvalue + " \'";
-        qDebug() << "check str: " << check_str;
+        // qDebug() << "check str: " << check_str;
         QSqlQuery queryObj(m_db);
-        qDebug() << "check rst: " << queryObj.exec(check_str);
+        // qDebug() << "check rst: " << queryObj.exec(check_str);
         while(queryObj.next())  {
             result = true;
         }
@@ -318,7 +319,8 @@ int RealTimeDatabase::getDatabaseWorkingFlag(QString tableName) {
     return result;
 }
 
-bool RealTimeDatabase::setDatabaseWorkingState(QString tableName, int flag) {
+bool RealTimeDatabase::setDatabaseWorkingState(QString tableName, int flag) 
+{
     bool result = false;
     if (m_db.open()) {
         QString col_str = QString::fromLocal8Bit(" (Date, Time, Flag) ");
@@ -328,12 +330,12 @@ bool RealTimeDatabase::setDatabaseWorkingState(QString tableName, int flag) {
         QString valStr = date + ", " + time + ", " + flagValue;
         QString complete_tablename = "[" + m_connDbName + "].[dbo].[" + tableName + "]" ;
         QString insert_str = "insert into "+ complete_tablename + col_str + "values ("+ valStr +")";
-        qDebug() << "insert str: " << insert_str;
+        // qDebug() << "insert str: " << insert_str;
         QSqlQuery queryObj(m_db);
         result = queryObj.exec(insert_str);
-        qDebug() << "insert rst: " << result;
+        // qDebug() << "insert rst: " << result;
     } else {
-        qDebug() <<"error_SqlServer:\n" << m_db.lastError().text();
+        qDebug() <<"RealTimeDatabase::setDatabaseWorkingState, Error_SqlServer:\n" << m_db.lastError().text();
     }
     return result;
 }

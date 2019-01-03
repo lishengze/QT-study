@@ -25,11 +25,12 @@ QList<QString> readExcelSecodeList(QString fileName, QString sheetName,
     QXlsx::CellRange range = xlsx.dimension();
     int rowCount = range.rowCount();
     int colCount = range.columnCount();
-    qDebug() <<"fileName: " << fileName <<"rowCount: " << rowCount << ", colCount" << colCount;
+    // qDebug() <<"fileName: " << fileName <<"rowCount: " << rowCount << ", colCount" << colCount;
 
-    for (int i = startRow; i <= rowCount; i++){
+    for (int i = startRow; i <= rowCount; i++)
+    {
         result.append(completeSecode(xlsx.cellAt(i, 1)->value().toString(), style));
-     }
+    }
     return result;
 }
 
