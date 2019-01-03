@@ -4,6 +4,8 @@
 #include "toolfunc.h"
 #include "widget_func.h"
 #include "process_data_func.h"
+#include "database_func.h"
+#include "io_func.h"
 
 RealTimeDataWrite::RealTimeDataWrite(QTableView* programInfoTableView, QTableView* errorMsgTableView,
                                      QString dbConnID, QString dbHost,
@@ -33,7 +35,8 @@ void RealTimeDataWrite::initCommonData() {
     m_testWriteAveTime = 0;
     m_testWriteCount = 0;
 
-    m_waitWriteTime = 10;
+    m_waitWriteTime = 30;
+    m_monitorExceptionWaitTime = 30000;
 }
 
 
@@ -47,8 +50,7 @@ void RealTimeDataWrite::initDatabase() {
                       .arg(m_dbName).arg(m_dbHost));
 }
 
-void RealTimeDataWrite::initMonitorTimer() {
-    m_monitorExceptionWaitTime = 10000;
+void RealTimeDataWrite::initMonitorTimer() {    
     updateProgramInfo(m_programInfoTableView,
                       QString::fromLocal8Bit("写入异常监听时间为: %1 毫秒")
                       .arg(m_monitorExceptionWaitTime));
@@ -97,40 +99,58 @@ void RealTimeDataWrite::registerParams() {
     qRegisterMetaType<QList<QString>>("QList<QString>");
 }
 
-bool RealTimeDataWrite::isSecodeListChange() {
+bool RealTimeDataWrite::isSecodeListChange() 
+{
     QList<QString> databaseTableList = m_realtimeDatabase->getTableList(m_dbName);
     bool result = false;
-    for (QString secode:m_secodeList) {
-        if (databaseTableList.indexOf(secode) < 0) {
+    for (QString secode:m_secodeList) 
+    {
+        if (databaseTableList.indexOf(secode) < 0) 
+        {
             result = true;
         }
     }
 
-    for (QString futureCode:m_futureList) {
-        if (databaseTableList.indexOf(futureCode) < 0) {
+    for (QString futureCode:m_futureList) 
+    {
+        if (databaseTableList.indexOf(futureCode) < 0) 
+        {
             result = true;
         }
     }
     return result;
 }
 
-bool RealTimeDataWrite::checkDatabase() {
+bool RealTimeDataWrite::checkDatabase() 
+{
     bool result = true;
-    if (m_realtimeDatabase->checkdataTime(m_dataTimeTable) && !isSecodeListChange()) {
+    bool isDev = false;
+    if ( !isDev && QDate::currentDate() == getRealtimeDate(m_dbHost) && !isSecodeListChange()) 
+    {
         updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("实时数据表已经创建好"));
         QString compTableMsg = m_realtimeDatabase->completeTable(m_secodeList);
         QString compFutureMsg = m_realtimeDatabase->completeFutureTable(m_futureList);
         QString compDatatimeMsg = m_realtimeDatabase->completeDataTimeTable(m_dataTimeTable);
-    } else {
-        if (clearDatabase()) {
+
+        QList<QString> completedTableList = m_realtimeDatabase->getTableList("MarketData_RealTime");
+        qDebug() << QString("completedTableList.size: %1, m_secodeList.size: %2 m_futureList.size: %3")
+                    .arg(completedTableList.size()).arg(m_secodeList.size()).arg(m_futureList.size());
+    } 
+    else 
+    {
+        if (clearDatabase()) 
+        {
             QString compTableMsg = m_realtimeDatabase->completeTable(m_secodeList);
             QString compFutureMsg = m_realtimeDatabase->completeFutureTable(m_futureList);
             QString compDatatimeMsg = m_realtimeDatabase->completeDataTimeTable(m_dataTimeTable);
 
-            if (compTableMsg != "SUCCESS") {
+            if (compTableMsg != "SUCCESS") 
+            {
                 result = false;
                 updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("创建股票数据表失败, 错误消息为: %1").arg(compTableMsg));
-            } else {
+            }
+            else 
+            {
                 updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("创建股票数据表成功"));
             }
 
@@ -147,6 +167,20 @@ bool RealTimeDataWrite::checkDatabase() {
             } else {
                 updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("创建数据时间表成功"));
             }
+
+            QList<QString> completedTableList = m_realtimeDatabase->getTableList("MarketData_RealTime");
+
+            // qDebug() << QString("completedTableList.size: %1, m_secodeList.size: %2 m_futureList.size: %3")
+            //            .arg(completedTableList.size()).arg(m_secodeList.size()).arg(m_futureList.size());
+
+            for (QString secode : m_secodeList)
+            {
+                if (completedTableList.indexOf(secode) < 0)
+                {
+                    qDebug() << secode << " missed";
+                }
+            }
+      
         } else {
             result = false;
         }
@@ -184,33 +218,45 @@ void RealTimeDataWrite::setTableList_slot(QList<QString> secodeList, QList<QStri
     m_futureList = futureList;
     m_secodeList = secodeList;
     m_realtimeDataNumb = 0;
-    if (checkDatabase()) {
+    if (checkDatabase()) 
+    {
         emit setTableListComplete_signal();
     }
 }
 
-void RealTimeDataWrite::writePreCloseData_slot(QMap<QString, QStringList> preCloseData) {
-    qDebug() << "RealTimeDataWrite::writePreCloseData";
+void RealTimeDataWrite::writePreCloseData_slot(QMap<QString, QStringList> preCloseData) 
+{
     QString tableName = "PreCloseData";
     QList<QString> tableList = m_realtimeDatabase->getTableList(m_realtimeDatabase->getDatabaseName());
     bool result = true;
-    if (tableList.indexOf(tableName) < 0 ) {
-        if (m_realtimeDatabase->createPreCloseTable(tableName) ) {
+
+    if (tableList.indexOf(tableName) < 0 ) 
+    {
+        if (m_realtimeDatabase->createPreCloseTable(tableName) ) 
+        {
+            updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("创建昨收数据表成功， 开始插入昨收数据."));
+
             for (QMap<QString, QStringList>::iterator it = preCloseData.begin();
-                 it != preCloseData.end(); ++it) {
-                if (!m_realtimeDatabase->insertPreCloseData(tableName, it.value())) {
-                    result = false;
-                    updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("插入股票 %1,昨收数据失败").arg(tableName));
-                    break;
+                 it != preCloseData.end(); ++it) 
+            {
+                if (!m_realtimeDatabase->insertPreCloseData(tableName, it.value())) 
+                {
+                    updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("插入股票 %1,昨收数据失败").arg(it.key()));
+                    qDebug() << it.key() << it.value();
                 }
             }
-            if (result) {
+            if (result) 
+            {
                 updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("成功插入当日昨收数据"));
             }
-        } else {
+        } 
+        else 
+        {
             updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("创建昨收数据表失败"));
         }
-    } else {
+    } 
+    else 
+    {
         updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("昨收数据已经存在"));
     }
     if (result) {
@@ -357,7 +403,7 @@ void RealTimeDataWrite::resetWriteSource() {
 
 RealTimeDataWrite::~RealTimeDataWrite() {
     emit stopMonitorTimer_signal();
-    qDebug() << "m_subWriteThreadList.size: "  << m_subWriteThreadList.size();
+    // qDebug() << "m_subWriteThreadList.size: "  << m_subWriteThreadList.size();
     for (int i = 0; i < m_subWriteThreadList.size(); ++i) {
         if (!m_subWriteThreadList[i]->isFinished()) {
              m_subWriteThreadList[i]->quit();

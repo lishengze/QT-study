@@ -4,13 +4,11 @@
 #include <QWidget>
 #include <QThread>
 #include <QTimer>
-#include "strategymodel.h"
 #include "database.h"
 
 #include "realtimedataread.h"
 #include "realtimedatabase.h"
 #include "realtimedatawrite.h"
-#include "excel.h"
 
 namespace Ui {
 class UpdateRealtimeDataForm;

@@ -99,8 +99,6 @@ void ReadDatabaseData::startReadMarketData_slot() {
         sumResult.append(ori_result);
         emit readOneMarketDataComplete_signal();
     }
-//    emit readMarketDataComplete_signal(sumResult);
-//    qDebug() << QThread::currentThreadId() << "Done!";
 }
 
 void ReadDatabaseData::startReadWeightData_slot() {

@@ -40,6 +40,8 @@ public:
     QMap<QString, QStringList> wsqFutureData(QList<QString> futureList);
 
     void setPreCloseData();
+    void checkPreCloseData(QMap<QString, QStringList>& oriData);
+
     QMap<QString, QStringList> wsqPreCloseData();
 
     QList<QString> wsqRealTimeSecodeList();
@@ -74,6 +76,7 @@ private:
     int                m_minReadWaitTime;
     int                m_signalWriteTime;
     int                m_updateTime;
+    bool               m_isDev;
 
     QString            m_dbConnID;
     QString            m_dbHost;

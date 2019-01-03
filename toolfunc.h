@@ -6,7 +6,7 @@
 #include <QWidget>
 #include <QTableView>
 #include <QFileInfo>
-#include "macd.h"
+
 
 //QList<QPointF> sortPointFList(QList<QPointF> oridata);
 

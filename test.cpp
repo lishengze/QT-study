@@ -6,7 +6,6 @@
 #include "excel_func.h"
 #include "time_func.h"
 #include "io_func.h"
-#include "extractmarketdata.h"
 #include "readdatabasedata.h"
 #include <QThread>
 
@@ -116,7 +115,6 @@ void Test::test_extract_marketdata() {
     QString startDate = "20150130";
     QString endDate = "20180417";
 
-    int dbConnectID = 1;
     QStringList keyValueList;
     keyValueList << "TCLOSE" << "TURNOVER";
     QString secodeFileName = QString::fromLocal8Bit("D:/excel/沪深300成分股 20170130~20180417 10min收盘价.xlsx");

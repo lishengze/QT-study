@@ -44,7 +44,8 @@ SOURCES += main.cpp\
     ../public-files/public-function/secode_func.cpp \
     ../public-files/public-function/terminal_func.cpp \
     ../public-files/public-function/time_func.cpp \
-    ../public-files/public-function/widget_func.cpp
+    ../public-files/public-function/widget_func.cpp \
+    ../public-files/public-function/database_func.cpp
 #    ../public-function/excel_func.cpp \
 #    ../public-function/time_func.cpp \
 #    ../public-function/widget_func.cpp \
@@ -72,8 +73,8 @@ HEADERS  += updaterealtimedataform.h \
 #    extractweightdata.h \
 #    extractindustrydata.h \
     wind_func.h \
-    treeitem.h \
-    treemodel.h \
+#    treeitem.h \
+#    treemodel.h \
     ../public-files/public-class/database.h \
     ../public-files/public-class/macd.h \
     ../public-files/public-class/realtimedatabase.h \
@@ -85,7 +86,8 @@ HEADERS  += updaterealtimedataform.h \
     ../public-files/public-function/secode_func.h \
     ../public-files/public-function/terminal_func.h \
     ../public-files/public-function/time_func.h \
-    ../public-files/public-function/widget_func.h
+    ../public-files/public-function/widget_func.h \
+    ../public-files/public-function/database_func.h
 #    ../public-function/excel_func.h \
 #    ../public-function/time_func.h \
 #    ../public-function/widget_func.h \

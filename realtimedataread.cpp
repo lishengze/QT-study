@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <QFileInfo>
 #include <database.h>
+#include <QCoreApplication>
 
 using namespace std;
 #include "WAPIWrapperCpp.h"
@@ -19,6 +20,7 @@ using namespace std;
 #include "widget_func.h"
 #include "process_data_func.h"
 #include "io_func.h"
+
 
 RealTimeDataRead::RealTimeDataRead(QTableView* programInfoTableView,
                                    QTableView* errorMsgTableView,
@@ -50,6 +52,8 @@ void RealTimeDataRead::initCommonData() {
 
     m_minReadWaitTime = 3500;
     m_signalWriteTime = 2.5;
+
+    m_isDev = false;
 }
 
 void RealTimeDataRead::initDatabase() {
@@ -133,13 +137,19 @@ void RealTimeDataRead::monitorException_slot() {
     }
 }
 
-void RealTimeDataRead::loginWind_slot() {
-    int errcode = CWAPIWrapperCpp::start();
+void RealTimeDataRead::loginWind_slot() 
+{
+    int errcode = 0;
+
+    if (!m_isDev)
+    {
+        errcode = CWAPIWrapperCpp::start();
+    }
+    
     if (0 == errcode) {
 
         m_login = true;
         updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("登陆万得成功"));
-//        waitForNextTradingDay(m_programInfoTableView);
 
         m_secodeList = getSecodeList();
         m_futureList = getFutureList();
@@ -159,44 +169,94 @@ void RealTimeDataRead::loginWind_slot() {
     }
 }
 
-QList<QString> RealTimeDataRead::getExcelSecodeList() {
+QList<QString> RealTimeDataRead::getExcelSecodeList() 
+{
     QList<QFileInfo> strategyFileInfoList = getExcelFileInfo(m_strategyFileDir);
     QList<QString> result;
-    for (QFileInfo currFileInfo : strategyFileInfoList) {
-        QList<QString> secodeList = readExcelSecodeList(m_strategyFileDir + currFileInfo.fileName());
-        for (QString secode : secodeList) {
-            if (result.indexOf(completeSecode(secode, "wind")) < 0) {
-                result.append(completeSecode(secode, "wind"));
+    for (QFileInfo currFileInfo : strategyFileInfoList) 
+    {
+        QList<QString> secodeList = readExcelSecodeList(m_strategyFileDir + currFileInfo.fileName(), "Sheet1", 1, "wind");
+        for (QString secode : secodeList) 
+        {
+            if (result.indexOf(secode) < 0) 
+            {
+                result.append(secode);
             }
         }
     }
+
+    // printList(result, "excelFileCodeList");
+
+/*
+    QString indexFileName = QString("%1/%2").arg(QCoreApplication::applicationDirPath()).arg("./info.xlsx");
+    QList<QString> indexCodeList = readExcelSecodeList(indexFileName, "indexList");
+    for (QString indexCode : indexCodeList)
+    {
+        if (result.indexOf(getCompleteIndexCode(indexCode, "wind")) < 0)
+        {
+            result.append(getCompleteIndexCode(indexCode, "wind"));
+        }
+    }
+*/    
     return result;
 }
 
-QList<QString> RealTimeDataRead::getSecodeList() {
-//    resetDatabase();
+QList<QString> RealTimeDataRead::getSecodeList() 
+{    
     QString tableName = getCompleteIndexCode(m_secodeList_IndexCode) + "_SecodeList";
     QList<QString> result;
     result = m_realtimeDatabase->getSecodeList(tableName);
-    printList(result, "中证800");
-    for (int i = 0; i < result.size(); ++i) {
+    for (int i = 0; i < result.size(); ++i) 
+    {
         result[i] = completeSecode(result[i], "wind");
     }
 
-    updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("%1股票代码数: %2").arg(m_secodeList_IndexCode).arg(result.size()));
+    if (result.indexOf("000303.SH") > 0)
+    {
+        qDebug() << "000303.SH is IN 800";
+    }
+
+    updateProgramInfo(m_programInfoTableView, 
+                    QString::fromLocal8Bit("%1股票代码数: %2").arg(m_secodeList_IndexCode).arg(result.size()));
 
     QList<QString> excelList = getExcelSecodeList();
-    for (QString secode : excelList) {
-        if (result.indexOf(secode) < 0) {
-            result.append(secode);
-            qDebug() << secode;
-        }
-    }
+
     updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("所有组合股票代码数: %1").arg(excelList.size()));
 
+    QList<QString> excelOnlyCodeList;
+
+    for (QString secode : excelList) 
+    {
+        if (result.indexOf(secode) < 0) 
+        {
+            result.append(secode);
+            excelOnlyCodeList.append(secode);
+        }
+    }
+
+    if (result.indexOf("000303.SH") > 0)
+    {
+        qDebug() << "000303.SH is IN EXCEL";
+    }
+
+    // printList(excelOnlyCodeList, "excelOnlyCodeList");
+
+
     QList<QString> indexCodeList = getIndexCode("wind");
-    result += indexCodeList;
-    result = getSubList(result, 0, result.size());
+    // printList(indexCodeList, "indexCodeList");
+
+    for (QString indexCode: indexCodeList)
+    {
+        if (result.indexOf(indexCode) < 0)
+        {
+            result.append(indexCode);
+        }
+    }
+
+    if (result.indexOf("000303.SH") > 0)
+    {
+        qDebug() << "000303.SH is IN IndexList";
+    }    
     return result;
 }
 
@@ -205,13 +265,30 @@ QList<QString> RealTimeDataRead::getFutureList() {
     return result;
 }
 
-void RealTimeDataRead::setTableListComplete_slot() {
+void RealTimeDataRead::setTableListComplete_slot() 
+{
     setPreCloseData();
 }
 
 void RealTimeDataRead::setPreCloseData() {
     QMap<QString, QStringList> result = wsqPreCloseData();
+    checkPreCloseData(result);
+
     emit writePreCloseData_signal(result);
+}
+
+void RealTimeDataRead::checkPreCloseData(QMap<QString, QStringList>& oriData)
+{
+    for (QMap<QString, QStringList>::const_iterator it = oriData.begin();
+        it != oriData.end(); ++it)
+    {
+        if (it.value()[1] == "nan")
+        {
+            qDebug() << it.key() << it.value();
+            oriData.remove(it.key());
+            m_secodeList.removeOne(it.key());            
+        }
+    }
 }
 
 void RealTimeDataRead::setPrecloseDataComplete_slot() {
@@ -238,70 +315,82 @@ void RealTimeDataRead::writeComplete_slot(int flag) {
 }
 
 void RealTimeDataRead::setRealTimeData_slot() {
-//    QMap<QString, QStringList> secodeResult = getSnapshootData();
-//    QMap<QString, QStringList> futureResult = wsqFutureData(m_futureList);
-//    if (secodeResult.size() > m_secodeList.size() * m_usefulReadRate) {
-//            emit writeRealTimeData_signal(secodeResult, futureResult);
-//            emit stopMonitorTimer_signal();
-//    } else {
-//        setRealTimeData_slot();
-//    }
+    bool isTest = false;
 
-    if (isStockTrading()) {
+    if (isTest)
+    {
         QMap<QString, QStringList> secodeResult = getSnapshootData();
         QMap<QString, QStringList> futureResult = wsqFutureData(m_futureList);
         if (secodeResult.size() > m_secodeList.size() * m_usefulReadRate) {
-            emit writeRealTimeData_signal(secodeResult, futureResult);
-            emit stopMonitorTimer_signal();
-        } else {
+                emit writeRealTimeData_signal(secodeResult, futureResult);
+                emit stopMonitorTimer_signal();
+       } else {
             setRealTimeData_slot();
+       }
+    }
+    else
+    {
+        if (isStockTrading()) {
+            QMap<QString, QStringList> secodeResult = getSnapshootData();
+            QMap<QString, QStringList> futureResult = wsqFutureData(m_futureList);
+            if (secodeResult.size() > m_secodeList.size() * m_usefulReadRate)
+            {
+                emit writeRealTimeData_signal(secodeResult, futureResult);
+                emit stopMonitorTimer_signal();
+            }
+            else
+            {
+                setRealTimeData_slot();
+            }
+            emit stopWaitTradeTimer_signal();
+        } else {
+            emit stopMonitorTimer_signal();
         }
-        emit stopWaitTradeTimer_signal();
-    } else {
-        emit stopMonitorTimer_signal();
-    }
 
-    if (isStockTradingNotStart() && !m_isTooEarly){
-        m_isTooEarly = true;
-        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("时间太早"));
+        if (isStockTradingNotStart() && !m_isTooEarly){
+            m_isTooEarly = true;
+            updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("时间太早"));
 
-        emit startWaitTradeTimer_signal();
-    }
+            emit startWaitTradeTimer_signal();
+        }
 
-    if (isStockNoonBreak() && !m_isRestTime) {
-        updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("午休时间"));
-        m_isRestTime = true;
+        if (isStockNoonBreak() && !m_isRestTime) {
+            updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("午休时间"));
+            m_isRestTime = true;
 
-        emit startWaitTradeTimer_signal();
-    }
+            emit startWaitTradeTimer_signal();
+        }
 
-    if (isStockTradingOver()) {
-        emit stopWaitTradeTimer_signal();
-        waitForNextTradingDay(m_programInfoTableView);
-        resetReadSource();
+        if (isStockTradingOver()) {
+            emit stopWaitTradeTimer_signal();
+            waitForNextTradingDay(m_programInfoTableView);
+            resetReadSource();
+        }
     }
 }
 
-QMap<QString, QStringList> RealTimeDataRead::getSnapshootData() {
+QMap<QString, QStringList> RealTimeDataRead::getSnapshootData() 
+{
     QMap<QString, QStringList> result;
     for(int i = 0; i < m_secodeList.size(); i+= m_wsqSnapshootDataNumb) {
         QList<QString> subSecodeList = getSubList(m_secodeList, i, i + m_wsqSnapshootDataNumb);
         result.unite(wsqSnapshootData(subSecodeList));
     }
     if (result.size() ==  m_secodeList.size()) {
-//        qDebug() << "getSnapshootData Successfully, result.size: " << result.size();
+    //        qDebug() << "getSnapshootData Successfully, result.size: " << result.size();
     }
     return result;
 }
 
-QMap<QString, QStringList> RealTimeDataRead::wsqSnapshootData(QList<QString> secodeList) {
+QMap<QString, QStringList> RealTimeDataRead::wsqSnapshootData(QList<QString> secodeList) 
+{
     bool bOutputMsg = false;
     QMap<QString, QStringList> result;
     int errcode;
     if (m_login) {
         WindData wd;
         LPCWSTR windcodes = transSecodeList(secodeList);
-        LPCWSTR indicators = TEXT("rt_date,rt_time,rt_latest,rt_pre_close,rt_amt");
+        LPCWSTR indicators = TEXT("rt_date,rt_time,rt_latest,rt_pre_close,rt_amt,rt_open");
         LPCWSTR options = TEXT("");
         errcode = CWAPIWrapperCpp::wsq(wd, windcodes, indicators, options);
         if (bOutputMsg) qDebug() << "startWsqOneTime errcode: " << errcode;
@@ -398,7 +487,8 @@ QMap<QString, QStringList> RealTimeDataRead::wsqFutureData(QList<QString> future
     return result;
 }
 
-QMap<QString, QStringList> RealTimeDataRead::wsqPreCloseData() {
+QMap<QString, QStringList> RealTimeDataRead::wsqPreCloseData() 
+{
     int errcode;
     QMap<QString, QStringList> result;
     if (m_login) {
@@ -437,6 +527,7 @@ QMap<QString, QStringList> RealTimeDataRead::wsqPreCloseData() {
                 singleCodeData.prepend(codes);
                 result.insert(codes, singleCodeData);
             }
+            updateProgramInfo(m_programInfoTableView, QString::fromLocal8Bit("获取前收数据成功."));
         } else {
             updateProgramInfo(m_errorMsgTableView, QString::fromLocal8Bit("获取前收数据失败, 错误代码为: %1").arg(errcode));
         }
