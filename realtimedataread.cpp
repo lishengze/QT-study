@@ -243,7 +243,7 @@ QList<QString> RealTimeDataRead::getSecodeList()
 
 
     QList<QString> indexCodeList = getIndexCode("wind");
-    // printList(indexCodeList, "indexCodeList");
+    printList(indexCodeList, "indexCodeList");
 
     for (QString indexCode: indexCodeList)
     {

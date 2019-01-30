@@ -115,7 +115,8 @@ void UpdateRealtimeDataForm::initWidget() {
 }
 
 void UpdateRealtimeDataForm::initDatasourceCombox() {
-    m_dbhostList << "192.168.211.162"
+    m_dbhostList << "127.0.0.1"
+                 << "192.168.211.162"
                  << "192.168.211.165";
 
     ui->dataSource_ComboBox->addItems(m_dbhostList);
