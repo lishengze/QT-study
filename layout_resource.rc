@@ -4,7 +4,7 @@
 #  include <windows.h>
 # endif
 
-IDI_ICON1	ICON	DISCARDABLE	"D:\\client\\upData-dev\\lion.ico"
+IDI_ICON1	ICON	DISCARDABLE	"D:\\client\\chart-dev\\dev.ico"
 
 VS_VERSION_INFO VERSIONINFO
 	FILEVERSION 0,0,0,0

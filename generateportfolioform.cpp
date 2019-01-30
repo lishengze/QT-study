@@ -61,7 +61,7 @@ void GeneratePortfolioForm::setDatabase() {
         m_database = NULL;
     }
     m_dbhost = ui->datasource_comboBox->currentText();
-    m_database = new Database(m_dbConnID, m_dbhost);
+    m_database = new Database(m_dbhost);
     updateProgramInfo(ui->programInfo_Table, QString::fromLocal8Bit("当前链接的数据源是: %1").arg(m_dbhost));
 }
 

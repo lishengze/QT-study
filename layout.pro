@@ -4,9 +4,10 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql widgets
+QT += core gui sql widgets
 QT += axcontainer
 QT += charts
+CONFIG += C++11
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -18,13 +19,13 @@ INCLUDEPATH += ../public-files/public-class
 
 SOURCES  += main.cpp\
             widget.cpp \
-            toolfunc.cpp \
+#            toolfunc.cpp \
             test.cpp \
             chartform.cpp \
             qmychartview.cpp \
             dataread.cpp \
             dataprocess.cpp \
-            dialog.cpp \
+            #dialog.cpp \
             monitorrealtimedata.cpp \
             chartdata.cpp \
             historydata.cpp \
@@ -32,7 +33,7 @@ SOURCES  += main.cpp\
             generateportfolioform.cpp \
             futurechart.cpp \
             extractdatawindow.cpp \
-            indexchart.cpp \
+#            indexchart.cpp \
     ../public-files/public-class/basechart.cpp \
     ../public-files/public-class/database.cpp \
     ../public-files/public-class/macd.cpp \
@@ -46,18 +47,21 @@ SOURCES  += main.cpp\
     ../public-files/public-function/terminal_func.cpp \
     ../public-files/public-function/time_func.cpp \
     ../public-files/public-function/widget_func.cpp \
+    ../public-files/public-function/database_func.cpp \
     csschartformone.cpp \
     csschartform.cpp \
-    workprogressdialog.cpp
+    workprogressdialog.cpp \
+    ../public-files/public-function/energy_compute.cpp \
+    ../public-files/public-function/spread_compute.cpp
 
 HEADERS  += widget.h \
-            toolfunc.h \
+#            toolfunc.h \
             test.h \
             chartform.h \
             qmychartview.h \
             dataread.h \
             dataprocess.h \
-            dialog.h \
+            #dialog.h \
             monitorrealtimedata.h \
             chartdata.h \
             historydata.h \
@@ -65,7 +69,7 @@ HEADERS  += widget.h \
             generateportfolioform.h \
             futurechart.h \
             extractdatawindow.h \
-            indexchart.h \
+#            indexchart.h \
     ../public-files/public-class/basechart.h \
     ../public-files/public-class/database.h \
     ../public-files/public-class/macd.h \
@@ -79,19 +83,22 @@ HEADERS  += widget.h \
     ../public-files/public-function/terminal_func.h \
     ../public-files/public-function/time_func.h \
     ../public-files/public-function/widget_func.h \
+    ../public-files/public-function/database_func.h \
     csschartformone.h \
     csschartform.h \
-    workprogressdialog.h
+    workprogressdialog.h \
+    ../public-files/public-function/energy_compute.h \
+    ../public-files/public-function/spread_compute.h
 
 FORMS    += widget.ui \
     chartform.ui \
-    dialog.ui \
+    # dialog.ui \
     announcementform.ui \
 #    webviewform.ui
     generateportfolioform.ui \
     futurechart.ui \
     extractdatawindow.ui \
-    indexchart.ui \
+#    indexchart.ui \
     csschartformone.ui \
     csschartform.ui \
     workprogressdialog.ui

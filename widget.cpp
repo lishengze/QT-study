@@ -49,6 +49,11 @@ Widget::Widget(QWidget *parent) :
     ui->setupUi(this);
     initCommonData();
     initWidegt();
+
+    if (!m_isDev)
+    {
+        setDBTableNameMap();
+    }
 }
 
 Widget::~Widget()
@@ -71,28 +76,51 @@ Widget::~Widget()
     m_histDataThread.wait();
 }
 
-void Widget::initCommonData() {
+void Widget::initCommonData() 
+{
     m_announcementView = NULL;
     m_dbhostList << "192.168.211.162"
                  << "192.168.211.165";
+
     m_currDBHost = m_dbhostList[0];
+
     m_futureIndexCode = "000300";
     m_isBuySalePortfolio = false;
 
+    m_isDev = true;
     initFileDir();
 }
 
-void Widget::initFileDir() {
+void Widget::initWidegt() 
+{
+    initHedgedWidget();
+    initEnergyWidget();
+    //    initFutureWidget();
+    initAnnounceWidget();
+    initDatasourceWidget();
+    initProgramWorkInfoWidget();
+    initTableContextMenuWidget();
+    // initWorkProgressDialog();
+
+    setPortfolioTableWidget();
+    setBuySalePortfolioTableWidget();
+}
+
+void Widget::initFileDir() 
+{
     m_nativeFileName = "./spreadDirInfo.xlsx";
     QFile tmpFile(m_nativeFileName);
-    if (!tmpFile.exists()) {
+    if (!tmpFile.exists()) 
+    {
         QXlsx::Document xlsx;
         m_strategyFileDir = QString("//192.168.211.182/it程序设计/strategy/");
         m_buySalePortfolioFileDir = QString("//192.168.211.182/it程序设计/买入卖出组合/");
         xlsx.write("A1", m_strategyFileDir);
         xlsx.write("A2",m_buySalePortfolioFileDir);
         xlsx.saveAs(m_nativeFileName);
-    } else {
+    } 
+    else 
+    {
         QXlsx::Document xlsx(m_nativeFileName);
         xlsx.selectSheet("Sheet1");
         QXlsx::CellRange range = xlsx.dimension();
@@ -103,43 +131,13 @@ void Widget::initFileDir() {
             xlsx.write("A1", m_strategyFileDir);
             xlsx.write("A2",m_buySalePortfolioFileDir);
             xlsx.save();
-        } else {
+        } 
+        else 
+        {
             m_strategyFileDir = xlsx.cellAt(1, 1)->value().toString();
             m_buySalePortfolioFileDir = xlsx.cellAt(2, 1)->value().toString();
         }
     }
-}
-
-void Widget::initWidegt() {
-//    initCalendar();
-//    initHedgeComboBox();
-//    initDataFrequency();
-//    initEnergyDataFreq();
-//    initMacdTime();
-//    setFutureContractCombox();
-//    initDatasourceCombox();
-//    initSpreadSpinbox();
-//    initCSSParamComBox();
-//    initEnergyIndexCodeComboBox();
-
-//    setFutureContractList();
-//    setPortfolioTableWidget();
-//    setBuySalePortfolioTableWidget();
-
-//    initProgramWorkInfoTableView();
-//    initTableContextMenuWidget();
-
-    initHedgedWidget();
-    initEnergyWidget();
-    initFutureWidget();
-    initAnnounceWidget();
-    initDatasourceWidget();
-    initProgramWorkInfoWidget();
-    initTableContextMenuWidget();
-    initWorkProgressDialog();
-
-    setPortfolioTableWidget();
-    setBuySalePortfolioTableWidget();
 }
 
 void Widget::initHedgedWidget()
@@ -177,7 +175,7 @@ void Widget::initEnergyWidget()
     ui->energyStart_dateEdit->setCalendarPopup (true);
     ui->energyEnd_dateEdit->setCalendarPopup (true);
 
-    ui->energyStart_dateEdit->setDate (QDate(2018,1,1));
+    ui->energyStart_dateEdit->setDate (QDate::currentDate().addDays(-1));
     ui->energyEnd_dateEdit->setDate (QDate::currentDate());
     ui->energyStart_dateEdit->setMinimumDate(QDate(2007,1,1));
 
@@ -189,10 +187,9 @@ void Widget::initEnergyWidget()
 
         QCheckBox *pCheckBox = new QCheckBox(this);
         pCheckBox->setText(reqValue);
-//        if(reqValue == "day" || reqValue == "120m" || reqValue == "60m") {
-//            pCheckBox->setChecked(true);
-//        }
-        if(reqValue == "day") {
+
+        if(reqValue == "10m") 
+        {
             pCheckBox->setChecked(true);
         }
 
@@ -201,6 +198,8 @@ void Widget::initEnergyWidget()
     }
     ui->energyDataFrequency_comboBox->setModel(m_energyDataFreqListWidget->model());
     ui->energyDataFrequency_comboBox->setView(m_energyDataFreqListWidget);
+
+    ui->energySelectCode_lineEdit->insert("SH000300");
 
     initCSSParamComBox();
 }
@@ -230,12 +229,14 @@ void Widget::initAnnounceWidget()
     ui->AnnouncementEndDate->setDate(QDate::currentDate().addDays(0));
 }
 
-void Widget::initDatasourceWidget() {
+void Widget::initDatasourceWidget() 
+{
     ui->dataSource_ComboBox->addItems(m_dbhostList);
     ui->dataSource_ComboBox->setCurrentIndex(0);
 }
 
-void Widget::initProgramWorkInfoWidget () {
+void Widget::initProgramWorkInfoWidget () 
+{
     QStandardItemModel* initModel = new QStandardItemModel();
     initModel -> setHorizontalHeaderItem (0, new QStandardItem(QString("时间")));
     initModel -> setHorizontalHeaderItem (1, new QStandardItem(QString("消息")));
@@ -247,7 +248,8 @@ void Widget::initProgramWorkInfoWidget () {
     ui->programInfo_tableView->setShowGrid (false);
 }
 
-void Widget::initTableContextMenuWidget() {
+void Widget::initTableContextMenuWidget() 
+{
     ui->strategy_table->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->buySalePortfolio_table->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -258,7 +260,8 @@ void Widget::initTableContextMenuWidget() {
             this, SLOT(show_portfolioTable_contextMenu(QPoint)));
 }
 
-void Widget::setPortfolioTableWidget() {
+void Widget::setPortfolioTableWidget() 
+{
     m_strategyFileInfoList = getExcelFileInfo(m_strategyFileDir);
 
     QStandardItemModel* standardItemModel = dynamic_cast<QStandardItemModel*>(ui->strategy_table->model ());
@@ -279,10 +282,11 @@ void Widget::setPortfolioTableWidget() {
     ui->strategy_table->setShowGrid (false);
 }
 
-void Widget::setBuySalePortfolioTableWidget() {
+void Widget::setBuySalePortfolioTableWidget() 
+{
     m_buySalePortfolioFileInfoList = getExcelFileInfo(m_buySalePortfolioFileDir);
     m_portfolioAmount = getPortfolioAmountMap(m_buySalePortfolioFileInfoList);
-//    printMap(m_portfolioAmount, "m_portfolioAmount: ");
+    //    printMap(m_portfolioAmount, "m_portfolioAmount: ");
 
     QStandardItemModel* standardItemModel = dynamic_cast<QStandardItemModel*>(ui->buySalePortfolio_table->model ());
     if (NULL == standardItemModel) {
@@ -307,7 +311,8 @@ void Widget::setBuySalePortfolioTableWidget() {
     ui->buySalePortfolio_table->setShowGrid (false);
 }
 
-void Widget::initCSSParamComBox() {
+void Widget::initCSSParamComBox() 
+{
     ui->pictureNumb_spinBox->setValue(3);
 
     m_aveParamListWidget = new QListWidget(this);
@@ -361,27 +366,30 @@ void Widget::initWorkProgressDialog()
     connect(&m_histDataThread, SIGNAL(finished()),
             m_histDataWorker, SLOT(deleteLater()));
 
-    connect(this, SIGNAL(startGetTableList_signal()),
-            m_histDataWorker, SLOT(startGetTableList_slot()));
+    connect(this, SIGNAL(getTableList_signal()),
+            m_histDataWorker, SLOT(getTableList_slot()));
 
-    connect(m_histDataWorker, SIGNAL(getTableList_signal(QString,QStringList)),
-            this, SLOT(getTableList_slot(QString,QStringList)));
+    connect(m_histDataWorker, SIGNAL(sendTableList_signal(QString,QStringList)),
+            this, SLOT(sendTableList_slot(QString,QStringList)));
 
     m_histDataWorker->moveToThread(&m_histDataThread);
-    m_histDataThread.start();
+    m_histDataThread.start();    
 }
 
 void Widget::setDBTableNameMap()
 {
+    initWorkProgressDialog();
+
     m_workProgressDialog->setWorkInfo(QString("开始读取数据库中已存储的股票与指数信息, 用于验证输入股票或指数代码是否有效[只执行一次]"));
     m_workProgressDialog->setRange(m_timeTypeList.size(), 0);
     m_workProgressDialog->updateWorkState(0);
     m_workProgressDialog->show();
+    // m_workProgressDialog->setWindowFlags(Qt::WindowStaysOnTopHint);
 
-    emit startGetTableList_signal();
+    emit getTableList_signal();
 }
 
-void Widget::getTableList_slot(QString timeType, QStringList tableList)
+void Widget::sendTableList_slot(QString timeType, QStringList tableList)
 {
     QString databaseName = QString("MarketData_%1").arg(timeType);
     m_databaseTableNameMap[timeType] = tableList;
@@ -393,7 +401,6 @@ void Widget::getTableList_slot(QString timeType, QStringList tableList)
                    .arg(timeType).arg(m_databaseTableNameMap[timeType].size());
 
     m_workProgressDialog->setWorkInfo(info);
-    qDebug() << databaseName << m_databaseTableNameMap[timeType].size();
     if (m_timeTypeList.size() == m_databaseTableNameMap.size())
     {
         m_workProgressDialog->close();
@@ -836,7 +843,6 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
 
     QString timeType;
     QStringList timeTypeList = getEnergyDataFreq();
-    qDebug() << timeTypeList;
     if (timeTypeList.size() == 1) {
         timeType = timeTypeList[0];
     } else {
@@ -853,11 +859,11 @@ void Widget::on_showAVEEnergy_pushButton_clicked()
         return;
     }
 
-    if(selectCode.size() == 0)
-    {
-        QMessageBox::critical(NULL, "Error", QString("目标指数或代码为空"));
-        return;
-    }
+    // if(selectCode.size() == 0)
+    // {
+    //     QMessageBox::critical(NULL, "Error", QString("目标指数或代码为空"));
+    //     return;
+    // }
 
     if (!checkCodeInDatabase(selectCode, dbhost, timeTypeList)
     || !checkCodeInDatabase(hedgedCode, dbhost, timeTypeList)) {
@@ -1040,9 +1046,10 @@ void Widget::on_historyEnergyChart_clicked()
 
 void Widget::windowClose_slot(int windowID)
 {
-    if (windowID >= 0 && windowID < m_chartViews.size()) {
-        if (m_chartViews[windowID] != NULL) {
-            qDebug() << "windowID: " << windowID;
+    if (windowID >= 0 && windowID < m_chartViews.size()) 
+    {
+        if (m_chartViews[windowID] != NULL) 
+        {
             delete m_chartViews[windowID];
             m_chartViews[windowID] = NULL;
         }
@@ -1052,8 +1059,10 @@ void Widget::windowClose_slot(int windowID)
 void Widget::closeEvent(QCloseEvent *event)
 {
     event;
-    for(int i = 0; i < m_chartViews.size(); ++i) {
-        if (NULL != m_chartViews[i]) {
+    for(int i = 0; i < m_chartViews.size(); ++i) 
+    {
+        if (NULL != m_chartViews[i]) 
+        {
             m_chartViews[i] -> close();
         }
     }
@@ -1108,210 +1117,22 @@ QStringList Widget::getEnergyDataFreq()
 bool Widget::checkCodeInDatabase(QString codeName, QString dbhost, QStringList timeTypeList)
 {
     bool result = true;
-//    for (auto timeType : timeTypeList) {
-//        QString databaseName = QString("MarketData_%1").arg(timeType);
-//        if (!isCodeInDatabase(codeName, databaseName, dbhost)) {
-//            QMessageBox::critical(NULL, "Error", QString("选择的代码: %1, 不在数据库中").arg(codeName));
-//            result = false;
-//        }
-//    }
 
-//    setDBTableNameMap();
-
-    if (codeName !="")
+    if (!m_isDev)
     {
-        for (auto timeType : timeTypeList) {
-           if(m_databaseTableNameMap[timeType].indexOf(codeName) < 0)
-           {
-               qDebug() << QString("TimeType: %1, CodeName: %2").arg(timeType).arg(codeName);
-               QMessageBox::critical(NULL, "Error", QString("选择的代码: %1 不在数据库中").arg(codeName));
-               result = false;
-//               qDebug() << m_databaseTableNameMap[timeType];
-           }
+        if (codeName !="")
+        {
+            for (auto timeType : timeTypeList) 
+            {
+                if (m_databaseTableNameMap[timeType].indexOf(codeName) < 0)
+                {
+                    qDebug() << QString("TimeType: %1, CodeName: %2").arg(timeType).arg(codeName);
+                    QMessageBox::critical(NULL, "Error", QString("选择的代码: %1 不在数据库中").arg(codeName));
+                    result = false;
+                }
+            }
         }
     }
+
     return result;
 }
-
-//void Widget::initCalendar () {
-//    ui->chooseStartDate->setCalendarPopup (true);
-//    ui->chooseEndDate->setCalendarPopup (true);
-
-//    ui->chooseStartDate->setDate (QDate::currentDate().addDays(-365*1));
-//    ui->chooseEndDate->setDate (QDate::currentDate());
-
-//    QDate today = QDate::currentDate();
-//    QDate sevenDayAgo = today.addDays(-7);
-//    ui->AnnouncementStartDate->setDate(sevenDayAgo);
-//    ui->AnnouncementEndDate->setDate(today);
-
-////    ui->chooseIndexStartDate->setCalendarPopup (true);
-////    ui->chooseIndexEndDate->setCalendarPopup (true);
-
-////    ui->chooseIndexStartDate->setDate (QDate::currentDate().addDays(-30));
-////    ui->chooseIndexEndDate->setDate (QDate::currentDate());
-
-//    ui->energyStart_dateEdit->setCalendarPopup (true);
-//    ui->energyEnd_dateEdit->setCalendarPopup (true);
-
-////    ui->energyStart_dateEdit->setDate (QDate::currentDate().addDays(-365*5));
-////    ui->energyEnd_dateEdit->setDate (QDate::currentDate());
-
-//    ui->energyStart_dateEdit->setDate (QDate(2011,1,1));
-//    ui->energyEnd_dateEdit->setDate (QDate(2012,1,1));
-//}
-
-//void Widget::initHedgeComboBox() {
-//    ui->hedgeTarget_comboBox->setCurrentText (QString("沪深300"));
-//    ui->hedgeTarget_comboBox->addItem (QString("沪深300"),  "000300");
-//    ui->hedgeTarget_comboBox->addItem (QString("上证50"),   "000016");
-//    ui->hedgeTarget_comboBox->addItem (QString("中证100"),  "399903");
-//    ui->hedgeTarget_comboBox->addItem (QString("中证200"),  "000904");
-//    ui->hedgeTarget_comboBox->addItem (QString("中证500"),  "000905");
-//    ui->hedgeTarget_comboBox->addItem (QString("中证800"),  "000906");
-//    ui->hedgeTarget_comboBox->addItem (QString("中证1000"), "000852");
-//    ui->hedgeCount_spinBox->setValue (2);
-//}
-
-//void Widget::initDataFrequency() {
-//    QStringList timeFre;
-//    timeFre << "5m" << "10m" << "15m" << "30m" << "60m"
-//            << "120m" << "day" << "week" << "month";
-
-//    ui->dataFrequency->addItems (timeFre);
-//    ui->dataFrequency->setCurrentText ("day");
-//}
-
-//void Widget::initEnergyDataFreq() {
-//    m_energyDataFreqListWidget = new QListWidget(this);
-//    QStringList energyTimeFre;
-//    energyTimeFre << "month" << "week" << "day" << "120m" << "60m" << "30m" << "15m" << "10m";
-//    for (auto reqValue: energyTimeFre) {
-//        QListWidgetItem *pItem = new QListWidgetItem(m_energyDataFreqListWidget);
-//        pItem->setData(Qt::UserRole, reqValue);
-
-//        QCheckBox *pCheckBox = new QCheckBox(this);
-//        pCheckBox->setText(reqValue);
-////        if(reqValue == "day" || reqValue == "120m" || reqValue == "60m") {
-////            pCheckBox->setChecked(true);
-////        }
-
-//        if(reqValue == "day") {
-//            pCheckBox->setChecked(true);
-//        }
-
-//        m_energyDataFreqListWidget->addItem(pItem);
-//        m_energyDataFreqListWidget->setItemWidget(pItem, pCheckBox);
-//    }
-//    ui->energyDataFrequency_comboBox->setModel(m_energyDataFreqListWidget->model());
-//    ui->energyDataFrequency_comboBox->setView(m_energyDataFreqListWidget);
-//}
-
-//void Widget::initMacdTime () {
-//    ui->EMA1TimeSpinBox->setValue (12);
-//    ui->EMA2TimeSpinBox->setValue (26);
-//    ui->DIFFTimeSpinBox->setValue (9);
-//}
-
-//void Widget::setFutureContractCombox() {
-//    ui->futureList_ComboBox->clear();
-//    ui->futureList_ComboBox->addItems(m_futureList);
-//    ui->futureList_ComboBox->setCurrentIndex(0);
-//}
-
-//void Widget::setFutureContractList() {
-//    Database database_obj(this, "0", m_currDBHost);
-//    m_futureList = database_obj.getAllData(m_futureIndexCode, "Future_Info");
-////    qDebug() << m_futureList;
-//}
-
-//void Widget::initSpreadSpinbox() {
-//    ui->maxSpread_SpinBox->setSingleStep(0.01);
-//    ui->minSpread_SpinBox->setSingleStep(0.01);
-
-//    ui->maxSpread_SpinBox->setRange(-100000, 100000);
-//    ui->minSpread_SpinBox->setRange(-100000, 100000);
-
-//    ui->maxSpread_SpinBox->setValue(100);
-//    ui->minSpread_SpinBox->setValue(-100);
-//}
-
-//void Widget::initEnergyIndexCodeComboBox() {
-////    QStringList indexList;
-////    indexList << "上证综指_000001" << "上证A指_000002" << "上证B指_000003" << "上证380_000009" << "上证180_000010"
-////              << "深证成指_399001" << "深证综指_399106" << "深证A指_399107" << "深证B指_399108"
-////              << "创业板50_399673" << "创业板指_399006" << "创业300_399102" << "创业板综_399102"
-////              << "中小板指_399005" << "中小300_399008"<< "中小板综_399101"
-////              << "上证50_000016" << "中证100_399903"  << "中证200_0904" << "中证500_000905" << "中证800_000906"
-////              << "沪深300_000300" << "300非银_000849"
-////              << "沪深300能源_000908" << "沪深300材料_000909" << "沪深300工业_000910" << "沪深300可选_000911"
-////              << "沪深300消费_000912" << "沪深300医药_000913" << "沪深300信息_000915" << "沪深300公用_000917"
-////              << "300银行_000951" << "300地产_000952";
-////    ui->energyIndexCode_comboBox->addItems (indexList);
-////    ui->energyIndexCode_comboBox->setCurrentText ("000300");
-//}
-
-
-//    void initSelectIndexComboBox();
-//    void initHedgedIndexComboBox();
-//    void initIndexAveNumb();
-//    void on_showIndexHedgedPic_pushButton_clicked();
-
-//void Widget::initSelectIndexComboBox() {
-//    QStringList indexList;
-//    indexList << "000849" << "000908" << "000909" << "000910" << "000911" << "000912"
-//              << "000913" << "000915" << "000917" << "000951" << "000952" ;
-//    ui->targetIndex_QComboBox->addItems (indexList);
-//    ui->targetIndex_QComboBox->setCurrentText ("000913");
-//}
-
-//void Widget::initHedgedIndexComboBox() {
-//    QStringList indexList;
-//    indexList << "000300" << "000849" << "000908" << "000909" << "000910" << "000911"
-//              << "000912" << "000913" << "000915" << "000917" << "000951" << "000952";
-//    ui->hedgeIndex_comboBox->addItems (indexList);
-//    ui->hedgeIndex_comboBox->setCurrentText ("000300");
-//}
-
-//void Widget::initIndexAveNumb() {
-//    ui->indexAveNunb_spinBox->setMaximum(100000);
-//    ui->indexAveNunb_spinBox->setMinimum(-100000);
-//    ui->indexAveNunb_spinBox->setValue(32);
-//}
-
-//void Widget::on_showIndexHedgedPic_pushButton_clicked()
-//{
-//    QString startDate = ui->chooseIndexStartDate->date().toString("yyyyMMdd");
-//    QString endDate = ui->chooseIndexEndDate->date().toString("yyyyMMdd");
-//    QString dbhost = ui->dataSource_ComboBox->currentText();
-//    QString timeType = ui->index_dataFrequency->currentText();
-//    QString databaseName = QString("MarketData_%1").arg(timeType);
-//    QString selectIndex = ui->targetIndex_QComboBox->currentText();
-//    QString hedgedIndex = ui->hedgeIndex_comboBox->currentText();
-//    int aveNumb = ui->indexAveNunb_spinBox->value();
-
-//    if (startDate.toInt () > endDate.toInt ()) {
-//        QMessageBox::critical(NULL, "Error", QString("起始时间晚于截止时间"));
-//        return;
-//    }
-
-//    if (selectIndex == hedgedIndex) {
-//        QMessageBox::critical(NULL, "Error", QString("目标指数与对冲指数相同都为: %1").arg(selectIndex));
-//        return;
-//    }
-//    QWidget* chartView = new IndexChart(m_chartViews.count(), dbhost, databaseName,
-//                                selectIndex, hedgedIndex, startDate, endDate,
-//                                aveNumb);
-//    m_chartViews.append (chartView);
-//    chartView->setWindowTitle("指数对冲图");
-//    chartView->show();
-
-//    connect(chartView, SIGNAL(windowClose_signal(int)),
-//            this, SLOT(windowClose_slot(int)));
-
-//    QString info = QString("开始显示指数对冲图: \n目标指数为: %1, 对冲指数为: %2\n起始时间: %3, 终止时间: %4\n数据频率: %5, 平均值: %6")
-//                           .arg(selectIndex).arg(hedgedIndex)
-//                           .arg(startDate).arg(endDate)
-//                           .arg(timeType).arg(aveNumb);
-//    updateProgramInfo (ui->programInfo_tableView, info);
-//}

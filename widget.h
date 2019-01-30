@@ -4,7 +4,6 @@
 #include <QWidget>
 #include "QtCharts/QChart"
 #include <QChartView>
-#include "callout.h"
 #include <QGraphicsSimpleTextItem>
 #include <QList>
 #include <QResizeEvent>
@@ -70,11 +69,11 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 signals:
-    void startGetTableList_signal();
+    void getTableList_signal();
 
 public slots:
     void windowClose_slot(int windowID);
-    void getTableList_slot(QString timeType, QStringList tableList);
+    void sendTableList_slot(QString timeType, QStringList tableList);
 
 private slots:
     void on_chooseStartDate_editingFinished();
@@ -164,16 +163,9 @@ private:
     WorkProgressDialog*          m_workProgressDialog;
     HistoryData*                 m_histDataWorker;
     QThread                      m_histDataThread;
+
+    bool                         m_isDev;
 };
 
-//    void initCalendar();
-//    void initHedgeComboBox();
-//    void initDataFrequency();
-//    void initEnergyDataFreq();
-//    void initEnergyIndexCodeComboBox();
-//    void initMacdTime();
-//    void setFutureContractCombox();
-//    void setFutureContractList();
-//    void initSpreadSpinbox();
 
 #endif // WIDGET_H

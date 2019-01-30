@@ -65,9 +65,14 @@ public:
     void initHistoryData();
     void initLabelRowColNumb();
     void registSignalParamsType();
-    void startGetData();
+    void setRealtimeFlag();
+    void startGetHistData();
+    void startGetRealtimeData();
 
-    void  initColors();
+    void initColors();
+
+    void extendRealtimeList(int dataID);
+
     virtual void initLayout();
     virtual void initTheme();
 
@@ -83,9 +88,8 @@ public:
     virtual void initExtractKeyValueList();
     virtual QList<QMyChartView*> getChartViewList();
     virtual QString getExcelFileName(QStringList keyValueList, QString fileDir);
-//    virtual QList<QStringList> getExcelData(QStringList keyValueList);
 
-    void setPropertyValue(int index, int dataID);
+    void setPropertyValue(int index, int dataID, bool isUpdateLableLine=true);
     virtual void mouseMoveEvenFunc(QObject *watched, QEvent *event);
     virtual void mouseButtonReleaseFunc(QObject *watched, QEvent *event);
     virtual void KeyReleaseFunc(QEvent *event);
@@ -93,12 +97,14 @@ public:
     virtual double getPointXDistance();
 
 signals:
-    void getCSSData_signal();
+    void getRealtimeData_signal();
+    void getIndexCssData_signal();
 
 public slots:
-    void sendCSSData_slot(QList<QString>, QList<QList<double>>,
+    void sendHistCSSData_slot(QList<QString>, QList<QList<double>>,
                           QList<QList<double>>, int);
 
+    void sendRealTimeCSSData_slot(QList<double>, QList<double>, int, bool);
     void connectMarkers();
     void handleMarkerClicked();
     void getChoosenInfo_slot(QStringList keyValueList, QString fileDir, bool bOpenDesFile);
@@ -118,6 +124,7 @@ private:
     int                                     m_currColNumb;
 
     bool                                    m_isPortfolio;
+    bool                                    m_isRealtime;
     QMap<QString, int>                      m_portfolioMap;
     QString                                 m_portfolioName;
     QString                                 m_hedgeIndexCode;
@@ -195,6 +202,9 @@ private:
     QList<bool>                             m_isKeyMoveList;
     QList<QPoint>                           m_mouseInitPosList;
     int                                     m_currFoucusChartID;
+
+    // 用于更新实时图像的数据结构
+    QList<int>                              m_updateCountList;
 };
 
 #endif // CSSCHARTFORM_H

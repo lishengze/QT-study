@@ -55,8 +55,7 @@ void FutureChart::initCommonData() {
 }
 
 void FutureChart::initMonitorWorker() {
-    m_monitorWorker = new MonitorRealTimeData(QString("%1").arg(m_chartViewID),
-                                              m_dbhost, m_futureName, m_updateTime);
+    m_monitorWorker = new MonitorRealTimeData(m_dbhost, m_updateTime, m_futureName);
 
     connect(this, SIGNAL(getHistFutureData_signal()),
             m_monitorWorker, SLOT(getHistFutureData_slot()));
@@ -67,8 +66,8 @@ void FutureChart::initMonitorWorker() {
     connect(m_monitorWorker, SIGNAL(sendHistFutureData_signal(QList<double>)),
             this, SLOT(sendHistFutureData_slot(QList<double>)));
 
-    connect(m_monitorWorker, SIGNAL(sendFutureData_signal(QList<double>)),
-            this, SLOT(sendFutureData_slot(QList<double>)));
+    connect(m_monitorWorker, SIGNAL(sendRealtimeFutureData_signal(QList<double>)),
+            this, SLOT(sendRealtimeFutureData_slot(QList<double>)));
 
     m_monitorWorker->moveToThread(&m_MonitorThread);
 
@@ -186,7 +185,7 @@ void FutureChart::sendHistFutureData_slot(QList<double> histFutureData) {
     m_monitorWorker->startTimer();
 }
 
-void FutureChart::sendFutureData_slot (QList<double> realtimeFutureData) {
+void FutureChart::sendRealtimeFutureData_slot (QList<double> realtimeFutureData) {
 //    qDebug() << realtimeFutureData;
     monitorSpread(realtimeFutureData[0], transIntDateTime(realtimeFutureData[1]));
     m_futureSpread.append(realtimeFutureData[0]);

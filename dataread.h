@@ -7,18 +7,14 @@
 #include <QDebug>
 #include <QMap>
 #include "database.h"
+#include "process_data_func.h"
 
 class DataRead: public QObject
 {
     Q_OBJECT
 public:
-    DataRead(QString databaseConnID, QString dbhost,
-             QString dbName, QStringList tableNameList,
-             QString startDate, QString endDate, QStringList keyValueList,
-             QObject *parent = Q_NULLPTR);
-
-    DataRead(QString databaseConnID, QString dbhost,
-             QString dbName, QStringList tableNameList,
+    DataRead(QString dbhost, QString dbName, QStringList tableNameList,
+             QString startDate="", QString endDate="", QStringList keyValueList=EmpytStringList(),
              QObject *parent = Q_NULLPTR);
 
     ~DataRead();
@@ -27,7 +23,7 @@ public:
     QMap<QString, QList<QStringList>> readRealTimeData();
 
 public slots:
-    void receiveStartReadData(QString dataType);
+    void getOrinPortfolioData_slot(QString dataType);
 
 signals:
     void sendHistoryData(QMap<QString, QList<QStringList>> historyData);

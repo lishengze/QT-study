@@ -59,14 +59,16 @@ private:
     bool                                 m_isRealTime;
     bool                                 m_isBuySalePortfolio;
 
-    QMap<QString, QList<QStringList>>    m_oriData;
-    QMap<QString, int>                   m_portfolioMap;
+    QMap<QString, QList<QStringList>>    m_oriPortfilioData;
+    
     QStringList                          m_secodeNameList;
 
-    QMap<QString, int>                   m_buyStrategyMap;
-    QMap<QString, int>                   m_saleStrategyMap;
+    QMap<QString, int>                   m_portfolio;
+    QMap<QString, int>                   m_buyPortfolio;
+    QMap<QString, int>                   m_salePortfolio;
 
     QMap<QString, int>                   m_indexHedgeMetaInfo;
+
     QMap<QString, QStringList>           m_indexHedgeData;
     QString                              m_hedgeIndexCode;
 
@@ -77,6 +79,7 @@ private:
     QList<MACD>                          m_MACDData;
     QList<double>                        m_timeData;
     QList<double>                        m_indexCodeData;
+
     QList<double>                        m_mainList;
     QList<double>                        m_subValueList;
     QList<double>                        m_energyValueList;

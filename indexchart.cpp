@@ -3,6 +3,7 @@
 #include "process_data_func.h"
 #include "io_func.h"
 #include "compute_func.h"
+#include "spread_compute.h"
 #include "time_func.h"
 #include <QtMath>
 #include <QMessageBox>
@@ -86,7 +87,7 @@ void IndexChart::setDataFrequency() {
 }
 
 void IndexChart::initHistDataWorker() {
-    m_histDataWorker = new HistoryData(m_chartViewID, m_dbhost, m_databaseName,
+    m_histDataWorker = new HistoryData(m_dbhost, m_databaseName,
                                        m_selectIndex, m_hedgedIndex,
                                        m_startDate, m_endDate, m_isRealTime,
                                        m_aveNumb, m_csst12Rate,
@@ -115,9 +116,7 @@ void IndexChart::initHistDataWorker() {
 }
 
 void IndexChart::initMonitorWorker() {
-    m_monitorWorker = new MonitorRealTimeData(QString("%1").arg(m_chartViewID+1),
-                                              m_dbhost, m_selectIndex, m_hedgedIndex,
-                                              m_updateTime);
+    m_monitorWorker = new MonitorRealTimeData(m_dbhost, m_updateTime, m_selectIndex, m_hedgedIndex);
 
     connect(m_monitorWorker, SIGNAL(sendTradeOver()),
             this, SLOT(tradeOver_slot()));

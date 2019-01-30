@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Qt/t5.7.1/5.7/msvc2015_64/include/QtWidgets/*"
+                "../public-files/**",
+                "../build-release-chart-dev",
+                "C:/Qt/Qt5.7.1/5.7/msvc2015_64/include/**"
             ],
             "defines": [
                 "_DEBUG",

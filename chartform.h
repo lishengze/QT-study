@@ -114,19 +114,21 @@ public slots:
     void receiveRealTimeData(ChartData curChartData);
 
     void receiveTableViewInfo(QString msg);
-    void receiveMarketHistData_slot(QList<QList<double>> allData);
+    void sendHistPortfolioData_slot(QList<QList<double>> allData);
 
     void receiveTradeOver();
     void updatePrecloseData();
 
 signals:
-    void getHistDataSignal();
-    void sendStartReadDataSignal(QString dataType);
-    void sendstartProcessHistoryDataSignal(QString dataType);
-    void sendCloseSignal(int ChartViewID);
-    void getPreData(QList<QString> secodeList);
-    void getPreCloseSpread();
-    void startMonitorRealTimeData();
+    void getHistPortfolioData_Signal();
+
+    // void sendStartReadDataSignal(QString dataType);
+    // void sendstartProcessHistoryDataSignal(QString dataType);
+    // void sendCloseSignal(int ChartViewID);
+    // void startMonitorRealTimeData();
+
+    void startReadRealtimeData_signal();
+    void getPreCloseSpread_signal();
 
 protected:
     virtual void closeEvent(QCloseEvent *event);
@@ -187,7 +189,7 @@ private:
 
     QList<double>        m_mainList;
     QList<double>        m_subValueList;
-    QList<double>        m_energyValueList;
+    QList<double>        m_earningList;
 
     QTime                m_startTime;
     QTime                m_endTime;

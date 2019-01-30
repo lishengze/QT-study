@@ -24,7 +24,8 @@ AnnouncementForm::AnnouncementForm(QString dbConnID, QString dbhost,
 {
     ui->setupUi(this);
     initTableView();
-    m_database = new Database(m_dbConnID, m_dbhost);
+    // m_database = new Database(m_dbConnID, m_dbhost);
+    m_database = new Database(m_dbhost);
     setTableView();
 }
 

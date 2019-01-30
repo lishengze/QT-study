@@ -47,7 +47,7 @@ public:
     void initCommonData();
     void initHistoryData();
     void registSignalParamsType();
-    void startGetData();
+    void startGetHistData();
     void addPropertyLabel();
 
     void setLineColor();
@@ -78,11 +78,12 @@ public:
     virtual double getPointXDistance();
 
 signals:
-    void getCSSData_signal();
+    void getIndexCssData_signal();
 
 
 public slots:
-    void sendCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int);
+    void sendHistCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int);
+    void sendRealTimeCSSData_slot(QList<double>, QList<double>, int, bool);
 
     void connectMarkers();
     void disconnectMarkers();

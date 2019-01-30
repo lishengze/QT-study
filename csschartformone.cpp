@@ -44,7 +44,7 @@ CSSChartFormOne::CSSChartFormOne(int chartID, QString dbhost, QString timeType,
 
     initHistoryData();
     registSignalParamsType();
-    startGetData();
+    startGetHistData();
 
     addPropertyLabel();
 }
@@ -77,7 +77,7 @@ void CSSChartFormOne::initCommonData() {
 void CSSChartFormOne::initHistoryData() {
     int maxPreTimeNumb = Max(m_aveNumbList, 0, m_aveNumbList.size());
     m_newStartDate = getPreDate(m_startDate, m_timeType, maxPreTimeNumb);
-    qDebug() << QString("maxPreTimeNumb: %1, newStartDate: %2").arg(maxPreTimeNumb).arg(m_newStartDate);
+    // qDebug() << QString("maxPreTimeNumb: %1, newStartDate: %2").arg(maxPreTimeNumb).arg(m_newStartDate);
     m_histdataWorker = new HistoryData(m_dbhost, m_databaseName, m_newStartDate, m_endDate,
                                        m_singleCodeName, "", m_aveNumbList, m_isEMAList,
                                        m_mainAveNumb, m_subAveNumb, m_energyAveNumb,
@@ -88,11 +88,11 @@ void CSSChartFormOne::initHistoryData() {
     connect(&m_histdataThread, SIGNAL(finished()),
             m_histdataWorker, SLOT(deleteLater()));
 
-    connect(this, SIGNAL(getCSSData_signal()),
-            m_histdataWorker, SLOT(getCSSData_slot()));
+    connect(this, SIGNAL(getIndexCssData_signal()),
+            m_histdataWorker, SLOT(getIndexCSSData_slot()));
 
-    connect(m_histdataWorker, SIGNAL(sendCSSData_signal(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)),
-            this, SLOT(sendCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)));
+    connect(m_histdataWorker, SIGNAL(sendHistCSSData_signal(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)),
+            this, SLOT(sendHistCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)));
 
     m_histdataWorker->moveToThread(&m_histdataThread);
 
@@ -439,10 +439,10 @@ void CSSChartFormOne::initCSSChart() {
     m_cssChartLabelSeries->attachAxis(cssAxisY);
 }
 
-void CSSChartFormOne::sendCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
-                                       QList<QList<double>> cssList, int dataType) {
+void CSSChartFormOne::sendHistCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
+                                           QList<QList<double>> cssList, int dataType) {
 
-    qDebug() << "CSSChartFormOne::sendCSSData_slot";
+    qDebug() << "CSSChartFormOne::sendHistCSSData_slot";
     int startPos = getStartIndex(m_startDate, timeList);
 
     qDebug() << QString("startPos: %1").arg(startPos);
@@ -454,7 +454,7 @@ void CSSChartFormOne::sendCSSData_slot(QList<QString> timeList, QList<QList<doub
     for (int i = 0; i < cssList.size(); ++i) {
         m_cssList.append(getSubList(cssList[i], startPos, cssList[i].size()));
     }
-
+    dataType;
 //    qDebug() << "m_timeList.size: " << m_timeList.size();
 //    for (int i =0; i < m_aveList.size(); ++i) {
 //        qDebug() << QString("m_aveList[%1].size: %2").arg(i).arg(m_aveList[i].size());
@@ -465,8 +465,13 @@ void CSSChartFormOne::sendCSSData_slot(QList<QString> timeList, QList<QList<doub
     initLayout();
 }
 
-void CSSChartFormOne::startGetData() {
-    emit getCSSData_signal();
+void CSSChartFormOne::sendRealTimeCSSData_slot(QList<double>, QList<double>, int, bool)
+{
+
+}
+
+void CSSChartFormOne::startGetHistData() {
+    emit getIndexCssData_signal();
 }
 
 void CSSChartFormOne::initExtractKeyValueList() {

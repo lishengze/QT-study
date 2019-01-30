@@ -318,7 +318,7 @@
               </size>
              </property>
              <property name="text">
-              <string>历史势能图</string>
+              <string>势能图</string>
              </property>
             </widget>
            </item>

@@ -35,7 +35,7 @@ void testDataRead();
 
 void testGetSnapShootData();
 
-void testTransDateTime();
+void testtransToEpochTime();
 
 void testGetAnnounce();
 

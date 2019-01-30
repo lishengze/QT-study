@@ -81,7 +81,7 @@ public:
 public slots:
     void tradeOver_slot();
     void sendHistFutureData_slot(QList<double>);
-    void sendFutureData_slot(QList<double>);
+    void sendRealtimeFutureData_slot(QList<double>);
 
 protected:
     virtual void closeEvent(QCloseEvent *event);

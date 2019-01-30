@@ -15,6 +15,8 @@
 #include "excel_func.h"
 #include "time_func.h"
 #include "compute_func.h"
+#include "spread_compute.h"
+#include "database_func.h"
 using std::max;
 
 #include <QtMath>
@@ -46,8 +48,7 @@ CSSChartForm::CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList
     initHistoryData();
     initColors();
     registSignalParamsType();
-    startGetData();
-    qDebug() << m_selectCodeName << m_hedgedCodeName;
+    startGetHistData();
 }
 
 CSSChartForm::CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList,
@@ -78,7 +79,7 @@ CSSChartForm::CSSChartForm(int chartID, QString dbhost, QStringList timeTypeList
     initHistoryData();
     initColors();
     registSignalParamsType();
-    startGetData();
+    startGetHistData();
 }
 
 CSSChartForm::~CSSChartForm()
@@ -140,6 +141,7 @@ void CSSChartForm::initCommonData() {
 
     initExtractKeyValueList();
     initLabelRowColNumb();
+    setRealtimeFlag();
 }
 
 void CSSChartForm::initSecodeList() {
@@ -208,6 +210,8 @@ void CSSChartForm::initListData() {
         m_mouseInitPosList.append(QPoint(-1, -1));
 
         m_oldLabelIndexList.append(0);
+
+        m_updateCountList.append(0);
     }
 }
 
@@ -217,18 +221,12 @@ void CSSChartForm::initHistoryData() {
         QString databaseName = m_databaseNameList[i];
         int maxPreTimeNumb = Max(m_aveNumbList, 0, m_aveNumbList.size()) + 90;
         QString newStartDate = getPreDate(m_startDate, timeType, maxPreTimeNumb);
-        qDebug() << QString("maxPreTimeNumb: %1, newStartDate: %2").arg(maxPreTimeNumb).arg(newStartDate);
         HistoryData* histdataWorker;
         if (m_isPortfolio)
         {
-            int threadNumb = m_secodeNameList.size();
-            QStringList keyValueList;
-            keyValueList << "TCLOSE" << "VOTRUNOVER";
-
             histdataWorker = new HistoryData(m_dbhost, databaseName,
                                              newStartDate, m_endDate,
-                                             threadNumb, m_secodeNameList, m_hedgeIndexCode,
-                                             m_portfolioMap, keyValueList,
+                                             m_secodeNameList, m_hedgeIndexCode, m_portfolioMap,
                                              m_aveNumbList, m_isEMAList,
                                              m_mainAveNumb, m_subAveNumb, m_energyAveNumb,
                                              m_css12Rate, m_mainCssRate1, m_mainCssRate2,
@@ -237,7 +235,8 @@ void CSSChartForm::initHistoryData() {
         }
         else
         {
-            histdataWorker = new HistoryData(m_dbhost, databaseName, newStartDate, m_endDate,
+            histdataWorker = new HistoryData(m_dbhost, databaseName, 
+                                             newStartDate, m_endDate,
                                              m_selectCodeName, m_hedgedCodeName,
                                              m_aveNumbList, m_isEMAList,
                                              m_mainAveNumb, m_subAveNumb, m_energyAveNumb,
@@ -251,11 +250,17 @@ void CSSChartForm::initHistoryData() {
         connect(histdataThread, SIGNAL(finished()),
                 histdataWorker, SLOT(deleteLater()));
 
-        connect(this, SIGNAL(getCSSData_signal()),
-                histdataWorker, SLOT(getCSSData_slot()));
+        connect(this, SIGNAL(getIndexCssData_signal()),
+                histdataWorker, SLOT(getIndexCSSData_slot()));
 
-        connect(histdataWorker, SIGNAL(sendCSSData_signal(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)),
-                this, SLOT(sendCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)));
+        connect(this, SIGNAL(getRealtimeData_signal()),
+                histdataWorker, SLOT(getRealtimeData_slot()));                
+
+        connect(histdataWorker, SIGNAL(sendHistCSSData_signal(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)),
+                this, SLOT(sendHistCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)));
+
+        connect(histdataWorker, SIGNAL(sendRealTimeCSSData_signal(QList<double>, QList<double>, int, bool)),
+                this, SLOT(sendRealTimeCSSData_slot(QList<double>, QList<double>, int, bool)));                
 
         histdataWorker->moveToThread(histdataThread);
 
@@ -264,6 +269,7 @@ void CSSChartForm::initHistoryData() {
         m_histdataWorkerList.append(histdataWorker);
         m_histdataThreadList.append(histdataThread);
     }
+    // qDebug() << "CSSChartForm ThreadID: " << QThread::currentThreadId();
 }
 
 void CSSChartForm::initLabelRowColNumb() {
@@ -279,7 +285,7 @@ void CSSChartForm::initLabelRowColNumb() {
     }
 
     m_labelColNumb = qCeil(double(m_aveNumbList.size() + 3)/double(m_labelRowNumb));
-    qDebug() << QString("m_lableRowNumb: %1, m_labelColNumb: %2").arg(m_labelRowNumb).arg(m_labelColNumb);
+    // qDebug() << QString("m_lableRowNumb: %1, m_labelColNumb: %2").arg(m_labelRowNumb).arg(m_labelColNumb);
 }
 
 void CSSChartForm::initExtractKeyValueList() {
@@ -325,21 +331,107 @@ void CSSChartForm::initColors() {
     m_cssChartColorList.append(QColor(0,229,255));      // 势能小于0
 }
 
-void CSSChartForm::startGetData() {
-    emit getCSSData_signal();
+void CSSChartForm::setRealtimeFlag()
+{
+    if (getDate(m_endDate) == QDate::currentDate())
+    {
+        m_isRealtime = true;  
+    }
+    else
+    {
+        m_isRealtime = false;
+    }
 }
 
-void CSSChartForm::registSignalParamsType() {
+void CSSChartForm::startGetHistData() 
+{
+    emit getIndexCssData_signal();
+}
+
+void CSSChartForm::startGetRealtimeData()
+{
+    emit getRealtimeData_signal();
+}
+
+void CSSChartForm::registSignalParamsType() 
+{
     qRegisterMetaType<QList<QString>>("QList<QString>");
     qRegisterMetaType<QList<QList<double>>>("QList<QList<double>>");
 }
 
-void CSSChartForm::sendCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
-                                    QList<QList<double>> cssList, int dataID) {
-    QMutexLocker locker(&m_mutex);
-    int startPos = getStartIndex(m_startDate, timeList);
+void CSSChartForm::extendRealtimeList(int dataID)
+{
+    double addRate = 0.1;
+    int addNumb = m_timeList[dataID].size() * addRate;
+    QString latestDate = (m_timeList[dataID].last().split(" "))[0];
+    QDate addDate = getDate(latestDate);
+    QList<QString> addedTimeList;
 
-    qDebug() <<"dataID: " << dataID <<", startPos: " << startPos;
+    if (m_timeTypeList[dataID] == "day")
+    {
+        for (int addedCount = 0;  addedCount < addNumb;)
+        {
+            addDate = addDate.addDays(1);
+            if (!isTradingDay(addDate))
+            {
+                continue;
+            }
+
+            QString addDateTime = addDate.toString("yyyyMMdd");
+            m_timeList[dataID].append(addDateTime);
+            ++addedCount;                
+
+            addedTimeList.append(addDateTime);
+        }
+    }
+    else
+    {
+        QString latestTime = (m_timeList[dataID].last().split(" "))[1];
+        QTime curTime = getTime(latestTime);
+        QList<int> onedayTimeList = getOneDayTimeList(m_dbhost, m_databaseNameList[dataID]);
+        addNumb = addNumb > onedayTimeList.size() ? addNumb : onedayTimeList.size();
+
+        for (int addedCount = 0;  addedCount < addNumb;)
+        {
+            if (addDate == QDate::currentDate())
+            {
+                for (int i = 0; i < onedayTimeList.size(); ++i)
+                {
+                    if (onedayTimeList[i] > curTime.toString("hhmmss").toInt())
+                    {
+                        QString addDateTime = addDate.toString("yyyyMMdd") + " " + QString("%1").arg(onedayTimeList[i] / 100);
+                        m_timeList[dataID].append(addDateTime);
+                        ++addedCount;
+                        addedTimeList.append(addDateTime);                        
+                    }
+                }
+            }
+
+            addDate = addDate.addDays(1);
+            while (!isTradingDay(addDate))
+            {
+                addDate = addDate.addDays(1);
+            }
+
+            for (int i = 0; i < onedayTimeList.size(); ++i)
+            {
+                QString addDateTime = addDate.toString("yyyyMMdd") + " " + QString("%1").arg(onedayTimeList[i] /100);
+                m_timeList[dataID].append(addDateTime);
+                ++addedCount;
+                addedTimeList.append(addDateTime);
+            }
+        }
+    }
+
+    // printList(addedTimeList, "addedTimeList");
+}
+
+void CSSChartForm::sendHistCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
+                                    QList<QList<double>> cssList, int dataID) 
+{
+    QMutexLocker locker(&m_mutex);
+
+    int startPos = getStartIndex(m_startDate, timeList);
 
     m_timeList[dataID] = getSubList(timeList, startPos, timeList.size());
     m_realStartTime = m_timeList[dataID][0];
@@ -361,58 +453,138 @@ void CSSChartForm::sendCSSData_slot(QList<QString> timeList, QList<QList<double>
 
     startPos = 0;
     m_timeListStore[dataID] = getSubList(timeList, startPos, timeList.size());
-//    qDebug() << QString("m_timeListStore[%1].size: %2").arg(dataID).arg(timeList.size());
-    for (int i = 0; i < m_aveNumbList.size() + 1; ++i) {
+    for (int i = 0; i < m_aveNumbList.size() + 1; ++i) 
+    {
         m_aveListStore[dataID].append(getSubList(aveList[i], startPos, aveList[i].size()));
-//        qDebug() << QString("aveList[%1].size: %2").arg(i).arg(aveList[i].size());
     }
 
-    for (int i = 0; i < cssList.size(); ++i) {
+    for (int i = 0; i < cssList.size(); ++i) 
+    {
         m_cssListStore[dataID].append(getSubList(cssList[i], startPos, cssList[i].size()));
-//        qDebug() << QString("cssList[%1].size: %2").arg(i).arg(cssList[i].size());
     }
 
     if(m_isPortfolio)
     {
         m_hedgedDataListStore[dataID] = getSubList(aveList[aveList.size()-2], startPos, aveList.last().size()) ;
         m_indexDataListStore[dataID] = getSubList(aveList.last(), startPos, aveList.last().size()) ;
-//        qDebug() << QString("m_hedgedDataListStore[%1].size: %2,  m_indexDataListStore[%1].size: %3")
-//                    .arg(dataID).arg(aveList[aveList.size()-2].size()).arg(aveList.last().size());
+    }
+
+    if (m_isRealtime && !isTradingOver())
+    {
+        extendRealtimeList(dataID);
     }
 
     setChart(dataID);
     initTheme();
 
     m_currDataIDList.append(dataID);
-    if (m_currDataIDList.size() == m_timeTypeList.size()) {
+    if (m_currDataIDList.size() == m_timeTypeList.size()) 
+    {
         setChartView();
         setLabels();
         setColors();
         connectMarkers();
         setWindowTitleName();
+
+        if (m_isRealtime)
+        {
+            startGetRealtimeData();
+        }
     }
 }
 
-void CSSChartForm::setChart(int dataID) {
+void CSSChartForm::sendRealTimeCSSData_slot(QList<double> aveList, QList<double> cssList, 
+                                            int dataID, bool isAddData)
+{
+    ++m_updateCountList[dataID];
+
+    // printList(aveList, "aveList");
+    // printList(cssList, "cssList");
+    qDebug() << QString("m_updateCount: %1, isAddData: %2")
+                .arg(m_updateCountList[dataID]).arg(isAddData);
+
+    if (m_updateCountList[dataID] != 1)
+    {
+        for (int i = 0; i < aveList.size(); ++i)
+        {            
+            m_aveLineSeriesList[dataID][i]->remove(m_aveList[dataID][i].size()-1);
+            m_aveList[dataID][i].pop_back();
+        }
+
+        for (int i = 0; i < 2; ++i)
+        {
+            m_cssLineSeriesList[dataID][i]->remove(m_cssList[dataID][i].size()-1);
+            m_cssList[dataID][i].pop_back();            
+        }
+        m_energySeriesListList[dataID][0]->barSets()[0]->remove(m_cssList[dataID][2].size()-1);
+        m_energySeriesListList[dataID][1]->barSets()[0]->remove(m_cssList[dataID][2].size()-1);
+        m_cssList[dataID][2].pop_back();
+    }
+
+        if (m_aveList[dataID][0].size() >= m_timeList[dataID].size())
+        {
+            return;
+        }
+
+        for (int i = 0; i < aveList.size(); ++i)
+        {
+            m_aveList[dataID][i].append(aveList[i]);
+            m_aveLineSeriesList[dataID][i]->append(m_aveList[dataID][i].size()-1, m_aveList[dataID][i].last());
+        }
+
+        for (int i = 0; i < 2; ++i)
+        {
+            m_cssList[dataID][i].append(cssList[i]);
+            m_cssLineSeriesList[dataID][i]->append(m_cssList[dataID][i].size()-1, m_cssList[dataID][i].last());
+        }
+
+        m_cssList[dataID][2].append(cssList[2]);
+        if (cssList[2] > 0)
+        {
+            m_energySeriesListList[dataID][0]->barSets()[0]->append(cssList[2]);
+            m_energySeriesListList[dataID][1]->barSets()[0]->append(0);
+        }
+        else
+        {
+            m_energySeriesListList[dataID][0]->barSets()[0]->append(0);
+            m_energySeriesListList[dataID][1]->barSets()[0]->append(cssList[2]);
+        }
+
+        setPropertyValue(m_cssList[dataID][0].size()-1, dataID, false);
+
+    if (isAddData)
+    {
+        m_updateCountList[dataID] = 0;
+    }
+}
+
+void CSSChartForm::setChart(int dataID) 
+{
     setAVEChart(dataID);
     setCSSChart(dataID);
 }
 
-void CSSChartForm::setAVEChart(int dataID) {
+void CSSChartForm::setAVEChart(int dataID) 
+{
     QCategoryAxis* timeAxisX = getTimeAxisX(m_timeList[dataID], m_chartXaxisTickCount);
     QValueAxis* aveAxisY = new QValueAxis;
     QList<double> aveRange =getChartYvalueRange(m_aveList[dataID]);
     m_aveChartRange[dataID] = aveRange;
     aveAxisY->setRange(aveRange[0], aveRange[1]);
 
-    for (int i = 0; i < m_aveList[dataID].size(); ++i) {
+    for (int i = 0; i < m_aveList[dataID].size(); ++i) 
+    {
         QLineSeries* currSeries = new QLineSeries;
-        for (int j = 0; j < m_aveList[dataID][i].size(); ++j) {
+        for (int j = 0; j < m_aveList[dataID][i].size(); ++j) 
+        {
             currSeries->append(j, m_aveList[dataID][i][j]);
         }
-        if (i == 0) {
+        if (i == 0) 
+        {
             currSeries->setName(QString("收盘价"));
-        } else {
+        } 
+        else 
+        {
             currSeries->setName(QString("%1").arg(m_aveNumbList[i-1]));
         }
         currSeries->setUseOpenGL(true);
@@ -424,7 +596,8 @@ void CSSChartForm::setAVEChart(int dataID) {
     aveChartLabelSeries->append(m_oldLabelIndexList[dataID], m_aveChartRange[dataID][1]);
 
     QChart* aveChart = new QChart();
-    for (auto lineSeries:m_aveLineSeriesList[dataID]) {
+    for (auto lineSeries:m_aveLineSeriesList[dataID]) 
+    {
         aveChart->addSeries(lineSeries);
     }
     aveChart->addSeries(aveChartLabelSeries);
@@ -438,8 +611,10 @@ void CSSChartForm::setAVEChart(int dataID) {
     aveChart->setAnimationOptions(QChart::NoAnimation);
     aveChart->addAxis(aveAxisY, Qt::AlignLeft);
     aveChart->addAxis(timeAxisX, Qt::AlignBottom);
-    for (auto lineSeries:m_aveLineSeriesList[dataID]) {
+    for (auto lineSeries:m_aveLineSeriesList[dataID]) 
+    {
         lineSeries->attachAxis(aveAxisY);
+        lineSeries->attachAxis(timeAxisX);
     }
     aveChartLabelSeries->attachAxis(aveAxisY);
     aveChartLabelSeries->attachAxis(timeAxisX);
@@ -447,7 +622,8 @@ void CSSChartForm::setAVEChart(int dataID) {
     m_aveChartList[dataID] = aveChart;
 }
 
-void CSSChartForm::setCSSChart(int dataID) {
+void CSSChartForm::setCSSChart(int dataID) 
+{
     QCategoryAxis* timeAxisX = getTimeAxisX(m_timeList[dataID], m_chartXaxisTickCount);
     QValueAxis* cssAxisY = new QValueAxis;
     cssAxisY->setRange(m_minCSS, m_maxCSS);
@@ -456,9 +632,11 @@ void CSSChartForm::setCSSChart(int dataID) {
 
     QList<int> aveList;
     aveList << m_mainAveNumb << m_subAveNumb;
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 2; ++i) 
+    {
         QLineSeries* currSeries = new QLineSeries;
-        for (int j = 0; j < m_cssList[dataID][i].size(); ++j) {
+        for (int j = 0; j < m_cssList[dataID][i].size(); ++j) 
+        {
             currSeries->append(j, m_cssList[dataID][i][j]);
         }
         currSeries->setUseOpenGL(true);
@@ -469,7 +647,8 @@ void CSSChartForm::setCSSChart(int dataID) {
 
     QBarSet *energySetUp = new QBarSet("势能指标大于0");
     QBarSet *energySetDown = new QBarSet("势能指标小于0");
-    for (int i = 0; i < m_cssList[dataID][2].size(); ++i) {
+    for (int i = 0; i < m_cssList[dataID][2].size(); ++i) 
+    {
         if (m_cssList[dataID][2][i] > 0) {
             energySetUp->append(m_cssList[dataID][2][i]);
             energySetDown->append(0);
@@ -479,14 +658,16 @@ void CSSChartForm::setCSSChart(int dataID) {
         }
     }
 
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 2; ++i) 
+    {
         QStackedBarSeries* energySeries = new QStackedBarSeries;
         m_energySeriesListList[dataID].append(energySeries);
     }
     m_energySeriesListList[dataID][0]->append(energySetUp);
     m_energySeriesListList[dataID][1]->append(energySetDown);
 
-    for (int i = 0; i < m_cssMarkValueList.size(); ++i) {
+    for (int i = 0; i < m_cssMarkValueList.size(); ++i) 
+    {
         QLineSeries* currSeries = new QLineSeries;
         for (int j = 0; j < m_timeList[dataID].size(); ++j) {
             currSeries->append(j, m_cssMarkValueList[i]);
@@ -540,7 +721,8 @@ void CSSChartForm::setCSSChart(int dataID) {
     m_cssChartList[dataID] = cssChart;
 }
 
-void CSSChartForm::setChartView() {
+void CSSChartForm::setChartView() 
+{
     for (int i = 0; i < m_aveChartViewList.size(); ++i) {
         QGroupBox* groupBox1 = new QGroupBox();
         QGroupBox* groupBox2 = new QGroupBox();
@@ -570,7 +752,8 @@ void CSSChartForm::setChartView() {
     initTableContextMenu();
 }
 
-void CSSChartForm::setLabels() {
+void CSSChartForm::setLabels() 
+{
     int width = 80;
     int height = 20;
     int y_space = 10;
@@ -608,7 +791,6 @@ void CSSChartForm::setLabels() {
         m_aveChartlabelListList[i].append(closeLabel);
         ++lableIndex;
 
-//        bool isChangeLine = false;
         for (int j = 0; j < m_aveNumbList.size(); ++j) {
             QLabel* aveLabel = new QLabel(aveGroupBox);
             if (m_isEMAList[j]) {
@@ -624,11 +806,6 @@ void CSSChartForm::setLabels() {
                 x_pos = x_start;
                 y_pos += height + y_space;
             }
-//            if (j >= (m_aveNumbList.size()+3)/2-2 && isChangeLine == false && m_timeTypeList.size() > 1) {
-//                x_pos = x_start;
-//                y_pos += height + y_space;
-//                isChangeLine = true;
-//            }
             aveLabel->setGeometry(QRect(x_pos, y_pos, width, height));
             m_aveChartlabelListList[i].append(aveLabel);
             ++lableIndex;
@@ -658,7 +835,8 @@ void CSSChartForm::setLabels() {
     }
 }
 
-void CSSChartForm::setColors() {
+void CSSChartForm::setColors() 
+{
     for (int i = 0; i < m_timeTypeList.size();++i) {
         for (int j = 0; j < m_aveChartColorList.size(); ++j) {
             m_aveChartlabelListList[i][j]->setStyleSheet(QString("color: rgb(%1, %2, %3);")
@@ -792,8 +970,11 @@ void CSSChartForm::handleMarkerClicked()
     marker->setPen(pen);
 }
 
-void CSSChartForm::setPropertyValue(int index, int dataID) {
-    if (index >=0 && index < m_timeList[dataID].size()) {
+void CSSChartForm::setPropertyValue(int index, int dataID, bool isUpdateLableLine) 
+{
+    // qDebug() << "ChartForm Thread: " << QThread::currentThreadId();
+    if (index >=0 && index < m_aveList[dataID][0].size()) 
+    {
         m_aveChartlabelListList[dataID][1]->setText(QString("T: %1").arg(m_timeList[dataID][index]));
         m_aveChartlabelListList[dataID][2]->setText(QString("C: %1").arg(m_aveList[dataID][0][index]));
         for (int i = 0; i < m_aveNumbList.size(); ++i) {
@@ -813,15 +994,25 @@ void CSSChartForm::setPropertyValue(int index, int dataID) {
         m_cssChartlabelListList[dataID][2]->setText(QString("势%1: %2")
                                                      .arg(m_energyAveNumb).arg(m_cssList[dataID][2][index]));
 
-        updateLabelSeries(index, dataID);
+        if (isUpdateLableLine)
+        {
+            updateLabelSeries(index, dataID);
+        }        
     }
 }
 
 void CSSChartForm::updateLabelSeries(int index, int dataID) {
-    for (QPointF point: m_cssChartLabelSeriesList[dataID]->points()) {
+    if (index >= m_aveList[dataID][0].size())
+    {
+        return;
+    }
+
+    for (QPointF point: m_cssChartLabelSeriesList[dataID]->points()) 
+    {
         m_cssChartLabelSeriesList[dataID]->remove(point);
     }
-    for (QPointF point:  m_aveChartLabelSeriesList[dataID]->points()) {
+    for (QPointF point:  m_aveChartLabelSeriesList[dataID]->points()) 
+    {
          m_aveChartLabelSeriesList[dataID]->remove(point);
     }
 
@@ -862,47 +1053,54 @@ void CSSChartForm::mouseMoveEvenFunc(QObject *watched, QEvent *event) {
     }
 }
 
-void CSSChartForm::mouseButtonReleaseFunc(QObject *watched, QEvent *event) {
+void CSSChartForm::mouseButtonReleaseFunc(QObject *watched, QEvent *event) 
+{
     QMouseEvent *mouseEvent = (QMouseEvent *)event;
     QPoint curPoint = mouseEvent->pos ();
     QPointF transPoint;
 
-    for (int i = 0; i < m_timeTypeList.size(); ++i) {
+    for (int i = 0; i < m_timeTypeList.size(); ++i) 
+    {
         m_currTimeIndexList[i] = -1;
         m_mouseInitPosList[i] = QCursor::pos();
         m_keyMoveCountList[i] = 0;
         double deltaInGlobalPointAndChartPoint = 0;
-        if (watched == m_aveChartViewList[i]) {
+        if (watched == m_aveChartViewList[i]) 
+        {
             QPointF aveChartPoint = m_aveChartList[i]->mapToValue (curPoint);
             m_currTimeIndexList[i] = qFloor(aveChartPoint.x());
-            if (m_currTimeIndexList[i] >= 0 && m_currTimeIndexList[i] < m_timeList[i].size()) {
+            if (m_currTimeIndexList[i] >= 0 && m_currTimeIndexList[i] < m_aveList[i][0].size()) 
+            {
                 transPoint = m_aveChartList[i]->mapToPosition( (QPointF(m_currTimeIndexList[i], m_aveList[i][0][m_currTimeIndexList[i]])));
                 deltaInGlobalPointAndChartPoint = transPoint.x() - curPoint.x();
             }
         }
 
-        if (watched == m_cssChartViewList[i]) {
+        if (watched == m_cssChartViewList[i]) 
+        {
             QPointF cssChartPoint = m_cssChartList[i]->mapToValue (curPoint);
             m_currTimeIndexList[i] = qFloor(cssChartPoint.x());
-            if (m_currTimeIndexList[i] >= 0 && m_currTimeIndexList[i] < m_timeList[i].size()) {
+            if (m_currTimeIndexList[i] >= 0 && m_currTimeIndexList[i] < m_cssList[i][0].size()) 
+            {
                 transPoint = m_cssChartList[i]->mapToPosition( (QPointF(m_currTimeIndexList[i], m_cssList[i][0][m_currTimeIndexList[i]])));
                 deltaInGlobalPointAndChartPoint = transPoint.x() - curPoint.x();
             }
         }
 
-        if (m_currTimeIndexList[i] >= 0 && m_currTimeIndexList[i] < m_timeList[i].size()) {
+        if (m_currTimeIndexList[i] >= 0 && m_currTimeIndexList[i] < m_cssList[i][0].size()) 
+        {
             m_isKeyMoveList[i] = true;
             setPropertyValue(m_currTimeIndexList[i], i);
             m_mouseInitPosList[i].setX(m_mouseInitPosList[i].x() + deltaInGlobalPointAndChartPoint);
             QCursor::setPos(m_mouseInitPosList[i]);
             m_currFoucusChartID = i;
-            qDebug() << "m_currFoucusChartID: " << i;
             break;
         }
     }
 }
 
-void CSSChartForm::KeyReleaseFunc(QEvent *event) {
+void CSSChartForm::KeyReleaseFunc(QEvent *event) 
+{
     QKeyEvent* keyEvent = (QKeyEvent*)event;
     int step = 0;
 
@@ -915,10 +1113,12 @@ void CSSChartForm::KeyReleaseFunc(QEvent *event) {
     moveMouse(step);
 }
 
-void CSSChartForm::moveMouse(int step) {
+void CSSChartForm::moveMouse(int step) 
+{
     double pointXDistance = getPointXDistance();
 
-    if (step != 0) {
+    if (step != 0) 
+    {
         m_keyMoveCountList[m_currFoucusChartID] += step;
         m_currTimeIndexList[m_currFoucusChartID] += step;
         float move_distance = pointXDistance * m_keyMoveCountList[m_currFoucusChartID];
@@ -926,8 +1126,10 @@ void CSSChartForm::moveMouse(int step) {
         m_isKeyMoveList[m_currFoucusChartID] = true;
         setPropertyValue(m_currTimeIndexList[m_currFoucusChartID], m_currFoucusChartID);
 
-        if (move_distance >= 1 || move_distance <=-1 || move_distance == 0) {
-            QCursor::setPos(m_mouseInitPosList[m_currFoucusChartID].x() + move_distance, m_mouseInitPosList[m_currFoucusChartID].y());
+        if (move_distance >= 1 || move_distance <=-1 || move_distance == 0) 
+        {
+            QCursor::setPos(m_mouseInitPosList[m_currFoucusChartID].x() + move_distance, 
+                            m_mouseInitPosList[m_currFoucusChartID].y());
         }
     }
 }
@@ -984,7 +1186,7 @@ QString CSSChartForm::getExcelFileName(QStringList keyValueList, QString fileDir
 void CSSChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString fileDir, bool bOpenDesFile) {
     QString fileName = getExcelFileName(choosenKeyValueList, fileDir);
 
-    qDebug() << "fileName: " << fileName;
+    // qDebug() << "fileName: " << fileName;
     int sumResult = 1;
     /**/
     for (int i = 0; i < m_timeTypeList.size(); ++i)
