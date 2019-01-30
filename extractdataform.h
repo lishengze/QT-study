@@ -48,6 +48,7 @@ public:
     void setDesFileTable();
 
     void initTableContextMenu();
+    QList<QString> extractTimeList();
 
     void basicTest();
     QStringList checkSecodeList(QStringList oriSecodeList, QString dbhost, QString dbName);
@@ -107,6 +108,15 @@ private slots:
 
     void on_startExtractFundament_pushButton_clicked();
 
+    void on_extractSecodeTimeList_pushButton_clicked();
+
+    void on_extractWeightTimeList_pushButton_clicked();
+
+    void on_extractIndustryTimeList_pushButton_clicked();
+
+    void on_extractFundamentTimeList_pushButton_clicked();
+
+
 private:
     Ui::ExtractDataForm *       ui;
 
@@ -117,6 +127,11 @@ private:
     QStringList                 m_indexCodeList;
     QStringList                 m_industryList;
     QStringList                 m_fundamentKeyList;
+
+    QList<QString>              m_marketTimeList;
+    QList<QString>              m_industryTimeList;
+    QList<QString>              m_weightTimeList;
+    QList<QString>              m_fundamentTimeList;
 
     QList<ExtractMarketData*>   m_extractMarketDataObjList;
     QList<ExtractWeightData*>   m_extractWeightDataObjList;

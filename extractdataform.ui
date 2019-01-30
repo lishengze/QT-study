@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1097</width>
-    <height>770</height>
+    <width>1083</width>
+    <height>812</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,6 +26,23 @@
       </item>
       <item>
        <widget class="QComboBox" name="chooseDataSource_comboBox"/>
+      </item>
+     </layout>
+    </item>
+    <item row="4" column="1">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>--- 程序运行信息 ---</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableView" name="programInfo_Table"/>
       </item>
      </layout>
     </item>
@@ -53,12 +70,155 @@
       </item>
      </layout>
     </item>
+    <item row="3" column="0">
+     <widget class="QGroupBox" name="groupBox_3">
+      <property name="minimumSize">
+       <size>
+        <width>250</width>
+        <height>150</height>
+       </size>
+      </property>
+      <property name="title">
+       <string>提取行业分类</string>
+      </property>
+      <widget class="QWidget" name="">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>261</width>
+         <height>121</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>分类指标</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>起始时间</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>终止时间</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QPushButton" name="extractIndustryData_pushButton">
+          <property name="text">
+           <string>开始提取</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QComboBox" name="industry_comboBox"/>
+        </item>
+        <item row="1" column="2">
+         <widget class="QDateEdit" name="industryStartDate_dateEdit"/>
+        </item>
+        <item row="2" column="2">
+         <widget class="QDateEdit" name="industryEndDate_dateEdit"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QPushButton" name="extractIndustryTimeList_pushButton">
+          <property name="text">
+           <string>从EXCEL导入时间列表</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <zorder>layoutWidget</zorder>
+      <zorder>layoutWidget</zorder>
+      <zorder>layoutWidget</zorder>
+      <zorder>layoutWidget</zorder>
+      <zorder>groupBox_2</zorder>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="minimumSize">
+       <size>
+        <width>250</width>
+        <height>150</height>
+       </size>
+      </property>
+      <property name="title">
+       <string>提取指数权重</string>
+      </property>
+      <widget class="QWidget" name="">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>261</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>指数截止日 开始时间：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>指数截止日 结束时间：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QPushButton" name="extractWeightTimeList_pushButton">
+          <property name="text">
+           <string>从EXCEL导入时间列表</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1" colspan="2">
+         <widget class="QPushButton" name="extractWeightData_pushButton">
+          <property name="text">
+           <string>开始提取</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" colspan="2">
+         <widget class="QDateEdit" name="indexStartDate_dateEdit"/>
+        </item>
+        <item row="2" column="1" colspan="2">
+         <widget class="QDateEdit" name="indexEndDate_dateEdit"/>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>指数名称: </string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" colspan="2">
+         <widget class="QComboBox" name="indexCode_comboBox"/>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
     <item row="1" column="0">
      <widget class="QGroupBox" name="groupBox">
       <property name="minimumSize">
        <size>
         <width>280</width>
-        <height>150</height>
+        <height>200</height>
        </size>
       </property>
       <property name="maximumSize">
@@ -70,217 +230,86 @@
       <property name="title">
        <string>提取行情数据</string>
       </property>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>行情数据频率: </string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="dataType_comboBox"/>
-         </item>
-        </layout>
-       </item>
-       <item row="1" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>行情指标：</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="keyValue_comboBox"/>
-         </item>
-        </layout>
-       </item>
-       <item row="2" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>起始时间: </string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDateEdit" name="startDate_dateEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item row="3" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>截止时间:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDateEdit" name="endDate_dateEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item row="4" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_8">
-         <item>
-          <widget class="QPushButton" name="chooseSecodeListFromTable_pushButton">
-           <property name="text">
-            <string>手动选择股票代码</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="chooseSecodeListFromExcel_pushButton">
-           <property name="text">
-            <string>从EXCEL导入股票代码</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="5" column="0">
-        <widget class="QPushButton" name="extractMarketData_pushButton">
-         <property name="text">
-          <string>开始提取</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QGroupBox" name="groupBox_2">
-      <property name="minimumSize">
-       <size>
-        <width>250</width>
-        <height>120</height>
-       </size>
-      </property>
-      <property name="title">
-       <string>提取指数权重</string>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_3">
-       <item row="0" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_6">
-         <item>
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>指数名称: </string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="indexCode_comboBox"/>
-         </item>
-        </layout>
-       </item>
-       <item row="1" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_7">
-         <item>
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>指数截止日 开始时间：</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDateEdit" name="indexStartDate_dateEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item row="2" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_12">
-         <item>
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>指数截止日 结束时间：</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDateEdit" name="indexEndDate_dateEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="extractWeightData_pushButton">
-         <property name="text">
-          <string>开始提取</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item row="3" column="0">
-     <widget class="QGroupBox" name="groupBox_3">
-      <property name="minimumSize">
-       <size>
-        <width>250</width>
-        <height>120</height>
-       </size>
-      </property>
-      <property name="title">
-       <string>提取行业分类</string>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_9">
-         <item>
-          <widget class="QLabel" name="label_10">
-           <property name="text">
-            <string>分类指标</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="industry_comboBox"/>
-         </item>
-        </layout>
-       </item>
-       <item row="2" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_11">
-         <item>
-          <widget class="QLabel" name="label_12">
-           <property name="text">
-            <string>终止时间</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDateEdit" name="industryEndDate_dateEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item row="1" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_10">
-         <item>
-          <widget class="QLabel" name="label_11">
-           <property name="text">
-            <string>起始时间</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDateEdit" name="industryStartDate_dateEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="extractIndustryData_pushButton">
-         <property name="text">
-          <string>开始提取</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QWidget" name="">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>261</width>
+         <height>171</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>行情指标：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="keyValue_comboBox"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>起始时间: </string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDateEdit" name="startDate_dateEdit"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>截止时间:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QDateEdit" name="endDate_dateEdit"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>行情数据频率: </string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QComboBox" name="dataType_comboBox"/>
+        </item>
+        <item row="4" column="0">
+         <widget class="QPushButton" name="chooseSecodeListFromTable_pushButton">
+          <property name="text">
+           <string>手动选择股票代码</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QPushButton" name="chooseSecodeListFromExcel_pushButton">
+          <property name="text">
+           <string>从EXCEL导入股票代码</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QPushButton" name="extractSecodeTimeList_pushButton">
+          <property name="text">
+           <string>从EXCEL导入时间列表</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QPushButton" name="extractMarketData_pushButton">
+          <property name="text">
+           <string>开始提取</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item row="4" column="0">
@@ -294,102 +323,83 @@
       <property name="title">
        <string>提取基本面数据:</string>
       </property>
-      <layout class="QGridLayout" name="gridLayout_5">
-       <item row="0" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_13">
-         <item>
-          <widget class="QLabel" name="label_14">
-           <property name="text">
-            <string>基本面指标：</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="fundamentValue_comboBox"/>
-         </item>
-        </layout>
-       </item>
-       <item row="1" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_16">
-         <item>
-          <widget class="QLabel" name="label_16">
-           <property name="text">
-            <string>起始时间：</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDateEdit" name="fundamentStart_dateEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item row="2" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_17">
-         <item>
-          <widget class="QLabel" name="label_17">
-           <property name="text">
-            <string>截止时间：</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDateEdit" name="fundamentEnd_dateEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item row="3" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_18">
-         <item>
-          <widget class="QPushButton" name="chooseSecodeList_pushButton">
-           <property name="text">
-            <string>手动选择股票代码</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="importSecodeList_pushButton">
-           <property name="text">
-            <string>从EXCEL 导入股票代码</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="4" column="0">
-        <widget class="QPushButton" name="startExtractFundament_pushButton">
-         <property name="text">
-          <string>开始提取</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QWidget" name="">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>261</width>
+         <height>171</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>基本面指标：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="fundamentValue_comboBox"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_16">
+          <property name="text">
+           <string>起始时间：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDateEdit" name="fundamentStart_dateEdit"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_17">
+          <property name="text">
+           <string>截止时间：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QDateEdit" name="fundamentEnd_dateEdit"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QPushButton" name="chooseSecodeList_pushButton">
+          <property name="text">
+           <string>手动选择股票代码</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QPushButton" name="importSecodeList_pushButton">
+          <property name="text">
+           <string>从EXCEL 导入股票代码</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QPushButton" name="extractFundamentTimeList_pushButton">
+          <property name="text">
+           <string>从EXCEL导入时间列表</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QPushButton" name="startExtractFundament_pushButton">
+          <property name="text">
+           <string>开始提取</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <zorder>layoutWidget</zorder>
-      <zorder>endDate_dateEdit_2</zorder>
-      <zorder>label_16</zorder>
-      <zorder>label_17</zorder>
-      <zorder>fundamentStart_dateEdit</zorder>
-      <zorder>fundamentEnd_dateEdit</zorder>
-      <zorder>chooseSecodeList_pushButton</zorder>
-      <zorder>importSecodeList_pushButton</zorder>
-      <zorder>startExtractFundament_pushButton</zorder>
+      <zorder>layoutWidget</zorder>
+      <zorder>layoutWidget</zorder>
+      <zorder>layoutWidget</zorder>
+      <zorder>layoutWidget</zorder>
+      <zorder>groupBox_3</zorder>
      </widget>
-    </item>
-    <item row="4" column="1">
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>--- 程序运行信息 ---</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QTableView" name="programInfo_Table"/>
-      </item>
-     </layout>
     </item>
    </layout>
   </widget>
@@ -398,7 +408,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1097</width>
+     <width>1083</width>
      <height>23</height>
     </rect>
    </property>

@@ -25,10 +25,9 @@ ReadDatabaseData::ReadDatabaseData(QString dbhost, int dbConnectID,QString dataT
     initDatabase();
 }
 
-ReadDatabaseData::ReadDatabaseData(QString dbhost, int dbConnectID,
-                                   QString date, QString indexCode, QObject *parent):
-    m_dbhost(dbhost), m_dbConnectID(dbConnectID),
-    m_indexDate(date),m_weightIndexCode(indexCode),
+ReadDatabaseData::ReadDatabaseData(QString dbhost, QString indexDate, 
+                                   QString indexCode, QObject *parent):
+    m_dbhost(dbhost), m_indexDate(indexDate), m_weightIndexCode(indexCode),
     QObject(parent)
 {
     m_database = NULL;
@@ -47,7 +46,7 @@ ReadDatabaseData::ReadDatabaseData(QString dbhost, int dbConnectID,
 }
 
 void ReadDatabaseData::initDatabase() {
-    m_database = new Database(QString("%1").arg(m_dbConnectID), m_dbhost);
+    m_database = new Database(m_dbhost);
 }
 
 void ReadDatabaseData::releaseDatabase() {
@@ -77,7 +76,7 @@ void ReadDatabaseData::startReadMarketData_slot() {
             }
         }
         QList<QStringList> ori_result = m_database->getDataByDate(m_startDate, m_endDate, m_keyValueList,
-                                                                  completeSecode(secode), m_dataType, false);
+                                                                  completeSecode(secode), m_dataType, true);
 
 //        qDebug() << "Ori "<< secode << ori_result.size() << ", m_indexTimeList.size: " << m_indexTimeList.size();
         completeExcelData(ori_result, m_indexTimeList, m_keyValueList.size(), secode);
@@ -100,7 +99,8 @@ void ReadDatabaseData::startReadMarketData_slot() {
 //    qDebug() << QThread::currentThreadId() << "Done!";
 }
 
-void ReadDatabaseData::startReadWeightData_slot() {
+void ReadDatabaseData::startReadWeightData_slot() 
+{
     qDebug() << "receive startReadWeightData_signal" << QThread::currentThreadId();
 
     QList<QStringList> ori_result = m_database->getWeightData(m_indexDate, m_weightIndexCode);
@@ -108,27 +108,29 @@ void ReadDatabaseData::startReadWeightData_slot() {
     QStringList title;
     title.append(m_weightIndexCode);
     title.append(m_indexDate);
+    
     ori_result.insert(0, title);
 
-    QStringList colStr;
-    colStr.append(QString::fromLocal8Bit("指数代码"));
-    colStr.append(QString::fromLocal8Bit("指数名称"));
-    colStr.append(QString::fromLocal8Bit("指数成分日"));
-    colStr.append(QString::fromLocal8Bit("指数截止日"));
-    colStr.append(QString::fromLocal8Bit("股票代码"));
-    colStr.append(QString::fromLocal8Bit("股票名称"));
-    colStr.append(QString::fromLocal8Bit("比例"));
-    colStr.append(QString::fromLocal8Bit("排名"));
-    colStr.append(QString::fromLocal8Bit("数据来源"));
-    ori_result.insert(1, colStr);
+    // QStringList colStr;
+    // colStr.append(QString::fromLocal8Bit("指数代码"));
+    // colStr.append(QString::fromLocal8Bit("指数名称"));
+    // colStr.append(QString::fromLocal8Bit("指数成分日"));
+    // colStr.append(QString::fromLocal8Bit("指数截止日"));
+    // colStr.append(QString::fromLocal8Bit("股票代码"));
+    // colStr.append(QString::fromLocal8Bit("股票名称"));
+    // colStr.append(QString::fromLocal8Bit("比例"));
+    // colStr.append(QString::fromLocal8Bit("排名"));
+    // colStr.append(QString::fromLocal8Bit("数据来源"));
+    // ori_result.insert(1, colStr);
 
     emit readOneMarketDataComplete_signal();
     emit readWeightDataComplete_signal(ori_result);
 
-    qDebug() << m_weightIndexCode << QThread::currentThreadId() << "Done!";
+    // qDebug() << m_weightIndexCode << QThread::currentThreadId() << "Done!";
 }
 
-void ReadDatabaseData::startReadIndustryData_slot() {
+void ReadDatabaseData::startReadIndustryData_slot() 
+{
     qDebug() << "receive startReadIndustryData_slot" << QThread::currentThreadId();
     QList<QStringList> ori_result = m_database->getIndustryData(m_industryList, m_industryDate);
 
@@ -149,7 +151,8 @@ void ReadDatabaseData::startReadIndustryData_slot() {
     qDebug() << m_industryDate << QThread::currentThreadId() << "Done!";
 }
 
-ReadDatabaseData::~ReadDatabaseData() {
+ReadDatabaseData::~ReadDatabaseData() 
+{
     qDebug() << "ReadDatabaseData::~ReadDatabaseData";
     if (NULL != m_database) {
         delete m_database;

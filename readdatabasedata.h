@@ -14,9 +14,8 @@ public:
                      QList<QStringList> indexTimeList, QStringList keyValueList,
                      QObject *parent = 0);
 
-    ReadDatabaseData(QString dbhost, int dbConnectID,
-                     QString date, QString indexCode,
-                     QObject *parent = 0);
+    ReadDatabaseData(QString dbhost, QString indexDate,  
+                     QString indexCode, QObject *parent = 0);
 
     ReadDatabaseData(QString dbhost, int dbConnectID,
                      QString date, QStringList industryList,

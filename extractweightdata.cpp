@@ -7,12 +7,12 @@
 #include "time_func.h"
 #include "io_func.h"
 
-ExtractWeightData::ExtractWeightData(QString dbhost, int dbConnectID,
-                                     QString startDate, QString endDate,
+ExtractWeightData::ExtractWeightData(QString dbhost, QString startDate, QString endDate,
+                                     QList<QString> dateList,
                                      QStringList indexCodeList, QString desDirName,
                                      int threadCount,QObject *parent) :
-    m_dbConnectID(dbConnectID), m_dbhost(dbhost),
-    m_startDate(startDate), m_endDate(endDate),
+    m_dbhost(dbhost),
+    m_startDate(startDate), m_endDate(endDate), m_dateList(dateList),
     m_indexCodeList(indexCodeList), m_desDirName(desDirName),
     m_readThreadCount(threadCount), QObject(parent)
 {
@@ -57,14 +57,21 @@ ExtractWeightData::~ExtractWeightData() {
 void ExtractWeightData::initCommonData() {
     m_startTime = QDateTime::currentDateTime();
     m_currCompleteCount = 0;
+    m_dataNumb = 0;
 }
 
-void ExtractWeightData::initDateList() {
-    QDate startDate = getDate(m_startDate);
-    QDate endDate = getDate(m_endDate);
-    for (QDate currDate = startDate; currDate<= endDate; currDate = currDate.addDays(1)) {
-        m_dateList.append(currDate.toString("yyyyMMdd"));
+void ExtractWeightData::initDateList() 
+{   
+    if (m_dateList.size() == 0 && (m_startDate.size() > 0 && m_endDate.size() > 0))
+    {
+        QDate startDate = getDate(m_startDate);
+        QDate endDate = getDate(m_endDate);
+        for (QDate currDate = startDate; currDate<= endDate; currDate = currDate.addDays(1)) 
+        {
+            m_dateList.append(currDate.toString("yyyyMMdd"));
+        }
     }
+
 }
 
 void ExtractWeightData::initWorkProgressDialog() {
@@ -107,13 +114,12 @@ void ExtractWeightData::allocateThreadData() {
 }
 
 void ExtractWeightData::createReadThreads() {
-    for (int i = 0; i < m_readThreadData.size(); ++i) {
+    for (int i = 0; i < m_readThreadData.size(); ++i) 
+    {
         QString  indexCode = m_readThreadData[i][0];
         QString  indexDate = m_readThreadData[i][1];
         QThread* currThread = new QThread();
-        int dbConnectID = m_dbConnectID + 10 + i;
-        ReadDatabaseData* currReadDatabaseData = new ReadDatabaseData(m_dbhost, dbConnectID,
-                                                                      indexDate, indexCode);
+        ReadDatabaseData* currReadDatabaseData = new ReadDatabaseData(m_dbhost, indexDate, indexCode);
         currReadDatabaseData->moveToThread(currThread);
 
         connect(currThread, SIGNAL(finished()),
@@ -146,8 +152,81 @@ void ExtractWeightData::startReadData() {
     emit startReadWeightData_signal();
 }
 
+void ExtractWeightData::transSumResult()
+{
+    QStringList colStr;
+    colStr.append(QString::fromLocal8Bit("指数代码"));
+    colStr.append(QString::fromLocal8Bit("指数名称"));
+    colStr.append(QString::fromLocal8Bit("指数成分日"));
+    colStr.append(QString::fromLocal8Bit("指数截止日"));
+    colStr.append(QString::fromLocal8Bit("股票代码"));
+    colStr.append(QString::fromLocal8Bit("股票名称"));
+    colStr.append(QString::fromLocal8Bit("比例"));
+    colStr.append(QString::fromLocal8Bit("排名"));
+    colStr.append(QString::fromLocal8Bit("数据来源"));
+
+    QString timeStr = m_dateList.first();
+    if (m_dateList.size() > 1)
+    {
+        timeStr += "_" + m_dateList.last();
+    }
+
+    for (int i = 0; i < m_indexCodeList.size(); ++i)
+    {
+        QList<QStringList> curData;
+        QString indexCode = m_indexCodeList[i];
+        for (int j = 0; j < m_dateList.size(); ++j)
+        {
+            QString date = m_dateList[j];
+            m_colResult[indexCode][date].pop_front();
+            curData += m_colResult[indexCode][date];
+        }
+        QStringList metaInfo;
+        metaInfo <<indexCode <<timeStr;
+        curData.insert(0, metaInfo);
+        curData.insert(1, colStr);
+        m_sumResult.append(curData);
+    }
+
+    m_colResult.clear();
+
+    // QMap<QString, QList<QStringList>> transResult;
+    // for (int i = 0; i < m_sumResult.size(); ++i)
+    // {
+    //     QString indexCode = m_sumResult[i][0][0];
+    //     QString indexDate = m_sumResult[i][0][1];
+    //     m_sumResult[i].pop_front();
+    //     if (transResult.find(indexCode) == transResult.end())
+    //     {
+    //         transResult[indexCode] = m_sumResult[i];
+    //     }
+    //     else
+    //     {
+    //         transResult[indexCode] += m_sumResult[i];
+    //     }
+    // }
+
+    // m_sumResult.clear();
+    // for (QMap<QString, QList<QStringList>>::const_iterator it = transResult.begin();
+    //     it != transResult.end(); ++it)
+    // {
+    //     QString indexCode = it.key();
+    //     QString timeStr = m_dateList.first();
+    //     if (m_dateList.size() > 1)
+    //     {
+    //         timeStr += "_" + m_dateList.last();
+    //     }
+    //     QStringList metaInfo;
+    //     metaInfo <<indexCode <<timeStr;
+    //     transResult[indexCode].insert(0, metaInfo);
+    //     transResult[indexCode].insert(1, colStr);
+    //     m_sumResult.append(transResult[indexCode]);
+    // }
+}
+
 void ExtractWeightData::storeData() {
-    for (int i = 0; i < m_sumResult.size(); ++i) {
+    for (int i = 0; i < m_sumResult.size(); ++i) 
+    {
         QString indexCode = m_sumResult[i][0][0];
         QString indexDate = m_sumResult[i][0][1];
         m_sumResult[i].pop_front();
@@ -159,7 +238,8 @@ void ExtractWeightData::storeData() {
 }
 
 int ExtractWeightData::writeMatrixExcelData(QString fileName, QList<QStringList>& oriData,
-                                            QString sheetName, bool isTranspose) {
+                                            QString sheetName, bool isTranspose) 
+{
     checkFile(fileName);
     QXlsx::Document xlsx(fileName);
 
@@ -190,13 +270,25 @@ int ExtractWeightData::writeMatrixExcelData(QString fileName, QList<QStringList>
     return 1;
 }
 
-void ExtractWeightData::readWeightDataComplete_slot(QList<QStringList> threadResult) {
+void ExtractWeightData::readWeightDataComplete_slot(QList<QStringList> threadResult) 
+{
     QMutexLocker locker(&m_oneThreadCompleteMutex);
-    m_sumResult.append(threadResult);
+    QString indexCode = threadResult[0][0];
+    QString indexDate = threadResult[0][1];
+
+    // m_sumResult.append(threadResult);
+
+    m_colResult[indexCode][indexDate] = threadResult;
+    ++m_dataNumb;
+
     threadResult.clear();
-    if (m_sumResult.size() == m_readThreadData.size()) {
+    if (m_dataNumb == m_readThreadData.size()) 
+    {
         m_workProgressDialog->disableStopButton();
-        qDebug() << "m_sumResult.size: " << m_sumResult.size();
+        // qDebug() << "m_sumResult.size: " << m_sumResult.size();
+        qDebug() << "m_dataNumb:       " << m_dataNumb;
+
+        transSumResult();
         storeData();
 
         m_endTime = QDateTime::currentDateTime();
@@ -208,7 +300,8 @@ void ExtractWeightData::readWeightDataComplete_slot(QList<QStringList> threadRes
     }
 }
 
-void ExtractWeightData::readOneWeightDataComplete_slot() {
+void ExtractWeightData::readOneWeightDataComplete_slot() 
+{
     QMutexLocker locker(&m_readOneDataCompleteMutex);
     m_currCompleteCount += 1;
     qDebug() << QString("Complete: %1, %2 left.")
@@ -216,7 +309,8 @@ void ExtractWeightData::readOneWeightDataComplete_slot() {
     m_workProgressDialog->updateWorkState(m_currCompleteCount);
 }
 
-void ExtractWeightData::stopWork_slot() {
+void ExtractWeightData::stopWork_slot() 
+{
     qDebug() << "ExtractWeightData::stopWork_slot ";
     for (int i = 0; i < m_ReadThreadList.size(); ++i) {
         disconnect(m_ReadDataObjList[i], SIGNAL(readWeightDataComplete_signal(QList<QStringList>)),

@@ -14,8 +14,8 @@ class ExtractWeightData:public QObject
 {
     Q_OBJECT
 public:
-    ExtractWeightData(QString dbhost, int dbConnectID,
-                      QString startDate, QString endDate,
+    ExtractWeightData(QString dbhost, QString startDate, QString endDate, 
+                      QList<QString> timeList,
                       QStringList indexCodeList, QString desDirName,
                       int threadCount, QObject *parent = 0);
     ~ExtractWeightData();
@@ -29,6 +29,7 @@ public:
     void allocateThreadData();
     void createReadThreads();
     void startReadData();
+    void transSumResult();
     void storeData();
 
     int writeMatrixExcelData(QString fileName, QList<QStringList>& oriData,
@@ -61,9 +62,12 @@ private:
     QList<QThread*>             m_ReadThreadList;
     QList<ReadDatabaseData*>    m_ReadDataObjList;
     QList<QList<QStringList>>   m_sumResult;
+    QMap<QString, QMap<QString, QList<QStringList>>> m_colResult;
+    int                         m_dataNumb;
+    
     int                         m_currCompleteCount;
-    mutable QMutex             m_oneThreadCompleteMutex;
-    mutable QMutex             m_readOneDataCompleteMutex;
+    mutable QMutex              m_oneThreadCompleteMutex;
+    mutable QMutex              m_readOneDataCompleteMutex;
 
     WorkProgressDialog*         m_workProgressDialog;
     QDateTime                   m_startTime;

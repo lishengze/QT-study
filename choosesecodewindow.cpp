@@ -52,7 +52,7 @@ void ChooseSecodeWindow::initMarketInfoMap() {
 
 void ChooseSecodeWindow::initDatabase() {
     int connectID = getDatabaseConnectId();
-    m_database = new Database(QString("%1").arg(connectID), m_dbhost);
+    m_database = new Database(m_dbhost);
 }
 
 void ChooseSecodeWindow::initTreeView() {

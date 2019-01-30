@@ -100,14 +100,14 @@ void ExtractDataForm::initFileDir() {
             m_desFileDir = xlsx.cellAt(2, 1)->value().toString();
         }
     }
-//    qDebug() << "m_oriFileDir: " << m_oriFileDir;
-//    qDebug() << "m_desFileDir: " << m_desFileDir;
+    //    qDebug() << "m_oriFileDir: " << m_oriFileDir;
+    //    qDebug() << "m_desFileDir: " << m_desFileDir;
 }
 
 void ExtractDataForm::initDataTypeMap() {
 
-//    m_dataTypeMap.insert(QString("1分"), "MarketData_1m");
-//    m_dataTypeMap.insert(QString("5分"), "MarketData_5m");
+    //    m_dataTypeMap.insert(QString("1分"), "MarketData_1m");
+    //    m_dataTypeMap.insert(QString("5分"), "MarketData_5m");
     m_dataTypeMap.insert(QString("10分"), "MarketData_10m");
     m_dataTypeMap.insert(QString("15分"), "MarketData_15m");
     m_dataTypeMap.insert(QString("30分"), "MarketData_30m");
@@ -356,6 +356,28 @@ void ExtractDataForm::initTableContextMenu() {
             this, SLOT(show_desFileTable_contextMenu(QPoint)));
 }
 
+QList<QString> ExtractDataForm::extractTimeList()
+{
+    QString file_name = QFileDialog::getOpenFileName(NULL, QString("选择导入的EXCEL, 文件第一列为时间"),
+                                                  ".", QString("Excel Files(*.xlsx)"));
+    QList<QString> result;                 
+    if (file_name != "") 
+    {
+        updateProgramInfo(ui->programInfo_Table, QString("选择了股票代码列表文件: %1").arg(m_currOriFile));
+        QList<QString> oriTimeList = readExcelColData(file_name);
+        for (int i = 0; i < oriTimeList.size(); ++i)
+        {
+            if (oriTimeList[i].indexOf("-") >= 0)
+            {
+                oriTimeList[i].remove(QChar('-'));
+            }
+        }
+        result = oriTimeList;
+        printList(oriTimeList, "TransTimeList");
+    }    
+    return result;
+}
+
 void ExtractDataForm::show_oriFileTable_contextMenu(QPoint pos) {
     QMenu *menu = new QMenu(ui->oriFile_tableView);
     QAction *refreshTable = new QAction(QString("刷新"),ui->oriFile_tableView);
@@ -368,7 +390,7 @@ void ExtractDataForm::show_oriFileTable_contextMenu(QPoint pos) {
 
     menu->addAction(refreshTable);
     menu->addAction(deleteFile);
-//    menu->addAction(openDir);
+    //    menu->addAction(openDir);
     menu->move (cursor ().pos ());
     menu->show ();
     pos;
@@ -386,7 +408,7 @@ void ExtractDataForm::show_desFileTable_contextMenu(QPoint pos) {
 
     menu->addAction(refreshTable);
     menu->addAction(deleteFile);
-//    menu->addAction(openDir);
+    //    menu->addAction(openDir);
     menu->move (cursor ().pos ());
     menu->show ();
     pos;
@@ -403,7 +425,7 @@ void ExtractDataForm::refresh_desFileTable() {
 void ExtractDataForm::delete_oriFile() {
     QMap<int, int> selectMap = getSelectRows(ui->oriFile_tableView);
     QList<QString> selectData = getSelectTableData(ui->oriFile_tableView, selectMap);
-//    qDebug() << "selectData: " << selectData;
+    //    qDebug() << "selectData: " << selectData;
 
     for (QString stringData : selectData) {
         QString fileName = m_oriFileDir + stringData;
@@ -459,30 +481,30 @@ void ExtractDataForm::open_desDir() {
 }
 
 void ExtractDataForm::basicTest() {
-//        QString dbhost = "192.168.211.162";
-//        // QString dbhost = "localhost";
-////         QString databaseName = "MarketData_10m";
-//        QString databaseName = "MarketData_day";
-//        QString startDate = "20150130";
-//        QString endDate = "20180417";
+    //        QString dbhost = "192.168.211.162";
+    //            // QString dbhost = "localhost";
+//    //         QString databaseName = "MarketData_10m";
+    //        QString databaseName = "MarketData_day";
+    //        QString startDate = "20150130";
+    //        QString endDate = "20180417";
 
-//        int dbConnectID = m_extractTimes;
-//        QStringList keyValueList;
-//        keyValueList << "TCLOSE";
-//        QString secodeFileName = QString("D:/excel/沪深300成分股 20170130~20180417 10min收盘价.xlsx");
-//        QString desDirName = QString("D:/excel/cplus/");
+    //        int dbConnectID = m_extractTimes;
+    //        QStringList keyValueList;
+    //        keyValueList << "TCLOSE";
+    //        QString secodeFileName = QString("D:/excel/沪深300成分股 20170130~20180417 10min收盘价.xlsx");
+    //        QString desDirName = QString("D:/excel/cplus/");
 
-//        ExtractMarketData* currExtractMarketDataObj = new ExtractMarketData(dbhost, dbConnectID, databaseName,
-//                                                                            startDate, endDate,
-//                                                                            secodeFileName, desDirName,
-//                                                                            keyValueList, m_extractThreadCount);
+    //        ExtractMarketData* currExtractMarketDataObj = new ExtractMarketData(dbhost, dbConnectID, databaseName,
+    //                                                                            startDate, endDate,
+    //                                                                            secodeFileName, desDirName,
+    //                                                                            keyValueList, m_extractThreadCount);
 
-//        connect(currExtractMarketDataObj, SIGNAL(extractDataComplete_signal()),
-//                this, SLOT(extractDataComplete_slot()));
+    //        connect(currExtractMarketDataObj, SIGNAL(extractDataComplete_signal()),
+    //                this, SLOT(extractDataComplete_slot()));
 
-//        currExtractMarketDataObj->startReadData();
+    //        currExtractMarketDataObj->startReadData();
 
-//        m_extractMarketDataObjList.append(currExtractMarketDataObj);
+    //        m_extractMarketDataObjList.append(currExtractMarketDataObj);
 }
 
 QStringList ExtractDataForm::getCurrKeyValueList() {
@@ -522,7 +544,7 @@ QStringList ExtractDataForm::getCurrFundamentKeyList() {
 
 QStringList ExtractDataForm::checkSecodeList(QStringList oriSecodeList, QString dbhost, QString dbName) {
     QStringList result;
-    Database databaseObj("0", dbhost);
+    Database databaseObj(dbhost);
     QList<QString> tableList = databaseObj.getTableList(dbName);
     QStringList errorCodeList;
     for (QString secode:result) {
@@ -569,7 +591,8 @@ void ExtractDataForm::on_extractMarketData_pushButton_clicked()
                                 .arg(startDate).arg(endDate);
 
         if (QMessageBox::Yes == QMessageBox::information(NULL, QString("确认信息"),
-                                                         info, QMessageBox::Yes | QMessageBox::No)) {
+                                                         info, QMessageBox::Yes | QMessageBox::No)) 
+        {
             updateProgramInfo(ui->programInfo_Table, info);
             ExtractMarketData* currExtractMarketDataObj = new ExtractMarketData(dbhost, databaseName,
                                                                                 startDate, endDate,
@@ -597,18 +620,20 @@ void ExtractDataForm::on_extractWeightData_pushButton_clicked()
 
     qDebug() << dbConnectId << dbhost << startDate << endDate << currIndexCodeList;
 
-    if (currIndexCodeList.size() == 0) {
+    if (currIndexCodeList.size() == 0) 
+    {
         QMessageBox::critical(NULL, "Error", QString(QString("还未选择指数")));
-    } else {
+    } 
+    else 
+    {
         QString info = QString("开始提取权重信息: \n选择的指数为: %1;\n指数截止日起始时间: [%2, %3];")
                 .arg(m_indexCodeList.join(",")).arg(startDate).arg(endDate);
         if (QMessageBox::Yes == QMessageBox::information(NULL, QString("确认信息"),
                                                          info, QMessageBox::Yes | QMessageBox::No)) {
             updateProgramInfo(ui->programInfo_Table, info);
 
-            ExtractWeightData* currExtractWeightData = new ExtractWeightData(dbhost, dbConnectId,
-                                                                             startDate, endDate, currIndexCodeList,
-                                                                             m_desFileDir, m_extractThreadCount);
+            ExtractWeightData* currExtractWeightData = new ExtractWeightData(dbhost, startDate, endDate, m_weightTimeList,
+                                                                            currIndexCodeList, m_desFileDir, m_extractThreadCount);
             connect(currExtractWeightData, SIGNAL(extractWeightDataComplete_signal(QStringList)),
                     this, SLOT(extractDataComplete_slot(QStringList)) );
             currExtractWeightData -> startReadData();
@@ -725,7 +750,7 @@ void ExtractDataForm::on_oriFile_tableView_clicked(const QModelIndex &index)
     QFile tmpFile(cmpFileName);
     if (tmpFile.exists()) {
         m_currOriFile = cmpFileName;
-//        qDebug() << "m_currOriFile: " << m_currOriFile;
+    //        qDebug() << "m_currOriFile: " << m_currOriFile;
         m_secodeList = readExcelSecodeList(m_currOriFile, "Sheet1", 1, "ori");
     } else {
         QMessageBox::critical(NULL, "Error", QString("当前文件不存在,请刷新当前表格"));
@@ -836,3 +861,22 @@ void ExtractDataForm::on_importSecodeList_pushButton_clicked()
 }
 
 
+void ExtractDataForm::on_extractSecodeTimeList_pushButton_clicked()
+{
+    m_marketTimeList = extractTimeList();
+}
+
+void ExtractDataForm::on_extractWeightTimeList_pushButton_clicked()
+{
+    m_weightTimeList = extractTimeList();
+}
+
+void ExtractDataForm::on_extractIndustryTimeList_pushButton_clicked()
+{
+    m_industryTimeList = extractTimeList();
+}
+
+void ExtractDataForm::on_extractFundamentTimeList_pushButton_clicked()
+{
+    m_fundamentTimeList = extractTimeList();
+}

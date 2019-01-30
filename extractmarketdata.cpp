@@ -99,8 +99,10 @@ void ExtractMarketData::initWorkProgressDialog() {
             this, SLOT(stopWork_slot()) );
 }
 
-void ExtractMarketData::initDatabase() {
-    m_database = new Database("1", m_dbhost);
+void ExtractMarketData::initDatabase() 
+{
+    qDebug() << "m_dbhost: " << m_dbhost;
+    m_database = new Database(m_dbhost);
 }
 
 void ExtractMarketData::initSecodeMap() {
