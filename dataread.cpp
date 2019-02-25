@@ -11,14 +11,23 @@ DataRead::DataRead(QString dbhost, QString dbName, QStringList tableNameList,
     m_database = new Database(dbhost);
 }
 
+
+void DataRead::setTableNameList(QList<QString> codeList)
+{
+    m_tableNameList = codeList;
+}
+
 void DataRead::getOrinPortfolioData_slot(QString dataType) {
     if (dataType == "HistoryData") 
-    {
+    {        
+        // qDebug() << "Emit HistoryData: " << QThread::currentThreadId();
         emit sendHistoryData (readHistoryData());
+       
     }
     if (dataType == "RealTimeData") 
-    {
-        emit sendHistoryData (readRealTimeData());
+    {        
+        // qDebug() << "Emit RealTimeData: " << QThread::currentThreadId();
+        emit sendHistoryData (readRealTimeData());   
     }
 
     if (dataType == "All")
@@ -33,14 +42,6 @@ QMap<QString, QList<QStringList>> DataRead::readHistoryData ()
 {
     QMap<QString, QList<QStringList>> result = m_database->getLongTimeHistoryData(m_startDate, m_endDate,
                                                                                   m_keyValueList, m_tableNameList, m_dbName);
-
-    for (QMap<QString, QList<QStringList>>::const_iterator it = result.begin();
-        it != result.end(); ++it)
-    {
-        // qDebug() << it.key() << it.value().size();
-        // printList(it.value(), it.key());
-    }
-
     return result;
 }
 

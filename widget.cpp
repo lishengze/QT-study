@@ -78,9 +78,11 @@ Widget::~Widget()
 
 void Widget::initCommonData() 
 {
+    m_workProgressDialog = NULL;
     m_announcementView = NULL;
     m_dbhostList << "192.168.211.162"
-                 << "192.168.211.165";
+                 << "192.168.211.165"
+                 << "127.0.0.1";
 
     m_currDBHost = m_dbhostList[0];
 
@@ -95,26 +97,26 @@ void Widget::initWidegt()
 {
     initHedgedWidget();
     initEnergyWidget();
-    //    initFutureWidget();
     initAnnounceWidget();
     initDatasourceWidget();
     initProgramWorkInfoWidget();
     initTableContextMenuWidget();
-    // initWorkProgressDialog();
-
     setPortfolioTableWidget();
     setBuySalePortfolioTableWidget();
 }
 
 void Widget::initFileDir() 
 {
-    m_nativeFileName = "./spreadDirInfo.xlsx";
+    QString workDir = QCoreApplication::applicationDirPath() + "/";
+    // qDebug() << "workDir: " << workDir;
+    m_nativeFileName = workDir + "/info.xlsx";
     QFile tmpFile(m_nativeFileName);
     if (!tmpFile.exists()) 
     {
         QXlsx::Document xlsx;
-        m_strategyFileDir = QString("//192.168.211.182/it程序设计/strategy/");
-        m_buySalePortfolioFileDir = QString("//192.168.211.182/it程序设计/买入卖出组合/");
+        xlsx.selectSheet("dir");
+        m_strategyFileDir = workDir;
+        m_buySalePortfolioFileDir = workDir;
         xlsx.write("A1", m_strategyFileDir);
         xlsx.write("A2",m_buySalePortfolioFileDir);
         xlsx.saveAs(m_nativeFileName);
@@ -122,12 +124,13 @@ void Widget::initFileDir()
     else 
     {
         QXlsx::Document xlsx(m_nativeFileName);
-        xlsx.selectSheet("Sheet1");
+        xlsx.selectSheet("dir");
         QXlsx::CellRange range = xlsx.dimension();
 
         if (range.rowCount() == 0) {
-            m_strategyFileDir = QString("//192.168.211.182/it程序设计/strategy/");
-            m_buySalePortfolioFileDir = QString("//192.168.211.182/it程序设计/买入卖出组合/");
+            m_strategyFileDir = workDir;
+            m_buySalePortfolioFileDir = workDir;
+            xlsx.selectSheet("dir");
             xlsx.write("A1", m_strategyFileDir);
             xlsx.write("A2",m_buySalePortfolioFileDir);
             xlsx.save();
@@ -175,7 +178,7 @@ void Widget::initEnergyWidget()
     ui->energyStart_dateEdit->setCalendarPopup (true);
     ui->energyEnd_dateEdit->setCalendarPopup (true);
 
-    ui->energyStart_dateEdit->setDate (QDate::currentDate().addDays(-1));
+    ui->energyStart_dateEdit->setDate (QDate::currentDate().addDays(-10));
     ui->energyEnd_dateEdit->setDate (QDate::currentDate());
     ui->energyStart_dateEdit->setMinimumDate(QDate(2007,1,1));
 
@@ -262,7 +265,7 @@ void Widget::initTableContextMenuWidget()
 
 void Widget::setPortfolioTableWidget() 
 {
-    m_strategyFileInfoList = getExcelFileInfo(m_strategyFileDir);
+    m_strategyFileInfoList = getExcelFileInfo(m_strategyFileDir, false);
 
     QStandardItemModel* standardItemModel = dynamic_cast<QStandardItemModel*>(ui->strategy_table->model ());
     if (NULL == standardItemModel) {
@@ -284,14 +287,15 @@ void Widget::setPortfolioTableWidget()
 
 void Widget::setBuySalePortfolioTableWidget() 
 {
-    m_buySalePortfolioFileInfoList = getExcelFileInfo(m_buySalePortfolioFileDir);
+    m_buySalePortfolioFileInfoList = getExcelFileInfo(m_buySalePortfolioFileDir, false);
     m_portfolioAmount = getPortfolioAmountMap(m_buySalePortfolioFileInfoList);
-    //    printMap(m_portfolioAmount, "m_portfolioAmount: ");
 
     QStandardItemModel* standardItemModel = dynamic_cast<QStandardItemModel*>(ui->buySalePortfolio_table->model ());
     if (NULL == standardItemModel) {
         standardItemModel = new QStandardItemModel();
-    } else {
+    } 
+    else 
+    {
         standardItemModel->clear();
     }
 
@@ -384,7 +388,7 @@ void Widget::setDBTableNameMap()
     m_workProgressDialog->setRange(m_timeTypeList.size(), 0);
     m_workProgressDialog->updateWorkState(0);
     m_workProgressDialog->show();
-    // m_workProgressDialog->setWindowFlags(Qt::WindowStaysOnTopHint);
+    m_workProgressDialog->setWindowFlags(Qt::WindowStaysOnTopHint);
 
     emit getTableList_signal();
 }
@@ -784,13 +788,17 @@ void Widget::on_Annoucnement_Button_clicked()
 void Widget::on_chooseStrategyDir_Button_clicked()
 {
     QString dirName = QFileDialog::getExistingDirectory(NULL, "caption", ".");
-    if (dirName != "") {
+    if (dirName != "") 
+    {
         m_strategyFileDir = dirName + "/";
-        if (writeFileInfo(m_nativeFileName, "A1", m_strategyFileDir) == 1) {
+        if (writeFileInfo(m_nativeFileName, "A1", m_strategyFileDir, "dir") == 1) 
+        {
             setPortfolioTableWidget();
             updateProgramInfo(ui->programInfo_tableView, QString(QString("设置新的策略文件夹为: %1"))
                                                          .arg(m_strategyFileDir));
-        } else {
+        } 
+        else 
+        {
             QMessageBox::critical(NULL, "Error", QString("设置新的策略文件夹出错"));
         }
     }

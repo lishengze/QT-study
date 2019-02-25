@@ -500,8 +500,8 @@ void CSSChartForm::sendRealTimeCSSData_slot(QList<double> aveList, QList<double>
 
     // printList(aveList, "aveList");
     // printList(cssList, "cssList");
-    qDebug() << QString("m_updateCount: %1, isAddData: %2")
-                .arg(m_updateCountList[dataID]).arg(isAddData);
+    // qDebug() << QString("m_updateCount: %1, isAddData: %2")
+    //             .arg(m_updateCountList[dataID]).arg(isAddData);
 
     if (m_updateCountList[dataID] != 1)
     {
@@ -521,36 +521,36 @@ void CSSChartForm::sendRealTimeCSSData_slot(QList<double> aveList, QList<double>
         m_cssList[dataID][2].pop_back();
     }
 
-        if (m_aveList[dataID][0].size() >= m_timeList[dataID].size())
-        {
-            return;
-        }
+    if (m_aveList[dataID][0].size() >= m_timeList[dataID].size())
+    {
+        return;
+    }
 
-        for (int i = 0; i < aveList.size(); ++i)
-        {
-            m_aveList[dataID][i].append(aveList[i]);
-            m_aveLineSeriesList[dataID][i]->append(m_aveList[dataID][i].size()-1, m_aveList[dataID][i].last());
-        }
+    for (int i = 0; i < aveList.size(); ++i)
+    {
+        m_aveList[dataID][i].append(aveList[i]);
+        m_aveLineSeriesList[dataID][i]->append(m_aveList[dataID][i].size()-1, m_aveList[dataID][i].last());
+    }
 
-        for (int i = 0; i < 2; ++i)
-        {
-            m_cssList[dataID][i].append(cssList[i]);
-            m_cssLineSeriesList[dataID][i]->append(m_cssList[dataID][i].size()-1, m_cssList[dataID][i].last());
-        }
+    for (int i = 0; i < 2; ++i)
+    {
+        m_cssList[dataID][i].append(cssList[i]);
+        m_cssLineSeriesList[dataID][i]->append(m_cssList[dataID][i].size()-1, m_cssList[dataID][i].last());
+    }
 
-        m_cssList[dataID][2].append(cssList[2]);
-        if (cssList[2] > 0)
-        {
-            m_energySeriesListList[dataID][0]->barSets()[0]->append(cssList[2]);
-            m_energySeriesListList[dataID][1]->barSets()[0]->append(0);
-        }
-        else
-        {
-            m_energySeriesListList[dataID][0]->barSets()[0]->append(0);
-            m_energySeriesListList[dataID][1]->barSets()[0]->append(cssList[2]);
-        }
+    m_cssList[dataID][2].append(cssList[2]);
+    if (cssList[2] > 0)
+    {
+        m_energySeriesListList[dataID][0]->barSets()[0]->append(cssList[2]);
+        m_energySeriesListList[dataID][1]->barSets()[0]->append(0);
+    }
+    else
+    {
+        m_energySeriesListList[dataID][0]->barSets()[0]->append(0);
+        m_energySeriesListList[dataID][1]->barSets()[0]->append(cssList[2]);
+    }
 
-        setPropertyValue(m_cssList[dataID][0].size()-1, dataID, false);
+    setPropertyValue(m_cssList[dataID][0].size()-1, dataID, false);
 
     if (isAddData)
     {

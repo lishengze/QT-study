@@ -164,13 +164,13 @@ void MonitorRealTimeData::initTimer()
 
 void MonitorRealTimeData::initIndexHedgeMetaInfo() 
 {
-    m_indexHedgeMetaInfo.insert("000300.SH", 300);
-    m_indexHedgeMetaInfo.insert("000016.SH", 300);
-    m_indexHedgeMetaInfo.insert("000852.SH", 1000);
-    m_indexHedgeMetaInfo.insert("000904.SH", 200);
-    m_indexHedgeMetaInfo.insert("000905.SH", 200);
-    m_indexHedgeMetaInfo.insert("000906.SH", 800);
-    m_indexHedgeMetaInfo.insert("399903.SZ", 100);
+    m_indexPriceMap.insert("000300.SH", 300);
+    m_indexPriceMap.insert("000016.SH", 300);
+    m_indexPriceMap.insert("000852.SH", 1000);
+    m_indexPriceMap.insert("000904.SH", 200);
+    m_indexPriceMap.insert("000905.SH", 200);
+    m_indexPriceMap.insert("000906.SH", 800);
+    m_indexPriceMap.insert("399903.SZ", 100);
 }
 
 void MonitorRealTimeData::addMacd(MACD initMacdData) 
@@ -217,7 +217,7 @@ void MonitorRealTimeData::getPreCloseSpread_slot()
     } else {
         preCloseSpread = getHedgedSpread(allPreCLoseData, m_portfolio,
                                          m_hedgeIndexCode, m_portfolio[m_hedgeIndexCode],
-                                         m_indexHedgeMetaInfo[m_hedgeIndexCode]);
+                                         m_indexPriceMap[m_hedgeIndexCode]);
     }
     emit sendPreCloseData(preCloseSpread);
 }
@@ -262,7 +262,6 @@ void MonitorRealTimeData::getRealtimeData_slot()
             m_hedgedIndex = getCompleteIndexCode(m_hedgedIndex, "wind");
             QStringList selectData = m_database->getSnapShootData(m_selectIndex, todayKeyValueList);
             QStringList hedgedData = m_database->getSnapShootData(m_hedgedIndex, todayKeyValueList);
-
 
             double selectTime = QDateTime(getDate(selectData[0]), getTime(selectData[1])).toMSecsSinceEpoch();;
             double hedgedTime = QDateTime(getDate(hedgedData[0]), getTime(hedgedData[1])).toMSecsSinceEpoch();;
@@ -361,7 +360,7 @@ bool MonitorRealTimeData::checkPortfolioData(QMap<QString, QStringList> realTime
         }
     }
 
-    sameTimeCount < m_secodeNameList.size() * unUpdatedDataPercent;
+    // sameTimeCount < m_secodeNameList.size() * unUpdatedDataPercent;
     if (realTimeData.size() == m_secodeNameList.size()) 
     {
         return true;
@@ -399,7 +398,7 @@ ChartData MonitorRealTimeData::computeSpreadMACDData()
     {
         result = getHedgedData(m_realTimeData, m_portfolio,
                                m_hedgeIndexCode, m_portfolio[m_hedgeIndexCode],
-                               m_indexHedgeMetaInfo[m_hedgeIndexCode]);
+                               m_indexPriceMap[m_hedgeIndexCode]);
     }
 
     double strategyData = result[0];
@@ -435,7 +434,7 @@ QList<double> MonitorRealTimeData::computeSpreadData()
     {
         result = getHedgedData(m_realTimeData, m_portfolio,
                                m_hedgeIndexCode, m_portfolio[m_hedgeIndexCode],
-                               m_indexHedgeMetaInfo[m_hedgeIndexCode]);
+                               m_indexPriceMap[m_hedgeIndexCode]);
     }
     result.removeAt(1);
     return result;

@@ -63,21 +63,21 @@ DataProcess::DataProcess(QMap<QString, QList<QStringList>>& oridata,
 
 void DataProcess::initIndexHedgeMetaInfo() 
 {
-    m_indexHedgeMetaInfo.insert("SH000300", 300);
-    m_indexHedgeMetaInfo.insert("SH000016", 300);  // 上证50
-    m_indexHedgeMetaInfo.insert("SH000852", 1000);
-    m_indexHedgeMetaInfo.insert("SH000904", 200);
-    m_indexHedgeMetaInfo.insert("SH000905", 200);
-    m_indexHedgeMetaInfo.insert("SH000906", 800);
-    m_indexHedgeMetaInfo.insert("SZ399903", 100);
+    m_indexPriceMap.insert("SH000300", 300);
+    m_indexPriceMap.insert("SH000016", 300);  // 上证50
+    m_indexPriceMap.insert("SH000852", 1000);
+    m_indexPriceMap.insert("SH000904", 200);
+    m_indexPriceMap.insert("SH000905", 200);
+    m_indexPriceMap.insert("SH000906", 800);
+    m_indexPriceMap.insert("SZ399903", 100);
 
-    m_indexHedgeMetaInfo.insert("000300.SH", 300);
-    m_indexHedgeMetaInfo.insert("000016.SH", 300);
-    m_indexHedgeMetaInfo.insert("000852.SH", 1000);
-    m_indexHedgeMetaInfo.insert("000904.SH", 200);
-    m_indexHedgeMetaInfo.insert("000905.SH", 200);
-    m_indexHedgeMetaInfo.insert("000906.SH", 800);
-    m_indexHedgeMetaInfo.insert("399903.SZ", 100);
+    m_indexPriceMap.insert("000300.SH", 300);
+    m_indexPriceMap.insert("000016.SH", 300);
+    m_indexPriceMap.insert("000852.SH", 1000);
+    m_indexPriceMap.insert("000904.SH", 200);
+    m_indexPriceMap.insert("000905.SH", 200);
+    m_indexPriceMap.insert("000906.SH", 800);
+    m_indexPriceMap.insert("399903.SZ", 100);
 }
 
 void DataProcess::filterHedgeIndexData() 
@@ -166,7 +166,7 @@ QList<QList<double>> DataProcess::computeHedgedData () {
         pointDataList = getStrategyPointList(m_oriPortfilioData, seocdebuyCountMap);
         hedgedResult = getHedgedData(pointDataList, m_indexHedgeData,
                                      m_portfolio[m_hedgeIndexCode],
-                                     m_indexHedgeMetaInfo[m_hedgeIndexCode]);
+                                     m_indexPriceMap[m_hedgeIndexCode]);
     }
 
     m_timeData = hedgedResult[0];
@@ -196,7 +196,7 @@ QList<QList<double>> DataProcess::computeHedgedData () {
         QList<double> oriTypeList;
         QList<double> typList;
         QList<double> earningList;
-        getTypeEarningList(m_hedgedData, m_indexCodeData, oriTypeList, earningList);
+        getTypEarningList(m_hedgedData, m_indexCodeData, oriTypeList, earningList);
         getTransedTYP(oriTypeList, typList);
 
         computeAVEList(earningList, m_aveList, m_aveNumbList, m_isEMAList);
@@ -298,7 +298,7 @@ QList<QList<double>> DataProcess::computeSnapshootData()
         } else {
             tmpResult = getHedgedData(oneTimeData, m_portfolio,
                                       m_hedgeIndexCode, m_portfolio[m_hedgeIndexCode],
-                                      m_indexHedgeMetaInfo[m_hedgeIndexCode]);
+                                      m_indexPriceMap[m_hedgeIndexCode]);
         }
         if (tmpResult.size() != 0 && tmpResult[1] != 0) {
             m_hedgedData.prepend(tmpResult[0]);

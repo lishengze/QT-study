@@ -466,7 +466,7 @@ void ChartForm::sendHistPortfolioData_slot(QList<QList<double> > allData)
 
 void ChartForm::receiveRealTimeData(ChartData curChartData) 
 {
-    qDebug() << "ChartForm receiveRealTimeData Thread: " << QThread::currentThreadId();
+    // qDebug() << "ChartForm receiveRealTimeData Thread: " << QThread::currentThreadId();
 
     m_hedgedData.append(curChartData.strategyData);
     m_votData.append(curChartData.votData);

@@ -101,7 +101,7 @@ private:
     QMap<QString, QList<double>>    m_vot;
     QMap<QString, QList<QString>>   m_time;
 
-    QMap<QString, double>           m_indexHedgeMetaInfo;
+    QMap<QString, double>           m_indexPriceMap;
     QString                         m_hedgeIndexCode;
     QStringList                     m_secodeNameList;
 

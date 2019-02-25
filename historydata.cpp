@@ -1,5 +1,6 @@
 ﻿#include <cstdlib>
 #include <QString>
+#include <QStringList>
 #include "historydata.h"
 #include "toolfunc.h"
 #include "secode_func.h"
@@ -10,6 +11,9 @@
 #include "spread_compute.h"
 #include "io_func.h"
 #include "database_func.h"
+
+using std::unique_lock;
+
 #pragma execution_character_set("utf-8")
 
 // 简单组合对冲
@@ -30,10 +34,6 @@ HistoryData::HistoryData(QString dbhost, QString databaseName,
     m_salePortfolio(saleStrategyMap),
     QObject(parent)
 {
-    m_keyValueList.clear();
-    m_keyValueList << "TCLOSE" << "VOTRUNOVER";
-    m_threadNumb = m_secodeNameList.size();
-
     m_isPortfolio = true;
     m_isBuySalePortfolio = isBuySalePortfolio;
     m_isFuture = false;
@@ -71,11 +71,7 @@ HistoryData::HistoryData(QString dbhost, QString databaseName,
                         m_energyCssRate1(energyCssRate1), m_energyCssRate2(energyCssRate2),
                         m_maxCSS(maxCSS), m_minCSS(minCSS), m_databaseID(dataID),
                         QObject(parent)
-{
-    m_keyValueList.clear();
-    m_keyValueList << "TCLOSE" << "VOTRUNOVER" << "PCTCHG";
-    m_threadNumb = m_secodeNameList.size();    
-    
+{    
     m_isPortfolio = true;
     m_isBuySalePortfolio = false;
     m_isFuture = false;
@@ -83,9 +79,8 @@ HistoryData::HistoryData(QString dbhost, QString databaseName,
 
     m_isCSSChart = true;
 
-    if (getDate(m_endDate) == QDate::currentDate())
+    if (getDate(m_endDate) == QDate::currentDate() && isTradingDay(getDate(m_endDate)))
     {
-        m_endDate = QDate::currentDate().addDays(-1).toString("yyyyMMdd");
         m_isRealTime = true;
     }
     else
@@ -125,7 +120,8 @@ HistoryData::HistoryData(QString dbhost, QString databaseName,
 
     m_isCSSChart = true;
 
-    if (getDate(m_endDate) == QDate::currentDate())
+    if (getDate(m_endDate) == QDate::currentDate() 
+    &&  isTradingDay(getDate(m_endDate)))
     {
         m_isRealTime = true;
     }
@@ -133,7 +129,6 @@ HistoryData::HistoryData(QString dbhost, QString databaseName,
     {
         m_isRealTime = false;
     }
-
 
     initCommonData();
 }
@@ -147,17 +142,20 @@ HistoryData::HistoryData(QString dbhost, QStringList timeTypeList, QObject* pare
 
 HistoryData::~HistoryData() 
 {
-    for (int i = 0; i < m_dataProcessThreadList.size(); ++i) {
-         delete m_dataProcessThreadList[i];
-         m_dataProcessThreadList[i] = NULL;
+    for (int i = 0; i < m_dataProcessThreadList.size(); ++i) 
+    {
+        delete m_dataProcessThreadList[i];
+        m_dataProcessThreadList[i] = NULL;
     }
 
-    for (int i = 0; i < m_dataReaderThreadList.size(); ++i) {
-         delete m_dataReaderThreadList[i];
-         m_dataReaderThreadList[i] = NULL;
+    for (int i = 0; i < m_dataReaderThreadList.size(); ++i) 
+    {
+        delete m_dataReaderThreadList[i];
+        m_dataReaderThreadList[i] = NULL;
     }
 
-    if (NULL != m_database) {
+    if (NULL != m_database) 
+    {
         delete m_database;
         m_database = NULL;
     }
@@ -171,11 +169,15 @@ HistoryData::~HistoryData()
 
 void HistoryData::initCommonData()
 {
+    m_isSupple = false;
     m_database = NULL;
     m_readDataThreadCount = 0;
     m_oldTime = 0;
     m_curTime = 0;
     m_lastAddedTime = 0;
+
+    m_keyValueList.clear();
+    m_keyValueList << "TCLOSE" << "VOTRUNOVER" << "PCTCHG";  
 
     if (m_selectCodeName.size() == 0 && m_hedgedCodeName.size() != 0)
     {
@@ -185,6 +187,7 @@ void HistoryData::initCommonData()
     if (m_isRealTime)
     {
         m_oneDayTimeList = getOneDayTimeList(m_dbhost, m_databaseName);
+        // printList(m_oneDayTimeList, "m_oneDayTimeList");
     }
 
     initDatabase();
@@ -193,10 +196,28 @@ void HistoryData::initCommonData()
 
     if (m_isPortfolio)
     {
+        m_threadNumb = min(m_secodeNameList.size(), 8);
         initPortfolioSignalType();
         initPortfolioThreadSecodeList();
-        initReadPortfolioDataSignal();
-        initPortfolioIndexHedgeMetaInfo();
+        setReadPortfolioDataThreads();
+        initPortfolioIndexHedgeMetaInfo();                  
+    }
+
+    if (m_isRealTime && m_isPortfolio)
+    {
+        Database realtimeDB = Database(m_dbhost);
+        QList<QString> rlCodeList = realtimeDB.getTableList("MarketData_RealTime");
+
+        QList<QString> portfolioCodeList = m_portfolio.keys();
+
+        for (QString code:portfolioCodeList)
+        {
+            if (rlCodeList.indexOf(getCompleteSecode(code, "wind")) < 0)
+            {
+                qDebug() << code << " is lost!";
+                m_isRealTime = false;
+            }
+        }
     }
 
     if (m_isRealTime && m_isCSSChart)
@@ -230,7 +251,7 @@ void HistoryData::initRealtimeWorker()
     int monitorTime;
     if (m_isCSSChart)
     {
-        monitorTime = 5 * 1000;
+        monitorTime = 10 * 1000;
     }
     else
     {
@@ -277,16 +298,8 @@ void HistoryData::initRealtimeWorker()
 void HistoryData::initPortfolioSignalType() 
 {
     if (m_isCSSChart)
-    {
-        if (m_isRealTime && isTradingStart())
-        {
-            m_signalType = "All";
-            // m_signalType = "HistoryData";
-        }
-        else
-        {
-            m_signalType = "HistoryData";
-        }
+    {        
+        m_signalType = "HistoryData";
     }
     else
     {
@@ -303,68 +316,59 @@ void HistoryData::initPortfolioSignalType()
 
 void HistoryData::initPortfolioThreadSecodeList() 
 {
-    for (int i = 0; i < m_threadNumb; ++i) {
-        QStringList emptyList;
-        m_threadSecodeList.append (emptyList);
-    }
-
-    for (int i = 0; i < m_secodeNameList.size(); i+=m_threadNumb) {
-        for (int j = 0; j < m_threadNumb && i + j < m_secodeNameList.size(); ++j) {
-            m_threadSecodeList[j].append (m_secodeNameList[i+j]);
-        }
-    }
+    allocateThreadCodeList(m_threadNumb, m_secodeNameList, m_threadSecodeList);
+    // printList(m_threadSecodeList, "m_threadSecodeList");
 }
 
 void HistoryData::initPortfolioIndexHedgeMetaInfo() 
 {
-    m_indexHedgeMetaInfo.insert("SH000300", 300);
-    m_indexHedgeMetaInfo.insert("SH000016", 300);  // 上证50
-    m_indexHedgeMetaInfo.insert("SH000852", 1000);
-    m_indexHedgeMetaInfo.insert("SH000904", 200);
-    m_indexHedgeMetaInfo.insert("SH000905", 200);
-    m_indexHedgeMetaInfo.insert("SH000906", 800);
-    m_indexHedgeMetaInfo.insert("SZ399903", 100);
+    m_indexPriceMap.insert("SH000300", 300);
+    m_indexPriceMap.insert("SH000016", 300);  // 上证50
+    m_indexPriceMap.insert("SH000852", 1000);
+    m_indexPriceMap.insert("SH000904", 200);
+    m_indexPriceMap.insert("SH000905", 200);
+    m_indexPriceMap.insert("SH000906", 800);
+    m_indexPriceMap.insert("SZ399903", 100);
 
-    m_indexHedgeMetaInfo.insert("000300.SH", 300);
-    m_indexHedgeMetaInfo.insert("000016.SH", 300);
-    m_indexHedgeMetaInfo.insert("000852.SH", 1000);
-    m_indexHedgeMetaInfo.insert("000904.SH", 200);
-    m_indexHedgeMetaInfo.insert("000905.SH", 200);
-    m_indexHedgeMetaInfo.insert("000906.SH", 800);
-    m_indexHedgeMetaInfo.insert("399903.SZ", 100);
+    m_indexPriceMap.insert("000300.SH", 300);
+    m_indexPriceMap.insert("000016.SH", 300);
+    m_indexPriceMap.insert("000852.SH", 1000);
+    m_indexPriceMap.insert("000904.SH", 200);
+    m_indexPriceMap.insert("000905.SH", 200);
+    m_indexPriceMap.insert("000906.SH", 800);
+    m_indexPriceMap.insert("399903.SZ", 100);
 }
 
-void HistoryData::initReadPortfolioDataSignal() 
+void HistoryData::setReadPortfolioDataThreads() 
 {
     qRegisterMetaType<QMap<QString, QList<QStringList>>>("QMap<QString, QList<QStringList>>");
+
     for (int i = 0; i < m_threadSecodeList.size (); ++i) 
     {
-        DataRead* curDataReader;
-        if (m_threadSecodeList[i].size() > 0) 
-        {
-            curDataReader = new DataRead(m_dbhost, m_databaseName, m_threadSecodeList[i],
-                                         m_startDate, m_endDate, m_keyValueList);
-        }
+
+        DataRead* curDataReader = new DataRead(m_dbhost, m_databaseName, m_threadSecodeList[i],
+                                               m_startDate, m_endDate, m_keyValueList);
 
         QThread* curThread = new QThread();
         curDataReader->moveToThread(curThread);
 
-        connect (curThread, SIGNAL(finished()),
+        connect (curThread,     SIGNAL(finished()),
                  curDataReader, SLOT(deleteLater()));
 
-        connect (this, SIGNAL(getOrinPortfolioData_Signal(QString)),
+        connect (this,          SIGNAL(getOrinPortfolioData_Signal(QString)),
                  curDataReader, SLOT(getOrinPortfolioData_slot(QString)));
 
         connect (curDataReader, SIGNAL(sendHistoryData(QMap<QString, QList<QStringList>>)),
-                 this, SLOT(sendHistOrinPortfolioData_slot(QMap<QString, QList<QStringList>>)), Qt::QueuedConnection);
-
+                this,           SLOT(sendHistOrinPortfolioData_slot(QMap<QString, QList<QStringList>>)),
+                Qt::QueuedConnection);
+        
         curThread->start();
         m_dataReaderList.append(curDataReader);
         m_dataReaderThreadList.append(curThread);
     }
 }
 
-void HistoryData::initCompPortfolioDataSignal() 
+void HistoryData::setCompPortfolioDataThreads() 
 {
     int oridataCount = 0;
     for (int i = 0; i < m_secodeNameList.size (); ++i) {
@@ -453,7 +457,7 @@ void HistoryData::getIndexCSSData_slot()
 
     if (m_isRealTime)
     {
-        completeIndexTdyRealtimeData(selectDBData, m_selectCodeName);
+        completeIndexRealtimeData(selectDBData, m_selectCodeName);
     }
 
     m_oldSelectData = selectDBData.last()[2].toDouble();
@@ -469,7 +473,7 @@ void HistoryData::getIndexCSSData_slot()
 
         if (m_isRealTime)
         {
-            completeIndexTdyRealtimeData(hedgedDBData, m_hedgedCodeName);
+            completeIndexRealtimeData(hedgedDBData, m_hedgedCodeName);
         }
 
         if (m_hedgedCodeName == m_selectCodeName)
@@ -477,7 +481,7 @@ void HistoryData::getIndexCSSData_slot()
             zeroHistData(selectDBData);
         }
 
-        getTypeEarningList(selectDBData, hedgedDBData, m_timeFormat,
+        getTypEarningList(selectDBData, hedgedDBData, m_timeFormat,
                            m_timeList, m_oriTypeList, m_earningList);
 
         getTransedTYP(m_oriTypeList, m_typList);
@@ -487,7 +491,7 @@ void HistoryData::getIndexCSSData_slot()
     }
     else
     {
-        getTypeEarningList(selectDBData, m_timeFormat, m_timeList, m_oriTypeList, m_earningList);
+        getTypEarningList(selectDBData, m_timeFormat, m_timeList, m_oriTypeList, m_earningList);
         getTransedTYP(m_oriTypeList, m_typList);
     }
 
@@ -497,24 +501,36 @@ void HistoryData::getIndexCSSData_slot()
 void HistoryData::sendHistOrinPortfolioData_slot (QMap<QString, QList<QStringList>> subThreadData) 
 {
     QMutexLocker locker(&m_mutex);
-    m_oriPortfilioData.unite (subThreadData);
+    // qDebug() << "receive " << m_signalType << QThread::currentThreadId();
+    m_oriHistPortfolioData.unite (subThreadData);
     ++m_readDataThreadCount;
 
-    emit sendTableViewInfo_Signal(QString("完成股票指数读取数目: %1").arg(m_oriPortfilioData.size ()));
+    emit sendTableViewInfo_Signal(QString("完成股票指数读取数目: %1").arg(m_oriHistPortfolioData.size ()));
 
     if (m_readDataThreadCount == m_threadNumb) 
     {
-        releaseReadPortfolioDataThreads ();
         m_readDataThreadCount = 0;
-        if (m_oriPortfilioData.find("Error")!= m_oriPortfilioData.end())
+        if (m_oriHistPortfolioData.find("Error")!= m_oriHistPortfolioData.end())
         {
             emit sendTableViewInfo_Signal(QString("Error: 读取数据出错"));
         }
+        else if (m_isSupple)
+        {
+            m_suppledPortfolioData = m_oriHistPortfolioData;
+            m_oriHistPortfolioData.clear ();
+            releaseReadPortfolioDataThreads();
+
+            completeSupplePortfolioData();
+            computeHistPortData();
+        }
         else
         {
-            computePortfolioData();
+           m_oriPortfilioData = m_oriHistPortfolioData;
+           m_oriHistPortfolioData.clear ();
+           releaseReadPortfolioDataThreads();
+
+           computePortfolioData();
         }
-        m_oriPortfilioData.clear ();
     }
 }
 
@@ -524,13 +540,7 @@ void HistoryData::sendRealtimeIndexData_slot(QList<double> indexData)
     {
         if (m_hedgedCodeName.size() == 0)
         {       
-            // double closePrice = indexData[0] + std::rand() % int(indexData[0]/10);
-            // m_earningList.append(closePrice);
-            // m_oriTypeList.append((closePrice + indexData[1])/2);
-
             m_curSelectData = indexData[0];
-            
- 
 
             double curChange = (m_curSelectData - m_oldSelectData) / m_oldSelectData;
             m_earningList.append(m_earningList.last() * (1 + curChange));
@@ -545,19 +555,16 @@ void HistoryData::sendRealtimeIndexData_slot(QList<double> indexData)
         }
         else
         {
-            qDebug() << QString("%1: %2, %3: %4, Time: %5")
-                        .arg(m_selectCodeName).arg(indexData[0])
-                        .arg(m_hedgedCodeName).arg(indexData[1])
-                        .arg(QDateTime::fromMSecsSinceEpoch(indexData[2])
-                            .toString("yyyy.MM.dd hh:mm:ss"));   
+            // qDebug() << QString("%1: %2, %3: %4, Time: %5")
+            //             .arg(m_selectCodeName).arg(indexData[0])
+            //             .arg(m_hedgedCodeName).arg(indexData[1])
+            //             .arg(QDateTime::fromMSecsSinceEpoch(indexData[2])
+            //                 .toString("yyyy.MM.dd hh:mm:ss"));   
                                      
             m_curSelectData = indexData[0];
             m_curHedgedData = indexData[1];
             double curSelectChange = (m_curSelectData - m_oldSelectData) / m_oldSelectData;
             double curHedgedChange = (m_curHedgedData - m_oldHedgedData) / m_oldHedgedData;
-
-            // double curSelectChange = indexData[0];
-            // double curHedgedChange = indexData[1];      
 
             if (m_selectCodeName == m_hedgedCodeName)
             {
@@ -582,141 +589,130 @@ void HistoryData::sendRealtimeIndexData_slot(QList<double> indexData)
 
 void HistoryData::sendRealtimeSpreadData_slot(QList<double> oridata)
 {
-    qDebug() << QString("portfolio: %1, %2: %3, Time: %4")
-                    .arg(oridata[0]).arg(m_hedgedCodeName).arg(oridata[2])
-                    .arg(QDateTime::fromMSecsSinceEpoch(oridata[1])
-                    .toString("yyyy.MM.dd hh:mm:ss")); 
-
-    double m_curSelectData = oridata[0];
-    double m_curHedgedData = oridata[2];
+    m_curSelectData = oridata[0];
+    m_curHedgedData = oridata[2];
 
     double relativeEarning = (m_curSelectData - m_oldSelectData) / m_curHedgedData;
+
     m_earningList.append(m_earningList.last()*(1 + relativeEarning));
     m_oriTypeList.append((m_earningList.last() + m_earningList[m_earningList.size()-2]) / 2);    
 
     m_curEpochRealtime = oridata[1];
+
+    // qDebug() << QString("oldSelectData:%1, curSelectData:%2, oldHedgedData:%3, curHedgedData:%4, %5")
+    //                     .arg(m_oldSelectData).arg(m_curSelectData)
+    //                     .arg(m_oldHedgedData).arg(m_curHedgedData)
+    //                     .arg(QDateTime::fromMSecsSinceEpoch(oridata[1])
+    //                     .toString("yyyy.MM.dd hh:mm:ss"));
 
     computeRealtimeCSSData();
 }
 
 void HistoryData::computePortfolioData () 
 {
-    bool isNewType = true;
-    if (isNewType)
+    if (m_isCSSChart)
     {
-        if (m_isCSSChart)
+        checkSuppleData();
+
+        if (!m_isSupple)
         {
             computeHistPortData();
-            
-            m_curSelectData = m_hedgedData.last();
-            m_oldSelectData = m_hedgedData.last();            
-            m_curHedgedData = m_indexCodeData.last();
-            m_oldHedgedData = m_indexCodeData.last();
-            transEpochTimeList(m_timeList, m_timeData, m_timeFormat);
-
-            getTypeEarningList(m_hedgedData, m_indexCodeData, m_oriTypeList, m_earningList);
-
-            getTransedTYP(m_oriTypeList, m_typList);
-
-            computeHistoryCSSData();
-        }
-        else
-        {
-            QList<QList<double>> allData;
-            if (m_isRealTime)
-            {
-                if (m_isBuySalePortfolio)
-                {
-                    allData = computeSnapshootData(m_oriPortfilioData, m_buyPortfolio, m_salePortfolio, m_macdTime);                    
-                }
-                else
-                {
-                    allData = computeSnapshootData(m_oriPortfilioData, m_portfolio, m_hedgedCodeName, 
-                                                   m_indexHedgeMetaInfo[m_hedgedCodeName], m_macdTime);
-                }                
-            }
-            else
-            {
-                computeHedgedData();
-                computeVotData();
-                computeMacdData();   
-
-                allData.append(m_timeData);
-                allData.append(m_hedgedData);
-                allData.append(m_votData);
-                allData.append(m_macdData);
-                allData.append(m_indexCodeData);                
-            }
-            emit sendHistPortfolioData_Signal(allData);
-        }
+        }        
     }
     else
     {
-        initCompPortfolioDataSignal();
-        emit startCompPortfolioData_Signal("all");
-        emit sendTableViewInfo_Signal("开始计算历史数据");
+        QList<QList<double>> allData;
+        if (m_isRealTime)
+        {
+            if (m_isBuySalePortfolio)
+            {
+                allData = computeSnapshootData(m_oriPortfilioData, m_buyPortfolio, m_salePortfolio, m_macdTime);                    
+            }
+            else
+            {
+                allData = computeSnapshootData(m_oriPortfilioData, m_portfolio, m_hedgedCodeName, 
+                                                m_indexPriceMap[m_hedgedCodeName], m_macdTime);
+            }                
+        }
+        else
+        {
+            if (m_isBuySalePortfolio)
+            {
+                computeHistSpreadTimeList(m_oriPortfilioData, m_buyPortfolio,
+                                            m_salePortfolio, m_timeData, m_hedgedData);
+            }
+            else
+            {
+                computeHistSpreadTimeList(m_oriPortfilioData, m_portfolio, 
+                                            m_hedgedCodeName,m_portfolio[m_hedgedCodeName], 
+                                            m_indexPriceMap[m_hedgedCodeName], 
+                                            m_timeData, m_hedgedData, m_indexCodeData);              
+            }
+
+            computeVotList(m_oriPortfilioData, m_votData);
+            computeMACDList(m_hedgedData, m_macdTime, m_macdData);
+            
+            allData.append(m_timeData);
+            allData.append(m_hedgedData);
+            allData.append(m_votData);
+            allData.append(m_macdData);
+            allData.append(m_indexCodeData);                
+        }
+        emit sendHistPortfolioData_Signal(allData);
     }
+}
+
+void HistoryData::checkSuppleData()
+{
+    if (m_isRealTime)
+    {
+        QList<QString> suppleCodeList;
+        checkHistData(m_oriPortfilioData, m_endDate, suppleCodeList);
+
+        if (suppleCodeList.size() > 0)
+        {
+            m_isSupple = true;
+            m_threadNumb = min(8, suppleCodeList.size());
+            allocateThreadCodeList(m_threadNumb, suppleCodeList, m_threadSecodeList);
+            setReadPortfolioDataThreads();
+            emit getOrinPortfolioData_Signal("RealTimeData");
+        }                    
+    }    
 }
 
 void HistoryData::computeHistPortData()
 {
-    if (m_signalType == "All")
-    {
-        QMap<QString, QList<QStringList>> longHistOriData;
-        QMap<QString, QList<QStringList>> todyHistOriData;
-        seperateHistData(m_oriPortfilioData, longHistOriData, todyHistOriData);
-        checkRestoreData(longHistOriData, todyHistOriData);
+    computeHistSpreadTimeList(m_oriPortfilioData, m_portfolio, 
+                              m_hedgedCodeName,m_portfolio[m_hedgedCodeName], 
+                              m_indexPriceMap[m_hedgedCodeName], 
+                              m_timeData, m_hedgedData, m_indexCodeData);      
 
-        //qDebug() << QString("longHistOriData.size: %1, todyHistOriData.size: %2")
-        //            .arg(longHistOriData.size()).arg(todyHistOriData.size());
+    m_curSelectData = m_hedgedData.last();
+    m_oldSelectData = m_hedgedData.last();            
+    m_curHedgedData = m_indexCodeData.last();
+    m_oldHedgedData = m_indexCodeData.last();
 
-        QMap<QString, int> longHistPortfolio = transPorfolio(m_portfolio, "tinysoft");
-        QMap<QString, int> todyHistPortfolio = transPorfolio(m_portfolio, "wind");
+    transEpochTimeList(m_timeList, m_timeData, m_timeFormat);
 
-        // printMap(longHistPortfolio, "longHistPortfolio");
-        // printMap(todyHistPortfolio, "todyHistPortfolio");
+    getTypEarningList(m_hedgedData, m_indexCodeData, m_oriTypeList, m_earningList);
 
-        QMap<QString, QStringList> indexTimeValueMap = getHistIndexTimeValueMap(longHistOriData, getCompleteIndexCode(m_hedgedCodeName, "tinysoft"));
-        QList<QList<double>> histHedgedResult = computeHistHedgedData(longHistOriData, indexTimeValueMap, 
-                                                                      longHistPortfolio, getCompleteIndexCode(m_hedgedCodeName, "tinysoft"),
-                                                                      m_indexHedgeMetaInfo[m_hedgedCodeName]); 
+    getTransedTYP(m_oriTypeList, m_typList);
 
-        m_timeData = histHedgedResult[0];
-        m_hedgedData = histHedgedResult[1];
-        m_indexCodeData = histHedgedResult[2];                 
-
-        QList<QList<double>> realHedgedResult = computeSnapshootData(todyHistOriData, todyHistPortfolio, 
-                                                                        getCompleteIndexCode(m_hedgedCodeName, "wind"), 
-                                                                        m_indexHedgeMetaInfo[m_hedgedCodeName], m_macdTime); 
-
-        filterDataByTime(m_oneDayTimeList, realHedgedResult);  
-        // printList(realHedgedResult, "filteredRealHedgedResult"); 
-
-        QList<double> tdyTimeData = realHedgedResult[0];
-        QList<double> tdyHedgedData = realHedgedResult[1];
-        QList<double> tdyIndexData = realHedgedResult[3];
-
-        if (tdyTimeData.size() > 0 && tdyTimeData.first() > m_timeData.last())
-        {
-            m_timeData +=tdyTimeData;
-            m_hedgedData += tdyHedgedData;
-            m_indexCodeData += tdyIndexData; 
-        }                           
-    }
-    else
-    {
-        m_indexHedgeData = getHistIndexTimeValueMap(m_oriPortfilioData, getCompleteIndexCode(m_hedgedCodeName, "tinysoft"));
-        QList<QList<double>> hedgedResult = computeHistHedgedData(m_oriPortfilioData, m_indexHedgeData, 
-                                                                  m_portfolio, m_hedgedCodeName, 
-                                                                  m_indexHedgeMetaInfo[m_hedgedCodeName]);
-
-        m_timeData = hedgedResult[0];
-        m_hedgedData = hedgedResult[1];
-        m_indexCodeData = hedgedResult[2];                
-    }
+    computeHistoryCSSData();                              
 }
 
-void HistoryData::completeIndexTdyRealtimeData(QList<QStringList>& oriData, QString codeName)
+void HistoryData::completeSupplePortfolioData()
+{        
+    checkRestoreData(m_oriPortfilioData, m_suppledPortfolioData);
+
+    QMap<QString, int> longHistPortfolio = transPorfolio(m_portfolio, "tinysoft");
+    QMap<QString, int> todyHistPortfolio = transPorfolio(m_portfolio, "wind");
+
+    filterRealtimeData(m_oneDayTimeList, m_suppledPortfolioData);
+    completeHistData(m_oriPortfilioData, m_suppledPortfolioData); 
+}
+
+void HistoryData::completeIndexRealtimeData(QList<QStringList>& oriData, QString codeName)
 {
     if (isStockTradingNotStart() || QDate::currentDate() != getRealtimeDate(m_dbhost))
     {
@@ -864,6 +860,11 @@ void HistoryData::computeRealtimeCSSData()
     emit sendRealTimeCSSData_signal(aveList, cssList, m_databaseID, m_isAddedRealtimeData);
 
     resetRealtimeData();
+
+    qDebug() << QString("oldSelectData:%1, curSelectData:%2, oldHedgedData:%3, curHedgedData:%4, isAdded: %5 ")
+                        .arg(m_oldSelectData).arg(m_curSelectData)
+                        .arg(m_oldHedgedData).arg(m_curHedgedData)
+                        .arg(m_isAddedRealtimeData);
 }
 
 QList<double> HistoryData::getRealtimeAveList()
@@ -900,9 +901,6 @@ bool HistoryData::isAddRealtimeData()
         m_oldTime = m_curTime;
         m_curTime = QDateTime::fromMSecsSinceEpoch(m_curEpochRealtime).toString("hhmmss").toInt();
     }
-
-    // qDebug() << m_oneDayTimeList;
-    qDebug() << QString("m_oldTime: %1, m_newTime: %2").arg(m_oldTime).arg(m_curTime);
 
     for (int i = 0; i < m_oneDayTimeList.size() - 1; ++i)
     {
@@ -971,105 +969,37 @@ void HistoryData::releaseAveList()
     m_aveList = result;
 }
 
-void HistoryData::filterHedgeIndexData() 
-{
-    QList<QStringList> tmpIndexHedgeData = m_oriPortfilioData[m_hedgedCodeName];
-    m_oriPortfilioData.remove(m_hedgedCodeName);
-    for (int i = 0; i < tmpIndexHedgeData.size (); ++i) 
-    {
-        QStringList tmpKeyValue;
-        tmpKeyValue << tmpIndexHedgeData[i][1] << tmpIndexHedgeData[i][2];
-        QString dateTimeString = QDateTime::fromMSecsSinceEpoch(qint64(tmpIndexHedgeData[i][0].toLongLong())).toString ("yyyyMMddhhmmss");
-        m_indexHedgeData.insert(dateTimeString, tmpKeyValue);
-    }
-}
-
-void HistoryData::computeHedgedData () 
-{
-    QList<QPointF> pointDataList;
-    QList<QList<double>> hedgedResult;
-
-    if (m_isBuySalePortfolio) 
-    {
-        QList<QPointF> buyPointDataList = getStrategyPointList(m_oriPortfilioData, m_buyPortfolio);
-        QList<QPointF> salePointDataList = getStrategyPointList(m_oriPortfilioData, m_salePortfolio);
-        hedgedResult = getHedgedData(buyPointDataList, salePointDataList);
-    } 
-    else 
-    {
-        filterHedgeIndexData();
-        QMap<QString, int> seocdebuyCountMap = m_portfolio;
-        seocdebuyCountMap.remove(m_hedgedCodeName);
-        pointDataList = getStrategyPointList(m_oriPortfilioData, seocdebuyCountMap);
-        hedgedResult = getHedgedData(pointDataList, m_indexHedgeData,
-                                     m_portfolio[m_hedgedCodeName],
-                                     m_indexHedgeMetaInfo[m_hedgedCodeName]);
-    }
-
-    m_timeData = hedgedResult[0];
-    m_hedgedData = hedgedResult[1];
-    m_indexCodeData = hedgedResult[2];
-
-    if (m_isCSSChart)
-    {
-        if (m_isRealTime)
-        {
-            m_curSelectData = m_hedgedData.last();
-            m_oldSelectData = m_hedgedData.last();
-            m_curHedgedData = m_indexCodeData.last();
-            m_oldHedgedData = m_indexCodeData.last();            
-        }
-
-        for (int i = 0; i < m_timeData.size(); ++i)
-        {
-            m_timeList.append(QDateTime::fromMSecsSinceEpoch(m_timeData[i]).toString(m_timeFormat));
-        }
-
-        getTypeEarningList(m_hedgedData, m_indexCodeData, m_oriTypeList, m_earningList);
-
-        getTransedTYP(m_oriTypeList, m_typList);
-
-        computeHistoryCSSData();                        
-    }
-}
-
-void  HistoryData::computeVotData () 
-{
-    QList<QString> keyList = m_oriPortfilioData.keys ();
-    QList<QPointF> pointDataList;
-    for (int i = 0; i < keyList.size (); ++i) {
-        QString key = keyList[i];
-        QList<QStringList> tmpStringList = m_oriPortfilioData[key];
-        QList<QPointF> tmpPointData;
-        for (int i = 0; i < tmpStringList.size (); ++i) {
-            tmpPointData.append (QPointF(tmpStringList[i][0].toDouble(), tmpStringList[i][2].toDouble()));
-        }
-        tmpPointData = sortPointFList(tmpPointData);
-        pointDataList = mergeSortedPointedList (pointDataList, 1, tmpPointData, 1);
-    }
-
-    if (m_timeData.size() == 0) {
-        for (int i = 0; i < pointDataList.size(); ++i) {
-            m_timeData.append(pointDataList[i].x());
-        }
-    }
-
-    for (int i = 0; i < pointDataList.size(); ++i) {
-        m_votData.append(pointDataList[i].y());
-    }
-}
-
-void  HistoryData::computeMacdData () 
-{
-    m_macdData = computeMACDDoubleData(m_hedgedData, m_macdTime[0], m_macdTime[1], m_macdTime[2]);
-}
-
 void HistoryData::releaseReadPortfolioDataThreads () 
 {
-    for (int i = 0; i < m_dataReaderThreadList.size(); ++i) 
+    for (int i = 0; i < m_dataReaderList.size(); ++i) 
+    {
+        if (NULL != m_dataReaderList[i])
+        {
+            disconnect (this,                SIGNAL(getOrinPortfolioData_Signal(QString)),
+                        m_dataReaderList[i], SLOT(getOrinPortfolioData_slot(QString)));
+
+            disconnect (m_dataReaderList[i], SIGNAL(sendHistoryData(QMap<QString, QList<QStringList>>)),
+                        this,                SLOT(sendHistOrinPortfolioData_slot(QMap<QString, QList<QStringList>>)));
+        }
+    }    
+
+    for (int i = 0; i < m_dataReaderThreadList.size(); ++i)
     {
         m_dataReaderThreadList[i]->quit ();
+        m_dataReaderThreadList[i]->wait ();
     }
+
+    for (int i = 0; i < m_dataReaderThreadList.size(); ++i)
+    {
+        if (NULL != m_dataReaderThreadList[i])
+        {
+            delete m_dataReaderThreadList[i];
+            m_dataReaderThreadList[i] = NULL;
+        }
+    }
+
+    m_dataReaderThreadList.clear();
+    m_dataReaderList.clear();
 }
 
 void HistoryData::releaseCompPortfolioDataThreads () 
@@ -1124,5 +1054,295 @@ void HistoryData::sendRealtimeFutureData_slot(QList<double>)
 
 }
 
+// void HistoryData::computeHistPortData()
+// {
+//     if (m_isRealTime)
+//     {
+//         QMap<QString, QList<QStringList>> longHistOriData;
+//         QMap<QString, QList<QStringList>> todyHistOriData;
+//         seperateHistData(m_oriPortfilioData, longHistOriData, todyHistOriData);
+//         checkRestoreData(longHistOriData, todyHistOriData);
+
+//         QMap<QString, int> longHistPortfolio = transPorfolio(m_portfolio, "tinysoft");
+//         QMap<QString, int> todyHistPortfolio = transPorfolio(m_portfolio, "wind");
+
+//         filterRealtimeData(m_oneDayTimeList, todyHistOriData);
+//         completeHistData(longHistOriData, todyHistOriData);
+
+//         computeHistSpreadTimeList(longHistOriData, longHistPortfolio, 
+//                                   m_hedgedCodeName,longHistPortfolio[m_hedgedCodeName], 
+//                                   m_indexPriceMap[m_hedgedCodeName], 
+//                                   m_timeData, m_hedgedData, m_indexCodeData);                        
+//     }
+//     else
+//     {
+//         QList<QString> suppleCodeList;
+//         checkHistData(m_oriPortfilioData, m_endDate, suppleCodeList);
+
+//         if (suppleCodeList.size() > 0)
+//         {
+//             m_isSupple = true;
+//             emit getOrinPortfolioData_Signal("RealTimeData");
+//         }
+//         else
+//         {
+//             computeHistSpreadTimeList(m_oriPortfilioData, m_portfolio, 
+//                                     m_hedgedCodeName,m_portfolio[m_hedgedCodeName], 
+//                                     m_indexPriceMap[m_hedgedCodeName], 
+//                                     m_timeData, m_hedgedData, m_indexCodeData);                 
+//         }                     
+//     }
+// }
+
+// void HistoryData::computeHistPortData()
+// {
+//     if (m_signalType == "All")
+//     {
+//         QMap<QString, QList<QStringList>> longHistOriData;
+//         QMap<QString, QList<QStringList>> todyHistOriData;
+//         seperateHistData(m_oriPortfilioData, longHistOriData, todyHistOriData);
+//         checkRestoreData(longHistOriData, todyHistOriData);
+
+//         //qDebug() << QString("longHistOriData.size: %1, todyHistOriData.size: %2")
+//         //            .arg(longHistOriData.size()).arg(todyHistOriData.size());
+
+//         QMap<QString, int> longHistPortfolio = transPorfolio(m_portfolio, "tinysoft");
+//         QMap<QString, int> todyHistPortfolio = transPorfolio(m_portfolio, "wind");
+
+//         filterRealtimeData(m_oneDayTimeList, todyHistOriData);
+//         completeHistData(longHistOriData, todyHistOriData);
+
+//         // printMap(longHistOriData, "longHistOriData");
+
+//         // for (QMap<QString, QList<QStringList>>::iterator it = longHistOriData.begin(); 
+//         //     it != longHistOriData.end(); ++it)
+//         // {
+//         //     qDebug() << it.key() << it.value().last();
+//         // }
+
+//         // printMap(todyHistOriData, "todyHistOriData");
+
+//         computeHistSpreadTimeList(longHistOriData, longHistPortfolio, 
+//                                   m_hedgedCodeName,longHistPortfolio[m_hedgedCodeName], 
+//                                   m_indexPriceMap[m_hedgedCodeName], 
+//                                   m_timeData, m_hedgedData, m_indexCodeData);           
+
+//         // QList<QList<double>> realHedgedResult = computeSnapshootData(todyHistOriData, todyHistPortfolio, 
+//         //                                                              getCompleteIndexCode(m_hedgedCodeName, "wind"), 
+//         //                                                              m_indexPriceMap[m_hedgedCodeName], m_macdTime); 
+
+//         // filterDataByTime(m_oneDayTimeList, realHedgedResult);  
+
+//         // QList<double> tdyTimeData = realHedgedResult[0];
+//         // QList<double> tdyHedgedData = realHedgedResult[1];
+//         // QList<double> tdyIndexData = realHedgedResult[3];
+
+//         // for (int i = 0; i < tdyTimeData.size(); ++i)
+//         // {
+//         //     qDebug() << QString("%1, %2, %3").arg(QDateTime::fromMSecsSinceEpoch(tdyTimeData[i]).toString(m_timeFormat))
+//         //                                      .arg(tdyHedgedData[i])
+//         //                                      .arg(tdyIndexData[i]);
+//         // }
+
+//         // if (tdyTimeData.size() > 0 && tdyTimeData.first() > m_timeData.last())
+//         // {
+//         //     m_timeData +=tdyTimeData;
+//         //     m_hedgedData += tdyHedgedData;
+//         //     m_indexCodeData += tdyIndexData; 
+//         // }                           
+//     }
+//     else
+//     {
+//         computeHistSpreadTimeList(m_oriPortfilioData, m_portfolio, 
+//                                   m_hedgedCodeName,m_portfolio[m_hedgedCodeName], 
+//                                   m_indexPriceMap[m_hedgedCodeName], 
+//                                   m_timeData, m_hedgedData, m_indexCodeData);                          
+//     }
+// }
+
+// QMap<QString, QStringList> indexTimeValueMap = getHistIndexTimeValueMap(longHistOriData, getCompleteIndexCode(m_hedgedCodeName, "tinysoft"));
+// QList<QList<double>> histHedgedResult = computeHistHedgedData(longHistOriData, indexTimeValueMap, 
+//                                                               longHistPortfolio, getCompleteIndexCode(m_hedgedCodeName, "tinysoft"),
+//                                                               m_indexPriceMap[m_hedgedCodeName]);                                                                       
+// m_timeData = histHedgedResult[0];
+// m_hedgedData = histHedgedResult[1];
+// m_indexCodeData = histHedgedResult[2];  
+
+// m_indexHedgeData = getHistIndexTimeValueMap(m_oriPortfilioData, getCompleteIndexCode(m_hedgedCodeName, "tinysoft"));
+// QList<QList<double>> hedgedResult = computeHistHedgedData(m_oriPortfilioData, m_indexHedgeData, 
+//                                                           m_portfolio, m_hedgedCodeName, 
+//                                                           m_indexPriceMap[m_hedgedCodeName]);
+
+// m_timeData = hedgedResult[0];
+// m_hedgedData = hedgedResult[1];
+// m_indexCodeData = hedgedResult[2];  
+
+// void HistoryData::filterHedgeIndexData() 
+// {
+//     QList<QStringList> tmpIndexHedgeData = m_oriPortfilioData[m_hedgedCodeName];
+//     m_oriPortfilioData.remove(m_hedgedCodeName);
+//     for (int i = 0; i < tmpIndexHedgeData.size (); ++i) 
+//     {
+//         QStringList tmpKeyValue;
+//         tmpKeyValue << tmpIndexHedgeData[i][1] << tmpIndexHedgeData[i][2];
+//         QString dateTimeString = QDateTime::fromMSecsSinceEpoch(qint64(tmpIndexHedgeData[i][0].toLongLong())).toString ("yyyyMMddhhmmss");
+//         m_indexHedgeData.insert(dateTimeString, tmpKeyValue);
+//     }
+// }
+
+// void computeHedgedData();
+// void computeVotData();
+// void computeMacdData();
+
+// void HistoryData::computeHedgedData () 
+// {
+//     QList<QPointF> pointDataList;
+//     QList<QList<double>> hedgedResult;
+
+//     if (m_isBuySalePortfolio) 
+//     {
+//         QList<QPointF> buyPointDataList = getStrategyPointList(m_oriPortfilioData, m_buyPortfolio);
+//         QList<QPointF> salePointDataList = getStrategyPointList(m_oriPortfilioData, m_salePortfolio);
+//         hedgedResult = getHedgedData(buyPointDataList, salePointDataList);
+//     } 
+//     else 
+//     {
+//         filterHedgeIndexData();
+//         QMap<QString, int> seocdebuyCountMap = m_portfolio;
+//         seocdebuyCountMap.remove(m_hedgedCodeName);
+//         pointDataList = getStrategyPointList(m_oriPortfilioData, seocdebuyCountMap);
+//         hedgedResult = getHedgedData(pointDataList, m_indexHedgeData,
+//                                      m_portfolio[m_hedgedCodeName],
+//                                      m_indexPriceMap[m_hedgedCodeName]);
+//     }
+
+//     m_timeData = hedgedResult[0];
+//     m_hedgedData = hedgedResult[1];
+//     m_indexCodeData = hedgedResult[2];
+// }
+
+// void  HistoryData::computeVotData () 
+// {
+//     QList<QString> keyList = m_oriPortfilioData.keys ();
+//     QList<QPointF> pointDataList;
+//     for (int i = 0; i < keyList.size (); ++i) {
+//         QString key = keyList[i];
+//         QList<QStringList> tmpStringList = m_oriPortfilioData[key];
+//         QList<QPointF> tmpPointData;
+//         for (int i = 0; i < tmpStringList.size (); ++i) {
+//             tmpPointData.append (QPointF(tmpStringList[i][0].toDouble(), tmpStringList[i][2].toDouble()));
+//         }
+//         tmpPointData = sortPointFList(tmpPointData);
+//         pointDataList = mergeSortedPointedList (pointDataList, 1, tmpPointData, 1);
+//     }
+
+//     if (m_timeData.size() == 0) {
+//         for (int i = 0; i < pointDataList.size(); ++i) {
+//             m_timeData.append(pointDataList[i].x());
+//         }
+//     }
+
+//     for (int i = 0; i < pointDataList.size(); ++i) {
+//         m_votData.append(pointDataList[i].y());
+//     }
+// }
+
+// void  HistoryData::computeMacdData () 
+// {
+//     m_macdData = computeMACDDoubleData(m_hedgedData, m_macdTime[0], m_macdTime[1], m_macdTime[2]);
+// }
 
 
+// if (m_isCSSChart)
+// {
+//     if (m_isRealTime)
+//     {
+//         m_curSelectData = m_hedgedData.last();
+//         m_oldSelectData = m_hedgedData.last();
+//         m_curHedgedData = m_indexCodeData.last();
+//         m_oldHedgedData = m_indexCodeData.last();            
+//     }
+
+//     for (int i = 0; i < m_timeData.size(); ++i)
+//     {
+//         m_timeList.append(QDateTime::fromMSecsSinceEpoch(m_timeData[i]).toString(m_timeFormat));
+//     }
+
+//     getTypEarningList(m_hedgedData, m_indexCodeData, m_oriTypeList, m_earningList);
+
+//     getTransedTYP(m_oriTypeList, m_typList);
+
+//     computeHistoryCSSData();                        
+// }
+
+// void HistoryData::computePortfolioData () 
+// {
+//     bool isNewType = true;
+//     if (isNewType)
+//     {
+//         if (m_isCSSChart)
+//         {
+//             computeHistPortData();
+            
+//             m_curSelectData = m_hedgedData.last();
+//             m_oldSelectData = m_hedgedData.last();            
+//             m_curHedgedData = m_indexCodeData.last();
+//             m_oldHedgedData = m_indexCodeData.last();
+
+//             transEpochTimeList(m_timeList, m_timeData, m_timeFormat);
+
+//             getTypEarningList(m_hedgedData, m_indexCodeData, m_oriTypeList, m_earningList);
+
+//             getTransedTYP(m_oriTypeList, m_typList);
+
+//             computeHistoryCSSData();
+//         }
+//         else
+//         {
+//             QList<QList<double>> allData;
+//             if (m_isRealTime)
+//             {
+//                 if (m_isBuySalePortfolio)
+//                 {
+//                     allData = computeSnapshootData(m_oriPortfilioData, m_buyPortfolio, m_salePortfolio, m_macdTime);                    
+//                 }
+//                 else
+//                 {
+//                     allData = computeSnapshootData(m_oriPortfilioData, m_portfolio, m_hedgedCodeName, 
+//                                                    m_indexPriceMap[m_hedgedCodeName], m_macdTime);
+//                 }                
+//             }
+//             else
+//             {
+//                 if (m_isBuySalePortfolio)
+//                 {
+//                     computeHistSpreadTimeList(m_oriPortfilioData, m_buyPortfolio,
+//                                               m_salePortfolio, m_timeData, m_hedgedData);
+//                 }
+//                 else
+//                 {
+//                     computeHistSpreadTimeList(m_oriPortfilioData, m_portfolio, 
+//                                               m_hedgedCodeName,m_portfolio[m_hedgedCodeName], 
+//                                               m_indexPriceMap[m_hedgedCodeName], 
+//                                               m_timeData, m_hedgedData, m_indexCodeData);              
+//                 }
+
+//                 computeVotList(m_oriPortfilioData, m_votData);
+//                 computeMACDList(m_hedgedData, m_macdTime, m_macdData);
+                
+//                 allData.append(m_timeData);
+//                 allData.append(m_hedgedData);
+//                 allData.append(m_votData);
+//                 allData.append(m_macdData);
+//                 allData.append(m_indexCodeData);                
+//             }
+//             emit sendHistPortfolioData_Signal(allData);
+//         }
+//     }
+//     else
+//     {
+//         setCompPortfolioDataThreads();
+//         emit startCompPortfolioData_Signal("all");
+//         emit sendTableViewInfo_Signal("开始计算历史数据");
+//     }
+// }

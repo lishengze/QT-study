@@ -19,6 +19,8 @@ public:
 
     ~DataRead();
 
+    void setTableNameList(QList<QString> codeList);
+
     QMap<QString, QList<QStringList>> readHistoryData();
     QMap<QString, QList<QStringList>> readRealTimeData();
 

@@ -67,7 +67,7 @@ private:
     QMap<QString, int>                   m_buyPortfolio;
     QMap<QString, int>                   m_salePortfolio;
 
-    QMap<QString, int>                   m_indexHedgeMetaInfo;
+    QMap<QString, int>                   m_indexPriceMap;
 
     QMap<QString, QStringList>           m_indexHedgeData;
     QString                              m_hedgeIndexCode;

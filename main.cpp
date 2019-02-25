@@ -8,7 +8,8 @@
 
 #pragma execution_character_set("utf-8")
 
-void setLibPath() {
+void setLibPath()
+{
     QApplication::addLibraryPath(".");
     QApplication::addLibraryPath("./lib");
 }
@@ -25,11 +26,10 @@ int main(int argc, char *argv[])
         testMain();
     }
     else
-    {        
+    {
         spreadWindow.setWindowTitle("点差客户端");
         spreadWindow.show();
     }
-
     return a.exec();
 }
 

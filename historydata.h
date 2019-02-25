@@ -4,6 +4,8 @@
 #include <QTableView>
 #include <QMutexLocker>
 #include <QMutex>
+#include <mutex>
+#include <condition_variable>
 
 #include "database.h"
 #include "dataread.h"
@@ -12,6 +14,9 @@
 #include "toolfunc.h"
 #include "process_data_func.h"
 #include "monitorrealtimedata.h"
+
+using std::mutex;
+using std::condition_variable;
 
 class HistoryData : public QObject
 {
@@ -69,9 +74,8 @@ public:
     void initPortfolioThreadSecodeList();
     void initPortfolioIndexHedgeMetaInfo();
 
-    void initReadPortfolioDataSignal();
-
-    void initCompPortfolioDataSignal();
+    void setReadPortfolioDataThreads();
+    void setCompPortfolioDataThreads();
 
     void initTimeFormat();
 
@@ -83,19 +87,15 @@ public:
 
     void releaseReadPortfolioDataThreads ();
     void releaseCompPortfolioDataThreads ();    
-    void completeIndexTdyRealtimeData(QList<QStringList>& oriData, QString codeName);
+    void completeIndexRealtimeData(QList<QStringList>& oriData, QString codeName);
 
+    void checkSuppleData();
     void computePortfolioData();
+    void completeSupplePortfolioData();
     void computeHistPortData();
-
-    void filterHedgeIndexData();
 
     void computeHistoryCSSData();
     void computeRealtimeCSSData();
-
-    void computeHedgedData();
-    void computeVotData();
-    void computeMacdData();
 
 signals:
     void getOrinPortfolioData_Signal(QString dataType);
@@ -160,6 +160,8 @@ private:
     QMap<QString, int>                 m_buyPortfolio;
     QMap<QString, int>                 m_salePortfolio;
 
+
+
     QList<QString>                     m_secodeNameList;
     QString                            m_timeFormat;
     QString                            m_timeType;
@@ -170,6 +172,7 @@ private:
     QList<QStringList>                 m_threadSecodeList;
     QList<DataRead*>                   m_dataReaderList;
     QList<QThread*>                    m_dataReaderThreadList;
+
     int                                m_readDataThreadCount;
     QMap<QString, QList<QStringList>>  m_completeTableData;
 
@@ -203,7 +206,7 @@ private:
     QList<bool>                        m_isEMAList;
 
     // MACD
-    QMap<QString, int>                   m_indexHedgeMetaInfo;
+    QMap<QString, int>                   m_indexPriceMap;
     QMap<QString, QStringList>           m_indexHedgeData;
 
     QList<double>                        m_hedgedData;
@@ -212,7 +215,14 @@ private:
     QList<MACD>                          m_MACDData;
     QList<double>                        m_timeData;
     QList<double>                        m_indexCodeData;    
-    QMap<QString, QList<QStringList>>    m_oriPortfilioData;
+
+       
+    bool                                 m_isSupple;
+    mutex                                m_suppleMutex;
+    condition_variable                   m_suppleCV;    
+    QMap<QString, QList<QStringList>>    m_oriPortfilioData;     
+    QMap<QString, QList<QStringList>>    m_oriHistPortfolioData;
+    QMap<QString, QList<QStringList>>    m_suppledPortfolioData;
 
     // 势能指标计算;
     QList<QString>                     m_timeList;
