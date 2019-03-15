@@ -11,7 +11,7 @@
 
 DataProcess::DataProcess(bool isRealTime, bool isBuySalePortfolio,
                          QMap<QString, QList<QStringList>>& oridata,
-                         QMap<QString, int> buyCount, QString hedgeIndexCode, QList<int> macdTime,
+                         QMap<QString, double> buyCount, QString hedgeIndexCode, QList<int> macdTime,
                          QObject *parent):
     m_isCSSChart(false), m_isRealTime(isRealTime), m_isBuySalePortfolio(isBuySalePortfolio),
     m_oriPortfilioData(oridata), m_portfolio(buyCount),
@@ -27,7 +27,7 @@ DataProcess::DataProcess(bool isRealTime, bool isBuySalePortfolio,
 
 DataProcess::DataProcess(bool isRealTime, bool isBuySalePortfolio,
                          QMap<QString, QList<QStringList>>& oridata,
-                         QMap<QString, int> buyStrategy, QMap<QString, int> saleStrategy,
+                         QMap<QString, double> buyStrategy, QMap<QString, double> saleStrategy,
                          QList<int> macdTime,
                          QObject *parent):
     m_isCSSChart(false), m_isRealTime(isRealTime), m_isBuySalePortfolio(isBuySalePortfolio),
@@ -39,7 +39,7 @@ DataProcess::DataProcess(bool isRealTime, bool isBuySalePortfolio,
 }
 
 DataProcess::DataProcess(QMap<QString, QList<QStringList>>& oridata,
-                        QMap<QString, int>& portfolio, QString hedgeIndexCode,
+                        QMap<QString, double>& portfolio, QString hedgeIndexCode,
                         QList<int> aveNumbList, QList<bool> isEMAList,
                         int mainAveNumb, int subAveNumb, int energyAveNumb,
                         double css12Rate, double mainCssRate1, double mainCssRate2,
@@ -155,15 +155,15 @@ QList<QList<double>> DataProcess::computeHedgedData () {
 
     if (m_isBuySalePortfolio) 
     {
-        QList<QPointF> buyPointDataList = getStrategyPointList(m_oriPortfilioData, m_buyPortfolio);
-        QList<QPointF> salePointDataList = getStrategyPointList(m_oriPortfilioData, m_salePortfolio);
+        QList<QPointF> buyPointDataList = getPortfolioPointList(m_oriPortfilioData, m_buyPortfolio);
+        QList<QPointF> salePointDataList = getPortfolioPointList(m_oriPortfilioData, m_salePortfolio);
         hedgedResult = getHedgedData(buyPointDataList, salePointDataList);
     } 
     else 
     {
-        QMap<QString, int> seocdebuyCountMap = m_portfolio;
+        QMap<QString, double> seocdebuyCountMap = m_portfolio;
         seocdebuyCountMap.remove(m_hedgeIndexCode);
-        pointDataList = getStrategyPointList(m_oriPortfilioData, seocdebuyCountMap);
+        pointDataList = getPortfolioPointList(m_oriPortfilioData, seocdebuyCountMap);
         hedgedResult = getHedgedData(pointDataList, m_indexHedgeData,
                                      m_portfolio[m_hedgeIndexCode],
                                      m_indexPriceMap[m_hedgeIndexCode]);
@@ -197,7 +197,7 @@ QList<QList<double>> DataProcess::computeHedgedData () {
         QList<double> typList;
         QList<double> earningList;
         getTypEarningList(m_hedgedData, m_indexCodeData, oriTypeList, earningList);
-        getTransedTYP(oriTypeList, typList);
+        getTransTypList(oriTypeList, typList);
 
         computeAVEList(earningList, m_aveList, m_aveNumbList, m_isEMAList);
 
@@ -296,9 +296,9 @@ QList<QList<double>> DataProcess::computeSnapshootData()
         if (m_isBuySalePortfolio) {
             tmpResult = getHedgedData(oneTimeData, m_buyPortfolio, m_salePortfolio);
         } else {
-            tmpResult = getHedgedData(oneTimeData, m_portfolio,
-                                      m_hedgeIndexCode, m_portfolio[m_hedgeIndexCode],
-                                      m_indexPriceMap[m_hedgeIndexCode]);
+//            tmpResult = getHedgedData(oneTimeData, m_portfolio,
+//                                      m_hedgeIndexCode, m_portfolio[m_hedgeIndexCode],
+//                                      m_indexPriceMap[m_hedgeIndexCode]);
         }
         if (tmpResult.size() != 0 && tmpResult[1] != 0) {
             m_hedgedData.prepend(tmpResult[0]);

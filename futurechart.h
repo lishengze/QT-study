@@ -87,7 +87,14 @@ protected:
     virtual void closeEvent(QCloseEvent *event);
 
 signals:
+    void updateProgramInfo_signal(QString info, bool isWarning);
+    void windowClose_signal(int windowID, QString windowName);
+
     void getHistFutureData_signal();
+
+    void getRealtimeData_signal();
+
+    void processRealtimeDataComplete_signal();
 
 private:
     Ui::FutureChart*        ui;
@@ -125,6 +132,9 @@ private:
     int                     m_keyMoveCount;
     int                     m_currTimeIndex;
     bool                    m_isKeyMove;
+
+    QDateTime               m_getRealDataTime;
+    QDateTime               m_showRealDataTime;
 
 };
 

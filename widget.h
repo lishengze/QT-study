@@ -22,150 +22,155 @@
 #include "generateportfolioform.h"
 #include "historydata.h"
 
-//#include "excel.h"
-//#include "strategymodel.h"
-
 QT_CHARTS_USE_NAMESPACE
 
-namespace Ui {
+namespace Ui
+{
 class Widget;
 }
 
 class Widget : public QWidget
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    explicit Widget(QWidget *parent = 0);
+  explicit Widget(QWidget *parent = 0);
 
-    void initCommonData();
-    void setDBTableNameMap();
-    void initFileDir();
+  void initCommonData();
+  void registSignalParamsType();
+  void setDBTableNameMap();
+  void initFileDir();
 
-    void initWidegt();    
+  void initWidegt();
+  void initDateTimeWidget();
+  void initHedgedWidget();
+  void initEnergyWidget();
+  void initFutureWidget();
+  void initAnnounceWidget();
 
-    void initHedgedWidget();
-    void initEnergyWidget();
-    void initFutureWidget();
-    void initAnnounceWidget();
-    void initDatasourceWidget();
-    void initProgramWorkInfoWidget();
-    void initTableContextMenuWidget();
-    void setPortfolioTableWidget();
-    void setBuySalePortfolioTableWidget();
-    void initWorkProgressDialog();
+  void initDatasourceWidget();
+  void initProgramWorkInfoWidget();
+  void initTableContextMenuWidget();
+  void setPortfolioTableWidget();
+  void setBuySalePortfolioTableWidget();
+  void initWorkProgressDialog();
 
-    void initCSSParamComBox();
+  void initCSSParamComBox();
 
-    bool checkCodeInDatabase(QString codeName, QString dbhost, QStringList timeTypeList);
+  bool checkCodeInDatabase(QString codeName, QString dbhost, 
+                           QStringList timeTypeList);
 
-    QStringList getEnergyDataFreq();
-    QList<int> getCSSParams();
-    void getAveParams(QList<int>& aveNumbList, QList<bool>& isEMAList);
+  void checkBuySalePortfolio();
+  void setHedgedString();
 
-    ~Widget();
+  QStringList getEnergyDataFreq();
+  QList<int> getCSSParams();
+  QList<int> getMACDParams();
+  void getAveParams(QList<int> &aveNumbList, QList<bool> &isEMAList);
+
+  ~Widget();
 
 protected:
-    void closeEvent(QCloseEvent *event);
+  void closeEvent(QCloseEvent *event);
 
 signals:
-    void getTableList_signal();
+  void getTableList_signal();
 
 public slots:
-    void windowClose_slot(int windowID);
-    void sendTableList_slot(QString timeType, QStringList tableList);
+
+  void updateProgramInfo_slot(QString info, bool isWarning);
+  void windowClose_slot(int windowID, QString windowName);
+
+  void sendTableList_slot(QString timeType, QStringList tableList);
 
 private slots:
-    void on_chooseStartDate_editingFinished();
+  void on_Annoucnement_Button_clicked();
 
-    void on_Annoucnement_Button_clicked();
+  void on_chooseStrategyDir_Button_clicked();
 
-    void on_historyHedgeIndexChart_clicked();
+  void on_choosePortfolioDir_Button_clicked();
 
-    void on_historyBuySaleChart_clicked();
+  void show_strategyTable_contextMenu(QPoint);
 
-    void on_realTimeHedgeIndexChart_clicked();
+  void show_portfolioTable_contextMenu(QPoint);
 
-    void on_realTimeBuySaleChart_clicked();
+  void refresh_strategy_table();
 
-    void on_chooseStrategyDir_Button_clicked();
+  void refresh_portfolio_table();
 
-    void on_choosePortfolioDir_Button_clicked();
+  void delete_strategy_file();
 
-    void show_strategyTable_contextMenu(QPoint);
+  void delete_portfolio_file();
 
-    void show_portfolioTable_contextMenu(QPoint);
+  void on_strategy_table_clicked(const QModelIndex &index);
 
-    void refresh_strategy_table();
+  void on_buySalePortfolio_table_clicked(const QModelIndex &index);
 
-    void refresh_portfolio_table();
+  void on_strategy_table_doubleClicked(const QModelIndex &index);
 
-    void delete_strategy_file();
+  void on_buySalePortfolio_table_doubleClicked(const QModelIndex &index);
 
-    void delete_portfolio_file();
+  void on_showFutureSpread_Button_clicked();
 
-    void on_strategy_table_clicked(const QModelIndex &index);
+  void on_dataSource_ComboBox_currentIndexChanged(const QString &arg1);
 
-    void on_buySalePortfolio_table_clicked(const QModelIndex &index);
+  void on_indexEnergyChart_clicked();
 
-    void on_strategy_table_doubleClicked(const QModelIndex &index);
+  void on_portfolioIndexHistSpreadChart_clicked();
 
-    void on_buySalePortfolio_table_doubleClicked(const QModelIndex &index);
+  void on_portfolioIndexRealSpreadChart_clicked();
 
-    void on_showFutureSpread_Button_clicked();
+  void on_portfolioIndexEnergyChart_clicked();
 
-    void on_dataSource_ComboBox_currentIndexChanged(const QString &arg1);
+  void on_portfolioHedgedEnergyChart_clicked();
 
-    void on_showAVEEnergy_pushButton_clicked();
+  void on_portfolioHedgedHistSpreadChart_clicked();
 
-    void on_historyEnergyChart_clicked();
+  void on_portfolioHedgedRealSpreadChart_clicked();
+
+  void on_isNetValueHedged_clicked(bool checked);
 
 private:
-    Ui::Widget *             ui;
+  Ui::Widget *                      ui;
 
-    QList<QWidget*>          m_chartViews;
-    QList<QString>           m_dbhostList;
-    QString                  m_currDBHost;
-    QString                  m_nativeFileName;
-    QString                  m_strategyFileDir;
-    QString                  m_portfolioFileName;
+  bool                              m_isDev;
 
-    QString                  m_buySalePortfolioFileDir;
-    QString                  m_currBuySalePortfolioName;
-    QString                  m_futureIndexCode;
-    QList<QString>           m_futureList;
-    bool                     m_isBuySalePortfolio;
+  QList<QWidget *>                  m_chartViews;
+  QList<QString>                    m_dbhostList;
+  QString                           m_currDBHost;
 
-    QMap<QString, int>       m_portfolioMap;
-    QList<QFileInfo>         m_strategyFileInfoList;
+  QString                           m_infoFileName;
+  QString                           m_oriPortfolioFileDir;
+  QString                           m_hedgePortfolioFileDir;  
 
-    QMap<QString, int>       m_buyStrategyMap;
-    QMap<QString, int>       m_saleStrategyMap;
-    QList<QFileInfo>         m_buySalePortfolioFileInfoList;
-    QMap<QString, QString>   m_portfolioAmount;
+  QString                           m_oriPortfolioName;
+  QString                           m_hedgedPortfolioName;
+  int                               m_hedgedType;
+  QString                           m_hedgedString;
 
-    QMap<QString, int>       m_seocdebuyCountMap;
-    QStringList              m_secodeNameList;
-    QString                  m_hedgeIndexCode;
-    int                      m_hedgeIndexCount;
+  QString                           m_futureIndexCode;
+  QList<QString>                    m_futureList;
 
-    QMap<QString, QString>   m_indexMap;
+  QMap<QString, double>             m_oriPortfolio;
+  QMap<QString, double>             m_hedgedPortfolio;
+  QString                           m_hedgeIndexCode;
+  int                               m_hedgeIndexCount;  
 
-    AnnouncementForm*        m_announcementView;
-    GeneratePortfolioForm*   m_genePortfolioWindow;
+  QList<QFileInfo>                  m_oriPortfolioFileInfoList;
+  QList<QFileInfo>                  m_hedgePortfolioFileInfoList;
 
-    QListWidget*             m_aveParamListWidget;
-    QListWidget*             m_cssParamListWidget;
-    QListWidget*             m_energyDataFreqListWidget;
-    QStringList              m_timeTypeList;
+  AnnouncementForm *                m_announcementView;
+  GeneratePortfolioForm *           m_genePortfolioWindow;
 
-    QMap<QString, QStringList>   m_databaseTableNameMap;
-    WorkProgressDialog*          m_workProgressDialog;
-    HistoryData*                 m_histDataWorker;
-    QThread                      m_histDataThread;
+  QListWidget *                     m_aveParamListWidget;
+  QListWidget *                     m_cssParamListWidget;
+  QListWidget *                     m_energyDataFreqListWidget;
+  QStringList                       m_timeTypeList;
 
-    bool                         m_isDev;
+  QMap<QString, QStringList>        m_databaseTableNameMap;
+  WorkProgressDialog *              m_workProgressDialog;
+  HistoryData *                     m_histDataWorker;
+  QThread                           m_histDataThread;
 };
-
 
 #endif // WIDGET_H

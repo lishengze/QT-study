@@ -6,15 +6,16 @@ class ChartData
 {
 public:
     ChartData();
-    ChartData(double strategyValue, double votValue,
-              double timeValue, MACD macdValue, double preSpread=0);
+    ChartData(double earningData, double votData,
+              double timeData, MACD macdData, 
+              double hedgeData=0);
 
 public:
-    double strategyData;
-    double votData;
-    double timeData;
-    double preSpread;
-    MACD macdData;
+    double m_earningData;
+    double m_votData;
+    double m_timeData;
+    double m_hedgeData;
+    MACD   m_MACDData;
 };
 
 #endif // CHARTDATA_H

@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
 ** Form generated from reading UI file 'workprogressdialog.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.7.1
@@ -17,7 +17,6 @@
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QProgressBar>
-#include <QtWidgets/QPushButton>
 
 QT_BEGIN_NAMESPACE
 
@@ -26,7 +25,6 @@ class Ui_WorkProgressDialog
 public:
     QLabel *info_label;
     QProgressBar *wrok_progressBar;
-    QPushButton *stop_pushButton;
 
     void setupUi(QDialog *WorkProgressDialog)
     {

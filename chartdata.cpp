@@ -5,10 +5,11 @@ ChartData::ChartData()
 
 }
 
-ChartData::ChartData(double strategyValue, double votValue,
-          double timeValue, MACD macdValue, double preSpread) :
-    strategyData(strategyValue), votData(votValue),
-    timeData(timeValue), macdData(macdValue), preSpread(preSpread)
+ChartData::ChartData(double earningData, double votData,
+                     double timeData, MACD macdData, 
+                     double hedgeData) :
+    m_earningData(earningData), m_votData(votData),
+    m_timeData(timeData), m_MACDData(macdData), m_hedgeData(hedgeData)
 {
 
 }

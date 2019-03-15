@@ -651,7 +651,7 @@ QList<QMap<QString, double>> GeneratePortfolioForm::getBuySalePortfolio() {
         }
     }
 
-    for (QMap<QString, int>::iterator it = m_currAccountMap.begin();
+    for (QMap<QString, double>::iterator it = m_currAccountMap.begin();
          it != m_currAccountMap.end(); ++it) {
         QString secode = it.key();
         if (m_currNewPortfolio.find(it.key()) == m_currNewPortfolio.end() && m_currAccountMap[secode] != 0) {

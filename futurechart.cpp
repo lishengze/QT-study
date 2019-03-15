@@ -42,37 +42,51 @@ void FutureChart::initCommonData() {
 
     m_oldLabelIndex = 0;
 
+    m_getRealDataTime = QDateTime::currentDateTime();
+    m_showRealDataTime = QDateTime::currentDateTime();
+
     initMonitorWorker();
     registSignalParamsType();
     initExtractKeyValueList();
 
-    if (isTradingStart()) {
+    if (isTradingStart()) 
+    {
         emit getHistFutureData_signal();
-    } else {
+    } 
+    else 
+    {
         initLayout();
-        m_monitorWorker->startTimer();
+        emit getRealtimeData_signal();
+        // m_monitorWorker->startTimer();
     }
 }
 
-void FutureChart::initMonitorWorker() {
-    m_monitorWorker = new MonitorRealTimeData(m_dbhost, m_updateTime, m_futureName);
+void FutureChart::initMonitorWorker() 
+{
+    m_monitorWorker = new MonitorRealTimeData(m_dbhost, m_futureName);
 
-    connect(this, SIGNAL(getHistFutureData_signal()),
+    connect(this,            SIGNAL(getHistFutureData_signal()),
             m_monitorWorker, SLOT(getHistFutureData_slot()));
 
     connect(m_monitorWorker, SIGNAL(sendTradeOver()),
-            this, SLOT(tradeOver_slot()));
+            this,            SLOT(tradeOver_slot()));
 
     connect(m_monitorWorker, SIGNAL(sendHistFutureData_signal(QList<double>)),
-            this, SLOT(sendHistFutureData_slot(QList<double>)));
+            this,            SLOT(sendHistFutureData_slot(QList<double>)));
 
     connect(m_monitorWorker, SIGNAL(sendRealtimeFutureData_signal(QList<double>)),
-            this, SLOT(sendRealtimeFutureData_slot(QList<double>)));
+            this,            SLOT(sendRealtimeFutureData_slot(QList<double>)));
+
+    connect(this,            SIGNAL(getRealtimeData_signal()),
+            m_monitorWorker, SLOT(getRealtimeData_slot()));
+
+    connect(this,            SIGNAL(processRealtimeDataComplete_signal()),
+            m_monitorWorker, SLOT(processRealtimeDataComplete_slot()));    
 
     m_monitorWorker->moveToThread(&m_MonitorThread);
 
     connect(&m_MonitorThread, SIGNAL(finished()),
-            m_monitorWorker, SLOT(deleteLater()));
+            m_monitorWorker,  SLOT(deleteLater()));
 
     m_MonitorThread.start();
 }
@@ -141,8 +155,10 @@ void FutureChart::initTheme() {
     ui->title_label->setStyleSheet(QStringLiteral("color: rgb(250, 250, 250);font: 75 14pt \"微软雅黑\";"));
 }
 
-void FutureChart::monitorSpread(double spread, QDateTime time) {
-    if (spread > m_maxSpreadValue || spread < m_minSpreadValue) {
+void FutureChart::monitorSpread(double spread, QDateTime time) 
+{
+    if (spread > m_maxSpreadValue || spread < m_minSpreadValue) 
+    {
         QString msg = QString("%1 基差: %2, 时间: %3")
                                             .arg(m_futureName).arg(spread)
                                             .arg(time.toString("hh:mm:ss"));
@@ -178,31 +194,49 @@ void FutureChart::transOriFutureData(QList<double> histFutureData) {
     }
 }
 
-void FutureChart::sendHistFutureData_slot(QList<double> histFutureData) {
+void FutureChart::sendHistFutureData_slot(QList<double> histFutureData) 
+{
     qDebug() << "histFutureData.size: " << histFutureData.size();
     transOriFutureData(histFutureData);
     initLayout();
-    m_monitorWorker->startTimer();
+    emit getRealtimeData_signal();
+    
+    // m_monitorWorker->startTimer();
 }
 
-void FutureChart::sendRealtimeFutureData_slot (QList<double> realtimeFutureData) {
-//    qDebug() << realtimeFutureData;
+void FutureChart::sendRealtimeFutureData_slot (QList<double> realtimeFutureData) 
+{
+    m_getRealDataTime = QDateTime::currentDateTime();
+    qDebug() << "Get  Real Data Cost " << m_getRealDataTime.toMSecsSinceEpoch() - m_showRealDataTime.toMSecsSinceEpoch()
+             << " MSecs";
+
     monitorSpread(realtimeFutureData[0], transIntDateTime(realtimeFutureData[1]));
     m_futureSpread.append(realtimeFutureData[0]);
     m_futureTime.append(transIntDateTime(realtimeFutureData[1]));
 
-    if (!m_isKeyMove) {
+    qDebug() << m_futureTime.last() << m_futureSpread.last();
+
+
+    if (!m_isKeyMove) 
+    {
         setPropertyValue(m_futureSpread.size()-1);
     }
 
     updateAxis();
     updateSeries();
     updateMousePos();
+
+    m_showRealDataTime = QDateTime::currentDateTime();
+
+    qDebug() << "Show Real Data Cost " << m_showRealDataTime.toMSecsSinceEpoch() - m_getRealDataTime.toMSecsSinceEpoch()
+             << " MSecs";
+    qDebug() << "";
+
+    emit processRealtimeDataComplete_signal();
 }
 
-void FutureChart::tradeOver_slot() {
-    qDebug() << "FutureChart trade is over";
-    m_monitorWorker->stopTimer();
+void FutureChart::tradeOver_slot() 
+{
 }
 
 QList<QDateTime> FutureChart::getExtendedFutureTime(QList<QDateTime> oriTime,
@@ -421,24 +455,16 @@ double FutureChart::getPointXDistance() {
     return distance;
 }
 
-void FutureChart::closeEvent(QCloseEvent *event) {
+void FutureChart::closeEvent(QCloseEvent *event) 
+{
     event;
-    if (NULL != m_monitorWorker) {
-        m_monitorWorker->stopTimer();
-    }
-    emit windowClose_signal(m_chartViewID);
+    emit windowClose_signal(m_chartViewID, m_futureName);
 }
 
 FutureChart::~FutureChart()
 {
     delete ui;
-    m_MonitorThread.quit();
-    m_MonitorThread.wait();
-
-    if (NULL != m_monitorWorker) {
-        m_monitorWorker->stopTimer();
-        m_monitorWorker = NULL;
-    }
+    m_MonitorThread.terminate();
 
     for (int i = 0; i < m_monitorBoxList.size(); ++i) {
         if (NULL != m_monitorBoxList[i]) {

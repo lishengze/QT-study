@@ -25,10 +25,10 @@ public:
     QMap<QString, QList<QStringList>> readRealTimeData();
 
 public slots:
-    void getOrinPortfolioData_slot(QString dataType);
+    void getHistPortfolioData_slot(QString dataType);
 
 signals:
-    void sendHistoryData(QMap<QString, QList<QStringList>> historyData);
+    void sendHistPortfolioData_signal(QMap<QString, QList<QStringList>> historyData);
     void sendRealTimeData(QMap<QString, QList<QStringList>> realtimeData);
 
 private:

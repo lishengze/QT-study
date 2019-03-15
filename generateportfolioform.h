@@ -133,7 +133,7 @@ private:
     bool                                   m_hasChooseAccount;
     QList<QString>                         m_currSecodeList;
     QMap<QString, double>                  m_currStrategyMap;
-    QMap<QString, int>                     m_currAccountMap;
+    QMap<QString, double>                     m_currAccountMap;
     QMap<QString, double>                  m_currPriceMap;
     QString                                m_priceTime;
 

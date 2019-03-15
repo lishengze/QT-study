@@ -78,7 +78,7 @@ public:
     virtual double getPointXDistance();
 
 signals:
-    void getIndexCssData_signal();
+    void getHistIndexData_signal();
 
 
 public slots:

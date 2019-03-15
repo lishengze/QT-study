@@ -15,18 +15,18 @@ class DataProcess: public QObject
 public:
     DataProcess(bool isRealTime, bool isBuySalePortfolio,
                 QMap<QString, QList<QStringList>>& oridata,
-                QMap<QString, int> buyCount, QString hedgeIndexCode,
+                QMap<QString, double> buyCount, QString hedgeIndexCode,
                 QList<int> macdTime,
                 QObject *parent = Q_NULLPTR);
 
     DataProcess(bool isRealTime, bool isBuySalePortfolio,
                 QMap<QString, QList<QStringList>>& oridata,
-                QMap<QString, int> buyStrategy, QMap<QString, int> saleStrategy,
+                QMap<QString, double> buyStrategy, QMap<QString, double> saleStrategy,
                 QList<int> macdTime,
                 QObject *parent = Q_NULLPTR);
 
     DataProcess(QMap<QString, QList<QStringList>>& oridata,
-                QMap<QString, int>& portfolioMap, QString hedgeIndexCode,
+                QMap<QString, double>& portfolioMap, QString hedgeIndexCode,
                 QList<int> aveNumbList, QList<bool> isEMAList,
                 int mainAveNumb, int subAveNumb, int energyAveNumb,
                 double css12Rate, double mainCssRate1, double mainCssRate2,
@@ -63,11 +63,11 @@ private:
     
     QStringList                          m_secodeNameList;
 
-    QMap<QString, int>                   m_portfolio;
-    QMap<QString, int>                   m_buyPortfolio;
-    QMap<QString, int>                   m_salePortfolio;
+    QMap<QString, double>                   m_portfolio;
+    QMap<QString, double>                   m_buyPortfolio;
+    QMap<QString, double>                   m_salePortfolio;
 
-    QMap<QString, int>                   m_indexPriceMap;
+    QMap<QString, double>                   m_indexPriceMap;
 
     QMap<QString, QStringList>           m_indexHedgeData;
     QString                              m_hedgeIndexCode;

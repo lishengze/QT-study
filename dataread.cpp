@@ -17,24 +17,24 @@ void DataRead::setTableNameList(QList<QString> codeList)
     m_tableNameList = codeList;
 }
 
-void DataRead::getOrinPortfolioData_slot(QString dataType) {
+void DataRead::getHistPortfolioData_slot(QString dataType) {
     if (dataType == "HistoryData") 
     {        
         // qDebug() << "Emit HistoryData: " << QThread::currentThreadId();
-        emit sendHistoryData (readHistoryData());
+        emit sendHistPortfolioData_signal (readHistoryData());
        
     }
     if (dataType == "RealTimeData") 
     {        
         // qDebug() << "Emit RealTimeData: " << QThread::currentThreadId();
-        emit sendHistoryData (readRealTimeData());   
+        emit sendHistPortfolioData_signal (readRealTimeData());   
     }
 
     if (dataType == "All")
     {
         QMap<QString, QList<QStringList>> longHistResult = readHistoryData();
         QMap<QString, QList<QStringList>> todyHistResult = readRealTimeData();
-        emit sendHistoryData (longHistResult.unite(todyHistResult));
+        emit sendHistPortfolioData_signal (longHistResult.unite(todyHistResult));
     }
 }
 

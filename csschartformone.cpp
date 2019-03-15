@@ -88,8 +88,8 @@ void CSSChartFormOne::initHistoryData() {
     connect(&m_histdataThread, SIGNAL(finished()),
             m_histdataWorker, SLOT(deleteLater()));
 
-    connect(this, SIGNAL(getIndexCssData_signal()),
-            m_histdataWorker, SLOT(getIndexCSSData_slot()));
+    connect(this, SIGNAL(getHistIndexData_signal()),
+            m_histdataWorker, SLOT(getHistIndexData_slot()));
 
     connect(m_histdataWorker, SIGNAL(sendHistCSSData_signal(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)),
             this, SLOT(sendHistCSSData_slot(QList<QString>, QList<QList<double>>,  QList<QList<double>>, int)));
@@ -471,7 +471,7 @@ void CSSChartFormOne::sendRealTimeCSSData_slot(QList<double>, QList<double>, int
 }
 
 void CSSChartFormOne::startGetHistData() {
-    emit getIndexCssData_signal();
+    emit getHistIndexData_signal();
 }
 
 void CSSChartFormOne::initExtractKeyValueList() {
