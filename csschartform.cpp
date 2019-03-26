@@ -38,11 +38,20 @@ CSSChartForm::CSSChartForm(int windowID, DatabaseParam dbParam, HedgedParam hedg
     registSignalParamsType();
     startGetHistData();
     setWindowTitleName();
+    initAddWarningView();
 }                
 
 CSSChartForm::~CSSChartForm()
 {
     delete ui;
+
+    m_pAddWarningForm->close();
+
+    if (NULL != m_pAddWarningForm)
+    {
+        delete m_pAddWarningForm;
+        m_pAddWarningForm = NULL;
+    }
 
     releaseHistWorker();
 }
@@ -98,11 +107,13 @@ void CSSChartForm::initCommonData()
     m_isClosed = false;
     m_maxColNumb = 3;
     m_chartXaxisTickCount = 5;
+    m_pAddWarningForm = NULL;
 
     m_cssMarkValueList << -265 << -240 << -200 << -158 << -130 << -80
                        << 80   << 130  << 158  << 200  << 240  << 265
                        << 300;
 
+    m_pAddWarningForm = NULL;
     initExtractKeyValueList();
     initLabelRowColNumb();    
 }
@@ -288,6 +299,56 @@ void CSSChartForm::initColors()
     m_cssChartColorList.append(QColor(0, 229, 255));   // 势能小于0
 }
 
+void CSSChartForm::initAddWarningView()
+{
+    WarningParam warningObj;
+    warningObj.m_timeTypeList = m_hedgedParam.m_timeTypeList;
+    for (int i = 0; i < m_hedgedParam.m_timeTypeList.size(); ++i)
+    {
+        warningObj.m_paramMap.insert(m_hedgedParam.m_timeTypeList[i], i);
+    }
+
+    QList<QString> oriTargetList;
+    
+    oriTargetList.append("净值");
+    warningObj.m_paramMap.insert("净值", 0);
+    for (int i = 0; i < m_cssParam.m_aveNumbList.size(); ++i)
+    {
+        QString id;
+        
+        if (m_cssParam.m_isEMAList[i] == false)
+        {
+            id = QString("A%1").arg(m_cssParam.m_aveNumbList[i]);
+        }
+        else
+        {
+            id = QString("E%1").arg(m_cssParam.m_aveNumbList[i]);
+        }    
+
+        oriTargetList.append(id);    
+        warningObj.m_paramMap.insert(id, i+1);
+    }
+
+    oriTargetList.append("主指标");
+    warningObj.m_paramMap.insert("净值", 0);
+
+    oriTargetList.append("从指标");
+    warningObj.m_paramMap.insert("从指标", 1);
+
+    oriTargetList.append("势能指标");
+    warningObj.m_paramMap.insert("势能指标", 2);
+
+    warningObj.m_oriTargetList = oriTargetList;
+    warningObj.m_compTargetList = oriTargetList;
+
+    m_pAddWarningForm = new AddWarningForm(warningObj);
+}
+
+AddWarningForm* CSSChartForm::getAddWarningForm()
+{
+    return m_pAddWarningForm;
+}
+
 void CSSChartForm::startGetHistData()
 {
     if (m_hedgedParam.m_isPortfolio)
@@ -421,141 +482,6 @@ void CSSChartForm::releaseHistWorker()
             m_histdataThreadList[i] = NULL;
         }
     }
-}
-
-void CSSChartForm::sendHistCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
-                                        QList<QList<double>> cssList, int dataID)
-{
-    WidgetProcess::Instance().setWidgetProcess(true);
-    WidgetProcess::Instance().lock("Hist " + m_titleName);
-
-    QDateTime startTime = QDateTime::currentDateTime();
-    qDebug() << "Get Hist Data cost: " << startTime.toMSecsSinceEpoch() 
-                                        - m_getHistDataTimeList[dataID].toMSecsSinceEpoch()
-             << " MSecs, DataNumb: " << timeList.size()
-             << ", " << m_hedgedParam.m_timeTypeList[dataID]
-             << m_titleName;
-
-    QMutexLocker locker(&m_mutex);
-
-    int startPos = getStartIndex(m_hedgedParam.m_startDate, timeList);
-
-    m_timeList[dataID] = getSubList(timeList, startPos, timeList.size());
-    m_realStartTime = m_timeList[dataID][0];
-    m_realEndTime = m_timeList[dataID].last();
-
-    for (int i = 0; i < m_cssParam.m_aveNumbList.size() + 1; ++i)
-    {
-        m_aveList[dataID].append(getSubList(aveList[i], startPos, aveList[i].size()));
-    }
-
-    for (int i = 0; i < cssList.size(); ++i)
-    {
-        m_cssList[dataID].append(getSubList(cssList[i], startPos, cssList[i].size()));
-    }
-
-    if (m_hedgedParam.m_isPortfolio)
-    {
-        m_hedgedDataList[dataID] = getSubList(aveList[aveList.size() - 2], startPos, aveList.last().size());
-        m_indexDataList[dataID] = getSubList(aveList.last(), startPos, aveList.last().size());
-    }
-
-    startPos = 0;
-    m_timeListStore[dataID] = getSubList(timeList, startPos, timeList.size());
-    for (int i = 0; i < m_cssParam.m_aveNumbList.size() + 1; ++i)
-    {
-        m_aveListStore[dataID].append(getSubList(aveList[i], startPos, aveList[i].size()));
-    }
-
-    for (int i = 0; i < cssList.size(); ++i)
-    {
-        m_cssListStore[dataID].append(getSubList(cssList[i], startPos, cssList[i].size()));
-    }
-
-    if (m_hedgedParam.m_isPortfolio)
-    {
-        m_hedgedDataListStore[dataID] = getSubList(aveList[aveList.size() - 2], startPos, aveList.last().size());
-        m_indexDataListStore[dataID] = getSubList(aveList.last(), startPos, aveList.last().size());
-    }
-
-    if (m_hedgedParam.m_isRealTime && !isTradingOver())
-    {
-        extendRealtimeList(dataID);
-    }
-
-    setChart(dataID);
-    initTheme();
-
-    m_currDataIDList.append(dataID);
-    if (m_currDataIDList.size() == m_hedgedParam.m_timeTypeList.size())
-    {
-        setChartView();
-        setLabels();
-        setColors();
-        connectMarkers();
-
-        if (m_hedgedParam.m_isRealTime)
-        {
-            startGetRealtimeData();
-            m_showRealDataTimeList[dataID] = QDateTime::currentDateTime();
-        }
-    }
-    qDebug() << "Show Hist Pic cost: " << QDateTime::currentMSecsSinceEpoch() - startTime.toMSecsSinceEpoch()
-             << " MSecs";
-    qDebug() << "";
-
-    WidgetProcess::Instance().unlock("Hist " + m_titleName);
-    WidgetProcess::Instance().setWidgetProcess(false);     
-}
-
-void CSSChartForm::sendRealTimeCSSData_slot(QList<double> aveList, QList<double> cssList,
-                                            int dataID, bool isAddData)
-{
-    if (WidgetProcess::Instance().isProcessing()) 
-    {
-        qDebug() << m_titleName << " update give up";
-        return;
-    }
-    WidgetProcess::Instance().setWidgetProcess(true);
-    WidgetProcess::Instance().lock("Real " + m_titleName);
-
-    m_getRealDataTimeList[dataID] = QDateTime::currentDateTime();
-
-    qDebug() << "Get  Real Data Cost " << m_getRealDataTimeList[dataID].toMSecsSinceEpoch() 
-                                        - m_showRealDataTimeList[dataID].toMSecsSinceEpoch()
-             << " MSecs, " << aveList.first() << m_hedgedParam.m_timeTypeList[dataID]
-             << m_titleName;
-
-    ++m_updateCountList[dataID];
-
-    // printList(aveList, "aveList");
-    // printList(cssList, "cssList");
-    // qDebug() << QString("m_updateCount: %1, isAddData: %2")
-    //             .arg(m_updateCountList[dataID]).arg(isAddData);
-
-
-
-    updateChart(aveList, cssList, dataID);    
-    setPropertyValue(m_cssList[dataID][0].size() - 1, dataID, false);
-
-
-    if (isAddData)
-    {
-        m_updateCountList[dataID] = 0;
-    }
-
-    m_showRealDataTimeList[dataID] = QDateTime::currentDateTime();
-
-    qDebug() << "Show Real Data Cost " << m_showRealDataTimeList[dataID].toMSecsSinceEpoch() 
-                                        - m_getRealDataTimeList[dataID].toMSecsSinceEpoch()
-             << " MSecs";
-    qDebug() << "";
-
-    emit processRealtimeDataComplete_signal();
-
-    WidgetProcess::Instance().unlock("Real " + m_titleName);
-    WidgetProcess::Instance().setWidgetProcess(false);    
-
 }
 
 void CSSChartForm::updateChart(QList<double> &aveList, QList<double> &cssList, int dataID)
@@ -1013,15 +939,7 @@ void CSSChartForm::setWindowTitleName()
 {
     if (m_hedgedParam.m_isPortfolio)
     {
-        if (m_hedgedParam.m_hedgedType == 0)
-        {
-            m_titleName = QString("%1 %2 %3 %4 净值, 权重日期: %5")
-                          .arg(m_hedgedParam.m_portfolioName)
-                          .arg(m_hedgedParam.m_timeTypeList.join("_"))
-                          .arg(m_hedgedParam.m_startDate).arg(m_hedgedParam.m_endDate)
-                          .arg(m_hedgedParam.m_weightDate);
-        }
-        else if (m_hedgedParam.m_hedgedType > 0)
+        if (m_hedgedParam.m_hedgedType >= SPREAD_HEDGE)
         {
             if (m_hedgedParam.m_isPortfolioHedge)
             {
@@ -1039,11 +957,29 @@ void CSSChartForm::setWindowTitleName()
                                 .arg(m_hedgedParam.m_startDate).arg(m_hedgedParam.m_endDate);                
             }
         }
-        else
+
+        if (m_hedgedParam.m_hedgedType == CLVALUE_WEIGHT_EARNING)
+        {
+            m_titleName = QString("%1 %2 %3 %4 净值, 个股权重不变, 权重日期: %5")
+                          .arg(m_hedgedParam.m_portfolioName)
+                          .arg(m_hedgedParam.m_timeTypeList.join("_"))
+                          .arg(m_hedgedParam.m_startDate).arg(m_hedgedParam.m_endDate)
+                          .arg(m_hedgedParam.m_weightDate);
+        }
+
+        if (m_hedgedParam.m_hedgedType == MKVALUE_WEIGHT_EARNING)
+        {
+            m_titleName = QString("%1 %2 %3 %4 净值, 个股数量不变")
+                          .arg(m_hedgedParam.m_portfolioName)
+                          .arg(m_hedgedParam.m_timeTypeList.join("_"))
+                          .arg(m_hedgedParam.m_startDate).arg(m_hedgedParam.m_endDate);
+        }
+
+        if (m_hedgedParam.m_hedgedType == CLVALUE_WEIGHT_HEDGE)
         {
             if (m_hedgedParam.m_isPortfolioHedge)
             {
-                m_titleName = QString("%1 %2 %3 %4 净值对冲, 权重日期: %5")
+                m_titleName = QString("%1 %2 %3 %4 净值对冲, 个股权重不变, 权重日期: %5")
                                 .arg(m_hedgedParam.m_portfolioName)
                                 .arg(m_hedgedParam.m_timeTypeList.join("_"))
                                 .arg(m_hedgedParam.m_startDate).arg(m_hedgedParam.m_endDate)
@@ -1051,7 +987,7 @@ void CSSChartForm::setWindowTitleName()
             }
             else
             {
-                m_titleName = QString("%1 %2 %3 %4 %5 净值对冲, 权重日期: %6")
+                m_titleName = QString("%1 %2 %3 %4 %5 净值对冲, 个股权重不变, 权重日期: %6")
                                 .arg(m_hedgedParam.m_portfolioName)
                                 .arg(m_hedgedParam.m_hedgedCode)
                                 .arg(m_hedgedParam.m_timeTypeList.join("_"))
@@ -1059,6 +995,25 @@ void CSSChartForm::setWindowTitleName()
                                 .arg(m_hedgedParam.m_weightDate);                
             }
         }
+
+        if (m_hedgedParam.m_hedgedType == MKVALUE_WEIGHT_HEDGE)
+        {
+            if (m_hedgedParam.m_isPortfolioHedge)
+            {
+                m_titleName = QString("%1 %2 %3 %4 净值对冲, 个股数量不变")
+                                .arg(m_hedgedParam.m_portfolioName)
+                                .arg(m_hedgedParam.m_timeTypeList.join("_"))
+                                .arg(m_hedgedParam.m_startDate).arg(m_hedgedParam.m_endDate);
+            }
+            else
+            {
+                m_titleName = QString("%1 %2 %3 %4 %5 净值对冲, 个股数量不变")
+                                .arg(m_hedgedParam.m_portfolioName)
+                                .arg(m_hedgedParam.m_hedgedCode)
+                                .arg(m_hedgedParam.m_timeTypeList.join("_"))
+                                .arg(m_hedgedParam.m_startDate).arg(m_hedgedParam.m_endDate);                
+            }
+        }        
     }
     else
     {
@@ -1480,6 +1435,137 @@ void CSSChartForm::getChoosenInfo_slot(QStringList choosenKeyValueList, QString 
     }
 }
 
+void CSSChartForm::sendHistCSSData_slot(QList<QString> timeList, QList<QList<double>> aveList,
+                                        QList<QList<double>> cssList, int dataID)
+{
+    WidgetProcess::Instance().setWidgetProcess(true);
+    WidgetProcess::Instance().lock("Hist " + m_titleName);
+
+    QDateTime startTime = QDateTime::currentDateTime();
+    qDebug() << "Get Hist Data cost: " << startTime.toMSecsSinceEpoch() 
+                                        - m_getHistDataTimeList[dataID].toMSecsSinceEpoch()
+             << " MSecs, DataNumb: " << timeList.size()
+             << ", " << m_hedgedParam.m_timeTypeList[dataID]
+             << m_titleName;
+
+    QMutexLocker locker(&m_mutex);
+
+    int startPos = getStartIndex(m_hedgedParam.m_startDate, timeList);
+
+    m_timeList[dataID] = getSubList(timeList, startPos, timeList.size());
+    m_realStartTime = m_timeList[dataID][0];
+    m_realEndTime = m_timeList[dataID].last();
+
+    for (int i = 0; i < m_cssParam.m_aveNumbList.size() + 1; ++i)
+    {
+        m_aveList[dataID].append(getSubList(aveList[i], startPos, aveList[i].size()));
+    }
+
+    for (int i = 0; i < cssList.size(); ++i)
+    {
+        m_cssList[dataID].append(getSubList(cssList[i], startPos, cssList[i].size()));
+    }
+
+    if (m_hedgedParam.m_isPortfolio)
+    {
+        m_hedgedDataList[dataID] = getSubList(aveList[aveList.size() - 2], startPos, aveList.last().size());
+        m_indexDataList[dataID] = getSubList(aveList.last(), startPos, aveList.last().size());
+    }
+
+    startPos = 0;
+    m_timeListStore[dataID] = getSubList(timeList, startPos, timeList.size());
+    for (int i = 0; i < m_cssParam.m_aveNumbList.size() + 1; ++i)
+    {
+        m_aveListStore[dataID].append(getSubList(aveList[i], startPos, aveList[i].size()));
+    }
+
+    for (int i = 0; i < cssList.size(); ++i)
+    {
+        m_cssListStore[dataID].append(getSubList(cssList[i], startPos, cssList[i].size()));
+    }
+
+    if (m_hedgedParam.m_isPortfolio)
+    {
+        m_hedgedDataListStore[dataID] = getSubList(aveList[aveList.size() - 2], startPos, aveList.last().size());
+        m_indexDataListStore[dataID] = getSubList(aveList.last(), startPos, aveList.last().size());
+    }
+
+    if (m_hedgedParam.m_isRealTime && !isTradingOver())
+    {
+        extendRealtimeList(dataID);
+    }
+
+    setChart(dataID);
+    initTheme();
+
+    m_currDataIDList.append(dataID);
+    if (m_currDataIDList.size() == m_hedgedParam.m_timeTypeList.size())
+    {
+        setChartView();
+        setLabels();
+        setColors();
+        connectMarkers();
+
+        if (m_hedgedParam.m_isRealTime)
+        {
+            startGetRealtimeData();
+            m_showRealDataTimeList[dataID] = QDateTime::currentDateTime();
+        }
+    }
+    qDebug() << "Show Hist Pic cost: " << QDateTime::currentMSecsSinceEpoch() - startTime.toMSecsSinceEpoch()
+             << " MSecs";
+    qDebug() << "";
+
+    WidgetProcess::Instance().unlock("Hist " + m_titleName);
+    WidgetProcess::Instance().setWidgetProcess(false);     
+}
+
+void CSSChartForm::sendRealTimeCSSData_slot(QList<double> aveList, QList<double> cssList,
+                                            int dataID, bool isAddData)
+{
+    // if (WidgetProcess::Instance().isProcessing()) 
+    // {
+    //     qDebug() << m_titleName << " update give up";
+    //     return;
+    // }
+    
+    WidgetProcess::Instance().setWidgetProcess(true);
+    WidgetProcess::Instance().lock("Real " + m_titleName);
+
+    m_getRealDataTimeList[dataID] = QDateTime::currentDateTime();
+
+    qDebug() << "Get  Real Data Cost " << m_getRealDataTimeList[dataID].toMSecsSinceEpoch() 
+                                        - m_showRealDataTimeList[dataID].toMSecsSinceEpoch()
+             << " MSecs, " << aveList.first() << m_hedgedParam.m_timeTypeList[dataID]
+             << m_titleName;
+
+    ++m_updateCountList[dataID];
+
+    updateChart(aveList, cssList, dataID);    
+    setPropertyValue(m_cssList[dataID][0].size() - 1, dataID, false);
+
+    if (isAddData)
+    {
+        m_updateCountList[dataID] = 0;
+    }
+
+    m_showRealDataTimeList[dataID] = QDateTime::currentDateTime();
+
+    qDebug() << "Show Real Data Cost " << m_showRealDataTimeList[dataID].toMSecsSinceEpoch() 
+                                        - m_getRealDataTimeList[dataID].toMSecsSinceEpoch()
+             << " MSecs";
+    qDebug() << "";
+
+    m_pAddWarningForm->checkWaringItem(aveList, cssList, dataID);
+
+    emit processRealtimeDataComplete_signal();
+
+    WidgetProcess::Instance().unlock("Real " + m_titleName);
+    WidgetProcess::Instance().setWidgetProcess(false);    
+
+}
+
+
 void CSSChartForm::closeEvent(QCloseEvent *event)
 {
     event;
@@ -1490,3 +1576,4 @@ void CSSChartForm::closeEvent(QCloseEvent *event)
         m_isClosed = true;
     }
 }
+

@@ -49,7 +49,7 @@ void FutureChart::initCommonData() {
     registSignalParamsType();
     initExtractKeyValueList();
 
-    if (isTradingStart()) 
+    if (isStockTradingStart()) 
     {
         emit getHistFutureData_signal();
     } 
@@ -57,7 +57,6 @@ void FutureChart::initCommonData() {
     {
         initLayout();
         emit getRealtimeData_signal();
-        // m_monitorWorker->startTimer();
     }
 }
 
@@ -93,6 +92,17 @@ void FutureChart::initMonitorWorker()
 
 void FutureChart::registSignalParamsType() {
     qRegisterMetaType<QList<double>>("QList<double>");
+}
+
+void FutureChart::initAddWarningView()
+{
+
+}
+
+AddWarningForm* FutureChart::getAddWarningForm()
+{
+    AddWarningForm* result = NULL;
+    return result;
 }
 
 void FutureChart::initExtractKeyValueList() {
@@ -240,20 +250,25 @@ void FutureChart::tradeOver_slot()
 }
 
 QList<QDateTime> FutureChart::getExtendedFutureTime(QList<QDateTime> oriTime,
-                                       int chartXaxisTickCount, int updateTime) {
+                                       int chartXaxisTickCount, int updateTime) 
+{
     QList<QDateTime> result = oriTime;
-    if (oriTime.size() >= chartXaxisTickCount) {
+    if (oriTime.size() >= chartXaxisTickCount) 
+    {
         double addedPercent = 1.0 / chartXaxisTickCount;
         int addedNumb = oriTime.size() * addedPercent;
         QDateTime latestDateTime = oriTime.back();
-        for (int i = 0; i < addedNumb; ++i) {
+        for (int i = 0; i < addedNumb; ++i) 
+        {
             latestDateTime = latestDateTime.addMSecs(updateTime);
-            if (isStockTrading(latestDateTime.time())) {
+            if (isStockTrading(latestDateTime.time())) 
+            {
                 result.append(latestDateTime);
-            } else {
+            } 
+            else 
+            {
                 break;
             }
-//            result.append(latestDateTime);
         }
     }
     return result;
@@ -263,7 +278,6 @@ QCategoryAxis* FutureChart::getAxisX (QList<QDateTime> m_valueList, int tickCoun
     QCategoryAxis* axisX = new QCategoryAxis;
     axisX->setStartValue(0);
     QList<int> axisXPosList = getNumbList(m_valueList.size (), tickCount);
-//    qDebug() << "axisXPosList: " << axisXPosList;
     for (int i = 0; i < axisXPosList.size(); ++i) {
         int xpos = axisXPosList[i];
         axisX->append (m_valueList[xpos].toString("hh:mm:ss"), xpos);
@@ -272,7 +286,8 @@ QCategoryAxis* FutureChart::getAxisX (QList<QDateTime> m_valueList, int tickCoun
     return axisX;
 }
 
-void FutureChart::initChartView() {
+void FutureChart::initChartView() 
+{
     m_extendedFutureTime = m_futureTime;
     QCategoryAxis* axisX = getAxisX(m_extendedFutureTime, m_chartXaxisTickCount);
     QValueAxis* axisY = new QValueAxis;
@@ -336,10 +351,8 @@ void FutureChart::updateSeries() {
     m_spreadLineSeries->append(m_futureSpread.size()-1, m_futureSpread.back());
 }
 
-
-
 void FutureChart::updateMousePos() {
-    moveMouse(0);
+//    moveMouse(0);
 }
 
 void FutureChart::setPropertyValue(int index) {
@@ -420,22 +433,27 @@ void FutureChart::KeyReleaseFunc(QEvent *event) {
     moveMouse(step);
 }
 
-void FutureChart::moveMouse(int step) {
+void FutureChart::moveMouse(int step) 
+{
     double pointXDistance = getPointXDistance();
-    if (m_oldPointDistance != pointXDistance) {
-        if (m_oldPointDistance != -1) {
+    if (m_oldPointDistance != pointXDistance) 
+    {
+        if (m_oldPointDistance != -1) 
+        {
             double deltaDistance = pointXDistance - m_oldPointDistance;
             m_mouseInitPos.setX(m_mouseInitPos.x() + deltaDistance);
         }
         m_oldPointDistance = pointXDistance;
     }
 
-    if (step != 0) {
+    if (step != 0) 
+    {
         m_keyMoveCount += step;
         m_currTimeIndex += step;
         float move_distance = pointXDistance * m_keyMoveCount;
 
-        if (m_currTimeIndex >= 0 && m_currTimeIndex < m_futureSpread.size()) {
+        if (m_currTimeIndex >= 0 && m_currTimeIndex < m_futureSpread.size()) 
+        {
             m_isKeyMove = true;
             setPropertyValue(m_currTimeIndex);
             updateLabelSeries(m_currTimeIndex);

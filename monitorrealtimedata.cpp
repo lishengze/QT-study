@@ -3,6 +3,9 @@
 #include <QDebug>
 #include <QThread>
 #include <algorithm>
+#include <iostream>
+#include <exception>
+
 #include "io_func.h"
 #include "secode_func.h"
 #include "time_func.h"
@@ -12,8 +15,8 @@
 using namespace std;
 #pragma execution_character_set("utf-8")
 
-MonitorRealTimeData::MonitorRealTimeData(DatabaseParam dbParam, HedgedParam hedgedParam, QObject *parent):
-    m_dbParam(dbParam), m_hedgedParam(hedgedParam), QObject(parent)
+MonitorRealTimeData::MonitorRealTimeData(DatabaseParam dbParam, HedgedParam hedgedParam, QObject *parent)
+                                        : m_dbParam(dbParam), m_hedgedParam(hedgedParam), QObject(parent)
 {
     m_isFuture                      = false;
     m_hedgedParam.m_oriCode         = getCompleteIndexCode(m_hedgedParam.m_oriCode, "wind");
@@ -29,9 +32,9 @@ MonitorRealTimeData::MonitorRealTimeData(DatabaseParam dbParam, HedgedParam hedg
 }                                               
 
 MonitorRealTimeData::MonitorRealTimeData(QString dbhost, QString futureName, QObject *parent)
-    : m_futureName(futureName), QObject(parent)
+                                        : m_futureName(futureName), QObject(parent)
 {
-    m_isFuture = true;
+    m_isFuture         = true;
     m_dbParam.m_dbhost = dbhost;
     initCommonData();
 }
@@ -224,121 +227,131 @@ void MonitorRealTimeData::processRealtimeDataComplete_slot()
 
 void MonitorRealTimeData::readRealtimeData_timer_slot()
 {
-    if (m_isTest == false)
+    try
     {
-        if (isStockTradingNotStart())
+        if (m_isTest == false)
         {
-            return;
-        }
-        else if (isStockTrading())
-        {
-            stopTimer();
-        }
-        else if (isStockTradingOver())
-        {
-            stopTimer();
-            return;
-        }
-        else if (isStockNoonBreak())
-        {
-            startTimer();
-            return;
-        }
-    }
-
-    if (m_isFuture)
-    {
-        QList<double> result = m_database->getFutureSpread(m_futureName);
-        double datetime = result[1];
-        if (datetime > 0)
-        {
-            checkUpdateTime();
-
-            emit sendRealtimeFutureData_signal(result);
-        }
-        else
-        {
-            qDebug() << QString("获取实时期货基差失败");
-        }
-    }
-
-    if (m_hedgedParam.m_isIndex)
-    {
-        QStringList todayKeyValueList;
-        todayKeyValueList << "日期"
-                          << "时间"
-                          << "最新成交价"
-                          << "开盘"
-                          << "前收";
-        QList<double> sendData;
-
-        if (m_hedgedParam.m_hedgedCode.size() > 0)
-        {
-            m_hedgedParam.m_oriCode = getCompleteIndexCode(m_hedgedParam.m_oriCode, "wind");
-            m_hedgedParam.m_hedgedCode = getCompleteIndexCode(m_hedgedParam.m_hedgedCode, "wind");
-            QStringList selectData = m_database->getSnapShootData(m_hedgedParam.m_oriCode, todayKeyValueList);
-            QStringList hedgedData = m_database->getSnapShootData(m_hedgedParam.m_hedgedCode, todayKeyValueList);
-
-            double selectTime = QDateTime(getDate(selectData[0]), getTime(selectData[1])).toMSecsSinceEpoch();
-            double hedgedTime = QDateTime(getDate(hedgedData[0]), getTime(hedgedData[1])).toMSecsSinceEpoch();
-            double timeData = selectTime > hedgedTime ? selectTime : hedgedTime;
-
-            sendData.append(selectData[2].toDouble());
-            sendData.append(hedgedData[2].toDouble());
-            sendData.append(timeData);
-        }
-        else
-        {
-            m_hedgedParam.m_oriCode = getCompleteIndexCode(m_hedgedParam.m_oriCode, "wind");
-            QStringList selectData = m_database->getSnapShootData(m_hedgedParam.m_oriCode, todayKeyValueList);
-            sendData.append(selectData[2].toDouble());
-            sendData.append(selectData[4].toDouble());
-            double currTime = QDateTime(getDate(selectData[0]), getTime(selectData[1])).toMSecsSinceEpoch();
-            sendData.append(currTime);
-        }
-
-        checkUpdateTime();
-        emit sendRealtimeIndexData_signal(sendData);
-    }
-
-    if (m_hedgedParam.m_isPortfolio)
-    {
-        QMap<QString, QStringList> oriRealTimeData = m_database->getSnapShootData(m_hedgedParam.m_codeList);
-
-        QMap<QString, double> lastCodeClose;
-        for (QMap<QString, QStringList>::const_iterator it = oriRealTimeData.begin();
-            it != oriRealTimeData.end(); ++it)
-        {
-            QString code = it.key();
-            if (m_hedgedParam.m_isCSSChart)
+            if (isStockTradingNotStart())
             {
-                code = getCompleteSecode(code, "tinysoft");
+                return;
             }
-            lastCodeClose.insert(code, it.value()[2].toDouble());
+            else if (isStockTrading())
+            {
+                stopTimer();
+            }
+            else if (isStockTradingOver())
+            {
+                stopTimer();
+                return;
+            }
+            else if (isStockNoonBreak())
+            {
+                startTimer();
+                return;
+            }
         }
 
-        bool isDataUseful = checkPortfolioData(oriRealTimeData);
-
-        if (isDataUseful)
+        if (m_isFuture)
         {
-            if (m_hedgedParam.m_isCSSChart)
+            QList<double> result = m_database->getFutureSpread(m_futureName);
+            double datetime = result[1];
+            if (datetime > 0)
             {
-                QList<double> result = computeSpreadData();
                 checkUpdateTime();
-                emit sendRealtimeSpreadData_signal(result, lastCodeClose);
+
+                emit sendRealtimeFutureData_signal(result);
             }
             else
             {
-                QList<double> result = computeSpreadMACDData();
-                checkUpdateTime();
-                emit sendRealtimeSpreadMACDData_signal(result, lastCodeClose);
+                qDebug() << QString("获取实时期货基差失败");
             }
         }
-        else
+
+        if (m_hedgedParam.m_isIndex)
         {
-            qDebug() << "Data is UnUseful";
+            QStringList todayKeyValueList;
+            todayKeyValueList << "日期"
+                            << "时间"
+                            << "最新成交价"
+                            << "开盘"
+                            << "前收";
+            QList<double> sendData;
+
+            if (m_hedgedParam.m_hedgedCode.size() > 0)
+            {
+                m_hedgedParam.m_oriCode = getCompleteIndexCode(m_hedgedParam.m_oriCode, "wind");
+                m_hedgedParam.m_hedgedCode = getCompleteIndexCode(m_hedgedParam.m_hedgedCode, "wind");
+                QStringList selectData = m_database->getSnapShootData(m_hedgedParam.m_oriCode, todayKeyValueList);
+                QStringList hedgedData = m_database->getSnapShootData(m_hedgedParam.m_hedgedCode, todayKeyValueList);
+
+                double selectTime = QDateTime(getDate(selectData[0]), getTime(selectData[1])).toMSecsSinceEpoch();
+                double hedgedTime = QDateTime(getDate(hedgedData[0]), getTime(hedgedData[1])).toMSecsSinceEpoch();
+                double timeData = selectTime > hedgedTime ? selectTime : hedgedTime;
+
+                sendData.append(selectData[2].toDouble());
+                sendData.append(hedgedData[2].toDouble());
+                sendData.append(timeData);
+            }
+            else
+            {
+                m_hedgedParam.m_oriCode = getCompleteIndexCode(m_hedgedParam.m_oriCode, "wind");
+                QStringList selectData = m_database->getSnapShootData(m_hedgedParam.m_oriCode, todayKeyValueList);
+                sendData.append(selectData[2].toDouble());
+                sendData.append(selectData[4].toDouble());
+                double currTime = QDateTime(getDate(selectData[0]), getTime(selectData[1])).toMSecsSinceEpoch();
+                sendData.append(currTime);
+            }
+
+            checkUpdateTime();
+            emit sendRealtimeIndexData_signal(sendData);
+        }
+
+        if (m_hedgedParam.m_isPortfolio)
+        {
+            QMap<QString, QStringList> oriRealTimeData = m_database->getSnapShootData(m_hedgedParam.m_codeList);
+
+            QMap<QString, double> lastCodeClose;
+
+            for (QMap<QString, QStringList>::const_iterator it = oriRealTimeData.begin();
+                it != oriRealTimeData.end(); ++it)
+            {
+                QString code = it.key();
+                if (m_hedgedParam.m_isCSSChart)
+                {
+                    code = getCompleteSecode(code, "tinysoft");
+                }
+                lastCodeClose.insert(code, it.value()[2].toDouble());
+            }
+
+            bool isDataUseful = checkPortfolioData(oriRealTimeData);
+
+            if (isDataUseful)
+            {
+                if (m_hedgedParam.m_isCSSChart)
+                {
+                    QList<double> result = computeSpreadData();
+                    checkUpdateTime();
+                    emit sendRealtimeSpreadData_signal(result, lastCodeClose);
+                }
+                else
+                {
+                    QList<double> result = computeSpreadMACDData();
+                    checkUpdateTime();
+                    emit sendRealtimeSpreadMACDData_signal(result, lastCodeClose);
+                }
+            }
+            else
+            {
+                qDebug() << "Data is UnUseful";
+            }
         }
     }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+
 }
 
 bool MonitorRealTimeData::checkPortfolioData(QMap<QString, QStringList> realTimeData)
@@ -383,7 +396,6 @@ bool MonitorRealTimeData::checkPortfolioData(QMap<QString, QStringList> realTime
         }
     }
 
-    // sameTimeCount < m_hedgedParam.m_codeList.size() * unUpdatedDataPercent;
     if (realTimeData.size() == m_hedgedParam.m_codeList.size())
     {
         return true;
@@ -393,7 +405,7 @@ bool MonitorRealTimeData::checkPortfolioData(QMap<QString, QStringList> realTime
         if (sameTimeCount >= m_hedgedParam.m_codeList.size() * unUpdatedDataPercent)
         {
             for (QMap<QString, QStringList>::iterator it = realTimeData.begin();
-                 it != realTimeData.end(); ++it)
+                it != realTimeData.end(); ++it)
             {
                 QString secode = it.key();
                 if (!m_vot[secode].isEmpty())

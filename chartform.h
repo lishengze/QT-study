@@ -38,6 +38,7 @@
 #include "qmychartview.h"
 #include "monitorrealtimedata.h"
 #include "extractdatawindow.h"
+#include "addwarningform.h"
 
 QT_BEGIN_NAMESPACE
 class QGraphicsSceneMouseEvent;
@@ -58,15 +59,6 @@ class ChartForm : public BaseChart
     Q_OBJECT
 
 public:
-
-    // ChartForm(QWidget *parent, QTableView* programInfoTableView,
-    //           int chartViewID, QString dbhost, bool isBuySalePortfolio,
-    //           QString hedgeIndexCode, int hedgeIndexCount, QList<int> macdTime,
-    //           QMap<QString, double> strategyMap = EmpytQStringDoubleMap(), QString strategyName="",
-    //           QMap<QString, double> buyStrategyList = EmpytQStringDoubleMap(),
-    //           QMap<QString, double> saleStrategyList = EmpytQStringDoubleMap(),
-    //           bool isRealTime = true, QString startDate ="", QString endDate="", QString timeType ="");
-
     ChartForm(int windowID, DatabaseParam dbParam, HedgedParam hedgedParam, QWidget *parent = nullptr);
 
     ~ChartForm();
@@ -77,6 +69,9 @@ public:
     void initRealTimeData();
 
     void initHistdataThread();
+
+    virtual void initAddWarningView();
+    virtual AddWarningForm* getAddWarningForm();
 
     virtual void initExtractKeyValueList();
     virtual QList<QMyChartView*> getChartViewList();

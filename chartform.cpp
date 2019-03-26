@@ -37,7 +37,6 @@
 #include "process_data_func.h"
 
 #include "widgetprocess.h"
-
 #pragma execution_character_set("utf-8")
 
 using std::max;
@@ -148,7 +147,7 @@ void ChartForm::initHistoryData()
 
 void ChartForm::initRealTimeData()
 {
-    m_dbParam.m_databaseName              = "MarketData_RealTime";
+    m_dbParam.m_databaseName    = "MarketData_RealTime";
     m_updateTime                = 3 * 1000;
     m_timeTypeFormat            = "hh:mm:ss";
     m_chartXaxisTickCount       = 5;
@@ -160,13 +159,14 @@ void ChartForm::initRealTimeData()
     connect(&m_getPreCloseDataTimer, SIGNAL(timeout()),
             this,                    SLOT(getPreCloseData_timer_slot()));
 
-    if (isTradingStart())
+    if (isStockTradingStart())
     {
         emit getPreCloseData_signal();
     }
     else
     {
         initLayout();
+
         if (QTime::currentTime() < m_getPreCloseDataTime)
         {
             m_getPreCloseDataTimer.start(m_getPreCloseDataUpdateTime);
@@ -183,6 +183,17 @@ void ChartForm::registSignalParamsType()
     qRegisterMetaType<ChartData>("ChartData");
     qRegisterMetaType<QList<QPersistentModelIndex>>("QList<QPersistentModelIndex>");    
     qRegisterMetaType<QAbstractItemModel::LayoutChangeHint>("QAbstractItemModel::LayoutChangeHint");
+}
+
+void ChartForm::initAddWarningView()
+{
+
+}
+
+AddWarningForm* ChartForm::getAddWarningForm()
+{
+    AddWarningForm* result = NULL;
+    return result;
 }
 
 void ChartForm::initExtractKeyValueList()
@@ -295,7 +306,7 @@ void ChartForm::sendPreCloseData_slot(double preSpread)
         ui->preCLoseSpreadValue_Label->setText(QString("昨日点差: %1").arg(m_preSpread));
     }
 
-    if (isTradingStart())
+    if (isStockTradingStart())
     {
         emit getHistPortfolioData_Signal();
     }
@@ -303,6 +314,8 @@ void ChartForm::sendPreCloseData_slot(double preSpread)
     {
         emit getRealtimeData_signal();
     }
+
+    //  emit getRealtimeData_signal();
 
     m_getHistDataTime = QDateTime::currentDateTime();
     qDebug() << "Get PreClose Data cost: " << m_getHistDataTime.toMSecsSinceEpoch() - m_initTime.toMSecsSinceEpoch()
@@ -323,6 +336,8 @@ void ChartForm::sendHistPortfolioData_slot(QList<QList<double>> allData)
     m_earningList = allData[1];
     m_votList = allData[2];
     QList<double> macdData = allData[3];
+
+    // qDebug() << m_timeData.size() << m_earningList.size() << m_votList.size();
 
     if (false == m_hedgedParam.m_isPortfolioHedge)
     {
@@ -369,11 +384,11 @@ void ChartForm::sendHistPortfolioData_slot(QList<QList<double>> allData)
 
 void ChartForm::sendRealtimeSpreadMACDData_slot(ChartData currChartData)
 {
-    if (WidgetProcess::Instance().isProcessing())
-    {
-        qDebug() << m_windowName << " update give up";
-        return;
-    }
+    // if (WidgetProcess::Instance().isProcessing())
+    // {
+    //     qDebug() << m_windowName << " update give up";
+    //     return;
+    // }
 
     WidgetProcess::Instance().setWidgetProcess(true);
     WidgetProcess::Instance().lock("Real " + m_windowName);
@@ -418,12 +433,9 @@ void ChartForm::receiveTableViewInfo_slot(QString msg)
 
 void ChartForm::updateChart()
 {
-
     updateAxis();
     updateSeries();
     updateMousePos();
-
-
 }
 
 QCategoryAxis *ChartForm::getTimeAxis()
@@ -484,6 +496,7 @@ void ChartForm::updateAxis()
             if (m_earningList.last() > strategyAxisY->max() || m_earningList.last() < strategyAxisY->min())
             {
                 QList<double> strategyAxisYRange = getChartYvalueRange(allStrategyData);
+                m_strategyChartRange = strategyAxisYRange;
                 strategyAxisY->setRange(strategyAxisYRange[0], strategyAxisYRange[1]);
             }
         }
@@ -508,6 +521,7 @@ void ChartForm::updateAxis()
         if (m_votList.last() > votAxisY->max() || m_votList.last() < votAxisY->min())
         {
             QList<double> votAxisYRange = getChartYvalueRange(m_votList);
+            votAxisYRange[0] = 0;
             m_votChartRange = votAxisYRange;
             votAxisY->setRange(votAxisYRange[0], votAxisYRange[1]);
         }
@@ -655,8 +669,12 @@ void ChartForm::updateSeries()
     if (NULL != m_votLineSeries)
     {
         m_votLineSeries->append(curPointNumb - 1, 0);
-        m_votLineSeries->append(curPointNumb - 1, m_votList[curPointNumb - 1]);
-        m_votLineSeries->append(curPointNumb - 1, 0);
+        if (m_votList[curPointNumb - 1] != 0)
+        {
+            m_votLineSeries->append(curPointNumb - 1, m_votList[curPointNumb - 1]);
+            m_votLineSeries->append(curPointNumb - 1, 0);
+        }
+
     }
 
     if (NULL != m_macdUpLineSeries && NULL != m_macdDownLineSeries)
@@ -665,14 +683,17 @@ void ChartForm::updateSeries()
         {
             m_macdUpLineSeries->append(curPointNumb - 1, 0);
             m_macdUpLineSeries->append(curPointNumb - 1, m_MACDList[curPointNumb - 1].m_macd);
-            m_macdUpLineSeries->append(curPointNumb - 1, 0);
+            m_macdUpLineSeries->append(curPointNumb - 1, 0);            
             m_macdDownLineSeries->append(curPointNumb - 1, 0);
         }
         else
         {
             m_macdDownLineSeries->append(curPointNumb - 1, 0);
-            m_macdDownLineSeries->append(curPointNumb - 1, m_MACDList[curPointNumb - 1].m_macd);
-            m_macdDownLineSeries->append(curPointNumb - 1, 0);
+            if (m_MACDList[curPointNumb - 1].m_macd != 0)
+            {
+                m_macdDownLineSeries->append(curPointNumb - 1, m_MACDList[curPointNumb - 1].m_macd);
+                m_macdDownLineSeries->append(curPointNumb - 1, 0);
+            }
             m_macdUpLineSeries->append(curPointNumb - 1, 0);
         }
     }
@@ -685,7 +706,7 @@ void ChartForm::updateSeries()
 
 void ChartForm::updateMousePos()
 {
-    moveMouse(0);
+//    moveMouse(0);
 }
 
 void ChartForm::initLayout()
@@ -730,27 +751,42 @@ void ChartForm::initLayout()
     setLineColor();
 }
 
-void ChartForm::setWindowName()
+void ChartForm::setWindowName() 
 {
-    if (m_hedgedParam.m_hedgedType == 0)
-    {
-        m_windowName = QString("%1 净值曲线, 权重日期: %2 ")
-                      .arg(m_hedgedParam.m_portfolioName)
-                      .arg(m_hedgedParam.m_weightDate);
-    }
-    else if (m_hedgedParam.m_hedgedType > 0)
+    if (m_hedgedParam.m_hedgedType >= SPREAD_HEDGE)
     {
         m_windowName = QString("%1 %2 点差对冲")
                       .arg(m_hedgedParam.m_portfolioName)
                       .arg(m_hedgedParam.m_hedgedCode);
     }
-    else if (m_hedgedParam.m_hedgedType < 0)
+
+    if (m_hedgedParam.m_hedgedType == CLVALUE_WEIGHT_EARNING)
     {
-        m_windowName = QString("%1 %2 净值对冲, 权重日期: %3")
+        m_windowName = QString("%1 净值曲线, 个股权重不变, 权重日期: %2 ")
+                      .arg(m_hedgedParam.m_portfolioName)
+                      .arg(m_hedgedParam.m_weightDate);
+    }
+    
+    if (m_hedgedParam.m_hedgedType == MKVALUE_WEIGHT_EARNING)
+    {
+        m_windowName = QString("%1 净值曲线, 个股数量不变 ")
+                      .arg(m_hedgedParam.m_portfolioName);
+    }
+    
+    if (m_hedgedParam.m_hedgedType == CLVALUE_WEIGHT_HEDGE)
+    {
+        m_windowName = QString("%1 %2 净值对冲, 个股权重不变, 权重日期: %3")
                       .arg(m_hedgedParam.m_portfolioName)
                       .arg(m_hedgedParam.m_hedgedCode)
                       .arg(m_hedgedParam.m_weightDate);
     }
+
+    if (m_hedgedParam.m_hedgedType == MKVALUE_WEIGHT_HEDGE)
+    {
+        m_windowName = QString("%1 %2 净值对冲, 个股数量不变")
+                      .arg(m_hedgedParam.m_portfolioName)
+                      .arg(m_hedgedParam.m_hedgedCode);
+    }    
 }
 
 QCategoryAxis *ChartForm::getAxisX()
@@ -1106,8 +1142,6 @@ void ChartForm::updateLableSeries(int index)
 
         if (NULL != m_votLabelSeries)
         {
-            // qDebug() <<"index: " << index << m_votLabelSeries->points();
-
             for (QPointF point : m_votLabelSeries->points())
             {
                 m_votLabelSeries->remove(point);

@@ -16,6 +16,7 @@
 #include "basechart.h"
 #include "qmychartview.h"
 #include "historydata.h"
+#include "addwarningform.h"
 
 QT_BEGIN_NAMESPACE
 class QGraphicsSceneMouseEvent;
@@ -61,6 +62,8 @@ class CSSChartForm : public BaseChart
 
     virtual void initLayout();
     virtual void initTheme();
+    virtual void initAddWarningView();
+    virtual AddWarningForm* getAddWarningForm();
 
     void setChart(int dataID);
     void setAVEChart(int dataID);
@@ -102,7 +105,9 @@ class CSSChartForm : public BaseChart
     void sendRealTimeCSSData_slot(QList<double>, QList<double>, int, bool);
 
     void connectMarkers();
+
     void handleMarkerClicked();
+
     void getChoosenInfo_slot(QStringList keyValueList, QString fileDir, bool bOpenDesFile);
 
 protected:
@@ -129,7 +134,7 @@ protected:
     QString                                  m_titleName;
     QString                                  m_excelFileName;
 
-
+    AddWarningForm*                          m_pAddWarningForm;
     // Chart;
     QList<double>                            m_cssMarkValueList;
     int                                      m_currChartIndex;
@@ -195,40 +200,5 @@ protected:
     QList<QDateTime>                         m_getRealDataTimeList;
     QList<QDateTime>                         m_showRealDataTimeList;
 };
-
-    // QString                                  m_dbhost;
-
-    // QString                                  m_startDate;
-    // QString                                  m_endDate;
-    // QString                                  m_weightDate;
-
-    // QString                                  m_oriCode;
-    // QString                                  m_hedgedCode;  
-
-    // QMap<QString, double>                       m_oriPortfolio;
-    // QMap<QString, double>                       m_hedgedPortfolio;
-
-    // QString                                  m_portfolioName;
-    // int                                      m_hedgedType;    
-
-    // QList<QString>                           m_codeList;
-    // QStringList                              m_timeTypeList;
-
-    // bool                                     m_isPortfolio;
-    // bool                                     m_isRealtime;
-
-    // int                                      m_mainAveNumb;
-    // int                                      m_subAveNumb;
-    // int                                      m_energyAveNumb;
-    // double                                   m_css12Rate;
-    // double                                   m_mainCssRate1;
-    // double                                   m_mainCssRate2;
-    // double                                   m_energyCssRate1;
-    // double                                   m_energyCssRate2;
-    // double                                   m_maxCSS;
-    // double                                   m_minCSS;
-
-    // QList<int>                               m_aveNumbList;
-    // QList<bool>                              m_isEMAList;
 
 #endif // CSSCHARTFORM_H

@@ -15,6 +15,7 @@
 #include "toolfunc.h"
 #include "qmychartview.h"
 #include "monitorrealtimedata.h"
+#include "addwarningform.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -51,6 +52,10 @@ public:
     void setLineColor();
 
     void transOriFutureData(QList<double> histFutureData);
+
+    virtual void initAddWarningView();
+
+    virtual AddWarningForm* getAddWarningForm();
 
     virtual void initExtractKeyValueList();
     virtual QList<QMyChartView*> getChartViewList();

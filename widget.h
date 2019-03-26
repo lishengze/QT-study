@@ -43,6 +43,7 @@ public:
 
   void initWidegt();
   void initDateTimeWidget();
+  void initHedgeTypeWidget();
   void initHedgedWidget();
   void initEnergyWidget();
   void initFutureWidget();
@@ -61,7 +62,6 @@ public:
                            QStringList timeTypeList);
 
   void checkBuySalePortfolio();
-  void setHedgedString();
 
   QStringList getEnergyDataFreq();
   QList<int> getCSSParams();
@@ -79,6 +79,7 @@ signals:
 public slots:
 
   void updateProgramInfo_slot(QString info, bool isWarning);
+  
   void windowClose_slot(int windowID, QString windowName);
 
   void sendTableList_slot(QString timeType, QStringList tableList);
@@ -128,7 +129,21 @@ private slots:
 
   void on_portfolioHedgedRealSpreadChart_clicked();
 
-  void on_isNetValueHedged_clicked(bool checked);
+  void on_SpreadEarning_spinBox_editingFinished();
+
+  void on_HedgeEarning_comboBox_activated(const QString &arg1);
+
+  void on_SingleEarning_comboBox_activated(const QString &arg1);
+
+  void on_weightDate_editingFinished();
+
+  void on_SpreadEarning_spinBox_valueChanged(const QString &arg1);
+
+  void on_SingleEarning_radioButton_clicked(bool checked);
+
+  void on_HedgeEarning_radioButton_clicked(bool checked);
+
+  void on_SpreadEarning_radioButton_clicked(bool checked);
 
 private:
   Ui::Widget *                      ui;
@@ -144,9 +159,12 @@ private:
   QString                           m_hedgePortfolioFileDir;  
 
   QString                           m_oriPortfolioName;
+
   QString                           m_hedgedPortfolioName;
   int                               m_hedgedType;
   QString                           m_hedgedString;
+  QString                           m_hedgedCode;
+  QString                           m_weightDate;
 
   QString                           m_futureIndexCode;
   QList<QString>                    m_futureList;

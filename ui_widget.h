@@ -41,42 +41,6 @@ public:
     QGridLayout *gridLayout_11;
     QLabel *label_4;
     QComboBox *dataSource_ComboBox;
-    QGroupBox *choooseFuture;
-    QGridLayout *gridLayout_7;
-    QGridLayout *gridLayout_6;
-    QLabel *label;
-    QComboBox *futureList_ComboBox;
-    QLabel *label_2;
-    QDoubleSpinBox *maxSpread_SpinBox;
-    QLabel *label_3;
-    QDoubleSpinBox *minSpread_SpinBox;
-    QPushButton *showFutureSpread_Button;
-    QGroupBox *chooseAnnouncement;
-    QGridLayout *gridLayout_8;
-    QGridLayout *gridLayout_5;
-    QLabel *endTimeLabel_2;
-    QDateEdit *AnnouncementEndDate;
-    QDateEdit *AnnouncementStartDate;
-    QLabel *startTimeLabel_2;
-    QPushButton *Annoucnement_Button;
-    QGroupBox *chooseTimeBox;
-    QGridLayout *gridLayout;
-    QVBoxLayout *verticalLayout_3;
-    QGridLayout *chooseTime_gridLayout;
-    QGridLayout *MACDTime_gridLayout;
-    QLabel *EMA1Time_label;
-    QLabel *EMA2Time_label;
-    QLabel *DIFFTime_label;
-    QSpinBox *EMA1TimeSpinBox;
-    QSpinBox *EMA2TimeSpinBox;
-    QSpinBox *DIFFTimeSpinBox;
-    QGridLayout *gridLayout_2;
-    QLabel *timeFre_label;
-    QComboBox *dataFrequency;
-    QLabel *hedgeTarget_Label;
-    QComboBox *hedgeTarget_comboBox;
-    QLabel *hedgeCount_label;
-    QSpinBox *hedgeCount_spinBox;
     QGroupBox *chooseEnergy_groupBox;
     QGridLayout *gridLayout_10;
     QGridLayout *gridLayout_9;
@@ -93,9 +57,51 @@ public:
     QComboBox *energyCssParam_comboBox;
     QPushButton *indexEnergyChart;
     QLabel *label_14;
+    QGroupBox *chooseTimeBox;
+    QWidget *layoutWidget;
+    QGridLayout *gridLayout;
+    QLabel *EMA1Time_label;
+    QLabel *EMA2Time_label;
+    QLabel *DIFFTime_label;
+    QSpinBox *EMA1TimeSpinBox;
+    QSpinBox *EMA2TimeSpinBox;
+    QSpinBox *DIFFTimeSpinBox;
+    QLabel *timeFre_label;
+    QComboBox *dataFrequency;
+    QLabel *hedgeTarget_Label;
+    QComboBox *hedgeTarget_comboBox;
+    QGroupBox *groupBox;
+    QWidget *layoutWidget1;
+    QGridLayout *gridLayout_3;
+    QDateEdit *endDate;
+    QLabel *label_7;
+    QLabel *energyUpdate_label;
+    QSpinBox *energyUpdate_spinBox;
+    QSpinBox *spreadUpdate_spinBox;
+    QLabel *endDate_Label;
+    QDateEdit *startDate;
+    QLabel *startDate_Label;
+    QGroupBox *chooseAnnouncement;
+    QGridLayout *gridLayout_8;
+    QGridLayout *gridLayout_5;
+    QLabel *endTimeLabel_2;
+    QDateEdit *AnnouncementEndDate;
+    QDateEdit *AnnouncementStartDate;
+    QLabel *startTimeLabel_2;
+    QPushButton *Annoucnement_Button;
     QGroupBox *CalendarBox;
     QGridLayout *gridLayout_4;
     QCalendarWidget *calendarWidget;
+    QGroupBox *choooseFuture;
+    QGridLayout *gridLayout_7;
+    QGridLayout *gridLayout_6;
+    QLabel *label;
+    QComboBox *futureList_ComboBox;
+    QLabel *label_2;
+    QDoubleSpinBox *maxSpread_SpinBox;
+    QLabel *label_3;
+    QDoubleSpinBox *minSpread_SpinBox;
+    QPushButton *showFutureSpread_Button;
     QVBoxLayout *verticalLayout_4;
     QVBoxLayout *programInfo_verticalLayout;
     QVBoxLayout *verticalLayout_2;
@@ -114,21 +120,18 @@ public:
     QPushButton *portfolioHedgedHistSpreadChart;
     QPushButton *portfolioHedgedRealSpreadChart;
     QPushButton *portfolioHedgedEnergyChart;
-    QRadioButton *isNetValueHedged;
     QLabel *programInfo_Label;
     QTableView *programInfo_tableView;
-    QGroupBox *groupBox;
-    QWidget *layoutWidget;
-    QGridLayout *gridLayout_3;
-    QDateEdit *endDate;
-    QLabel *label_7;
-    QLabel *energyUpdate_label;
-    QSpinBox *energyUpdate_spinBox;
-    QSpinBox *spreadUpdate_spinBox;
-    QLabel *endDate_Label;
-    QDateEdit *startDate;
-    QLabel *startDate_Label;
+    QGroupBox *groupBox_2;
+    QWidget *layoutWidget2;
+    QGridLayout *gridLayout_14;
+    QRadioButton *SingleEarning_radioButton;
     QDateEdit *weightDate;
+    QComboBox *SingleEarning_comboBox;
+    QComboBox *HedgeEarning_comboBox;
+    QSpinBox *SpreadEarning_spinBox;
+    QRadioButton *HedgeEarning_radioButton;
+    QRadioButton *SpreadEarning_radioButton;
     QLabel *label_5;
 
     void setupUi(QWidget *Widget)
@@ -136,7 +139,7 @@ public:
         if (Widget->objectName().isEmpty())
             Widget->setObjectName(QStringLiteral("Widget"));
         Widget->setEnabled(true);
-        Widget->resize(1406, 993);
+        Widget->resize(1406, 1105);
         Widget->setMinimumSize(QSize(280, 240));
         gridLayout_13 = new QGridLayout(Widget);
         gridLayout_13->setSpacing(6);
@@ -166,209 +169,7 @@ public:
         gridLayout_12->addLayout(gridLayout_11, 0, 0, 1, 1);
 
 
-        gridLayout_13->addWidget(chooseDataSource, 6, 0, 1, 1);
-
-        choooseFuture = new QGroupBox(Widget);
-        choooseFuture->setObjectName(QStringLiteral("choooseFuture"));
-        choooseFuture->setMinimumSize(QSize(350, 0));
-        choooseFuture->setMaximumSize(QSize(350, 16777215));
-        gridLayout_7 = new QGridLayout(choooseFuture);
-        gridLayout_7->setSpacing(6);
-        gridLayout_7->setContentsMargins(11, 11, 11, 11);
-        gridLayout_7->setObjectName(QStringLiteral("gridLayout_7"));
-        gridLayout_6 = new QGridLayout();
-        gridLayout_6->setSpacing(6);
-        gridLayout_6->setObjectName(QStringLiteral("gridLayout_6"));
-        label = new QLabel(choooseFuture);
-        label->setObjectName(QStringLiteral("label"));
-
-        gridLayout_6->addWidget(label, 0, 0, 1, 1);
-
-        futureList_ComboBox = new QComboBox(choooseFuture);
-        futureList_ComboBox->setObjectName(QStringLiteral("futureList_ComboBox"));
-
-        gridLayout_6->addWidget(futureList_ComboBox, 0, 1, 1, 1);
-
-        label_2 = new QLabel(choooseFuture);
-        label_2->setObjectName(QStringLiteral("label_2"));
-
-        gridLayout_6->addWidget(label_2, 1, 0, 1, 1);
-
-        maxSpread_SpinBox = new QDoubleSpinBox(choooseFuture);
-        maxSpread_SpinBox->setObjectName(QStringLiteral("maxSpread_SpinBox"));
-
-        gridLayout_6->addWidget(maxSpread_SpinBox, 1, 1, 1, 1);
-
-        label_3 = new QLabel(choooseFuture);
-        label_3->setObjectName(QStringLiteral("label_3"));
-
-        gridLayout_6->addWidget(label_3, 2, 0, 1, 1);
-
-        minSpread_SpinBox = new QDoubleSpinBox(choooseFuture);
-        minSpread_SpinBox->setObjectName(QStringLiteral("minSpread_SpinBox"));
-
-        gridLayout_6->addWidget(minSpread_SpinBox, 2, 1, 1, 1);
-
-        showFutureSpread_Button = new QPushButton(choooseFuture);
-        showFutureSpread_Button->setObjectName(QStringLiteral("showFutureSpread_Button"));
-        showFutureSpread_Button->setMinimumSize(QSize(0, 22));
-
-        gridLayout_6->addWidget(showFutureSpread_Button, 2, 2, 1, 1);
-
-
-        gridLayout_7->addLayout(gridLayout_6, 0, 0, 1, 1);
-
-
-        gridLayout_13->addWidget(choooseFuture, 4, 0, 1, 1);
-
-        chooseAnnouncement = new QGroupBox(Widget);
-        chooseAnnouncement->setObjectName(QStringLiteral("chooseAnnouncement"));
-        chooseAnnouncement->setMinimumSize(QSize(350, 0));
-        chooseAnnouncement->setMaximumSize(QSize(350, 16777215));
-        gridLayout_8 = new QGridLayout(chooseAnnouncement);
-        gridLayout_8->setSpacing(6);
-        gridLayout_8->setContentsMargins(11, 11, 11, 11);
-        gridLayout_8->setObjectName(QStringLiteral("gridLayout_8"));
-        gridLayout_5 = new QGridLayout();
-        gridLayout_5->setSpacing(6);
-        gridLayout_5->setObjectName(QStringLiteral("gridLayout_5"));
-        endTimeLabel_2 = new QLabel(chooseAnnouncement);
-        endTimeLabel_2->setObjectName(QStringLiteral("endTimeLabel_2"));
-
-        gridLayout_5->addWidget(endTimeLabel_2, 1, 0, 1, 1);
-
-        AnnouncementEndDate = new QDateEdit(chooseAnnouncement);
-        AnnouncementEndDate->setObjectName(QStringLiteral("AnnouncementEndDate"));
-
-        gridLayout_5->addWidget(AnnouncementEndDate, 1, 1, 1, 1);
-
-        AnnouncementStartDate = new QDateEdit(chooseAnnouncement);
-        AnnouncementStartDate->setObjectName(QStringLiteral("AnnouncementStartDate"));
-
-        gridLayout_5->addWidget(AnnouncementStartDate, 0, 1, 1, 1);
-
-        startTimeLabel_2 = new QLabel(chooseAnnouncement);
-        startTimeLabel_2->setObjectName(QStringLiteral("startTimeLabel_2"));
-
-        gridLayout_5->addWidget(startTimeLabel_2, 0, 0, 1, 1);
-
-        Annoucnement_Button = new QPushButton(chooseAnnouncement);
-        Annoucnement_Button->setObjectName(QStringLiteral("Annoucnement_Button"));
-        Annoucnement_Button->setMinimumSize(QSize(0, 22));
-        Annoucnement_Button->setMaximumSize(QSize(100, 16777215));
-
-        gridLayout_5->addWidget(Annoucnement_Button, 1, 2, 1, 1);
-
-
-        gridLayout_8->addLayout(gridLayout_5, 0, 0, 1, 1);
-
-
-        gridLayout_13->addWidget(chooseAnnouncement, 5, 0, 1, 1);
-
-        chooseTimeBox = new QGroupBox(Widget);
-        chooseTimeBox->setObjectName(QStringLiteral("chooseTimeBox"));
-        chooseTimeBox->setEnabled(true);
-        chooseTimeBox->setMinimumSize(QSize(350, 0));
-        chooseTimeBox->setMaximumSize(QSize(350, 16777215));
-        gridLayout = new QGridLayout(chooseTimeBox);
-        gridLayout->setSpacing(6);
-        gridLayout->setContentsMargins(11, 11, 11, 11);
-        gridLayout->setObjectName(QStringLiteral("gridLayout"));
-        verticalLayout_3 = new QVBoxLayout();
-        verticalLayout_3->setSpacing(6);
-        verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));
-        chooseTime_gridLayout = new QGridLayout();
-        chooseTime_gridLayout->setSpacing(6);
-        chooseTime_gridLayout->setObjectName(QStringLiteral("chooseTime_gridLayout"));
-
-        verticalLayout_3->addLayout(chooseTime_gridLayout);
-
-        MACDTime_gridLayout = new QGridLayout();
-        MACDTime_gridLayout->setSpacing(6);
-        MACDTime_gridLayout->setObjectName(QStringLiteral("MACDTime_gridLayout"));
-        EMA1Time_label = new QLabel(chooseTimeBox);
-        EMA1Time_label->setObjectName(QStringLiteral("EMA1Time_label"));
-        EMA1Time_label->setMaximumSize(QSize(16777215, 25));
-
-        MACDTime_gridLayout->addWidget(EMA1Time_label, 0, 0, 1, 1);
-
-        EMA2Time_label = new QLabel(chooseTimeBox);
-        EMA2Time_label->setObjectName(QStringLiteral("EMA2Time_label"));
-
-        MACDTime_gridLayout->addWidget(EMA2Time_label, 0, 1, 1, 1);
-
-        DIFFTime_label = new QLabel(chooseTimeBox);
-        DIFFTime_label->setObjectName(QStringLiteral("DIFFTime_label"));
-
-        MACDTime_gridLayout->addWidget(DIFFTime_label, 0, 2, 1, 1);
-
-        EMA1TimeSpinBox = new QSpinBox(chooseTimeBox);
-        EMA1TimeSpinBox->setObjectName(QStringLiteral("EMA1TimeSpinBox"));
-
-        MACDTime_gridLayout->addWidget(EMA1TimeSpinBox, 1, 0, 1, 1);
-
-        EMA2TimeSpinBox = new QSpinBox(chooseTimeBox);
-        EMA2TimeSpinBox->setObjectName(QStringLiteral("EMA2TimeSpinBox"));
-
-        MACDTime_gridLayout->addWidget(EMA2TimeSpinBox, 1, 1, 1, 1);
-
-        DIFFTimeSpinBox = new QSpinBox(chooseTimeBox);
-        DIFFTimeSpinBox->setObjectName(QStringLiteral("DIFFTimeSpinBox"));
-
-        MACDTime_gridLayout->addWidget(DIFFTimeSpinBox, 1, 2, 1, 1);
-
-
-        verticalLayout_3->addLayout(MACDTime_gridLayout);
-
-        gridLayout_2 = new QGridLayout();
-        gridLayout_2->setSpacing(6);
-        gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
-        timeFre_label = new QLabel(chooseTimeBox);
-        timeFre_label->setObjectName(QStringLiteral("timeFre_label"));
-        timeFre_label->setMaximumSize(QSize(60, 16777215));
-        timeFre_label->setSizeIncrement(QSize(40, 0));
-
-        gridLayout_2->addWidget(timeFre_label, 0, 0, 1, 1);
-
-        dataFrequency = new QComboBox(chooseTimeBox);
-        dataFrequency->setObjectName(QStringLiteral("dataFrequency"));
-        dataFrequency->setMaximumSize(QSize(80, 16777215));
-
-        gridLayout_2->addWidget(dataFrequency, 0, 1, 1, 1);
-
-        hedgeTarget_Label = new QLabel(chooseTimeBox);
-        hedgeTarget_Label->setObjectName(QStringLiteral("hedgeTarget_Label"));
-        hedgeTarget_Label->setMaximumSize(QSize(60, 16777215));
-
-        gridLayout_2->addWidget(hedgeTarget_Label, 1, 0, 1, 1);
-
-        hedgeTarget_comboBox = new QComboBox(chooseTimeBox);
-        hedgeTarget_comboBox->setObjectName(QStringLiteral("hedgeTarget_comboBox"));
-        hedgeTarget_comboBox->setMaximumSize(QSize(100, 16777215));
-
-        gridLayout_2->addWidget(hedgeTarget_comboBox, 1, 1, 1, 1);
-
-        hedgeCount_label = new QLabel(chooseTimeBox);
-        hedgeCount_label->setObjectName(QStringLiteral("hedgeCount_label"));
-        hedgeCount_label->setMaximumSize(QSize(100, 16777215));
-        hedgeCount_label->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
-
-        gridLayout_2->addWidget(hedgeCount_label, 1, 2, 1, 1);
-
-        hedgeCount_spinBox = new QSpinBox(chooseTimeBox);
-        hedgeCount_spinBox->setObjectName(QStringLiteral("hedgeCount_spinBox"));
-        hedgeCount_spinBox->setMaximumSize(QSize(100, 16777215));
-
-        gridLayout_2->addWidget(hedgeCount_spinBox, 1, 3, 1, 1);
-
-
-        verticalLayout_3->addLayout(gridLayout_2);
-
-
-        gridLayout->addLayout(verticalLayout_3, 0, 0, 1, 1);
-
-
-        gridLayout_13->addWidget(chooseTimeBox, 2, 0, 1, 1);
+        gridLayout_13->addWidget(chooseDataSource, 8, 0, 1, 1);
 
         chooseEnergy_groupBox = new QGroupBox(Widget);
         chooseEnergy_groupBox->setObjectName(QStringLiteral("chooseEnergy_groupBox"));
@@ -456,11 +257,185 @@ public:
         gridLayout_10->addLayout(gridLayout_9, 0, 0, 1, 1);
 
 
-        gridLayout_13->addWidget(chooseEnergy_groupBox, 3, 0, 1, 1);
+        gridLayout_13->addWidget(chooseEnergy_groupBox, 5, 0, 1, 1);
+
+        chooseTimeBox = new QGroupBox(Widget);
+        chooseTimeBox->setObjectName(QStringLiteral("chooseTimeBox"));
+        chooseTimeBox->setEnabled(true);
+        chooseTimeBox->setMinimumSize(QSize(350, 130));
+        chooseTimeBox->setMaximumSize(QSize(350, 16777215));
+        layoutWidget = new QWidget(chooseTimeBox);
+        layoutWidget->setObjectName(QStringLiteral("layoutWidget"));
+        layoutWidget->setGeometry(QRect(12, 22, 331, 101));
+        gridLayout = new QGridLayout(layoutWidget);
+        gridLayout->setSpacing(6);
+        gridLayout->setContentsMargins(11, 11, 11, 11);
+        gridLayout->setObjectName(QStringLiteral("gridLayout"));
+        gridLayout->setContentsMargins(0, 0, 0, 0);
+        EMA1Time_label = new QLabel(layoutWidget);
+        EMA1Time_label->setObjectName(QStringLiteral("EMA1Time_label"));
+        EMA1Time_label->setMaximumSize(QSize(16777215, 25));
+
+        gridLayout->addWidget(EMA1Time_label, 0, 0, 1, 1);
+
+        EMA2Time_label = new QLabel(layoutWidget);
+        EMA2Time_label->setObjectName(QStringLiteral("EMA2Time_label"));
+
+        gridLayout->addWidget(EMA2Time_label, 0, 1, 1, 2);
+
+        DIFFTime_label = new QLabel(layoutWidget);
+        DIFFTime_label->setObjectName(QStringLiteral("DIFFTime_label"));
+
+        gridLayout->addWidget(DIFFTime_label, 0, 3, 1, 1);
+
+        EMA1TimeSpinBox = new QSpinBox(layoutWidget);
+        EMA1TimeSpinBox->setObjectName(QStringLiteral("EMA1TimeSpinBox"));
+        EMA1TimeSpinBox->setMinimumSize(QSize(100, 0));
+
+        gridLayout->addWidget(EMA1TimeSpinBox, 1, 0, 1, 1);
+
+        EMA2TimeSpinBox = new QSpinBox(layoutWidget);
+        EMA2TimeSpinBox->setObjectName(QStringLiteral("EMA2TimeSpinBox"));
+        EMA2TimeSpinBox->setMinimumSize(QSize(60, 0));
+        EMA2TimeSpinBox->setMaximumSize(QSize(150, 16777215));
+
+        gridLayout->addWidget(EMA2TimeSpinBox, 1, 1, 1, 2);
+
+        DIFFTimeSpinBox = new QSpinBox(layoutWidget);
+        DIFFTimeSpinBox->setObjectName(QStringLiteral("DIFFTimeSpinBox"));
+        DIFFTimeSpinBox->setMinimumSize(QSize(100, 0));
+
+        gridLayout->addWidget(DIFFTimeSpinBox, 1, 3, 1, 1);
+
+        timeFre_label = new QLabel(layoutWidget);
+        timeFre_label->setObjectName(QStringLiteral("timeFre_label"));
+        timeFre_label->setMaximumSize(QSize(60, 16777215));
+        timeFre_label->setSizeIncrement(QSize(40, 0));
+
+        gridLayout->addWidget(timeFre_label, 2, 0, 1, 2);
+
+        dataFrequency = new QComboBox(layoutWidget);
+        dataFrequency->setObjectName(QStringLiteral("dataFrequency"));
+        dataFrequency->setMaximumSize(QSize(200, 16777215));
+
+        gridLayout->addWidget(dataFrequency, 2, 2, 1, 2);
+
+        hedgeTarget_Label = new QLabel(layoutWidget);
+        hedgeTarget_Label->setObjectName(QStringLiteral("hedgeTarget_Label"));
+        hedgeTarget_Label->setMaximumSize(QSize(60, 16777215));
+
+        gridLayout->addWidget(hedgeTarget_Label, 3, 0, 1, 2);
+
+        hedgeTarget_comboBox = new QComboBox(layoutWidget);
+        hedgeTarget_comboBox->setObjectName(QStringLiteral("hedgeTarget_comboBox"));
+        hedgeTarget_comboBox->setMaximumSize(QSize(200, 16777215));
+
+        gridLayout->addWidget(hedgeTarget_comboBox, 3, 2, 1, 2);
+
+
+        gridLayout_13->addWidget(chooseTimeBox, 4, 0, 1, 1);
+
+        groupBox = new QGroupBox(Widget);
+        groupBox->setObjectName(QStringLiteral("groupBox"));
+        groupBox->setMinimumSize(QSize(0, 150));
+        layoutWidget1 = new QWidget(groupBox);
+        layoutWidget1->setObjectName(QStringLiteral("layoutWidget1"));
+        layoutWidget1->setGeometry(QRect(10, 25, 331, 121));
+        gridLayout_3 = new QGridLayout(layoutWidget1);
+        gridLayout_3->setSpacing(6);
+        gridLayout_3->setContentsMargins(11, 11, 11, 11);
+        gridLayout_3->setObjectName(QStringLiteral("gridLayout_3"));
+        gridLayout_3->setContentsMargins(0, 0, 0, 0);
+        endDate = new QDateEdit(layoutWidget1);
+        endDate->setObjectName(QStringLiteral("endDate"));
+
+        gridLayout_3->addWidget(endDate, 1, 1, 1, 1);
+
+        label_7 = new QLabel(layoutWidget1);
+        label_7->setObjectName(QStringLiteral("label_7"));
+
+        gridLayout_3->addWidget(label_7, 4, 0, 1, 1);
+
+        energyUpdate_label = new QLabel(layoutWidget1);
+        energyUpdate_label->setObjectName(QStringLiteral("energyUpdate_label"));
+
+        gridLayout_3->addWidget(energyUpdate_label, 3, 0, 1, 1);
+
+        energyUpdate_spinBox = new QSpinBox(layoutWidget1);
+        energyUpdate_spinBox->setObjectName(QStringLiteral("energyUpdate_spinBox"));
+
+        gridLayout_3->addWidget(energyUpdate_spinBox, 3, 1, 1, 1);
+
+        spreadUpdate_spinBox = new QSpinBox(layoutWidget1);
+        spreadUpdate_spinBox->setObjectName(QStringLiteral("spreadUpdate_spinBox"));
+
+        gridLayout_3->addWidget(spreadUpdate_spinBox, 4, 1, 1, 1);
+
+        endDate_Label = new QLabel(layoutWidget1);
+        endDate_Label->setObjectName(QStringLiteral("endDate_Label"));
+
+        gridLayout_3->addWidget(endDate_Label, 1, 0, 1, 1);
+
+        startDate = new QDateEdit(layoutWidget1);
+        startDate->setObjectName(QStringLiteral("startDate"));
+
+        gridLayout_3->addWidget(startDate, 0, 1, 1, 1);
+
+        startDate_Label = new QLabel(layoutWidget1);
+        startDate_Label->setObjectName(QStringLiteral("startDate_Label"));
+
+        gridLayout_3->addWidget(startDate_Label, 0, 0, 1, 1);
+
+
+        gridLayout_13->addWidget(groupBox, 1, 0, 1, 1);
+
+        chooseAnnouncement = new QGroupBox(Widget);
+        chooseAnnouncement->setObjectName(QStringLiteral("chooseAnnouncement"));
+        chooseAnnouncement->setMinimumSize(QSize(350, 0));
+        chooseAnnouncement->setMaximumSize(QSize(350, 16777215));
+        gridLayout_8 = new QGridLayout(chooseAnnouncement);
+        gridLayout_8->setSpacing(6);
+        gridLayout_8->setContentsMargins(11, 11, 11, 11);
+        gridLayout_8->setObjectName(QStringLiteral("gridLayout_8"));
+        gridLayout_5 = new QGridLayout();
+        gridLayout_5->setSpacing(6);
+        gridLayout_5->setObjectName(QStringLiteral("gridLayout_5"));
+        endTimeLabel_2 = new QLabel(chooseAnnouncement);
+        endTimeLabel_2->setObjectName(QStringLiteral("endTimeLabel_2"));
+
+        gridLayout_5->addWidget(endTimeLabel_2, 1, 0, 1, 1);
+
+        AnnouncementEndDate = new QDateEdit(chooseAnnouncement);
+        AnnouncementEndDate->setObjectName(QStringLiteral("AnnouncementEndDate"));
+
+        gridLayout_5->addWidget(AnnouncementEndDate, 1, 1, 1, 1);
+
+        AnnouncementStartDate = new QDateEdit(chooseAnnouncement);
+        AnnouncementStartDate->setObjectName(QStringLiteral("AnnouncementStartDate"));
+
+        gridLayout_5->addWidget(AnnouncementStartDate, 0, 1, 1, 1);
+
+        startTimeLabel_2 = new QLabel(chooseAnnouncement);
+        startTimeLabel_2->setObjectName(QStringLiteral("startTimeLabel_2"));
+
+        gridLayout_5->addWidget(startTimeLabel_2, 0, 0, 1, 1);
+
+        Annoucnement_Button = new QPushButton(chooseAnnouncement);
+        Annoucnement_Button->setObjectName(QStringLiteral("Annoucnement_Button"));
+        Annoucnement_Button->setMinimumSize(QSize(0, 22));
+        Annoucnement_Button->setMaximumSize(QSize(100, 16777215));
+
+        gridLayout_5->addWidget(Annoucnement_Button, 1, 2, 1, 1);
+
+
+        gridLayout_8->addLayout(gridLayout_5, 0, 0, 1, 1);
+
+
+        gridLayout_13->addWidget(chooseAnnouncement, 7, 0, 1, 1);
 
         CalendarBox = new QGroupBox(Widget);
         CalendarBox->setObjectName(QStringLiteral("CalendarBox"));
-        CalendarBox->setMinimumSize(QSize(350, 1));
+        CalendarBox->setMinimumSize(QSize(350, 200));
         CalendarBox->setMaximumSize(QSize(350, 250));
         gridLayout_4 = new QGridLayout(CalendarBox);
         gridLayout_4->setSpacing(6);
@@ -474,6 +449,59 @@ public:
 
 
         gridLayout_13->addWidget(CalendarBox, 0, 0, 1, 1);
+
+        choooseFuture = new QGroupBox(Widget);
+        choooseFuture->setObjectName(QStringLiteral("choooseFuture"));
+        choooseFuture->setMinimumSize(QSize(350, 0));
+        choooseFuture->setMaximumSize(QSize(350, 16777215));
+        gridLayout_7 = new QGridLayout(choooseFuture);
+        gridLayout_7->setSpacing(6);
+        gridLayout_7->setContentsMargins(11, 11, 11, 11);
+        gridLayout_7->setObjectName(QStringLiteral("gridLayout_7"));
+        gridLayout_6 = new QGridLayout();
+        gridLayout_6->setSpacing(6);
+        gridLayout_6->setObjectName(QStringLiteral("gridLayout_6"));
+        label = new QLabel(choooseFuture);
+        label->setObjectName(QStringLiteral("label"));
+
+        gridLayout_6->addWidget(label, 0, 0, 1, 1);
+
+        futureList_ComboBox = new QComboBox(choooseFuture);
+        futureList_ComboBox->setObjectName(QStringLiteral("futureList_ComboBox"));
+
+        gridLayout_6->addWidget(futureList_ComboBox, 0, 1, 1, 1);
+
+        label_2 = new QLabel(choooseFuture);
+        label_2->setObjectName(QStringLiteral("label_2"));
+
+        gridLayout_6->addWidget(label_2, 1, 0, 1, 1);
+
+        maxSpread_SpinBox = new QDoubleSpinBox(choooseFuture);
+        maxSpread_SpinBox->setObjectName(QStringLiteral("maxSpread_SpinBox"));
+
+        gridLayout_6->addWidget(maxSpread_SpinBox, 1, 1, 1, 1);
+
+        label_3 = new QLabel(choooseFuture);
+        label_3->setObjectName(QStringLiteral("label_3"));
+
+        gridLayout_6->addWidget(label_3, 2, 0, 1, 1);
+
+        minSpread_SpinBox = new QDoubleSpinBox(choooseFuture);
+        minSpread_SpinBox->setObjectName(QStringLiteral("minSpread_SpinBox"));
+
+        gridLayout_6->addWidget(minSpread_SpinBox, 2, 1, 1, 1);
+
+        showFutureSpread_Button = new QPushButton(choooseFuture);
+        showFutureSpread_Button->setObjectName(QStringLiteral("showFutureSpread_Button"));
+        showFutureSpread_Button->setMinimumSize(QSize(0, 22));
+
+        gridLayout_6->addWidget(showFutureSpread_Button, 2, 2, 1, 1);
+
+
+        gridLayout_7->addLayout(gridLayout_6, 0, 0, 1, 1);
+
+
+        gridLayout_13->addWidget(choooseFuture, 6, 0, 1, 1);
 
         verticalLayout_4 = new QVBoxLayout();
         verticalLayout_4->setSpacing(6);
@@ -577,12 +605,6 @@ public:
 
         horizontalLayout_3->addWidget(portfolioHedgedEnergyChart);
 
-        isNetValueHedged = new QRadioButton(Widget);
-        isNetValueHedged->setObjectName(QStringLiteral("isNetValueHedged"));
-        isNetValueHedged->setMaximumSize(QSize(100, 16777215));
-
-        horizontalLayout_3->addWidget(isNetValueHedged);
-
 
         verticalLayout_2->addLayout(horizontalLayout_3);
 
@@ -606,71 +628,61 @@ public:
         verticalLayout_4->addLayout(programInfo_verticalLayout);
 
 
-        gridLayout_13->addLayout(verticalLayout_4, 0, 1, 9, 1);
+        gridLayout_13->addLayout(verticalLayout_4, 0, 1, 11, 1);
 
-        groupBox = new QGroupBox(Widget);
-        groupBox->setObjectName(QStringLiteral("groupBox"));
-        groupBox->setMinimumSize(QSize(0, 170));
-        layoutWidget = new QWidget(groupBox);
-        layoutWidget->setObjectName(QStringLiteral("layoutWidget"));
-        layoutWidget->setGeometry(QRect(10, 14, 331, 152));
-        gridLayout_3 = new QGridLayout(layoutWidget);
-        gridLayout_3->setSpacing(6);
-        gridLayout_3->setContentsMargins(11, 11, 11, 11);
-        gridLayout_3->setObjectName(QStringLiteral("gridLayout_3"));
-        gridLayout_3->setContentsMargins(0, 0, 0, 0);
-        endDate = new QDateEdit(layoutWidget);
-        endDate->setObjectName(QStringLiteral("endDate"));
+        groupBox_2 = new QGroupBox(Widget);
+        groupBox_2->setObjectName(QStringLiteral("groupBox_2"));
+        groupBox_2->setMinimumSize(QSize(0, 120));
+        layoutWidget2 = new QWidget(groupBox_2);
+        layoutWidget2->setObjectName(QStringLiteral("layoutWidget2"));
+        layoutWidget2->setGeometry(QRect(10, 20, 331, 100));
+        gridLayout_14 = new QGridLayout(layoutWidget2);
+        gridLayout_14->setSpacing(6);
+        gridLayout_14->setContentsMargins(11, 11, 11, 11);
+        gridLayout_14->setObjectName(QStringLiteral("gridLayout_14"));
+        gridLayout_14->setContentsMargins(0, 0, 0, 0);
+        SingleEarning_radioButton = new QRadioButton(layoutWidget2);
+        SingleEarning_radioButton->setObjectName(QStringLiteral("SingleEarning_radioButton"));
 
-        gridLayout_3->addWidget(endDate, 1, 1, 1, 1);
+        gridLayout_14->addWidget(SingleEarning_radioButton, 0, 0, 1, 1);
 
-        label_7 = new QLabel(layoutWidget);
-        label_7->setObjectName(QStringLiteral("label_7"));
-
-        gridLayout_3->addWidget(label_7, 4, 0, 1, 1);
-
-        energyUpdate_label = new QLabel(layoutWidget);
-        energyUpdate_label->setObjectName(QStringLiteral("energyUpdate_label"));
-
-        gridLayout_3->addWidget(energyUpdate_label, 3, 0, 1, 1);
-
-        energyUpdate_spinBox = new QSpinBox(layoutWidget);
-        energyUpdate_spinBox->setObjectName(QStringLiteral("energyUpdate_spinBox"));
-
-        gridLayout_3->addWidget(energyUpdate_spinBox, 3, 1, 1, 1);
-
-        spreadUpdate_spinBox = new QSpinBox(layoutWidget);
-        spreadUpdate_spinBox->setObjectName(QStringLiteral("spreadUpdate_spinBox"));
-
-        gridLayout_3->addWidget(spreadUpdate_spinBox, 4, 1, 1, 1);
-
-        endDate_Label = new QLabel(layoutWidget);
-        endDate_Label->setObjectName(QStringLiteral("endDate_Label"));
-
-        gridLayout_3->addWidget(endDate_Label, 1, 0, 1, 1);
-
-        startDate = new QDateEdit(layoutWidget);
-        startDate->setObjectName(QStringLiteral("startDate"));
-
-        gridLayout_3->addWidget(startDate, 0, 1, 1, 1);
-
-        startDate_Label = new QLabel(layoutWidget);
-        startDate_Label->setObjectName(QStringLiteral("startDate_Label"));
-
-        gridLayout_3->addWidget(startDate_Label, 0, 0, 1, 1);
-
-        weightDate = new QDateEdit(layoutWidget);
+        weightDate = new QDateEdit(layoutWidget2);
         weightDate->setObjectName(QStringLiteral("weightDate"));
 
-        gridLayout_3->addWidget(weightDate, 2, 1, 1, 1);
+        gridLayout_14->addWidget(weightDate, 2, 1, 1, 1);
 
-        label_5 = new QLabel(layoutWidget);
+        SingleEarning_comboBox = new QComboBox(layoutWidget2);
+        SingleEarning_comboBox->setObjectName(QStringLiteral("SingleEarning_comboBox"));
+
+        gridLayout_14->addWidget(SingleEarning_comboBox, 0, 1, 1, 1);
+
+        HedgeEarning_comboBox = new QComboBox(layoutWidget2);
+        HedgeEarning_comboBox->setObjectName(QStringLiteral("HedgeEarning_comboBox"));
+
+        gridLayout_14->addWidget(HedgeEarning_comboBox, 1, 1, 1, 1);
+
+        SpreadEarning_spinBox = new QSpinBox(layoutWidget2);
+        SpreadEarning_spinBox->setObjectName(QStringLiteral("SpreadEarning_spinBox"));
+
+        gridLayout_14->addWidget(SpreadEarning_spinBox, 3, 1, 1, 1);
+
+        HedgeEarning_radioButton = new QRadioButton(layoutWidget2);
+        HedgeEarning_radioButton->setObjectName(QStringLiteral("HedgeEarning_radioButton"));
+
+        gridLayout_14->addWidget(HedgeEarning_radioButton, 1, 0, 1, 1);
+
+        SpreadEarning_radioButton = new QRadioButton(layoutWidget2);
+        SpreadEarning_radioButton->setObjectName(QStringLiteral("SpreadEarning_radioButton"));
+
+        gridLayout_14->addWidget(SpreadEarning_radioButton, 3, 0, 1, 1);
+
+        label_5 = new QLabel(layoutWidget2);
         label_5->setObjectName(QStringLiteral("label_5"));
 
-        gridLayout_3->addWidget(label_5, 2, 0, 1, 1);
+        gridLayout_14->addWidget(label_5, 2, 0, 1, 1);
 
 
-        gridLayout_13->addWidget(groupBox, 1, 0, 1, 1);
+        gridLayout_13->addWidget(groupBox_2, 3, 0, 1, 1);
 
 
         retranslateUi(Widget);
@@ -683,22 +695,6 @@ public:
         Widget->setWindowTitle(QApplication::translate("Widget", "Widget", Q_NULLPTR));
         chooseDataSource->setTitle(QApplication::translate("Widget", "\351\200\211\346\213\251\346\225\260\346\215\256\346\272\220", Q_NULLPTR));
         label_4->setText(QApplication::translate("Widget", "\351\200\211\346\213\251\346\225\260\346\215\256\346\272\220:", Q_NULLPTR));
-        choooseFuture->setTitle(QApplication::translate("Widget", "\346\234\237\350\264\247\345\256\236\346\227\266\345\237\272\345\267\256\345\233\276\357\274\232", Q_NULLPTR));
-        label->setText(QApplication::translate("Widget", "\346\234\237\350\264\247\345\223\201\347\247\215:", Q_NULLPTR));
-        label_2->setText(QApplication::translate("Widget", "\345\237\272\345\267\256\346\234\200\345\244\247\345\200\274:", Q_NULLPTR));
-        label_3->setText(QApplication::translate("Widget", "\345\237\272\345\267\256\346\234\200\345\260\217\345\200\274:", Q_NULLPTR));
-        showFutureSpread_Button->setText(QApplication::translate("Widget", "\346\230\276\347\244\272\345\237\272\345\267\256\345\233\276\345\203\217", Q_NULLPTR));
-        chooseAnnouncement->setTitle(QApplication::translate("Widget", "\351\200\211\346\213\251\345\205\254\345\221\212\344\277\241\346\201\257", Q_NULLPTR));
-        endTimeLabel_2->setText(QApplication::translate("Widget", "\345\205\254\345\221\212\347\273\210\346\255\242\346\227\266\351\227\264:", Q_NULLPTR));
-        startTimeLabel_2->setText(QApplication::translate("Widget", "\345\205\254\345\221\212\350\265\267\345\247\213\346\227\266\351\227\264:", Q_NULLPTR));
-        Annoucnement_Button->setText(QApplication::translate("Widget", "\346\230\276\347\244\272\345\205\254\345\221\212\344\277\241\346\201\257", Q_NULLPTR));
-        chooseTimeBox->setTitle(QApplication::translate("Widget", "\347\202\271\345\267\256\345\233\276\345\217\202\346\225\260\357\274\232", Q_NULLPTR));
-        EMA1Time_label->setText(QApplication::translate("Widget", "T1", Q_NULLPTR));
-        EMA2Time_label->setText(QApplication::translate("Widget", "T2", Q_NULLPTR));
-        DIFFTime_label->setText(QApplication::translate("Widget", "T3", Q_NULLPTR));
-        timeFre_label->setText(QApplication::translate("Widget", "\346\227\266\351\227\264\351\242\221\347\216\207:", Q_NULLPTR));
-        hedgeTarget_Label->setText(QApplication::translate("Widget", "\345\257\271\345\206\262\347\233\256\346\240\207:", Q_NULLPTR));
-        hedgeCount_label->setText(QApplication::translate("Widget", "\347\254\224\346\225\260\357\274\232", Q_NULLPTR));
         chooseEnergy_groupBox->setTitle(QApplication::translate("Widget", "\345\212\277\350\203\275\345\233\276\345\217\202\346\225\260\357\274\232", Q_NULLPTR));
         energyTime_label->setText(QApplication::translate("Widget", "\346\227\266\351\227\264\351\242\221\347\216\207:", Q_NULLPTR));
         label_11->setText(QApplication::translate("Widget", "\345\257\271\345\206\262\346\214\207\346\225\260\346\210\226\350\202\241\347\245\250[SH\346\210\226SZ\345\274\200\345\244\264]:", Q_NULLPTR));
@@ -707,7 +703,27 @@ public:
         label_10->setText(QApplication::translate("Widget", "\347\233\256\346\240\207\346\214\207\346\225\260\346\210\226\350\202\241\347\245\250[SH\346\210\226SZ\345\274\200\345\244\264]:", Q_NULLPTR));
         indexEnergyChart->setText(QApplication::translate("Widget", "\346\230\276\347\244\272\345\233\276\345\203\217", Q_NULLPTR));
         label_14->setText(QApplication::translate("Widget", "\345\233\276\345\203\217\346\225\260\347\233\256:", Q_NULLPTR));
+        chooseTimeBox->setTitle(QApplication::translate("Widget", "\347\202\271\345\267\256\345\233\276\345\217\202\346\225\260\357\274\232", Q_NULLPTR));
+        EMA1Time_label->setText(QApplication::translate("Widget", "T1", Q_NULLPTR));
+        EMA2Time_label->setText(QApplication::translate("Widget", "T2", Q_NULLPTR));
+        DIFFTime_label->setText(QApplication::translate("Widget", "T3", Q_NULLPTR));
+        timeFre_label->setText(QApplication::translate("Widget", "\346\227\266\351\227\264\351\242\221\347\216\207:", Q_NULLPTR));
+        hedgeTarget_Label->setText(QApplication::translate("Widget", "\345\257\271\345\206\262\347\233\256\346\240\207:", Q_NULLPTR));
+        groupBox->setTitle(QApplication::translate("Widget", "\351\200\211\346\213\251\346\227\266\351\227\264,\351\242\221\347\216\207:", Q_NULLPTR));
+        label_7->setText(QApplication::translate("Widget", "\345\256\236\346\227\266\347\202\271\345\267\256\345\233\276\346\233\264\346\226\260\351\242\221\347\216\207[\347\247\222]", Q_NULLPTR));
+        energyUpdate_label->setText(QApplication::translate("Widget", "\345\256\236\346\227\266\345\212\277\350\203\275\345\233\276\346\233\264\346\226\260\351\242\221\347\216\207[\347\247\222]", Q_NULLPTR));
+        endDate_Label->setText(QApplication::translate("Widget", "\347\273\210\346\255\242\346\227\266\351\227\264:", Q_NULLPTR));
+        startDate_Label->setText(QApplication::translate("Widget", "\350\265\267\345\247\213\346\227\266\351\227\264:", Q_NULLPTR));
+        chooseAnnouncement->setTitle(QApplication::translate("Widget", "\351\200\211\346\213\251\345\205\254\345\221\212\344\277\241\346\201\257", Q_NULLPTR));
+        endTimeLabel_2->setText(QApplication::translate("Widget", "\345\205\254\345\221\212\347\273\210\346\255\242\346\227\266\351\227\264:", Q_NULLPTR));
+        startTimeLabel_2->setText(QApplication::translate("Widget", "\345\205\254\345\221\212\350\265\267\345\247\213\346\227\266\351\227\264:", Q_NULLPTR));
+        Annoucnement_Button->setText(QApplication::translate("Widget", "\346\230\276\347\244\272\345\205\254\345\221\212\344\277\241\346\201\257", Q_NULLPTR));
         CalendarBox->setTitle(QApplication::translate("Widget", "\346\227\245\345\216\206", Q_NULLPTR));
+        choooseFuture->setTitle(QApplication::translate("Widget", "\346\234\237\350\264\247\345\256\236\346\227\266\345\237\272\345\267\256\345\233\276\357\274\232", Q_NULLPTR));
+        label->setText(QApplication::translate("Widget", "\346\234\237\350\264\247\345\223\201\347\247\215:", Q_NULLPTR));
+        label_2->setText(QApplication::translate("Widget", "\345\237\272\345\267\256\346\234\200\345\244\247\345\200\274:", Q_NULLPTR));
+        label_3->setText(QApplication::translate("Widget", "\345\237\272\345\267\256\346\234\200\345\260\217\345\200\274:", Q_NULLPTR));
+        showFutureSpread_Button->setText(QApplication::translate("Widget", "\346\230\276\347\244\272\345\237\272\345\267\256\345\233\276\345\203\217", Q_NULLPTR));
         strategy_label->setText(QApplication::translate("Widget", "\347\273\204\345\220\210\344\277\241\346\201\257\357\274\232", Q_NULLPTR));
         chooseStrategyDir_Button->setText(QApplication::translate("Widget", "\351\200\211\346\213\251\347\273\204\345\220\210\346\226\207\344\273\266\345\244\271", Q_NULLPTR));
         strategy_label_2->setText(QApplication::translate("Widget", "\345\257\271\345\206\262\347\273\204\345\220\210\344\277\241\346\201\257\357\274\232", Q_NULLPTR));
@@ -718,14 +734,12 @@ public:
         portfolioHedgedHistSpreadChart->setText(QApplication::translate("Widget", "\345\216\206\345\217\262\347\273\204\345\220\210\345\257\271\345\206\262\347\202\271\345\267\256\345\233\276", Q_NULLPTR));
         portfolioHedgedRealSpreadChart->setText(QApplication::translate("Widget", "\345\256\236\346\227\266\347\273\204\345\220\210\345\257\271\345\206\262\347\202\271\345\267\256\345\233\276", Q_NULLPTR));
         portfolioHedgedEnergyChart->setText(QApplication::translate("Widget", "\347\273\204\345\220\210\345\257\271\345\206\262\345\212\277\350\203\275\345\233\276", Q_NULLPTR));
-        isNetValueHedged->setText(QApplication::translate("Widget", "\346\230\257\345\220\246\345\207\200\345\200\274\345\257\271\345\206\262", Q_NULLPTR));
         programInfo_Label->setText(QApplication::translate("Widget", "------------ \347\250\213\345\272\217\350\277\220\350\241\214\344\277\241\346\201\257 ------------", Q_NULLPTR));
-        groupBox->setTitle(QApplication::translate("Widget", "\351\200\211\346\213\251\346\227\266\351\227\264,\351\242\221\347\216\207:", Q_NULLPTR));
-        label_7->setText(QApplication::translate("Widget", "\345\256\236\346\227\266\347\202\271\345\267\256\345\233\276\346\233\264\346\226\260\351\242\221\347\216\207[\347\247\222]", Q_NULLPTR));
-        energyUpdate_label->setText(QApplication::translate("Widget", "\345\256\236\346\227\266\345\212\277\350\203\275\345\233\276\346\233\264\346\226\260\351\242\221\347\216\207[\347\247\222]", Q_NULLPTR));
-        endDate_Label->setText(QApplication::translate("Widget", "\347\273\210\346\255\242\346\227\266\351\227\264:", Q_NULLPTR));
-        startDate_Label->setText(QApplication::translate("Widget", "\350\265\267\345\247\213\346\227\266\351\227\264:", Q_NULLPTR));
-        label_5->setText(QApplication::translate("Widget", "\346\235\203\351\207\215\346\227\266\351\227\264:", Q_NULLPTR));
+        groupBox_2->setTitle(QApplication::translate("Widget", "\345\257\271\345\206\262\346\226\271\345\274\217\357\274\232", Q_NULLPTR));
+        SingleEarning_radioButton->setText(QApplication::translate("Widget", "\344\270\215\345\257\271\345\206\262\357\274\232", Q_NULLPTR));
+        HedgeEarning_radioButton->setText(QApplication::translate("Widget", "\345\207\200\345\200\274\345\257\271\345\206\262\357\274\232", Q_NULLPTR));
+        SpreadEarning_radioButton->setText(QApplication::translate("Widget", "\347\202\271\345\267\256\345\257\271\345\206\262[\347\254\224\346\225\260]\357\274\232", Q_NULLPTR));
+        label_5->setText(QApplication::translate("Widget", "\346\235\203\351\207\215\346\227\266\351\227\264\357\274\232", Q_NULLPTR));
     } // retranslateUi
 
 };

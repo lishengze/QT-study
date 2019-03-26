@@ -37,7 +37,6 @@
 #include "xlsxdocument.h"
 #include "futurechart.h"
 #include "database.h"
-#include "csschartformone.h"
 #include "csschartform.h"
 #include "time_func.h"
 
@@ -110,6 +109,7 @@ void Widget::initWidegt()
 {
     initDateTimeWidget();
     initHedgedWidget();
+    initHedgeTypeWidget();
     initEnergyWidget();
     initAnnounceWidget();
     initDatasourceWidget();
@@ -183,6 +183,28 @@ void Widget::initDateTimeWidget()
     ui->spreadUpdate_spinBox->setMinimum(4);
 }
 
+void Widget::initHedgeTypeWidget()
+{
+    ui->spreadUpdate_spinBox->setValue(2);
+    ui->spreadUpdate_spinBox->setMinimum(1);
+
+    ui->HedgeEarning_comboBox->addItem(QString("个股权重不变"), "-2");
+    ui->HedgeEarning_comboBox->addItem(QString("个股数量不变"), "-3");
+    ui->HedgeEarning_comboBox->addItem(QString(""), "-4");
+    ui->HedgeEarning_comboBox->setCurrentText("个股数量不变");
+    
+    ui->SingleEarning_comboBox->addItem(QString("个股权重不变"), "0");
+    ui->SingleEarning_comboBox->addItem(QString("个股数量不变"), "-1");    
+    ui->SingleEarning_comboBox->addItem(QString(""), "-4");
+    ui->SingleEarning_comboBox->setCurrentText("");
+
+    m_hedgedType = -3;
+    m_hedgedString = "净值对冲, 个股数量不变";  
+    ui->HedgeEarning_radioButton->setChecked(true);
+    ui->SpreadEarning_radioButton->setChecked(false);
+    ui->SingleEarning_radioButton->setChecked(false);   
+}
+
 void Widget::initHedgedWidget()
 {
     ui->hedgeTarget_comboBox->setCurrentText(QString("沪深300"));
@@ -193,8 +215,8 @@ void Widget::initHedgedWidget()
     ui->hedgeTarget_comboBox->addItem(QString("中证500"), "000905");
     ui->hedgeTarget_comboBox->addItem(QString("中证800"), "000906");
     ui->hedgeTarget_comboBox->addItem(QString("中证1000"), "000852");
-    ui->hedgeCount_spinBox->setValue(2);
-    ui->hedgeCount_spinBox->setRange(-10, 100);
+    // ui->hedgeCount_spinBox->setValue(2);
+    // ui->hedgeCount_spinBox->setRange(-10, 100);
 
     QStringList timeFre;
     timeFre << "5m"
@@ -458,7 +480,8 @@ void Widget::show_strategyTable_contextMenu(QPoint pos)
     QAction *refreshTable = new QAction(QString("刷新"), ui->strategy_table);
     QAction *deleteFile = new QAction(QString("删除"), ui->strategy_table);
 
-    connect(refreshTable, SIGNAL(triggered()), this, SLOT(refresh_strategy_table()));
+    connect(refreshTable, SIGNAL(triggered()), 
+            this, SLOT(refresh_strategy_table()));
     connect(deleteFile, SIGNAL(triggered()), this, SLOT(delete_strategy_file()));
 
     menu->addAction(refreshTable);
@@ -540,6 +563,186 @@ void Widget::delete_portfolio_file()
         }
     }
     setBuySalePortfolioTableWidget();
+}
+
+QList<int> Widget::getMACDParams()
+{
+    int EVA1Time = ui->EMA1TimeSpinBox->value();
+    int EVA2Time = ui->EMA2TimeSpinBox->value();
+    int DIFFTime = ui->DIFFTimeSpinBox->value();
+    QList<int> macdTime;
+    macdTime << EVA1Time << EVA2Time << DIFFTime;
+    return macdTime;
+}
+
+QList<int> Widget::getCSSParams()
+{
+    QList<int> result;
+    for (int i = 0; i < m_cssParamListWidget->count(); ++i)
+    {
+        QListWidgetItem *pItem = m_cssParamListWidget->item(i);
+        QSpinBox *pSpinBox = (QSpinBox *)m_cssParamListWidget->itemWidget(pItem);
+        result.append(pSpinBox->value());
+    }
+    return result;
+}
+
+void Widget::checkBuySalePortfolio()
+{
+    if (m_oriPortfolio.size() == 0)
+    {
+        QMessageBox::critical(NULL, "Error", QString("还未选择原始组合"));
+        return;
+    }
+
+    if (m_hedgedPortfolio.size() == 0)
+    {
+        QMessageBox::critical(NULL, "Error", QString("还未选择对冲组合"));
+        return;
+    }
+
+    if (m_oriPortfolio.find("Error") != m_oriPortfolio.end())
+    {
+        QMessageBox::critical(NULL, "Error", QString("%1 中没有正确的原始组合信息").arg(m_oriPortfolioName));
+        return;
+    }
+
+    if (m_hedgedPortfolio.find("Error") != m_hedgedPortfolio.end())
+    {
+        QMessageBox::critical(NULL, "Error", QString("%1 中没有正确的对冲组合信息").arg(m_hedgedPortfolioName));
+        return;
+    }
+}
+
+void Widget::getAveParams(QList<int> &aveNumbList, QList<bool> &isEMAList)
+{
+    for (int i = 0; i < m_aveParamListWidget->count(); ++i)
+    {
+        QListWidgetItem *pItem = m_aveParamListWidget->item(i);
+        QSpinBox *pSpinBox = (QSpinBox *)m_aveParamListWidget->itemWidget(pItem);
+        int currValue = pSpinBox->value();
+        if (currValue > 0)
+        {
+            aveNumbList.append(currValue);
+            isEMAList.append(false);
+        }
+        else if (currValue < 0)
+        {
+            aveNumbList.append(0 - currValue);
+            isEMAList.append(true);
+        }
+    }
+}
+
+QStringList Widget::getEnergyDataFreq()
+{
+    QStringList result;
+    for (int i = 0; i < m_energyDataFreqListWidget->count(); ++i)
+    {
+        QListWidgetItem *pItem = m_energyDataFreqListWidget->item(i);
+        QWidget *pWidget = m_energyDataFreqListWidget->itemWidget(pItem);
+        QCheckBox *pCheckBox = (QCheckBox *)pWidget;
+        if (pCheckBox->isChecked())
+        {
+            QString strText = pCheckBox->text();
+            result.append(strText);
+        }
+    }
+    return result;
+}
+
+bool Widget::checkCodeInDatabase(QString codeName, QString dbhost, QStringList timeTypeList)
+{
+    bool result = true;
+
+    if (!m_isDev)
+    {
+        if (codeName != "")
+        {
+            for (auto timeType : timeTypeList)
+            {
+                if (m_databaseTableNameMap[timeType].indexOf(codeName) < 0)
+                {
+                    qDebug() << QString("TimeType: %1, CodeName: %2").arg(timeType).arg(codeName);
+                    QMessageBox::critical(NULL, "Error", QString("选择的代码: %1 不在数据库中").arg(codeName));
+                    result = false;
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+void Widget::closeEvent(QCloseEvent *event)
+{
+    event;
+    for (int i = 0; i < m_chartViews.size(); ++i)
+    {
+        if (NULL != m_chartViews[i])
+        {
+            m_chartViews[i]->close();
+            delete m_chartViews[i];
+            m_chartViews[i] = NULL;            
+        }
+    }
+}
+
+void Widget::on_SpreadEarning_spinBox_editingFinished()
+{
+    m_hedgedType = ui->SpreadEarning_spinBox->value();
+    m_hedgedString = QString("点差对冲, 笔数: %1").arg(m_hedgedType);
+
+    ui->SpreadEarning_radioButton->setChecked(true);
+    ui->SingleEarning_radioButton->setChecked(false);
+    ui->HedgeEarning_radioButton->setChecked(false);
+}
+
+void Widget::on_HedgeEarning_comboBox_activated(const QString &arg1)
+{
+    if (arg1 != "")
+    {
+        m_hedgedType = ui->HedgeEarning_comboBox->currentData().toInt();
+        qDebug() << arg1 << m_hedgedType;
+
+        if (m_hedgedType == -2)
+        {
+            m_hedgedString = "个股权重不变, 净值对冲";
+        }
+        else
+        {
+            m_hedgedString = "个股数量不变, 净值对冲";
+        }    
+        ui->SpreadEarning_radioButton->setChecked(false);
+        ui->SingleEarning_radioButton->setChecked(false);
+        ui->HedgeEarning_radioButton->setChecked(true);        
+    }
+}
+
+void Widget::on_SingleEarning_comboBox_activated(const QString &arg1)
+{
+    if (arg1 != "")
+    {
+        m_hedgedType = ui->SingleEarning_comboBox->currentData().toInt();
+        qDebug() << arg1 << m_hedgedType;
+
+        if (m_hedgedType == 0)
+        {
+            m_hedgedString = "个股权重不变, 单纯净值";
+        }
+        else
+        {
+            m_hedgedString = "个股数量不变, 单纯净值";
+        }
+        ui->SpreadEarning_radioButton->setChecked(false);
+        ui->SingleEarning_radioButton->setChecked(true);
+        ui->HedgeEarning_radioButton->setChecked(false);          
+    }
+}
+
+void Widget::on_weightDate_editingFinished()
+{
+    m_weightDate = ui->weightDate->date().toString("yyyyMMdd");
 }
 
 void Widget::on_strategy_table_clicked(const QModelIndex &index)
@@ -832,7 +1035,7 @@ void Widget::on_portfolioIndexHistSpreadChart_clicked()
         hedgeParam.m_startDate      = ui->startDate->date().toString("yyyyMMdd");
         hedgeParam.m_endDate        = ui->endDate->date().toString("yyyyMMdd");
         hedgeParam.m_timeType       = ui->dataFrequency->currentText();
-        hedgeParam.m_hedgedType     = ui->hedgeCount_spinBox->value();
+        hedgeParam.m_hedgedType     = m_hedgedType;
         hedgeParam.m_oriPortfolio   = m_oriPortfolio;
         hedgeParam.m_portfolioName  = m_oriPortfolioName;
         hedgeParam.m_macdTime       = getMACDParams();
@@ -854,7 +1057,8 @@ void Widget::on_portfolioIndexHistSpreadChart_clicked()
                      + QString("起始时间: %1 \n终止时间: %2 \n权重日期: %3\n")
                         .arg(hedgeParam.m_startDate).arg(hedgeParam.m_endDate).arg(hedgeParam.m_weightDate)
                      + QString("数据频率: %1\n").arg(hedgeParam.m_timeType) 
-                     + QString("对冲目标: %1, 对冲笔数: %2\n").arg(hedgeParam.m_hedgedCode).arg(hedgeParam.m_hedgedType) 
+                     + QString("对冲目标: %1 \n").arg(hedgeParam.m_hedgedCode)
+                     + QString("对冲类型: %1 \n").arg(m_hedgedString) 
                      + QString("T1: %1, T2: %2, T3: %3")
                        .arg(hedgeParam.m_macdTime[0]).arg(hedgeParam.m_macdTime[1]).arg(hedgeParam.m_macdTime[2]);
 
@@ -894,14 +1098,13 @@ void Widget::on_portfolioIndexRealSpreadChart_clicked()
 
         dbParam.m_dbhost                = ui->dataSource_ComboBox->currentText();
         hedgeParam.m_weightDate         = getLastTradingDate(ui->weightDate->date()).toString("yyyyMMdd");        
-        hedgeParam.m_hedgedType         = ui->hedgeCount_spinBox->value();
+        hedgeParam.m_hedgedType         = m_hedgedType;
         hedgeParam.m_oriPortfolio       = m_oriPortfolio;
         hedgeParam.m_portfolioName      = m_oriPortfolioName;
         hedgeParam.m_macdTime           = getMACDParams();
         hedgeParam.m_isRealTime         = true;
         hedgeParam.m_isPortfolio        = true;
         hedgeParam.m_spreadUpdateMSecs  = ui->spreadUpdate_spinBox->value() * 1000;
-        //  hedgeParam.m_hedgedCode        = ui->hedgeTarget_comboBox->currentData().toString();
         if (hedgeParam.m_hedgedType != 0)
         {
             hedgeParam.m_hedgedCode     = ui->hedgeTarget_comboBox->currentData().toString();
@@ -911,8 +1114,9 @@ void Widget::on_portfolioIndexRealSpreadChart_clicked()
 
         QString info = QString("当前数据源为: %1\n组合名称: %2, 组合中股票数目为: %3\n")
                        .arg(dbParam.m_dbhost).arg(m_oriPortfolioName).arg(m_oriPortfolio.size()) 
-                     + QString("对冲目标: %1, 对冲笔数: %2\n")
-                       .arg(hedgeParam.m_hedgedCode).arg(hedgeParam.m_hedgedType) 
+                     + QString("对冲目标: %1\n")
+                       .arg(hedgeParam.m_hedgedCode)
+                     + QString("对冲类型: %1 \n").arg(m_hedgedString) 
                      + QString("T1: %1, T2: %2, T3: %3")
                        .arg(hedgeParam.m_macdTime[0]).arg(hedgeParam.m_macdTime[1]).arg(hedgeParam.m_macdTime[2]);
 
@@ -952,7 +1156,6 @@ void Widget::on_portfolioIndexEnergyChart_clicked()
     HedgedParam hedgeParam;
     CSSParam cssParam;
 
-    setHedgedString();
 
     dbParam.m_dbhost                = ui->dataSource_ComboBox->currentText();
     hedgeParam.m_startDate          = ui->startDate->date().toString("yyyyMMdd");
@@ -960,9 +1163,8 @@ void Widget::on_portfolioIndexEnergyChart_clicked()
     hedgeParam.m_weightDate         = getLastTradingDate(ui->weightDate->date()).toString("yyyyMMdd");
     hedgeParam.m_oriPortfolio       = m_oriPortfolio;
     hedgeParam.m_portfolioName      = m_oriPortfolioName; 
-    hedgeParam.m_hedgedType         = ui->hedgeCount_spinBox->value();
+    hedgeParam.m_hedgedType         = m_hedgedType;
     hedgeParam.m_energyUpdateMSecs  = ui->energyUpdate_spinBox->value() * 1000;
-
     if (hedgeParam.m_hedgedType != 0)
     {
         hedgeParam.m_hedgedCode = ui->hedgeTarget_comboBox->currentData().toString();
@@ -1026,7 +1228,7 @@ void Widget::on_portfolioIndexEnergyChart_clicked()
     QString hedgedInfo = "";
     if (m_hedgedType != 0)
     {
-        hedgedInfo = QString("对冲目标: %1, 对冲笔数: %2 \n").arg(hedgeParam.m_hedgedCode).arg(hedgeParam.m_hedgedType);
+        hedgedInfo = QString("对冲目标: %1\n").arg(hedgeParam.m_hedgedCode);
     }
     hedgedInfo += QString("对冲方式: %1\n").arg(m_hedgedString);
 
@@ -1079,7 +1281,6 @@ void Widget::on_portfolioIndexEnergyChart_clicked()
 void Widget::on_portfolioHedgedHistSpreadChart_clicked()
 {
     checkBuySalePortfolio();
-    setHedgedString();
 
     DatabaseParam dbParam;
     HedgedParam hedgeParam;
@@ -1095,8 +1296,14 @@ void Widget::on_portfolioHedgedHistSpreadChart_clicked()
     hedgeParam.m_timeType           = ui->dataFrequency->currentText();    
     hedgeParam.m_isPortfolioHedge   = true;
     hedgeParam.m_isPortfolio        = true;
-    hedgeParam.m_macdTime           = getMACDParams();
+    hedgeParam.m_macdTime           = getMACDParams();    
     hedgeParam.setCodeList();
+
+    if (hedgeParam.m_hedgedType != MKVALUE_WEIGHT_HEDGE && hedgeParam.m_hedgedType != CLVALUE_WEIGHT_HEDGE)
+    {
+        QMessageBox::critical(NULL, "Error", QString("未选择正确的净值对冲方式"));
+        return;        
+    }
 
     QString info = QString("数据源为: %1 \n").arg(dbParam.m_dbhost) 
                  + QString("原始组合名称: %1,  组合中股票数目为: %2 \n").arg(m_oriPortfolioName).arg(m_oriPortfolio.size()) 
@@ -1127,8 +1334,6 @@ void Widget::on_portfolioHedgedHistSpreadChart_clicked()
 void Widget::on_portfolioHedgedRealSpreadChart_clicked()
 {
     checkBuySalePortfolio();
-    setHedgedString();
-
     DatabaseParam dbParam;
     HedgedParam hedgeParam;
 
@@ -1145,6 +1350,12 @@ void Widget::on_portfolioHedgedRealSpreadChart_clicked()
     hedgeParam.m_macdTime           = getMACDParams();
     hedgeParam.m_spreadUpdateMSecs  = ui->spreadUpdate_spinBox->value() * 1000;
     hedgeParam.setCodeList();
+
+    if (hedgeParam.m_hedgedType != MKVALUE_WEIGHT_HEDGE && hedgeParam.m_hedgedType != CLVALUE_WEIGHT_HEDGE)
+    {
+        QMessageBox::critical(NULL, "Error", QString("未选择正确的净值对冲方式"));
+        return;        
+    }
 
     QString info = QString("数据源为: %1 \n").arg(dbParam.m_dbhost) 
                  + QString("原始组合名称: %1,  组合中股票数目为: %2 \n")
@@ -1176,7 +1387,6 @@ void Widget::on_portfolioHedgedRealSpreadChart_clicked()
 void Widget::on_portfolioHedgedEnergyChart_clicked()
 {
     checkBuySalePortfolio();
-    setHedgedString();
 
     DatabaseParam dbParam;
     HedgedParam hedgeParam;
@@ -1194,6 +1404,7 @@ void Widget::on_portfolioHedgedEnergyChart_clicked()
     hedgeParam.m_isCSSChart         = true; 
     hedgeParam.m_isPortfolio        = true;        
     hedgeParam.m_isPortfolioHedge   = true;
+
     if (ui->endDate->date() == QDateTime::currentDateTime().date())
     {
         hedgeParam.m_isRealTime   = true;
@@ -1211,6 +1422,12 @@ void Widget::on_portfolioHedgedEnergyChart_clicked()
     cssParam.m_mainAveNumb      = cssAveNumbList[0];
     cssParam.m_subAveNumb       = cssAveNumbList[1];
     cssParam.m_energyAveNumb    = cssAveNumbList[2];
+
+    if (hedgeParam.m_hedgedType != MKVALUE_WEIGHT_HEDGE && hedgeParam.m_hedgedType != CLVALUE_WEIGHT_HEDGE)
+    {
+        QMessageBox::critical(NULL, "Error", QString("未选择正确的净值对冲方式"));
+        return;        
+    }
 
     if (timeTypeList.size() == 0)
     {
@@ -1283,34 +1500,6 @@ void Widget::on_portfolioHedgedEnergyChart_clicked()
     }
 }
 
-void Widget::on_isNetValueHedged_clicked(bool checked)
-{
-    if (checked)
-    {
-        m_hedgedType = -1;
-    }
-    else
-    {
-        m_hedgedType = 1;
-    }
-}
-
-void Widget::setHedgedString()
-{
-    if (m_hedgedType == -1)
-    {
-        m_hedgedString = "净值对冲";
-    }
-    else if (m_hedgedType == 0)
-    {
-        m_hedgedString = "单纯净值";
-    }
-    else
-    {
-        m_hedgedString = "点差对冲";
-    }
-}
-
 void Widget::updateProgramInfo_slot(QString info, bool isWarning)
 {
    updateProgramInfo(ui->programInfo_tableView, info);
@@ -1335,129 +1524,67 @@ void Widget::windowClose_slot(int windowID, QString windowName)
     }
 }
 
-void Widget::closeEvent(QCloseEvent *event)
+void Widget::on_SpreadEarning_spinBox_valueChanged(const QString &arg1)
 {
-    event;
-    for (int i = 0; i < m_chartViews.size(); ++i)
+    m_hedgedType = ui->SpreadEarning_spinBox->value();
+    m_hedgedString = QString("点差对冲, 笔数: %1").arg(m_hedgedType);
+
+    ui->SpreadEarning_radioButton->setChecked(true);
+    ui->SingleEarning_radioButton->setChecked(false);
+    ui->HedgeEarning_radioButton->setChecked(false);
+    arg1;
+}
+
+void Widget::on_SingleEarning_radioButton_clicked(bool checked)
+{
+    if (checked)
     {
-        if (NULL != m_chartViews[i])
+        m_hedgedType = ui->SingleEarning_comboBox->currentData().toInt();
+
+        if (m_hedgedType == 0)
         {
-            m_chartViews[i]->close();
-            delete m_chartViews[i];
-            m_chartViews[i] = NULL;            
+            m_hedgedString = "个股权重不变, 单纯净值";
         }
-    }
-}
-
-QList<int> Widget::getMACDParams()
-{
-    int EVA1Time = ui->EMA1TimeSpinBox->value();
-    int EVA2Time = ui->EMA2TimeSpinBox->value();
-    int DIFFTime = ui->DIFFTimeSpinBox->value();
-    QList<int> macdTime;
-    macdTime << EVA1Time << EVA2Time << DIFFTime;
-    return macdTime;
-}
-
-QList<int> Widget::getCSSParams()
-{
-    QList<int> result;
-    for (int i = 0; i < m_cssParamListWidget->count(); ++i)
-    {
-        QListWidgetItem *pItem = m_cssParamListWidget->item(i);
-        QSpinBox *pSpinBox = (QSpinBox *)m_cssParamListWidget->itemWidget(pItem);
-        result.append(pSpinBox->value());
-    }
-    return result;
-}
-
-void Widget::checkBuySalePortfolio()
-{
-    if (m_oriPortfolio.size() == 0)
-    {
-        QMessageBox::critical(NULL, "Error", QString("还未选择原始组合"));
-        return;
-    }
-
-    if (m_hedgedPortfolio.size() == 0)
-    {
-        QMessageBox::critical(NULL, "Error", QString("还未选择对冲组合"));
-        return;
-    }
-
-    if (m_oriPortfolio.find("Error") != m_oriPortfolio.end())
-    {
-        QMessageBox::critical(NULL, "Error", QString("%1 中没有正确的原始组合信息").arg(m_oriPortfolioName));
-        return;
-    }
-
-    if (m_hedgedPortfolio.find("Error") != m_hedgedPortfolio.end())
-    {
-        QMessageBox::critical(NULL, "Error", QString("%1 中没有正确的对冲组合信息").arg(m_hedgedPortfolioName));
-        return;
-    }
-}
-
-void Widget::getAveParams(QList<int> &aveNumbList, QList<bool> &isEMAList)
-{
-    for (int i = 0; i < m_aveParamListWidget->count(); ++i)
-    {
-        QListWidgetItem *pItem = m_aveParamListWidget->item(i);
-        QSpinBox *pSpinBox = (QSpinBox *)m_aveParamListWidget->itemWidget(pItem);
-        int currValue = pSpinBox->value();
-        if (currValue > 0)
+        else
         {
-            aveNumbList.append(currValue);
-            isEMAList.append(false);
+            m_hedgedString = "个股数量不变, 单纯净值";
         }
-        else if (currValue < 0)
-        {
-            aveNumbList.append(0 - currValue);
-            isEMAList.append(true);
-        }
+        ui->SpreadEarning_radioButton->setChecked(false);
+        ui->SingleEarning_radioButton->setChecked(true);
+        ui->HedgeEarning_radioButton->setChecked(false);            
     }
 }
 
-QStringList Widget::getEnergyDataFreq()
+void Widget::on_HedgeEarning_radioButton_clicked(bool checked)
 {
-    QStringList result;
-    for (int i = 0; i < m_energyDataFreqListWidget->count(); ++i)
+    if (checked)
     {
-        QListWidgetItem *pItem = m_energyDataFreqListWidget->item(i);
-        QWidget *pWidget = m_energyDataFreqListWidget->itemWidget(pItem);
-        QCheckBox *pCheckBox = (QCheckBox *)pWidget;
-        if (pCheckBox->isChecked())
+        m_hedgedType = ui->HedgeEarning_comboBox->currentData().toInt();
+
+        if (m_hedgedType == -2)
         {
-            QString strText = pCheckBox->text();
-            result.append(strText);
+            m_hedgedString = "个股权重不变, 净值对冲";
         }
+        else
+        {
+            m_hedgedString = "个股数量不变, 净值对冲";
+        }    
+        ui->SpreadEarning_radioButton->setChecked(false);
+        ui->SingleEarning_radioButton->setChecked(false);
+        ui->HedgeEarning_radioButton->setChecked(true);           
     }
-    return result;
 }
 
-bool Widget::checkCodeInDatabase(QString codeName, QString dbhost, QStringList timeTypeList)
+void Widget::on_SpreadEarning_radioButton_clicked(bool checked)
 {
-    bool result = true;
-
-    if (!m_isDev)
+    if (checked)
     {
-        if (codeName != "")
-        {
-            for (auto timeType : timeTypeList)
-            {
-                if (m_databaseTableNameMap[timeType].indexOf(codeName) < 0)
-                {
-                    qDebug() << QString("TimeType: %1, CodeName: %2").arg(timeType).arg(codeName);
-                    QMessageBox::critical(NULL, "Error", QString("选择的代码: %1 不在数据库中").arg(codeName));
-                    result = false;
-                }
-            }
-        }
+        m_hedgedType = ui->SpreadEarning_spinBox->value();
+        m_hedgedString = QString("点差对冲, 笔数: %1").arg(m_hedgedType);
+
+        ui->SpreadEarning_radioButton->setChecked(true);
+        ui->SingleEarning_radioButton->setChecked(false);
+        ui->HedgeEarning_radioButton->setChecked(false);
     }
 
-    return result;
-}
-
-void comment()
-{
 }

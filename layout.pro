@@ -50,9 +50,13 @@ SOURCES  += main.cpp\
             workprogressdialog.cpp \
             ../public-files/public-function/energy_compute.cpp \
             ../public-files/public-function/spread_compute.cpp \
-            datastruct.cpp \
+#            datastruct.cpp \
 #            testdialog.cpp
-    widgetprocess.cpp
+    widgetprocess.cpp \
+    ../public-files/public-class/datastruct.cpp \
+    addwarningform.cpp \
+    charttableform.cpp \
+    allwarningform.cpp
 
 HEADERS  += widget.h \
             test.h \
@@ -86,9 +90,13 @@ HEADERS  += widget.h \
             workprogressdialog.h \
             ../public-files/public-function/energy_compute.h \
             ../public-files/public-function/spread_compute.h \
-            datastruct.h \
+#            datastruct.h \
 #            testdialog.h
-    widgetprocess.h
+    widgetprocess.h \
+    ../public-files/public-class/datastruct.h \
+    addwarningform.h \
+    charttableform.h \
+    allwarningform.h
 
 FORMS    += widget.ui \
             chartform.ui \
@@ -100,6 +108,9 @@ FORMS    += widget.ui \
             csschartform.ui \
             workprogressdialog.ui \
 #            testdialog.ui
+    addwarningform.ui \
+    charttableform.ui \
+    allwarningform.ui
 
 include(qtxlsx/src/xlsx/qtxlsx.pri)
 

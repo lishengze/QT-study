@@ -1,6 +1,10 @@
 ﻿#include <cstdlib>
 #include <QString>
 #include <QStringList>
+
+#include <iostream>
+#include <exception>
+
 #include "historydata.h"
 #include "toolfunc.h"
 #include "secode_func.h"
@@ -17,8 +21,10 @@ using std::unique_lock;
 #pragma execution_character_set("utf-8")
 
 
-HistoryData::HistoryData(DatabaseParam dbParam, HedgedParam hedgedParam,                           
-                         CSSParam cssParam,  int dataID,
+HistoryData::HistoryData(DatabaseParam dbParam, 
+                         HedgedParam hedgedParam,                           
+                         CSSParam cssParam,  
+                         int dataID,
                          QObject *parent):
                          m_hedgedParam(hedgedParam),
                          m_dbParam(dbParam),
@@ -27,14 +33,17 @@ HistoryData::HistoryData(DatabaseParam dbParam, HedgedParam hedgedParam,
                          m_isInit(false),
                          QObject(parent)
 {
-    // initCommonData();    
+
 }    
 
-// 数据库所有表列表
-HistoryData::HistoryData(QString dbhost, QStringList timeTypeList, QObject *parent) : 
-    m_dbParam(dbhost), m_timeTypeList(timeTypeList), QObject(parent)
+HistoryData::HistoryData(QString dbhost, 
+                         QStringList timeTypeList, 
+                         QObject *parent): 
+                         m_dbParam(dbhost), 
+                         m_timeTypeList(timeTypeList), 
+                         QObject(parent)
 {
-    // initDatabase();
+
 }
 
 HistoryData::~HistoryData()
@@ -115,7 +124,8 @@ void HistoryData::initCommonData()
         setReadPortfolioDataThreads();
         initPortfolioIndexHedgeMetaInfo();
 
-        if (m_hedgedParam.m_hedgedType <= 0)
+        if (m_hedgedParam.m_hedgedType == CLVALUE_WEIGHT_EARNING 
+         || m_hedgedParam.m_hedgedType == CLVALUE_WEIGHT_HEDGE)
         {
             transPortfolio();
         }
@@ -515,37 +525,55 @@ void HistoryData::sendRealtimeIndexData_slot(QList<double> indexData)
 
 void HistoryData::sendRealtimeSpreadData_slot(QList<double> oridata, QMap<QString, double> lastCodeClose)
 {
-    m_curSelectData = oridata[0];
-    m_curHedgedData = oridata[2];
-    m_curCodeClose  = lastCodeClose;
+    try
+    {
+        m_curSelectData = oridata[0];
+        m_curHedgedData = oridata[2];
+        m_curCodeClose  = lastCodeClose;
 
-    computeCurEarning();
+        computeCurEarning();
 
-    m_oriTypeList.append((m_earningList.last() + m_earningList[m_earningList.size() - 2]) / 2);
+        m_oriTypeList.append((m_earningList.last() + m_earningList[m_earningList.size() - 2]) / 2);
 
-    m_curEpochRealtime = oridata[1];
+        m_curEpochRealtime = oridata[1];
 
-    computeRealtimeCSSData();
+        computeRealtimeCSSData();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
 }
 
 void HistoryData::sendRealtimeSpreadMACDData_slot(QList<double> oriData, QMap<QString, double> lastCodeClose)
 {
-    m_curSelectData = oriData[0];
-    m_curHedgedData = oriData.last();
-    m_curCodeClose  = lastCodeClose;
+    try
+    {
+        m_curSelectData = oriData[0];
+        m_curHedgedData = oriData.last();
+        m_curCodeClose  = lastCodeClose;
 
-    double votData  = oriData[1];
-    double timeData = oriData[2];
+        double votData  = oriData[1];
+        double timeData = oriData[2];
 
-    computeCurEarning();
-    computeCurMACD();
+        computeCurEarning();
+        computeCurMACD();
 
-    ChartData curChartData(m_earningList.last(), votData, timeData,
-                           m_MACDData.last(), m_curHedgedData);
+        qDebug() << m_earningList.last() << votData << timeData <<  m_curHedgedData;
 
-    m_oldSelectData = m_curSelectData;
-    m_oldHedgedData = m_curHedgedData;
-    emit sendRealtimeSpreadMACDData_signal(curChartData);
+        ChartData curChartData(m_earningList.last(), votData, timeData,
+                            m_MACDData.last(), m_curHedgedData);
+
+        m_oldSelectData = m_curSelectData;
+        m_oldHedgedData = m_curHedgedData;
+        emit sendRealtimeSpreadMACDData_signal(curChartData);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+
 }
 
 void HistoryData::processRealtimeDataComplete_slot()
@@ -555,14 +583,11 @@ void HistoryData::processRealtimeDataComplete_slot()
 
 void HistoryData::computeCurEarning()
 {
-    double curEarning = 0;
+    double curEarning = 1;
 
-    // printMap(m_oldCodeClose, "m_oldCodeClose");
-    // printMap(m_curCodeClose, "m_curCodeClose");
-
-    if (m_hedgedParam.m_hedgedType == 0)
+    if (m_hedgedParam.m_hedgedType == CLVALUE_WEIGHT_EARNING 
+    && m_earningList.size() > 0)
     {
-        // printMap(m_hedgedParam.m_oriPortfolio, "m_hedgedParam.m_oriPortfolio");
         if (m_oldCodeClose.size() > 0)
         {
             double chg = 0;
@@ -572,37 +597,49 @@ void HistoryData::computeCurEarning()
                 double curChg = (it.value() - m_oldCodeClose[it.key()]) / m_oldCodeClose[it.key()];
                 chg += curChg * m_hedgedParam.m_oriPortfolio[it.key()];
             }
-            // qDebug() << "chg: " << chg;
-            if (m_earningList.size() > 0)
-            {
-                curEarning = m_earningList.last() * (1 + chg);
-            }
-            else
-            {
-                curEarning = 1 + chg;
-            }                        
+            curEarning = m_earningList.last() * (1 + chg);                 
         }
     }
-    else if (m_hedgedParam.m_hedgedType < 0)
+
+    if (m_hedgedParam.m_hedgedType == MKVALUE_WEIGHT_EARNING
+    && m_earningList.size() > 0)
+    {
+        double chg = (m_curSelectData - m_oldSelectData) / m_oldSelectData;
+        curEarning = m_earningList.last()*(1+chg);
+    }
+
+    if (m_hedgedParam.m_hedgedType == CLVALUE_WEIGHT_HEDGE
+    &&  m_earningList.size() > 0)
     {
         if (m_oldCodeClose.size() > 0)
         {
+            // printMap(m_oldCodeClose, "m_oldCodeClose");
+            // printMap(m_curCodeClose, "m_curCodeClose");
+
             double selectChg = 0;
             double hedgedChg = 0;
             for (QMap<QString ,double>::const_iterator it = m_curCodeClose.begin();
                 it != m_curCodeClose.end(); ++it)
             {
-                double curChg = (it.value() - m_oldCodeClose[it.key()]) / m_oldCodeClose[it.key()];
+                if (it.key() == m_hedgedParam.m_hedgedCode) continue;
 
+                double curChg = (it.value() - m_oldCodeClose[it.key()]) / m_oldCodeClose[it.key()];
+                
                 if (m_hedgedParam.m_oriPortfolio.find(it.key()) != m_hedgedParam.m_oriPortfolio.end())
                 {
                     selectChg += curChg * m_hedgedParam.m_oriPortfolio[it.key()];
+
+                    // qDebug() << it.key() << m_oldCodeClose[it.key()] << it.value() <<  curChg << m_hedgedParam.m_oriPortfolio[it.key()]
+                    //          << selectChg;
                 }
 
-                if (m_hedgedParam.m_hedgedPortfolio.find(it.key()) != m_hedgedParam.m_hedgedPortfolio.end())
+                if (m_hedgedParam.m_isPortfolioHedge)
                 {
-                    hedgedChg += curChg * m_hedgedParam.m_hedgedPortfolio[it.key()];
-                }            
+                    if (m_hedgedParam.m_hedgedPortfolio.find(it.key()) != m_hedgedParam.m_hedgedPortfolio.end())
+                    {
+                        hedgedChg += curChg * m_hedgedParam.m_hedgedPortfolio[it.key()];
+                    }   
+                }         
             }
 
             if (m_hedgedParam.m_isPortfolioHedge == false 
@@ -613,23 +650,29 @@ void HistoryData::computeCurEarning()
             }
 
             double relativeProfit = selectChg - hedgedChg;
-            if (m_earningList.size() > 0)
-            {
-                curEarning = m_earningList.last() * (1 + relativeProfit);
-            }
-            else
-            {
-               curEarning = 1 + relativeProfit;
-            }            
+            curEarning = m_earningList.last() * (1 + relativeProfit);
+
+            // qDebug() << "m_earningList.last(): " << m_earningList.last() << " curEarning: " << curEarning
+            //          << "selectChg: " << selectChg << " hedgedChg:" << hedgedChg;            
         }
     }
-    else
+
+    if (m_hedgedParam.m_hedgedType == MKVALUE_WEIGHT_HEDGE
+     && m_earningList.size() > 0)
+    {
+        double selectChg = (m_curSelectData - m_oldSelectData) / m_oldSelectData;
+        double hedgedChg = (m_curHedgedData - m_oldHedgedData) / m_oldHedgedData;
+        double relativeProfit = selectChg - hedgedChg;
+        curEarning = m_earningList.last()*(1+relativeProfit);
+    }
+
+    if (m_hedgedParam.m_hedgedType >= SPREAD_HEDGE)
     {
         if (m_hedgedParam.m_isPortfolioHedge)
         {
             curEarning = m_curSelectData - m_curHedgedData;
         }
-        else if (m_hedgedParam.m_isCSSChart)
+        else if (m_hedgedParam.m_isCSSChart && m_earningList.size() > 0)
         {
             double oldSpread = m_oldSelectData / (m_hedgedParam.m_oriPortfolio[m_hedgedParam.m_hedgedCode] * m_indexPriceMap[m_hedgedParam.m_hedgedCode]) - m_oldHedgedData;
 
@@ -647,10 +690,9 @@ void HistoryData::computeCurEarning()
 
     if (!m_hedgedParam.m_isCSSChart)
     {
-        m_oldCodeClose = m_curCodeClose;
+        m_oldCodeClose  = m_curCodeClose;
     }
     
-    // qDebug() << "curEarning: " << curEarning;
     m_earningList.append(curEarning);
 }
 
@@ -659,7 +701,9 @@ void HistoryData::computeCurMACD()
     if (m_MACDData.size() > 0)
     {
         m_MACDData.append(computeMACDData(m_earningList.last(), m_MACDData.last(),
-                                          m_hedgedParam.m_macdTime[0], m_hedgedParam.m_macdTime[1], m_hedgedParam.m_macdTime[2]));
+                                          m_hedgedParam.m_macdTime[0], 
+                                          m_hedgedParam.m_macdTime[1], 
+                                          m_hedgedParam.m_macdTime[2]));
     }
     else
     {
@@ -719,11 +763,14 @@ void HistoryData::computePortfolioData()
                                           m_timeData, m_earningList, m_indexCodeData,
                                           m_curSelectData, m_curHedgedData,
                                           m_curCodeClose);
-            }
 
-            m_oriPortfilioData.remove(m_hedgedParam.m_hedgedCode);
+                m_oriPortfilioData.remove(m_hedgedParam.m_hedgedCode);                                           
+            }
+                       
             computeVotList(m_oriPortfilioData, m_votData);
             computeMACDList(m_earningList, m_hedgedParam.m_macdTime, m_macdData);
+
+            // qDebug() << m_timeData.size() << m_earningList.size() << m_votData.size();
         }
 
         m_oldCodeClose  = m_curCodeClose;
@@ -1050,10 +1097,8 @@ void HistoryData::resetRealtimeData()
         m_oldHedgedData = m_curHedgedData;
 
         m_oldCodeClose  = m_curCodeClose;
-
         m_oldTime       = m_curTime;
     }
-
     releaseAveList();
 }
 
@@ -1105,6 +1150,5 @@ void HistoryData::releaseReadPortfolioDataThreads()
 
 void HistoryData::sendRealtimeFutureData_slot(QList<double>)
 {
-
 }
 

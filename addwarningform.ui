@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AddWarningForm</class>
+ <widget class="QWidget" name="AddWarningForm">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1125</width>
+    <height>787</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <layout class="QHBoxLayout" name="chooseInfo_horizontalLayout">
+       <item>
+        <widget class="QLabel" name="timeType_label">
+         <property name="text">
+          <string>时间频率: </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="timeType_comboBox"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="oriTarget_label">
+         <property name="text">
+          <string>告警指标: </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="oriTarget_comboBox"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>对比关系：</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="compare_comboBox"/>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="compTarget_radioButton">
+         <property name="text">
+          <string>对比指标：</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="compTarget_comboBox"/>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="compValue_radioButton">
+         <property name="text">
+          <string>对比数值</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="compValue_doubleSpinBox"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton">
+         <property name="text">
+          <string>添加</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <layout class="QHBoxLayout" name="infoTable_horizontalLayout">
+       <item>
+        <widget class="QTableView" name="addInfo_tableView"/>
+       </item>
+       <item>
+        <widget class="QTableView" name="warningInfo_tableView"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
